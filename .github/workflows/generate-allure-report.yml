@@ -19,7 +19,6 @@ env:
   COVERAGE_EXT: .coverage.info
   REPO_BASE_PATH: catalyst-libs/
 
-
 jobs:
   generate-test-reports:
     name: Generate test reports
@@ -28,16 +27,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Forge
-        uses: input-output-hk/catalyst-forge/actions/install@ci/v1.7.3
+        uses: input-output-hk/catalyst-forge/actions/install@ci/v1.8.1
         with:
-          version: 0.8.0
+          version: 0.19.1
         if: always()
 
       - name: Setup CI
-        uses: input-output-hk/catalyst-forge/actions/setup@ci/v1.7.3
+        uses: input-output-hk/catalyst-forge/actions/setup@ci/v1.8.1
 
       - name: Get catalyst libs unit test report
-        uses: input-output-hk/catalyst-forge/actions/run@ci/v1.7.3
+        uses: input-output-hk/catalyst-forge/actions/run@ci/v1.8.1
         if: always()
         continue-on-error: true
         with:

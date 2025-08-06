@@ -3,7 +3,10 @@
 use hermes_ipfs::{Cid, HermesIpfs};
 
 /// Print helper
-async fn print_cid_pinned(hermes_ipfs: &HermesIpfs, cid: &Cid) -> anyhow::Result<()> {
+async fn print_cid_pinned(
+    hermes_ipfs: &HermesIpfs,
+    cid: &Cid,
+) -> anyhow::Result<()> {
     let is_pinned = hermes_ipfs.is_pinned(cid).await?;
     println!("* Is CID pinned?: {is_pinned:?}");
     Ok(())
@@ -41,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
         } else {
             println!("AN ERROR OCCURRED: {e}");
         }
-    };
+    }
     println!("* Removing pin.");
     hermes_ipfs.remove_pin(cid).await?;
     print_cid_pinned(&hermes_ipfs, cid).await?;
@@ -53,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
         } else {
             println!("AN ERROR OCCURRED: {e}");
         }
-    };
+    }
     print_cid_pinned(&hermes_ipfs, cid).await?;
     println!("***************************************");
     println!("");

@@ -2,8 +2,7 @@
 
 use clap::{Parser, Subcommand};
 use hermes_ipfs::{HermesIpfs, IpfsBuilder};
-use lipsum::lipsum_with_rng;
-use rand::thread_rng;
+use lipsum::lipsum;
 use rust_ipfs::IpfsPath;
 
 /// CLI for a virtual filesystem.
@@ -62,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
         },
         Commands::AddFile => {
             println!("Adding file");
-            let contents = lipsum_with_rng(thread_rng(), 42);
+            let contents = lipsum(42);
             let ipfs_path = hermes_node
                 .add_ipfs_file(contents.into_bytes().into())
                 .await?;

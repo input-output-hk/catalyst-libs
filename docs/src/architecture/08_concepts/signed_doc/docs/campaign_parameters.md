@@ -24,6 +24,7 @@ The payload of a Campaign is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot campaign_parameters.dot.svg
+
 {{ include_file('./../diagrams/campaign_parameters.dot', indent=4) }}
 ```
 
@@ -64,7 +65,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`5ef32d5d-f240-462c-a7a4-ba4af221fa23` |
+| Type | 0110ea96-a555-47ce-8408-36efe6ed6f7c |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -225,9 +226,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-20 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog

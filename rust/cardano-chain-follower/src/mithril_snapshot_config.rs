@@ -88,7 +88,10 @@ impl MithrilSnapshotConfig {
     }
 
     /// Set a custom downloader configuration.
-    pub fn with_dl_config(mut self, config: DlConfig) -> Self {
+    pub fn with_dl_config(
+        mut self,
+        config: DlConfig,
+    ) -> Self {
         self.dl_config = Some(config);
         self
     }
@@ -135,7 +138,10 @@ impl MithrilSnapshotConfig {
 
     /// Activate the tmp mithril path to a numbered snapshot path.
     /// And then remove any left over files in download or the tmp path, or old snapshots.
-    pub(crate) async fn activate(&self, snapshot_number: u64) -> io::Result<PathBuf> {
+    pub(crate) async fn activate(
+        &self,
+        snapshot_number: u64,
+    ) -> io::Result<PathBuf> {
         let new_path = self.mithril_path(snapshot_number);
         let latest_id = latest_mithril_snapshot_id(self.chain);
 
@@ -210,7 +216,7 @@ impl MithrilSnapshotConfig {
                             );
                             cleanup_tasks.push(fs::remove_dir_all(entry.path()));
                         }
-                    };
+                    }
                 }
             },
         }
@@ -231,7 +237,9 @@ impl MithrilSnapshotConfig {
     ///
     /// This does not check if they SHOULD be de-duped, only de-dupes the files specified.
     pub(crate) fn dedup_tmp(
-        &self, tmp_file: &Path, latest_snapshot: &SnapshotData,
+        &self,
+        tmp_file: &Path,
+        latest_snapshot: &SnapshotData,
     ) -> anyhow::Result<()> {
         // Get the matching src file in the latest mithril snapshot to compare against.
         let snapshot_path = latest_snapshot.id().as_ref();
@@ -290,7 +298,10 @@ impl MithrilSnapshotConfig {
     /// Returns the path to the Numbered Snapshot Data.
     /// Will use a path relative to mithril data path.
     #[must_use]
-    pub(crate) fn mithril_path(&self, snapshot_number: u64) -> PathBuf {
+    pub(crate) fn mithril_path(
+        &self,
+        snapshot_number: u64,
+    ) -> PathBuf {
         let mut snapshot_path = self.path.clone();
         snapshot_path.push(snapshot_number.to_string());
         snapshot_path

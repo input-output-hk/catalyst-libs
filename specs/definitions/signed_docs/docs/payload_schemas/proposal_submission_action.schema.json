@@ -1,6 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "Proposal Submission Action Payload Schema",
     "description": "Structure of the payload of a Proposal Submission Action.",
     "maintainers": [
@@ -16,7 +15,7 @@
     },
     "type": "object",
     "additionalProperties": false,
-    "definitions": {
+    "$defs": {
         "action": {
             "type": "string",
             "description": "The action being performed on the Proposal.",
@@ -29,7 +28,7 @@
     },
     "properties": {
         "action": {
-            "$ref": "#/definitions/action"
+            "$ref": "#/$defs/action"
         }
     },
     "required": [

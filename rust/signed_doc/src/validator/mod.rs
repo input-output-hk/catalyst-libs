@@ -5,50 +5,42 @@ pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
-    fmt,
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, SystemTime},
 };
 
 use anyhow::Context;
-use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
-    problem_report::ProblemReport,
-    uuid::{Uuid, UuidV4},
-};
-use coset::{CoseSign, CoseSignature};
+use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 use rules::{
-    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
-    ReplyRule, Rules, SectionRule, SignatureKidRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, LinkField,
+    ParameterLinkRefRule, ParametersRule, RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule,
 };
 
 use crate::{
     doc_types::{
-        CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE,
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
-        PROPOSAL_TEMPLATE_UUID_TYPE,
+        BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
+        PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
     },
+    metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    signature::{tbs_data, Signature},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<HashMap<DocType, Arc<Rules>>> = LazyLock::new(document_rules_init);
 
-/// Returns an [`UuidV4`] from the provided argument, panicking if the argument is
-/// invalid.
-#[allow(clippy::expect_used)]
-fn expect_uuidv4<T>(t: T) -> UuidV4
-where T: TryInto<UuidV4, Error: fmt::Debug> {
-    t.try_into().expect("Must be a valid UUID V4")
-}
-
-/// `DOCUMENT_RULES` initialization function
-#[allow(clippy::expect_used)]
-fn document_rules_init() -> HashMap<Uuid, Rules> {
-    let mut document_rules_map = HashMap::new();
-
-    let proposal_document_rules = Rules {
+/// Proposal
+/// Require field: type, id, ver, template, parameters
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal/>
+fn proposal_rule() -> Rules {
+    // Parameter can be either brand, campaign or category
+    let parameters = vec![
+        BRAND_PARAMETERS.clone(),
+        CAMPAIGN_PARAMETERS.clone(),
+        CATEGORY_PARAMETERS.clone(),
+    ];
+    Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -57,11 +49,11 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_uuidv4(PROPOSAL_TEMPLATE_UUID_TYPE),
+            exp_template_type: PROPOSAL_FORM_TEMPLATE.clone(),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
-            optional: true,
+            exp_parameters_type: parameters.clone(),
+            optional: false,
         },
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
@@ -69,11 +61,23 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
-    };
+        param_link_ref: ParameterLinkRefRule::Specified {
+            field: LinkField::Template,
+        },
+    }
+}
 
-    document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
-
-    let comment_document_rules = Rules {
+/// Proposal Comment
+/// Require field: type, id, ver, ref, template, parameters
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment_template/>
+fn proposal_comment_rule() -> Rules {
+    // Parameter can be either brand, campaign or category
+    let parameters = vec![
+        BRAND_PARAMETERS.clone(),
+        CAMPAIGN_PARAMETERS.clone(),
+        CATEGORY_PARAMETERS.clone(),
+    ];
+    Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -82,23 +86,42 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_uuidv4(COMMENT_TEMPLATE_UUID_TYPE),
+            exp_template_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: PROPOSAL.clone(),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: expect_uuidv4(COMMENT_DOCUMENT_UUID_TYPE),
+            exp_reply_type: PROPOSAL_COMMENT.clone(),
             optional: true,
         },
-        section: SectionRule::Specified { optional: true },
-        parameters: ParametersRule::NotSpecified,
+        section: SectionRule::NotSpecified,
+        parameters: ParametersRule::Specified {
+            exp_parameters_type: parameters.clone(),
+            optional: false,
+        },
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
-    };
-    document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
+        // Link field can be either template or ref
+        param_link_ref: ParameterLinkRefRule::Specified {
+            field: LinkField::Template,
+        },
+    }
+}
+
+/// Proposal Submission Action
+/// Require fields: type, id, ver, ref, parameters
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
+#[allow(clippy::expect_used)]
+fn proposal_submission_action_rule() -> Rules {
+    // Parameter can be either brand, campaign or category
+    let parameters = vec![
+        BRAND_PARAMETERS.clone(),
+        CAMPAIGN_PARAMETERS.clone(),
+        CATEGORY_PARAMETERS.clone(),
+    ];
 
     let proposal_action_json_schema = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft7)
@@ -109,7 +132,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             .expect("Must be a valid json file"),
         )
         .expect("Must be a valid json scheme file");
-    let proposal_submission_action_rules = Rules {
+    Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -119,11 +142,11 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
-            optional: true,
+            exp_parameters_type: parameters,
+            optional: false,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: PROPOSAL.clone(),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
@@ -131,11 +154,25 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
-    };
+        param_link_ref: ParameterLinkRefRule::Specified {
+            field: LinkField::Ref,
+        },
+    }
+}
 
+/// `DOCUMENT_RULES` initialization function
+fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
+    let mut document_rules_map = HashMap::new();
+
+    let proposal_rules = Arc::new(proposal_rule());
+    let comment_rules = Arc::new(proposal_comment_rule());
+    let action_rules = Arc::new(proposal_submission_action_rule());
+
+    document_rules_map.insert(PROPOSAL.clone(), Arc::clone(&proposal_rules));
+    document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));
     document_rules_map.insert(
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-        proposal_submission_action_rules,
+        PROPOSAL_SUBMISSION_ACTION.clone(),
+        Arc::clone(&action_rules),
     );
 
     document_rules_map
@@ -149,9 +186,12 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
 pub async fn validate<Provider>(
-    doc: &CatalystSignedDocument, provider: &Provider,
+    doc: &CatalystSignedDocument,
+    provider: &Provider,
 ) -> anyhow::Result<bool>
-where Provider: CatalystSignedDocumentProvider {
+where
+    Provider: CatalystSignedDocumentProvider,
+{
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
@@ -164,7 +204,7 @@ where Provider: CatalystSignedDocumentProvider {
         return Ok(false);
     }
 
-    let Some(rules) = DOCUMENT_RULES.get(&doc_type.uuid()) else {
+    let Some(rules) = DOCUMENT_RULES.get(doc_type) else {
         doc.report().invalid_value(
             "`type`",
             &doc.doc_type()?.to_string(),
@@ -184,9 +224,12 @@ where Provider: CatalystSignedDocumentProvider {
 /// 3. If `provider.future_threshold()` not `None`, document `id` cannot be too far behind
 ///    (`past_threshold` arg) from `SystemTime::now()` based on the provide threshold
 fn validate_id_and_ver<Provider>(
-    doc: &CatalystSignedDocument, provider: &Provider,
+    doc: &CatalystSignedDocument,
+    provider: &Provider,
 ) -> anyhow::Result<bool>
-where Provider: CatalystSignedDocumentProvider {
+where
+    Provider: CatalystSignedDocumentProvider,
+{
     let id = doc.doc_id().ok();
     let ver = doc.doc_ver().ok();
     if id.is_none() {
@@ -279,16 +322,9 @@ where Provider: CatalystSignedDocumentProvider {
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
 pub async fn validate_signatures(
-    doc: &CatalystSignedDocument, provider: &impl VerifyingKeyProvider,
+    doc: &CatalystSignedDocument,
+    provider: &impl VerifyingKeyProvider,
 ) -> anyhow::Result<bool> {
-    let Ok(cose_sign) = doc.as_cose_sign() else {
-        doc.report().other(
-            "Cannot build a COSE sign object",
-            "During encoding signed document as COSE SIGN",
-        );
-        return Ok(false);
-    };
-
     if doc.signatures().is_empty() {
         doc.report().other(
             "Catalyst Signed Document is unsigned",
@@ -299,10 +335,8 @@ pub async fn validate_signatures(
 
     let sign_rules = doc
         .signatures()
-        .cose_signatures_with_kids()
-        .map(|(signature, kid)| {
-            validate_signature(&cose_sign, signature, kid, provider, doc.report())
-        });
+        .iter()
+        .map(|sign| validate_signature(doc, sign, provider, doc.report()));
 
     let res = futures::future::join_all(sign_rules)
         .await
@@ -316,12 +350,16 @@ pub async fn validate_signatures(
 
 /// A single signature validation function
 async fn validate_signature<Provider>(
-    cose_sign: &CoseSign, signature: &CoseSignature, kid: &CatalystId, provider: &Provider,
+    doc: &CatalystSignedDocument,
+    sign: &Signature,
+    provider: &Provider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
 where
     Provider: VerifyingKeyProvider,
 {
+    let kid = sign.kid();
+
     let Some(pk) = provider.try_get_key(kid).await? else {
         report.other(
             &format!("Missing public key for {kid}."),
@@ -330,11 +368,12 @@ where
         return Ok(false);
     };
 
-    let tbs_data = cose_sign.tbs_data(&[], signature);
-    let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
+    let tbs_data = tbs_data(kid, doc.doc_meta(), doc.content()).context("Probably a bug, cannot build CBOR COSE bytes for signature verification from the structurally valid COSE object.")?;
+
+    let Ok(signature_bytes) = sign.signature().try_into() else {
         report.invalid_value(
             "cose signature",
-            &format!("{}", signature.signature.len()),
+            &format!("{}", sign.signature().len()),
             &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
             "During encoding cose signature to bytes",
         );
@@ -360,9 +399,11 @@ mod tests {
     use uuid::{Timestamp, Uuid};
 
     use crate::{
+        builder::tests::Builder,
+        metadata::SupportedField,
         providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
         validator::{document_rules_init, validate_id_and_ver},
-        Builder, UuidV7,
+        UuidV7,
     };
 
     #[test]
@@ -375,25 +416,23 @@ mod tests {
 
         let uuid_v7 = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": uuid_v7.to_string(),
-                "ver": uuid_v7.to_string()
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Id(uuid_v7))
+            .with_metadata_field(SupportedField::Ver(uuid_v7))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
         assert!(is_valid);
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0));
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0));
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+            .try_into()
+            .unwrap();
+        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+            .try_into()
+            .unwrap();
         assert!(ver < id);
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": id.to_string(),
-                "ver": ver.to_string()
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Id(id))
+            .with_metadata_field(SupportedField::Ver(ver))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
@@ -404,13 +443,12 @@ mod tests {
             0,
             0,
             0,
-        ));
+        ))
+        .try_into()
+        .unwrap();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": to_far_in_past.to_string(),
-                "ver": to_far_in_past.to_string()
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Id(to_far_in_past))
+            .with_metadata_field(SupportedField::Ver(to_far_in_past))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
@@ -421,13 +459,12 @@ mod tests {
             0,
             0,
             0,
-        ));
+        ))
+        .try_into()
+        .unwrap();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": to_far_in_future.to_string(),
-                "ver": to_far_in_future.to_string()
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Id(to_far_in_future))
+            .with_metadata_field(SupportedField::Ver(to_far_in_future))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();

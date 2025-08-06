@@ -1,6 +1,8 @@
+# cspell: words yamux
+
 [package]
 name = "hermes-ipfs"
-version = "0.0.3"
+version = "0.0.5"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -12,16 +14,17 @@ workspace = true
 
 [dependencies]
 anyhow = "1.0.95"
-derive_more = {version = "1.0.0", features = ["from","into","display"] }
+derive_more = {version = "2.0.1", features = ["from","into","display"] }
 ipld-core = { version = "0.4.1", features = ["serde"]}
-rust-ipfs = "0.14.1"
-tokio = "1.42.0"
+# A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
+# rev-26b99cb as at July 30, 2025
+rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs", rev = "26b99cb" }
+tokio = "1.46.0"
 
 [dev-dependencies]
 # Dependencies used by examples
 clap = { version = "4.5.23", features = ["derive"] }
-dirs = "5.0.1"
+dirs = "6.0.0"
 lipsum = "0.9.1"
-rand = "0.8.5"
 rustyline-async = "0.4.5"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

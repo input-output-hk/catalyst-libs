@@ -47,7 +47,7 @@ impl TxnWitness {
                         map.insert(vkey_hash, (vkey, new_set));
                     }
                 }
-            };
+            }
             Ok(())
         }
 
@@ -71,14 +71,18 @@ impl TxnWitness {
                 _ => {
                     return Err(anyhow::anyhow!("Unsupported transaction Era"));
                 },
-            };
+            }
         }
         Ok(Self(map))
     }
 
     /// Check whether the public key hash is in the given transaction number.
     #[must_use]
-    pub fn check_witness_in_tx(&self, vkey_hash: &VKeyHash, tx_num: TxnIndex) -> bool {
+    pub fn check_witness_in_tx(
+        &self,
+        vkey_hash: &VKeyHash,
+        tx_num: TxnIndex,
+    ) -> bool {
         self.0
             .get(vkey_hash)
             .is_some_and(|entry| entry.1.contains(&tx_num))
@@ -86,13 +90,19 @@ impl TxnWitness {
 
     /// Get the actual verifying key from the given public key hash.
     #[must_use]
-    pub fn get_witness_vkey(&self, vkey_hash: &VKeyHash) -> Option<VerifyingKey> {
+    pub fn get_witness_vkey(
+        &self,
+        vkey_hash: &VKeyHash,
+    ) -> Option<VerifyingKey> {
         self.0.get(vkey_hash).map(|entry| entry.0)
     }
 }
 
 impl Display for TxnWitness {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         for data in &self.0 {
             let vkey_hash = data.key();
             let txn = &data.value().1;

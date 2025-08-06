@@ -34,7 +34,10 @@ struct MithrilSnapshotIteratorInner {
 }
 
 impl Debug for MithrilSnapshotIteratorInner {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         write!(
             f,
             "MithrilSnapshotIteratorInner {{ chain: {:?}, start: {:?}, previous: {:?} }}",
@@ -53,7 +56,10 @@ pub(crate) struct MithrilSnapshotIterator {
 }
 
 /// Create a probe point used in iterations to find the start when its not exactly known.
-pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
+pub(crate) fn probe_point(
+    point: &Point,
+    distance: u64,
+) -> Point {
     /// Step back point to indicate origin.
     const STEP_BACK_ORIGIN: u64 = 0;
     // Now that we have the tip, step back about 4 block intervals from tip, and do a fuzzy
@@ -80,7 +86,10 @@ impl MithrilSnapshotIterator {
 
     /// Try and probe to establish the iterator from the desired point.
     async fn try_fuzzy_iterator(
-        chain: Network, path: &Path, from: &Point, search_interval: u64,
+        chain: Network,
+        path: &Path,
+        from: &Point,
+        search_interval: u64,
     ) -> Option<MithrilSnapshotIterator> {
         let point = probe_point(from, search_interval);
         let Ok(mut iterator) = make_mithril_iterator(path, &point, chain).await else {
@@ -116,7 +125,7 @@ impl MithrilSnapshotIterator {
                     return None;
                 },
                 None => break,
-            };
+            }
         }
 
         debug!("Best Found for {from}. {this:?} > {previous:?}");
@@ -145,7 +154,11 @@ impl MithrilSnapshotIterator {
     /// We use this when we don't know the previous point, and need to find it.
     #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
-    async fn fuzzy_iterator(chain: Network, path: &Path, from: &Point) -> MithrilSnapshotIterator {
+    async fn fuzzy_iterator(
+        chain: Network,
+        path: &Path,
+        from: &Point,
+    ) -> MithrilSnapshotIterator {
         let mut backwards_search = BACKWARD_SEARCH_SLOT_INTERVAL;
         loop {
             if let Some(iterator) =
@@ -170,7 +183,10 @@ impl MithrilSnapshotIterator {
     #[allow(clippy::indexing_slicing)]
     #[logcall(ok = "debug", err = "error")]
     pub(crate) async fn new(
-        chain: Network, path: &Path, from: &Point, previous_point: Option<Point>,
+        chain: Network,
+        path: &Path,
+        from: &Point,
+        previous_point: Option<Point>,
     ) -> Result<Self> {
         if from.is_fuzzy() || (!from.is_origin() && previous_point.is_none()) {
             return Ok(Self::fuzzy_iterator(chain, path, from).await);

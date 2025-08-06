@@ -64,23 +64,11 @@ The "length-first core deterministic encoding requirements" variant of determini
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/signed_document.cddl](cddl/signed_document.cddl)
+    * [signed_document.cddl](cddl/signed_document.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/signed_document.cddl', indent=4) }}
     ```
-
-<!-- markdownlint-enable max-one-sentence-per-line -->
-
-<!-- markdownlint-disable max-one-sentence-per-line -->
-??? note "CDDL"
-
-    * [cddl/signed_document.cddl](cddl/signed_document.cddl)
-
-    ```cddl
-    {{ include_file('./cddl/signed_document.cddl', indent=4) }}
-    ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [COSE Header Parameters][RFC9052-HeaderParameters]
@@ -94,98 +82,351 @@ The [COSE header parameters][RFC9052-HeaderParameters] defined and used by Catal
 
 Media Type/s allowed in the Payload
 
-* Required : yes
-* [Cose][RFC9052] Label : 3
-* Format : Media Type
-  * Supported Values:
-    * [application/cbor] :
-      An [RFC8949] Binary [CBOR][RFC8949] Encoded Document.
-    * [application/cddl][RFC8610] :
-      A [CDDL][RFC8610] Document.
+<!---HTML START-->
+<!-- markdownlint-disable -->
+<div id="spec_content_type" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#spec_content_type table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
 
-      Note:
+#spec_content_type thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#spec_content_type p { margin: 0; padding: 0; }
+ #spec_content_type .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #spec_content_type .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #spec_content_type .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #spec_content_type .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #spec_content_type .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content_type .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content_type .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content_type .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #spec_content_type .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #spec_content_type .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #spec_content_type .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #spec_content_type .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #spec_content_type .gt_spanner_row { border-bottom-style: hidden; }
+ #spec_content_type .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #spec_content_type .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #spec_content_type .gt_from_md> :first-child { margin-top: 0; }
+ #spec_content_type .gt_from_md> :last-child { margin-bottom: 0; }
+ #spec_content_type .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #spec_content_type .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #spec_content_type .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #spec_content_type .gt_row_group_first td { border-top-width: 2px; }
+ #spec_content_type .gt_row_group_first th { border-top-width: 2px; }
+ #spec_content_type .gt_striped { background-color: #EDF7FC; }
+ #spec_content_type .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content_type .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #spec_content_type .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #spec_content_type .gt_left { text-align: left; }
+ #spec_content_type .gt_center { text-align: center; }
+ #spec_content_type .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #spec_content_type .gt_font_normal { font-weight: normal; }
+ #spec_content_type .gt_font_bold { font-weight: bold; }
+ #spec_content_type .gt_font_italic { font-style: italic; }
+ #spec_content_type .gt_super { font-size: 65%; }
+ #spec_content_type .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #spec_content_type .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
-      * This is an unofficial media type
-      * [RFC9165] Additional Control Operators for [CDDL][RFC8610] are supported.
-      * Must not have Modules, schema must be self-contained.
-    * [application/json] :
-      [JSON][RFC8259] Document
-    * [application/schema+json][JSON Schema-2020-12] :
-      A [JSON Schema Draft 2020-12][JSON Schema-2020-12] Document.
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
 
-      Note:
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">content type</td>
+  </tr>
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
-      * This is currently an unofficial media type.
-    * [text/css;][text/css] [charset=utf-8][RFC3629] :
-      [CSS] Content used for styling [HTML][HTML5].
-      [CSS] should use the least set of features possible to achieve
-      the desired presentation to ensure the broadest compatibility.
-    * [text/css;][text/css] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      [CSS] Content used for styling [HTML][HTML5].
-      [CSS] should use the least set of features possible to achieve
-      the desired presentation to ensure the broadest compatibility.
+Media Type/s allowed in the Payload
 
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-    * [text/html;][HTML5] [charset=utf-8][RFC3629] :
-      Formatted text using [HTML5] markup for rich text.
-      Only [HTML5] syntax is supported.
-    * [text/html;][HTML5] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      Formatted text using [HTML5] markup for rich text.
-      Only [HTML5] syntax is supported.
+</td>
+  </tr>
 
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-    * [text/markdown;][CommonMark] [charset=utf-8][RFC3629] :
-      Formatted text using [Markdown][CommonMark] for rich text.
-      [Markdown][CommonMark] formatting is as defined by [CommonMark].
+</thead>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Definition</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">Is the field required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped">3</td>
+    <td class="gt_row gt_left gt_striped"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Format</th>
+    <td class="gt_row gt_left">Media Type</td>
+    <td class="gt_row gt_left">A Media Type string which identifies the payload.</td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Supported Values</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.iana.org/assignments/media-types/application/cbor">application/cbor</a></td>
+    <td class="gt_row gt_left gt_striped">An <a href="https://www.rfc-editor.org/rfc/rfc8949.html">RFC8949</a> Binary <a href="https://www.rfc-editor.org/rfc/rfc8949.html">CBOR</a> Encoded Document.</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8610">application/cddl</a></td>
+    <td class="gt_row gt_left">A <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> Document.<br>
+Note:</p>
+<ul>
+<li>This is an unofficial media type</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9165">RFC9165</a> Additional Control Operators for <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> are supported.</li>
+<li>Must not have Modules, schema must be self-contained.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.iana.org/assignments/media-types/application/json">application/json</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Document</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://json-schema.org/draft/2020-12">application/schema+json</a></td>
+    <td class="gt_row gt_left">A <a href="https://json-schema.org/draft/2020-12"><a href="https://json-schema.org/draft/2020-12"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Schema</a> Draft 2020-12</a> Document.<br>
+Note:</p>
+<ul>
+<li>This is a draft/unofficial media type.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
+Note:</p>
+<ul>
+<li><a href="https://www.w3.org/Style/CSS/">CSS</a> should use the least set of features possible to achieve
+the desired presentation to ensure the broadest compatibility.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
+Note:</p>
+<ul>
+<li><a href="https://www.w3.org/Style/CSS/">CSS</a> should use the least set of features possible to achieve
+the desired presentation to ensure the broadest compatibility.</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
+Note:</p>
+<ul>
+<li>Only <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax is supported.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
+Note:</p>
+<ul>
+<li>Only <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax is supported.</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
+Note:</p>
+<ul>
+<li><a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatting is as defined by <a href="https://spec.commonmark.org/0.31.2/">CommonMark</a>.</li>
+<li>IF the document includes <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>, then <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax only is supported.</li>
+<li>The following <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> Extensions are also supported:
+<ul>
+<li>None</li>
+</ul>
+</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
+Note:</p>
+<ul>
+<li><a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatting is as defined by <a href="https://spec.commonmark.org/0.31.2/">CommonMark</a>.</li>
+<li>IF the document includes <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>, then <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax only is supported.</li>
+<li>The following <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> Extensions are also supported:
+<ul>
+<li>None</li>
+</ul>
+</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped">Plain Text with no markup or special formatting.<br>
+Note:</p>
+<ul>
+<li>Multiline Plain Text <em>MUST</em> always interpret <code>\n</code>
+as a hard line break.</li>
+</ul>
+</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left">Plain Text with no markup or special formatting.<br>
+Note:</p>
+<ul>
+<li>Multiline Plain Text <em>MUST</em> always interpret <code>\n</code>
+as a hard line break.</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+</tbody>
 
-      IF the document includes HTML, then [HTML5] syntax only is supported.
 
-      The following [Markdown][CommonMark] Extensions are also supported:
+</table>
 
-      * None
-    * [text/markdown;][CommonMark] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      Formatted text using [Markdown][CommonMark] for rich text.
-      [Markdown][CommonMark] formatting is as defined by [CommonMark].
+</div>
 
-      IF the document includes HTML, then [HTML5] syntax only is supported.
 
-      The following [Markdown][CommonMark] Extensions are also supported:
-
-      * None
-
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-    * [text/plain;][text/plain] [charset=utf-8][RFC3629] :
-      Plain Text with no markup or special formatting.
-      Multiline Plain Text *MUST* always interpret `
-      `
-      as a hard line break.
-    * [text/plain;][text/plain] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      Plain Text with no markup or special formatting.
-      Multiline Plain Text *MUST* always interpret `
-      `
-      as a hard line break.
-
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-
+<!-- markdownlint-enable -->
+<!---HTML END-->
 #### `content-encoding`
 
 Supported HTTP Encodings of the Payload.
 If no compression or encoding is used, then this field must not be present.
 
-* Required : optional
-* [Cose][RFC9052] Label : content-encoding ***Custom Header***
-* Format : HTTP Content Encoding
-  * Supported Values:
-    * [br] :
-      [BROTLI][RFC7932] Compression
+<!---HTML START-->
+<!-- markdownlint-disable -->
+<div id="spec_content-encoding" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#spec_content-encoding table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+#spec_content-encoding thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#spec_content-encoding p { margin: 0; padding: 0; }
+ #spec_content-encoding .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #spec_content-encoding .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #spec_content-encoding .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #spec_content-encoding .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #spec_content-encoding .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content-encoding .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content-encoding .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content-encoding .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #spec_content-encoding .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #spec_content-encoding .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #spec_content-encoding .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #spec_content-encoding .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #spec_content-encoding .gt_spanner_row { border-bottom-style: hidden; }
+ #spec_content-encoding .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #spec_content-encoding .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #spec_content-encoding .gt_from_md> :first-child { margin-top: 0; }
+ #spec_content-encoding .gt_from_md> :last-child { margin-bottom: 0; }
+ #spec_content-encoding .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #spec_content-encoding .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #spec_content-encoding .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #spec_content-encoding .gt_row_group_first td { border-top-width: 2px; }
+ #spec_content-encoding .gt_row_group_first th { border-top-width: 2px; }
+ #spec_content-encoding .gt_striped { background-color: #EDF7FC; }
+ #spec_content-encoding .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content-encoding .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #spec_content-encoding .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #spec_content-encoding .gt_left { text-align: left; }
+ #spec_content-encoding .gt_center { text-align: center; }
+ #spec_content-encoding .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #spec_content-encoding .gt_font_normal { font-weight: normal; }
+ #spec_content-encoding .gt_font_bold { font-weight: bold; }
+ #spec_content-encoding .gt_font_italic { font-style: italic; }
+ #spec_content-encoding .gt_super { font-size: 65%; }
+ #spec_content-encoding .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #spec_content-encoding .gt_asterisk { font-size: 100%; vertical-align: 0; }
+
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">content-encoding</td>
+  </tr>
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+
+Supported HTTP Encodings of the Payload
+
+</td>
+  </tr>
+
+</thead>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Definition</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left">Is the field required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped">content-encoding</td>
+    <td class="gt_row gt_left gt_striped">Custom Header parameter label.</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Format</th>
+    <td class="gt_row gt_left">HTTP Content Encoding</td>
+    <td class="gt_row gt_left">Encoding, if any, of the payload.</td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Supported Values</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br">br</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc7932">BROTLI</a> Compression</td>
+  </tr>
+</tbody>
+
+
+</table>
+
+</div>
+
+
+<!-- markdownlint-enable -->
+<!---HTML END-->
 
 ### Metadata
 
-Catalyst Signed Documents extend the Header Parameters with a series of [Metadata fields](./metadata.md).
+Catalyst Signed Documents extend the Header Parameters with a series of
+[Metadata fields](metadata).
 
 ### Signing Catalyst Signed Documents
 
@@ -207,9 +448,100 @@ Any `kid` [URI][RFC3986] which conforms to the Catalyst ID specification may be 
 The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 used to sign the protected portion of the document.
 
-* Required : yes
-* [Cose][RFC9052] Label : 4
-* Format : Catalyst ID
+<!---HTML START-->
+<!-- markdownlint-disable -->
+<div id="spec_kid" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#spec_kid table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+#spec_kid thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#spec_kid p { margin: 0; padding: 0; }
+ #spec_kid .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #spec_kid .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #spec_kid .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #spec_kid .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #spec_kid .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_kid .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_kid .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_kid .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #spec_kid .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #spec_kid .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #spec_kid .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #spec_kid .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #spec_kid .gt_spanner_row { border-bottom-style: hidden; }
+ #spec_kid .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #spec_kid .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #spec_kid .gt_from_md> :first-child { margin-top: 0; }
+ #spec_kid .gt_from_md> :last-child { margin-bottom: 0; }
+ #spec_kid .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #spec_kid .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #spec_kid .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #spec_kid .gt_row_group_first td { border-top-width: 2px; }
+ #spec_kid .gt_row_group_first th { border-top-width: 2px; }
+ #spec_kid .gt_striped { background-color: #EDF7FC; }
+ #spec_kid .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_kid .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #spec_kid .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #spec_kid .gt_left { text-align: left; }
+ #spec_kid .gt_center { text-align: center; }
+ #spec_kid .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #spec_kid .gt_font_normal { font-weight: normal; }
+ #spec_kid .gt_font_bold { font-weight: bold; }
+ #spec_kid .gt_font_italic { font-style: italic; }
+ #spec_kid .gt_super { font-size: 65%; }
+ #spec_kid .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #spec_kid .gt_asterisk { font-size: 100%; vertical-align: 0; }
+
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">kid</td>
+  </tr>
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+
+Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> identifying the Public Key
+
+</td>
+  </tr>
+
+</thead>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Definition</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">Is the field required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped">4</td>
+    <td class="gt_row gt_left gt_striped"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Format</th>
+    <td class="gt_row gt_left">Catalyst ID</td>
+    <td class="gt_row gt_left">KID (Catalyst ID URI)</td>
+  </tr>
+</tbody>
+
+
+</table>
+
+</div>
+
+
+<!-- markdownlint-enable -->
+<!---HTML END-->
 
 ## Copyright
 
@@ -217,51 +549,59 @@ used to sign the protected portion of the document.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### 0.0.1 (2025-04-04)
 
 * First Published Version
 
-#### 0.02 (2025-04-09)
+#### 0.0.2 (2025-04-09)
 
 * Add version control changelogs to the specification.
 
-#### 0.03 (2025-05-05)
+#### 0.0.3 (2025-05-05)
 
 * Use generalized parameters.
 
-#### 0.04 (2025-05-30)
+#### 0.0.4 (2025-06-25)
 
 * Improve and make document serialization more repeatable, and stricter.
-* TODO: Define Systems parameters
-* TODO: Define DReps documents.
-* TODO: Define Proposer Profiles.
-* TODO: Define Role 0 Profile.
+* Defined Systems parameters documents
+* Defined DReps documents.
+
+#### 0.1.0 (2025-07-30)
+
+* Fixed typographical and layout issues.
+* Added specifications for Form Templates and Elements.
+* Reverted Document Types to a Single [UUID][RFC9562] from an Array of UUIDs
+* Changed versions to be semantic (0.04 became 0.0.4)
+* Corrected Parameter References for Brand/Campaign/Category/Contest Templates
+* Replaced poorly formatting [markdown][CommonMark] tables with [HTML][HTML5] equivalents.
+* Added draft placeholders for Moderation Documents (subject to change)
+* Clarified How Representatives may delegate.
+* Clarified what happens when a new version of a Nomination Document is published.
+* Clarified how delegations can be revoked.
+* Clarified the payload for delegations.
+* Generalized Presentation Templates, and defined sample (subject to change) cards.
+* Removed specialized presentation templates, as a universal presentation template is all thats required.
+* Converted draft-7 [Json][RFC8259] Schemas to 2020-12
+* Add standard ICON definitions for Forms.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
-[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[Handlebars]: https://handlebarsjs.com/
-[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
-[application/cbor]: https://www.iana.org/assignments/media-types/application/cbor
-[application/json]: https://www.iana.org/assignments/media-types/application/json
-[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
-[CommonMark]: https://spec.commonmark.org/0.31.2/
-[text/plain]: https://www.rfc-editor.org/rfc/rfc2046.html
-[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
 [RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
-[text/css]: https://www.rfc-editor.org/rfc/rfc2318.html
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
-[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
-[RFC9165]: https://www.rfc-editor.org/rfc/rfc9165
-[RFC7932]: https://www.rfc-editor.org/rfc/rfc7932
+[CommonMark]: https://spec.commonmark.org/0.31.2/
+[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
+[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [RFC9052]: https://datatracker.ietf.org/doc/html/rfc9052
+[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
+[RFC9562]: https://www.rfc-editor.org/rfc/rfc9562.html
 [RFC3986]: https://datatracker.ietf.org/doc/html/rfc3986
-[CSS]: https://www.w3.org/Style/CSS/
-[br]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br

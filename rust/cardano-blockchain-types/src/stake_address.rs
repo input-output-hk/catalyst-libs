@@ -27,7 +27,11 @@ impl StakeAddress {
     /// Creates a new instance from the given parameters.
     #[allow(clippy::expect_used, clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new(network: Network, is_script: bool, stake_pk_hash: Blake2b224Hash) -> Self {
+    pub fn new(
+        network: Network,
+        is_script: bool,
+        stake_pk_hash: Blake2b224Hash,
+    ) -> Self {
         let network = network.into();
         let hash = stake_pk_hash.into();
         // `pallas::StakeAddress` can only be constructed from `ShelleyAddress`, so we are forced
@@ -49,9 +53,12 @@ impl StakeAddress {
 
     /// Creates `StakeAddress` from `StakeCredential`.
     #[must_use]
-    pub fn from_stake_cred(network: Network, cred: &conway::StakeCredential) -> Self {
+    pub fn from_stake_cred(
+        network: Network,
+        cred: &conway::StakeCredential,
+    ) -> Self {
         match cred {
-            conway::StakeCredential::Scripthash(h) => Self::new(network, true, (*h).into()),
+            conway::StakeCredential::ScriptHash(h) => Self::new(network, true, (*h).into()),
             conway::StakeCredential::AddrKeyhash(h) => Self::new(network, false, (*h).into()),
         }
     }
@@ -125,7 +132,10 @@ impl From<StakeAddress> for Vec<u8> {
 }
 
 impl Display for StakeAddress {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         // The `to_bech32` implementation returns an error if the network isn't equal to testnet
         // or mainnet. We don't allow other networks, so it is safe to unwrap, but just in case
         // return a debug representation.

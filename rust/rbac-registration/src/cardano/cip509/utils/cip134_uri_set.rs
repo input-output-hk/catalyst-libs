@@ -46,7 +46,9 @@ impl Cip0134UriSet {
     /// Creates a new `Cip0134UriSet` instance from the given certificates.
     #[must_use]
     pub fn new(
-        x509_certs: &[X509DerCert], c509_certs: &[C509Cert], report: &ProblemReport,
+        x509_certs: &[X509DerCert],
+        c509_certs: &[C509Cert],
+        report: &ProblemReport,
     ) -> Self {
         let x_uris = extract_x509_uris(x509_certs, report);
         let c_uris = extract_c509_uris(c509_certs, report);
@@ -73,7 +75,10 @@ impl Cip0134UriSet {
 
     /// Returns a list of stake addresses by the given index.
     #[must_use]
-    pub fn stake_addresses(&self, index: usize) -> HashSet<StakeAddress> {
+    pub fn stake_addresses(
+        &self,
+        index: usize,
+    ) -> HashSet<StakeAddress> {
         let mut result = HashSet::new();
 
         if let Some(uris) = self.x_uris().get(&index) {
@@ -105,7 +110,10 @@ impl Cip0134UriSet {
     /// 2: [uri_4]
     /// ```
     #[must_use]
-    pub fn update(self, metadata: &Cip509RbacMetadata) -> Self {
+    pub fn update(
+        self,
+        metadata: &Cip509RbacMetadata,
+    ) -> Self {
         if self == metadata.certificate_uris {
             // Nothing to update.
             return self;
@@ -156,7 +164,10 @@ impl Cip0134UriSet {
 }
 
 /// Iterates over X509 certificates and extracts CIP-0134 URIs.
-fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> UrisMap {
+fn extract_x509_uris(
+    certificates: &[X509DerCert],
+    report: &ProblemReport,
+) -> UrisMap {
     let mut result = UrisMap::new();
     let context = "Extracting URIs from X509 certificates in Cip509 metadata";
 
@@ -199,9 +210,8 @@ fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> Ur
                     // X.509 doesn't restrict the "alternative name" extension to be utf8 only, so
                     // we cannot treat this as error.
                     debug!("Ignoring invalid CIP-0134 address: {e:?}");
-                    continue;
                 },
-            };
+            }
         }
 
         if !uris.is_empty() {
@@ -213,7 +223,10 @@ fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> Ur
 }
 
 /// Iterates over C509 certificates and extracts CIP-0134 URIs.
-fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisMap {
+fn extract_c509_uris(
+    certificates: &[C509Cert],
+    report: &ProblemReport,
+) -> UrisMap {
     let mut result = UrisMap::new();
     let context = "Extracting URIs from C509 certificates in Cip509 metadata";
 
@@ -264,9 +277,8 @@ fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisM
                     Ok(u) => uris.push(u),
                     Err(e) => {
                         debug!("Ignoring invalid CIP-0134 address: {e:?}");
-                        continue;
                     },
-                };
+                }
             }
 
             if !uris.is_empty() {

@@ -2,7 +2,7 @@
 name = "cardano-blockchain-types"
 description = "Common Cardano Blockchain data types for use in both applications and crates"
 keywords = ["cardano", "catalyst", ]
-version = "0.0.3"
+version = "0.0.5"
 authors = [
     "Steven Johnson <steven.johnson@iohk.io>"
 ]
@@ -18,10 +18,11 @@ crate-type = ["cdylib", "rlib"]
 workspace = true
 
 [dependencies]
-pallas = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
-# pallas-hardano = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
-cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
-catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
+pallas = { version = "0.33.0", git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
+# pallas-hardano = { version = "0.33.0", git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
+catalyst-types = { version = "0.0.5", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types-v0.0.5" }
+cbork-utils = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils-v0.0.2" }
+
 
 ouroboros = "0.18.4"
 tracing = "0.1.41"

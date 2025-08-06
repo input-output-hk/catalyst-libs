@@ -39,6 +39,7 @@ linkAKA: {
 	Markdown:                               "CommonMark"
 	HTML:                                   "HTML5"
 	"JSON Schema":                          "JSON Schema-2020-12"
+	"JSON Schema version 2020-12":          "JSON Schema-2020-12"
 }
 
 all_aka_names: list.UniqueItems

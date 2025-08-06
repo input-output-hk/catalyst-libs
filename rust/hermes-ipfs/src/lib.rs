@@ -17,6 +17,8 @@ pub use rust_ipfs::libp2p::futures::{pin_mut, stream::BoxStream, FutureExt, Stre
 pub use rust_ipfs::p2p::PeerInfo;
 /// Enum for specifying paths in IPFS.
 pub use rust_ipfs::path::IpfsPath;
+/// Storage type for IPFS node.
+pub use rust_ipfs::repo::StorageTypes;
 /// Server, Client, or Auto mode
 pub use rust_ipfs::DhtMode;
 /// Server, Client, or Auto mode
@@ -25,8 +27,6 @@ pub use rust_ipfs::Ipfs;
 pub use rust_ipfs::Multiaddr;
 /// Peer ID type.
 pub use rust_ipfs::PeerId;
-/// Storage type for IPFS node.
-pub use rust_ipfs::StorageType;
 /// Stream for `PubSub` Topic Subscriptions.
 pub use rust_ipfs::SubscriptionStream;
 /// Builder type for IPFS Node configuration.
@@ -68,16 +68,22 @@ impl IpfsBuilder {
     /// Set the storage type for the IPFS node to local disk.
     ///
     /// ## Parameters
-    pub fn set_disk_storage<T: Into<std::path::PathBuf>>(self, storage_path: T) -> Self {
+    pub fn set_disk_storage<T: Into<std::path::PathBuf>>(
+        self,
+        storage_path: T,
+    ) -> Self {
         Self(
             self.0
-                .set_storage_type(rust_ipfs::StorageType::Disk(storage_path.into())),
+                .set_repo(&rust_ipfs::repo::Repo::new_fs(storage_path.into())),
         )
     }
 
     #[must_use]
     /// Set the transport configuration for the IPFS node.
-    pub fn set_transport_configuration(self, transport: rust_ipfs::p2p::TransportConfig) -> Self {
+    pub fn set_transport_configuration(
+        self,
+        transport: rust_ipfs::p2p::TransportConfig,
+    ) -> Self {
         Self(self.0.set_transport_configuration(transport))
     }
 
@@ -148,7 +154,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if the file fails to upload.
-    pub async fn add_ipfs_file(&self, ipfs_file: AddIpfsFile) -> anyhow::Result<IpfsPath> {
+    pub async fn add_ipfs_file(
+        &self,
+        ipfs_file: AddIpfsFile,
+    ) -> anyhow::Result<IpfsPath> {
         let ipfs_path = self.node.add_unixfs(ipfs_file).await?;
         Ok(ipfs_path)
     }
@@ -166,7 +175,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if the file fails to download.
-    pub async fn get_ipfs_file(&self, ipfs_path: GetIpfsFile) -> anyhow::Result<Vec<u8>> {
+    pub async fn get_ipfs_file(
+        &self,
+        ipfs_path: GetIpfsFile,
+    ) -> anyhow::Result<Vec<u8>> {
         let stream_bytes = self.node.cat_unixfs(ipfs_path).await?;
         Ok(stream_bytes.to_vec())
     }
@@ -180,7 +192,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if pinning fails.
-    pub async fn insert_pin(&self, cid: &Cid) -> anyhow::Result<()> {
+    pub async fn insert_pin(
+        &self,
+        cid: &Cid,
+    ) -> anyhow::Result<()> {
         self.node.insert_pin(cid).await
     }
 
@@ -205,7 +220,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if checking pin fails.
-    pub async fn is_pinned(&self, cid: &Cid) -> anyhow::Result<bool> {
+    pub async fn is_pinned(
+        &self,
+        cid: &Cid,
+    ) -> anyhow::Result<bool> {
         self.node.is_pinned(cid).await
     }
 
@@ -237,7 +255,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if removing pin fails.
-    pub async fn remove_pin(&self, cid: &Cid) -> anyhow::Result<()> {
+    pub async fn remove_pin(
+        &self,
+        cid: &Cid,
+    ) -> anyhow::Result<()> {
         self.node.remove_pin(cid).recursive().await
     }
 
@@ -256,7 +277,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if peer info cannot be retrieved.
-    pub async fn identity(&self, peer_id: Option<PeerId>) -> anyhow::Result<PeerId> {
+    pub async fn identity(
+        &self,
+        peer_id: Option<PeerId>,
+    ) -> anyhow::Result<PeerId> {
         self.node.identity(peer_id).await.map(|p| p.peer_id)
     }
 
@@ -270,7 +294,11 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to add peer.
-    pub async fn add_peer(&self, peer_id: PeerId, addr: Multiaddr) -> anyhow::Result<()> {
+    pub async fn add_peer(
+        &self,
+        peer_id: PeerId,
+        addr: Multiaddr,
+    ) -> anyhow::Result<()> {
         self.node.add_peer((peer_id, addr)).await
     }
 
@@ -300,7 +328,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to set DHT mode
-    pub async fn dht_mode(&self, mode: DhtMode) -> anyhow::Result<()> {
+    pub async fn dht_mode(
+        &self,
+        mode: DhtMode,
+    ) -> anyhow::Result<()> {
         self.node.dht_mode(mode).await
     }
 
@@ -317,7 +348,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to add DAG content.
-    pub async fn dag_put(&self, ipld: Ipld) -> anyhow::Result<Cid> {
+    pub async fn dag_put(
+        &self,
+        ipld: Ipld,
+    ) -> anyhow::Result<Cid> {
         self.node.put_dag(ipld).await
     }
 
@@ -334,7 +368,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to get DAG content.
-    pub async fn dag_get<T: Into<IpfsPath>>(&self, path: T) -> Result<Ipld, ResolveError> {
+    pub async fn dag_get<T: Into<IpfsPath>>(
+        &self,
+        path: T,
+    ) -> Result<Ipld, ResolveError> {
         self.node.get_dag(path).await
     }
 
@@ -353,7 +390,9 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to add content to DHT
     pub async fn dht_put(
-        &self, key: impl AsRef<[u8]>, value: impl Into<Vec<u8>>,
+        &self,
+        key: impl AsRef<[u8]>,
+        value: impl Into<Vec<u8>>,
     ) -> anyhow::Result<()> {
         self.node.dht_put(key, value, Quorum::One).await
     }
@@ -371,7 +410,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to get content from DHT
-    pub async fn dht_get(&self, key: impl AsRef<[u8]>) -> anyhow::Result<Vec<u8>> {
+    pub async fn dht_get(
+        &self,
+        key: impl AsRef<[u8]>,
+    ) -> anyhow::Result<Vec<u8>> {
         let record_stream = self.node.dht_get(key).await?;
         pin_mut!(record_stream);
         let record = record_stream
@@ -394,7 +436,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to add address to bootstrap nodes
-    pub async fn add_bootstrap(&self, address: Multiaddr) -> anyhow::Result<Multiaddr> {
+    pub async fn add_bootstrap(
+        &self,
+        address: Multiaddr,
+    ) -> anyhow::Result<Multiaddr> {
         self.node.add_bootstrap(address).await
     }
 
@@ -425,7 +470,8 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to retrieve pubsub swarm events.
     pub async fn pubsub_events(
-        &self, topic: impl Into<Option<String>>,
+        &self,
+        topic: impl Into<Option<String>>,
     ) -> anyhow::Result<BoxStream<'static, PubsubEvent>> {
         self.node.pubsub_events(topic).await
     }
@@ -444,7 +490,8 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to subscribe to pubsub topic.
     pub async fn pubsub_subscribe(
-        &self, topic: impl Into<String>,
+        &self,
+        topic: impl Into<String>,
     ) -> anyhow::Result<SubscriptionStream> {
         self.node.pubsub_subscribe(topic).await
     }
@@ -462,7 +509,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to unsubscribe from pubsub topic.
-    pub async fn pubsub_unsubscribe(&self, topic: impl Into<String>) -> anyhow::Result<bool> {
+    pub async fn pubsub_unsubscribe(
+        &self,
+        topic: impl Into<String>,
+    ) -> anyhow::Result<bool> {
         self.node.pubsub_unsubscribe(topic).await
     }
 
@@ -481,7 +531,9 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to publish to a pubsub topic.
     pub async fn pubsub_publish(
-        &self, topic: impl Into<String>, message: Vec<u8>,
+        &self,
+        topic: impl Into<String>,
+        message: Vec<u8>,
     ) -> anyhow::Result<MessageId> {
         self.node
             .pubsub_publish(topic, message)
@@ -502,7 +554,10 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to ban peer.
-    pub async fn ban_peer(&self, peer: PeerId) -> anyhow::Result<()> {
+    pub async fn ban_peer(
+        &self,
+        peer: PeerId,
+    ) -> anyhow::Result<()> {
         self.node.ban_peer(peer).await
     }
 }
@@ -594,7 +649,8 @@ impl FromStr for GetIpfsFile {
 
 /// Handle stream of messages from the IPFS pubsub topic
 pub fn subscription_stream_task(
-    stream: SubscriptionStream, handler: fn(PubsubMessage),
+    stream: SubscriptionStream,
+    handler: fn(PubsubMessage),
 ) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         pin_mut!(stream);

@@ -17,7 +17,10 @@ pub struct BlockAuxData(Arc<dashmap::ReadOnlyView<TxnIndex, TransactionAuxData>>
 impl BlockAuxData {
     /// Get `TransactionAuxData` for the given `TxnIndex` if any.
     #[must_use]
-    pub fn get(&self, txn_idx: TxnIndex) -> Option<&TransactionAuxData> {
+    pub fn get(
+        &self,
+        txn_idx: TxnIndex,
+    ) -> Option<&TransactionAuxData> {
         self.0.get(&txn_idx)
     }
 }
@@ -60,7 +63,7 @@ impl TryFrom<&MultiEraBlock<'_>> for BlockAuxData {
                 }
             } else {
                 bail!("Undecodable metadata, unknown Era");
-            };
+            }
         }
 
         Ok(Self(Arc::new(aux_data.into_read_only())))

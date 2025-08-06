@@ -121,7 +121,9 @@ impl Cip509 {
     /// An error is only returned if the data is completely corrupted. In all other cases
     /// the `Cip509` structure contains fully or partially decoded data.
     pub fn new(
-        block: &MultiEraBlock, index: TxnIndex, track_payment_addresses: &[ShelleyAddress],
+        block: &MultiEraBlock,
+        index: TxnIndex,
+        track_payment_addresses: &[ShelleyAddress],
     ) -> Result<Option<Self>, anyhow::Error> {
         // Find the transaction and decode the relevant data.
         let txns = block.txs();
@@ -169,7 +171,7 @@ impl Cip509 {
 
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
             validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
-        };
+        }
         validate_aux(
             raw_aux_data,
             txn.transaction_body.auxiliary_data_hash.as_ref(),
@@ -189,7 +191,8 @@ impl Cip509 {
 
     /// Returns a list of Cip509 instances from all the transactions of the given block.
     pub fn from_block(
-        block: &MultiEraBlock, track_payment_addresses: &[ShelleyAddress],
+        block: &MultiEraBlock,
+        track_payment_addresses: &[ShelleyAddress],
     ) -> Vec<Self> {
         let mut result = Vec::new();
 
@@ -223,7 +226,10 @@ impl Cip509 {
 
     /// Returns a role data for the given role if it is present.
     #[must_use]
-    pub fn role_data(&self, role: RoleId) -> Option<&RoleData> {
+    pub fn role_data(
+        &self,
+        role: RoleId,
+    ) -> Option<&RoleData> {
         self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
     }
 
@@ -326,7 +332,10 @@ impl Cip509 {
 }
 
 impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
-    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        decode_context: &mut DecodeContext,
+    ) -> Result<Self, decode::Error> {
         let context = "Decoding Cip509";
 
         // It is ok to return error here because we were unable to decode anything, but everywhere
@@ -412,7 +421,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                         );
                         break;
                     },
-                };
+                }
             }
         }
 
@@ -450,7 +459,9 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
 
 /// Records the payment history for the given set of addresses.
 fn payment_history(
-    txn: &conway::MintedTx, track_payment_addresses: &[ShelleyAddress], origin: &PointTxnIdx,
+    txn: &conway::MintedTx,
+    track_payment_addresses: &[ShelleyAddress],
+    origin: &PointTxnIdx,
     report: &ProblemReport,
 ) -> HashMap<ShelleyAddress, Vec<Payment>> {
     let hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(txn))).hash();
@@ -501,7 +512,9 @@ fn payment_history(
 
 /// Decodes purpose.
 fn decode_purpose(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
+    d: &mut Decoder,
+    context: &str,
+    report: &ProblemReport,
 ) -> Result<Option<UuidV4>, ()> {
     let bytes = match decode_bytes(d, "Cip509 purpose") {
         Ok(v) => v,
@@ -532,7 +545,9 @@ fn decode_purpose(
 
 /// Decodes input hash.
 fn decode_input_hash(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
+    d: &mut Decoder,
+    context: &str,
+    report: &ProblemReport,
 ) -> Result<Option<TxInputHash>, ()> {
     let bytes = match decode_bytes(d, "Cip509 txn inputs hash") {
         Ok(v) => v,
@@ -561,7 +576,9 @@ fn decode_input_hash(
 
 /// Decodes previous transaction id.
 fn decode_previous_transaction_id(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
+    d: &mut Decoder,
+    context: &str,
+    report: &ProblemReport,
 ) -> Result<Option<TransactionId>, ()> {
     let bytes = match decode_bytes(d, "Cip509 previous transaction id") {
         Ok(v) => v,
@@ -590,7 +607,9 @@ fn decode_previous_transaction_id(
 
 /// Decodes validation signature.
 fn decode_validation_signature(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
+    d: &mut Decoder,
+    context: &str,
+    report: &ProblemReport,
 ) -> Result<Option<ValidationSignature>, ()> {
     let bytes = match decode_bytes(d, "Cip509 validation signature") {
         Ok(v) => v,

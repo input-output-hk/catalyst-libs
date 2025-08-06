@@ -13,35 +13,22 @@ class TypesMd(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
-        super().__init__(args, spec, "types.md")
-
-    def doc_type_summary(self) -> str:
-        """Generate a Document Base Type Summary from the Document Specifications Data."""
-        doc_type_summary = """
-| Base Type | UUID | CBOR |
-| :--- | :--- | :--- |
-"""
-
-        for type_name in self._spec.base_types.all:
-            uuid = self._spec.base_types.uuid(type_name)
-            doc_type_summary += f"| {type_name} | `{uuid.as_uuid_str}` | `{uuid.as_cbor}` |\n"
-
-        return doc_type_summary.strip()
+        super().__init__(args, spec, template="types.md.jinja")
 
     def doc_type_details(self) -> str:
         """Generate a Document Type Detailed Summary from the Document Specifications Data."""
         doc_type_details = """
 <!-- markdownlint-disable MD033 -->
-| Document Type | Base Types | CBOR |
+| Document Type | UUIDv4 | CBOR |
 | :--- | :--- | :--- |
 """
 
         for k in self._spec.docs.names:
             doc_type = self._spec.docs.type(k)
             doc_type_details += (
-                f"| [{k}]({self.name_to_spec_link(k)}) |"
-                f" {doc_type.formatted_names()} |"
-                f" {doc_type.formatted_ids(separator=',<br/>')} |\n"
+                f"| {self.link_to_file(k, doc_name=k, template='document_page.md.jinja')} |"
+                f" {doc_type.as_uuid_str} |"
+                f" `{doc_type.as_cbor}` |\n"
             )
 
         doc_type_details += "<!-- markdownlint-enable MD033 -->"
@@ -54,25 +41,6 @@ class TypesMd(DocGenerator):
         if not graph.save_or_validate():
             return False
 
-        self._filedata = f"""
-# Document Types Table
+        self.generate_from_page_template(graph=graph)
 
-## Document Base Types
-
-All Document Types are defined by composing these base document types:
-
-{self.doc_type_summary()}
-
-## Document Types
-
-All Defined Document Types
-
-{self.doc_type_details()}
-
-## Document Relationship Hierarchy
-
-{graph.markdown_reference(relative_doc=self)}
-
-{self.insert_copyright(changelog=False)}
-"""
         return super().generate()

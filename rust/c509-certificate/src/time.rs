@@ -45,7 +45,9 @@ impl From<Time> for u64 {
 
 impl Encode<()> for Time {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0 == NO_EXP_DATE {
             encode_null(e, "Time")?;
@@ -57,7 +59,10 @@ impl Encode<()> for Time {
 }
 
 impl Decode<'_, ()> for Time {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Time")? {
             minicbor::data::Type::U8
             | minicbor::data::Type::U16

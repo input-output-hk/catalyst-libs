@@ -1,6 +1,6 @@
 [package]
 name = "cardano-chain-follower"
-version = "0.0.8"
+version = "0.0.11"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -11,16 +11,17 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pallas = {version = "0.30.1",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
-pallas-hardano = {version = "0.30.1",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
-pallas-crypto = {version = "0.30.1",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
+pallas = {version = "0.33.0",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
+pallas-hardano = {version = "0.33.0",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
+pallas-crypto = {version = "0.33.0",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "test/testnet-genesis-values" }
 
 mithril-client = { version = "0.12.2", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
-cardano-blockchain-types = { version = "0.0.3", path = "../cardano-blockchain-types" }
-catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
+
+cardano-blockchain-types = { version = "0.0.5",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types-v0.0.5" }
+catalyst-types = { version = "0.0.5",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types-v0.0.5" }
 
 
 thiserror = "1.0.69"
@@ -59,12 +60,13 @@ moka = { version = "0.12.9", features = ["sync"] }
 cpu-time = "1.0.0"
 
 [dev-dependencies]
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter","json"] }
 test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.4", path = "../rbac-registration" }
+rbac-registration = { version = "0.0.6", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "rbac-registration-v0.0.6" }
+minicbor = { version = "2.0.0", features = ["alloc","half"]}
 
 # Note, these features are for support of features exposed by dependencies.
 [features]
