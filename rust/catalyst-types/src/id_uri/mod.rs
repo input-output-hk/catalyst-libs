@@ -11,7 +11,6 @@ use std::{
     str::FromStr,
 };
 
-use base64::Engine;
 use chrono::{DateTime, Duration, Utc};
 use ed25519_dalek::VerifyingKey;
 use fluent_uri::{
@@ -551,8 +550,8 @@ impl FromStr for IdUri {
 
         // Decode and validate the Role0 Public key from the path
         let encoded_role0_key = path.get(1).ok_or(errors::IdUriError::InvalidRole0Key)?;
-        let decoded_role0_key = base64::engine::general_purpose::URL_SAFE_NO_PAD
-            .decode(encoded_role0_key.decode().into_string_lossy().as_ref())?;
+        let decoded_role0_key =
+            base64_url::decode(encoded_role0_key.decode().into_string_lossy().as_ref())?;
         let role0_pk = crate::conversion::vkey_from_bytes(&decoded_role0_key)
             .or(Err(errors::IdUriError::InvalidRole0Key))?;
 
@@ -639,7 +638,7 @@ impl Display for IdUri {
             f,
             "{}/{}",
             self.network,
-            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(self.role0_pk.as_bytes()),
+            base64_url::encode(self.role0_pk.as_bytes()),
         )?;
 
         // Role and Rotation are only serialized if its NOT and ID or they are not the defaults.
@@ -668,7 +667,6 @@ impl TryFrom<&[u8]> for IdUri {
 
 #[cfg(test)]
 mod tests {
-    use base64::Engine;
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;
 
@@ -713,7 +711,7 @@ mod tests {
         let mut csprng = OsRng;
         let signing_key: SigningKey = SigningKey::generate(&mut csprng);
         let vk = signing_key.verifying_key();
-        let encoded_vk = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(vk.as_bytes());
+        let encoded_vk = base64_url::encode(vk.as_bytes());
         assert_eq!(encoded_vk, "1234");
     }
 }
