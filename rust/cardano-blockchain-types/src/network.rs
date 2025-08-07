@@ -93,7 +93,7 @@ impl Network {
             Network::Mainnet => DEFAULT_MAINNET_RELAY.to_string(),
             Network::Preprod => DEFAULT_PREPROD_RELAY.to_string(),
             Network::Preview => DEFAULT_PREVIEW_RELAY.to_string(),
-             Network::Devnet => DEFAULT_DEVNET_RELAY.to_string(),
+            Network::Devnet => DEFAULT_DEVNET_RELAY.to_string(),
         }
     }
 
