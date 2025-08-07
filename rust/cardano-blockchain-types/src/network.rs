@@ -104,7 +104,7 @@ impl Network {
             Network::Mainnet => DEFAULT_MAINNET_MITHRIL_AGGREGATOR.to_string(),
             Network::Preprod => DEFAULT_PREPROD_MITHRIL_AGGREGATOR.to_string(),
             Network::Preview => DEFAULT_PREVIEW_MITHRIL_AGGREGATOR.to_string(),
-            Network::Devnet => DEFAULT_DEVNET_MITHRIL_GENESIS_KEY.to_string(),
+            Network::Devnet => DEFAULT_DEVNET_MITHRIL_AGGREGATOR.to_string(),
         }
     }
 
