@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::bail;
 use dashmap::DashMap;
-use pallas::ledger::traverse::MultiEraBlock;
+use pallas_traverse::MultiEraBlock;
 
 use super::aux_data::TransactionAuxData;
 use crate::txn_index::TxnIndex;

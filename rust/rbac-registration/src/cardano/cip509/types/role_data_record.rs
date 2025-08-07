@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use catalyst_types::catalyst_id::key_rotation::KeyRotation;
-use pallas::ledger::addresses::ShelleyAddress;
+use pallas_addresses::ShelleyAddress;
 
 use super::{CertOrPk, PointData, PointTxnIdx};
 

@@ -2,10 +2,9 @@
 
 use std::collections::HashMap;
 
-use pallas::{
-    crypto::hash::Hash,
-    ledger::{addresses::ShelleyAddress, primitives::conway::Value},
-};
+use pallas_addresses::ShelleyAddress;
+use pallas_crypto::hash::Hash;
+use pallas_primitives::conway::Value;
 
 use super::point_tx_idx::PointTxnIdx;
 

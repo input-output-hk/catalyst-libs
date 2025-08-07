@@ -23,14 +23,10 @@ use minicbor::{
     decode::{self},
     Decode, Decoder,
 };
-use pallas::{
-    codec::utils::Nullable,
-    ledger::{
-        addresses::{Address, ShelleyAddress},
-        primitives::conway,
-        traverse::MultiEraTx,
-    },
-};
+use pallas_codec::utils::Nullable;
+use pallas_addresses::{Address, ShelleyAddress};
+use pallas_primitives::conway;
+use pallas_traverse::MultiEraTx;
 use strum_macros::FromRepr;
 use tracing::warn;
 use uuid::Uuid;
@@ -459,7 +455,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
 
 /// Records the payment history for the given set of addresses.
 fn payment_history(
-    txn: &conway::MintedTx,
+    txn: &conway::Tx,
     track_payment_addresses: &[ShelleyAddress],
     origin: &PointTxnIdx,
     report: &ProblemReport,
@@ -474,7 +470,7 @@ fn payment_history(
         .collect();
 
     for (index, output) in txn.transaction_body.outputs.iter().enumerate() {
-        let conway::PseudoTransactionOutput::PostAlonzo(output) = output else {
+        let  conway::TransactionOutput::PostAlonzo(output) = output else {
             continue;
         };
 

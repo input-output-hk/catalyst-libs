@@ -11,17 +11,17 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pallas = { version = "0.33.0" }
-pallas-hardano = { version = "0.33.0" }
-pallas-crypto = { version = "0.33.0" }
+pallas = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
+pallas-hardano = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
+pallas-crypto = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
 
 mithril-client = { version = "0.12.2", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
 
-cardano-blockchain-types = { version = "0.0.5",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types-v0.0.5" }
-catalyst-types = { version = "0.0.5",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types-v0.0.5" }
+cardano-blockchain-types = { path = "../cardano-blockchain-types" }
+catalyst-types = { path = "../catalyst-types" }
 
 
 thiserror = "1.0.69"
@@ -65,7 +65,7 @@ test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.6", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "rbac-registration-v0.0.6" }
+rbac-registration = { path = "../rbac-registration" }
 minicbor = { version = "2.0.0", features = ["alloc","half"]}
 
 # Note, these features are for support of features exposed by dependencies.

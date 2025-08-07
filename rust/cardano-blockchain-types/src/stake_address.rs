@@ -6,16 +6,11 @@ use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Context};
 use catalyst_types::hashes::Blake2b224Hash;
-use pallas::{
-    crypto::hash::Hash,
-    ledger::{
-        addresses::{
-            ShelleyAddress, ShelleyDelegationPart, ShelleyPaymentPart,
-            StakeAddress as PallasStakeAddress,
-        },
-        primitives::conway,
-    },
+use pallas_addresses::{
+    ShelleyAddress, ShelleyDelegationPart, ShelleyPaymentPart, StakeAddress as PallasStakeAddress,
 };
+use pallas_crypto::hash::Hash;
+use pallas_primitives::conway;
 
 use crate::Network;
 

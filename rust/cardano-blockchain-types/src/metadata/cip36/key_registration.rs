@@ -12,7 +12,7 @@ use catalyst_types::{
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
-use pallas::ledger::addresses::Address;
+use pallas_addresses::Address;
 use strum::FromRepr;
 
 use super::voting_pk::VotingPubKey;

@@ -14,13 +14,11 @@ use catalyst_types::{
     problem_report::ProblemReport,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
-use pallas::{
-    codec::{
-        minicbor::{Encode, Encoder},
-        utils::Bytes,
-    },
-    ledger::{addresses::Address, primitives::conway, traverse::MultiEraTx},
-};
+use pallas_addresses::Address;
+use pallas_codec::minicbor::{Encode, Encoder};
+use pallas_primitives::{conway, Bytes};
+use pallas_traverse::MultiEraTx;
+
 use x509_cert::{der::Encode as X509Encode, Certificate as X509};
 
 use super::{
@@ -46,7 +44,7 @@ pub(crate) const URI: u8 = 134;
 /// Checks that hashing transactions inputs produces the value equal to the given one.
 pub fn validate_txn_inputs_hash(
     hash: &TxInputHash,
-    transaction: &conway::MintedTx,
+    transaction: &conway::Tx,
     report: &ProblemReport,
 ) {
     let context = "Cip509 transaction input hash validation";
@@ -118,7 +116,7 @@ pub fn validate_aux(
 /// Checks that all public keys extracted from x509 and c509 certificates are present in
 /// the witness set of the transaction.
 pub fn validate_stake_public_key(
-    transaction: &conway::MintedTx,
+    transaction: &conway::Tx,
     uris: Option<&Cip0134UriSet>,
     report: &ProblemReport,
 ) {

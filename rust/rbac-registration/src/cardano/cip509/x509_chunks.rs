@@ -124,7 +124,7 @@ mod tests {
 
     use cardano_blockchain_types::Point;
     use catalyst_types::problem_report::ProblemReport;
-    use pallas::ledger::traverse::MultiEraTx;
+    use pallas_traverse::MultiEraTx;
 
     use super::*;
     use crate::{cardano::cip509::PointTxnIdx, utils::test};
