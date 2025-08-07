@@ -21,7 +21,7 @@ mithril-client = { version = "0.12.2", default-features = false, features = [
 ] }
 
 cardano-blockchain-types = { path = "../cardano-blockchain-types" }
-catalyst-types = { path = "../catalyst-types" }
+catalyst-types = { path = "../catalyst-types", features = ["mmap-file"] }
 
 
 thiserror = "1.0.69"
