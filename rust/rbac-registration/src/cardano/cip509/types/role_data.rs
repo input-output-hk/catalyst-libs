@@ -11,9 +11,7 @@ use pallas::ledger::{
 };
 
 use crate::cardano::cip509::{
-    rbac::role_data::CborRoleData,
-    utils::cip19::{compare_key_hash, extract_key_hash},
-    KeyLocalRef,
+    rbac::role_data::CborRoleData, utils::cip19::extract_key_hash, KeyLocalRef,
 };
 
 /// A role data.
@@ -132,20 +130,31 @@ fn convert_payment_key(
             return None;
         },
     };
-    validate_payment_output(address, &witness, context, report);
 
-    match Address::from_bytes(address) {
-        Ok(Address::Shelley(a)) => Some(a),
-        Ok(a) => {
+    let address = match Address::from_bytes(address) {
+        Ok(a) => a,
+        Err(e) => {
             report.other(
-                &format!("Unsupported address type ({a:?}) in payment key index ({index})"),
+                &format!("Invalid address in payment key index ({index}): {e}"),
+                context,
+            );
+            return None;
+        },
+    };
+    validate_payment_output(&address, &witness, context, report);
+
+    match address {
+        Address::Shelley(a) => Some(a),
+        Address::Byron(_) => {
+            report.other(
+                &format!("Unsupported Byron address type in payment key index ({index})"),
                 context,
             );
             None
         },
-        Err(e) => {
+        Address::Stake(_) => {
             report.other(
-                &format!("Invalid address in payment key index ({index}): {e:?}"),
+                &format!("Unsupported Stake address type in payment key index ({index})"),
                 context,
             );
             None
@@ -155,12 +164,13 @@ fn convert_payment_key(
 
 /// Helper function for validating payment output key.
 fn validate_payment_output(
-    output_address: &[u8],
+    address: &Address,
     witness: &TxnWitness,
     context: &str,
     report: &ProblemReport,
 ) {
-    let Some(key) = extract_key_hash(output_address) else {
+    let bytes = address.to_vec();
+    let Some(key) = extract_key_hash(&bytes) else {
         report.other("Failed to extract payment key hash from address", context);
         return;
     };
@@ -168,10 +178,10 @@ fn validate_payment_output(
     // Set transaction index to 0 because the list of transaction is manually constructed
     // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
     // the witness within this transaction.
-    if let Err(e) = compare_key_hash(&[key], witness, 0.into()) {
+    if !witness.check_witness_in_tx(&key, 0.into()) {
         report.other(
             &format!(
-                "Unable to find payment output key ({key:?}) in the transaction witness set: {e:?}"
+                "Payment Key {address} (0x{key}) is not present in the transaction witness set, and can not be verified as owned and spendable."
             ),
             context,
         );

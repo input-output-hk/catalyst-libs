@@ -23,13 +23,11 @@ use pallas::{
 };
 use x509_cert::{der::Encode as X509Encode, Certificate as X509};
 
-use super::{
-    extract_key::{c509_key, x509_key},
-    utils::cip19::compare_key_hash,
-};
 use crate::cardano::cip509::{
-    rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    SimplePublicKeyType, X509DerCert,
+    rbac::Cip509RbacMetadata,
+    types::TxInputHash,
+    utils::extract_key::{c509_key, x509_key},
+    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -109,7 +107,9 @@ pub fn validate_aux(
     let hash = Blake2b256Hash::new(raw_aux_data);
     if hash != auxiliary_data_hash {
         report.other(
-            &format!("Incorrect transaction auxiliary data hash = '{hash:?}', expected = '{auxiliary_data_hash:?}'"),
+            &format!("Incorrect transaction auxiliary data hash = '0x{hash}', expected = '0x{auxiliary_data_hash}'. \
+            This metadata does not belong with this transaction. \
+            Catalyst metadata may not be transcribed to any other transaction body, and is therefore invalid."),
             context,
         );
     }
@@ -142,17 +142,22 @@ pub fn validate_stake_public_key(
         return;
     }
 
-    if let Err(e) = compare_key_hash(&pk_addrs, &witness, 0.into()) {
-        report.other(
-            &format!("Failed to compare public keys with witnesses: {e:?}"),
-            context,
-        );
+    for (hash, address) in pk_addrs {
+        if !witness.check_witness_in_tx(&hash, 0.into()) {
+            report.other(
+                &format!(
+                    "Payment Key '{address}' (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable."
+                ),
+                context,
+            );
+        }
     }
 }
 
 /// Extracts all stake addresses from both X509 and C509 certificates containing in the
-/// given `Cip509` and converts their hashes to bytes.
-fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
+/// given `Cip509`. Returns a list of pairs containing verifying public key hash and
+/// `bech32` string representation of address.
+fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, String)> {
     let Some(uris) = uris else {
         return Vec::new();
     };
@@ -163,7 +168,13 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
         .flat_map(|(_index, uris)| uris.iter())
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
-                a.payload().as_hash().as_slice().try_into().ok()
+                let bech32 = uri.address().to_string();
+                a.payload()
+                    .as_hash()
+                    .as_slice()
+                    .try_into()
+                    .ok()
+                    .map(|hash| (hash, bech32))
             } else {
                 None
             }
@@ -547,7 +558,7 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report.contains("Public key hash not found in transaction witness set"));
+        assert!(report.contains("is not present in the transaction witness set, and can not be verified as owned and spendable"));
     }
 
     #[test]
@@ -617,7 +628,7 @@ mod tests {
 
         let addresses = extract_stake_addresses(cip509.certificate_uris());
         assert_eq!(1, addresses.len());
-        assert_eq!(addresses.first().unwrap(), &hash);
+        assert_eq!(addresses.first().unwrap().0, hash);
     }
 
     // Verify that we are able to parse `Cip509` with legacy transaction output type.

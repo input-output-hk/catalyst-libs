@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{bail, Context};
+use anyhow::Context;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Point, StakeAddress, TransactionId, TxnIndex};
 use catalyst_types::{
@@ -17,7 +17,6 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
-use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
 };
@@ -47,10 +46,11 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn new(cip509: Cip509) -> anyhow::Result<Self> {
+    #[must_use]
+    pub fn new(cip509: Cip509) -> Option<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
 
-        Ok(Self {
+        Some(Self {
             inner: Arc::new(inner),
         })
     }
@@ -63,10 +63,11 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
+    #[must_use]
     pub fn update(
         &self,
         cip509: Cip509,
-    ) -> anyhow::Result<Self> {
+    ) -> Option<Self> {
         let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
             self.inner.update(cip509, signing_pk)?
@@ -75,9 +76,9 @@ impl RegistrationChain {
                 "latest signing key for role 0",
                 "cannot perform signature validation during Registration Chain update",
             );
-            bail!("No latest signing key found for role 0, cannot perform signature validation")
+            return None;
         };
-        Ok(Self {
+        Some(Self {
             inner: Arc::new(new_inner),
         })
     }
@@ -301,18 +302,18 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn new(cip509: Cip509) -> anyhow::Result<Self> {
+    #[must_use]
+    fn new(cip509: Cip509) -> Option<Self> {
         let context = "Registration Chain new";
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
             cip509
                 .report()
                 .invalid_value("previous transaction ID", "None", "Some", context);
-            bail!("Invalid chain root, previous transaction ID should be None.");
         }
         let Some(catalyst_id) = cip509.catalyst_id().cloned() else {
             cip509.report().missing_field("catalyst id", context);
-            bail!("Invalid chain root, catalyst id should be present.");
+            return None;
         };
 
         let point_tx_idx = cip509.origin().clone();
@@ -337,7 +338,7 @@ impl RegistrationChainInner {
         // must contain role 0
         let Some(role0_data) = role_data_record.get(&RoleId::Role0) else {
             cip509.report().missing_field("Role 0", context);
-            bail!("Role 0 not found");
+            return None;
         };
         let Some(signing_pk) = role0_data
             .signing_keys()
@@ -347,7 +348,7 @@ impl RegistrationChainInner {
             cip509
                 .report()
                 .missing_field("Signing pk for role 0 not found", context);
-            bail!("No valid signing key found for role 0");
+            return None;
         };
 
         check_validation_signature(
@@ -356,15 +357,10 @@ impl RegistrationChainInner {
             signing_pk,
             cip509.report(),
             context,
-        )?;
+        );
 
-        let (purpose, registration, payment_history) = match cip509.consume() {
-            Ok(v) => v,
-            Err(e) => {
-                let error = format!("Invalid Cip509: {e:?}");
-                error!(error);
-                bail!(error);
-            },
+        let Ok((purpose, registration, payment_history)) = cip509.consume() else {
+            return None;
         };
 
         let purpose = vec![purpose];
@@ -389,7 +385,7 @@ impl RegistrationChainInner {
         );
         let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
 
-        Ok(Self {
+        Some(Self {
             catalyst_id,
             current_tx_id_hash,
             purpose,
@@ -412,11 +408,12 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
+    #[must_use]
     fn update(
         &self,
         cip509: Cip509,
         signing_pk: VerifyingKey,
-    ) -> anyhow::Result<Self> {
+    ) -> Option<Self> {
         let context = "Registration Chain update";
         let mut new_inner = self.clone();
 
@@ -424,7 +421,7 @@ impl RegistrationChainInner {
             cip509
                 .report()
                 .missing_field("previous transaction ID", context);
-            bail!("Missing previous transaction ID");
+            return None;
         };
 
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
@@ -437,7 +434,7 @@ impl RegistrationChainInner {
                 signing_pk,
                 cip509.report(),
                 context,
-            )?;
+            );
 
             // If successful, update the chain current transaction ID hash
             new_inner.current_tx_id_hash =
@@ -449,17 +446,12 @@ impl RegistrationChainInner {
                 &format!("{:?}", self.current_tx_id_hash),
                 context,
             );
-            bail!("Invalid previous transaction ID, not a part of this registration chain");
+            return None;
         }
 
         let point_tx_idx = cip509.origin().clone();
-        let (purpose, registration, payment_history) = match cip509.consume() {
-            Ok(v) => v,
-            Err(e) => {
-                let error = format!("Invalid Cip509: {e:?}");
-                error!(error);
-                bail!(error);
-            },
+        let Ok((purpose, registration, payment_history)) = cip509.consume() else {
+            return None;
         };
 
         // Add purpose to the chain, if not already exist
@@ -496,7 +488,7 @@ impl RegistrationChainInner {
             &point_tx_idx,
         );
 
-        Ok(new_inner)
+        Some(new_inner)
     }
 }
 
@@ -508,34 +500,37 @@ fn check_validation_signature(
     signing_pk: VerifyingKey,
     report: &ProblemReport,
     context: &str,
-) -> anyhow::Result<()> {
+) {
     let context = &format!("Check Validation Signature in {context}");
     // Note that the validation signature can be in the range of 1 - 64 bytes
     // But since we allow only Ed25519, it should be 64 bytes
     let unsigned_aux = zero_out_last_n_bytes(raw_aux_data, Signature::BYTE_SIZE);
 
-    let validation_sig = validation_signature.with_context(|| {
+    let Some(validation_sig) = validation_signature else {
         report.missing_field("validation signature", context);
-        "Missing validation signature"
-    })?;
+        return;
+    };
 
-    let sig: Signature = validation_sig.clone().try_into().with_context(|| {
+    let Ok(sig) = validation_sig.clone().try_into() else {
         report.conversion_error(
             "validation signature",
             &format!("{validation_sig:?}"),
             "Ed25519 signature",
             context,
         );
-        "Failed to convert validation signature to Ed25519 Signature"
-    })?;
+        return;
+    };
 
     // Verify the signature using the latest signing public key
-    signing_pk
+    if let Err(e) = signing_pk
         .verify_strict(&unsigned_aux, &sig)
         .with_context(|| {
             report.other("Signature validation failed", context);
             "Signature verification failed"
         })
+    {
+        report.functional_validation(&format!("Signature validation failed: {e}"), context);
+    }
 }
 
 #[cfg(test)]
@@ -580,12 +575,13 @@ mod test {
             .unwrap();
         assert!(registration.report().is_problematic());
 
-        let error = chain.update(registration).unwrap_err();
-        let error = format!("{error:?}");
+        let report = registration.report().to_owned();
+        assert!(chain.update(registration).is_none());
+        let report = format!("{report:?}");
         assert!(
-            error.contains("Invalid previous transaction ID"),
+            report.contains("kind: InvalidValue { field: \"previous transaction ID\""),
             "{}",
-            error
+            report
         );
 
         // Add the second registration.
