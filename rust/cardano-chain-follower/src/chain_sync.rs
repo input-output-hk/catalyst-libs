@@ -451,11 +451,7 @@ async fn live_sync_backfill_and_purge(
         return;
     };
 
-    stats::new_mithril_update(
-        cfg.chain,
-        update.tip.slot_or_default(),
-        live_chain_length(cfg.chain) as u64,
-    );
+    stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
 
     debug!(
         "Before Backfill: Size of the Live Chain is: {} Blocks",
@@ -476,10 +472,10 @@ async fn live_sync_backfill_and_purge(
         }
     }
 
-    debug!(
-        "After Backfill: Size of the Live Chain is: {} Blocks",
-        live_chain_length(cfg.chain)
-    );
+    let new_live_chain_length = live_chain_length(cfg.chain);
+    stats::new_live_total_blocks(cfg.chain, new_live_chain_length as u64);
+
+    debug!("After Backfill: Size of the Live Chain is: {new_live_chain_length} Blocks",);
 
     // Once Backfill is completed OK we can use the Blockchain data for Syncing and Querying
     sync_ready.signal();
@@ -497,6 +493,8 @@ async fn live_sync_backfill_and_purge(
             update_sender = get_chain_update_tx_queue(cfg.chain).await;
         }
 
+        stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+
         debug!("Mithril Tip has advanced to: {update:?} : PURGE NEEDED");
 
         let update_point: Point = update.tip.clone();
@@ -507,11 +505,7 @@ async fn live_sync_backfill_and_purge(
         }
 
         let new_live_chain_length = live_chain_length(cfg.chain);
-        stats::new_mithril_update(
-            cfg.chain,
-            update.tip.slot_or_default(),
-            new_live_chain_length as u64,
-        );
+        stats::new_live_total_blocks(cfg.chain, new_live_chain_length as u64);
 
         debug!(
             "After Purge: Size of the Live Chain is: {new_live_chain_length} Blocks: Triggering Sleeping Followers.",
