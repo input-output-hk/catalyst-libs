@@ -18,8 +18,8 @@ pub enum CompressionAlgorithm {
     Raw = 10,
     /// Brotli compression.
     Brotli = 11,
-    /// Zstd compression.
-    Zstd = 12,
+    // /// Zstd compression.
+    // Zstd = 12,
 }
 
 /// A helper for decoding [`Cip509RbacMetadata`].
@@ -105,9 +105,9 @@ fn decompress(
         CompressionAlgorithm::Raw => {
             buffer.extend_from_slice(concat_chunk.as_slice());
         },
-        CompressionAlgorithm::Zstd => {
-            zstd::stream::copy_decode(concat_chunk.as_slice(), &mut buffer)?;
-        },
+        // CompressionAlgorithm::Zstd => {
+        //     zstd::stream::copy_decode(concat_chunk.as_slice(), &mut buffer)?;
+        // },
         CompressionAlgorithm::Brotli => {
             let mut decoder = brotli::Decompressor::new(concat_chunk.as_slice(), 4096);
             decoder
