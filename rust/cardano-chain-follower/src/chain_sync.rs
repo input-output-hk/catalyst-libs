@@ -451,7 +451,11 @@ async fn live_sync_backfill_and_purge(
         return;
     };
 
-    stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+    stats::new_mithril_update(
+        cfg.chain,
+        update.tip.slot_or_default(),
+        live_chain_length(cfg.chain) as u64,
+    );
 
     debug!(
         "Before Backfill: Size of the Live Chain is: {} Blocks",
@@ -488,8 +492,6 @@ async fn live_sync_backfill_and_purge(
             return;
         };
 
-        stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
-
         // We can't get an update sender until the sync is released.
         if update_sender.is_none() {
             update_sender = get_chain_update_tx_queue(cfg.chain).await;
@@ -504,9 +506,15 @@ async fn live_sync_backfill_and_purge(
             error!("Mithril Purge Failed: {}", error);
         }
 
+        let new_live_chain_length = live_chain_length(cfg.chain);
+        stats::new_mithril_update(
+            cfg.chain,
+            update.tip.slot_or_default(),
+            new_live_chain_length as u64,
+        );
+
         debug!(
-            "After Purge: Size of the Live Chain is: {} Blocks: Triggering Sleeping Followers.",
-            live_chain_length(cfg.chain)
+            "After Purge: Size of the Live Chain is: {new_live_chain_length} Blocks: Triggering Sleeping Followers.",
         );
 
         // Trigger any sleeping followers that data has changed.

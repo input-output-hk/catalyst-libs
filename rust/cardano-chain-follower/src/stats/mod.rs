@@ -193,6 +193,7 @@ pub(crate) fn new_live_block(
 pub(crate) fn new_mithril_update(
     chain: Network,
     mithril_tip: Slot,
+    total_live_blocks: u64,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -207,6 +208,7 @@ pub(crate) fn new_mithril_update(
 
     chain_stats.mithril.updates = chain_stats.mithril.updates.saturating_add(1);
     chain_stats.mithril.tip = mithril_tip;
+    chain_stats.live.blocks = total_live_blocks;
 }
 
 /// When did we start the backfill.
