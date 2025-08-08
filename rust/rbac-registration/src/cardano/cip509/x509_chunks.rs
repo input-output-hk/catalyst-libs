@@ -1,6 +1,6 @@
 //! X509 chunks handler where compressed chunks are decompressed and decoded.
 
-use std::io::Read;
+// use std::io::Read;
 
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper};
 use minicbor::{decode, Decode, Decoder};
@@ -16,8 +16,8 @@ pub enum CompressionAlgorithm {
     /// Raw data, no compression.
     #[default]
     Raw = 10,
-    /// Brotli compression.
-    Brotli = 11,
+    // /// Brotli compression.
+    // Brotli = 11,
     // /// Zstd compression.
     // Zstd = 12,
 }
@@ -108,12 +108,12 @@ fn decompress(
         // CompressionAlgorithm::Zstd => {
         //     zstd::stream::copy_decode(concat_chunk.as_slice(), &mut buffer)?;
         // },
-        CompressionAlgorithm::Brotli => {
-            let mut decoder = brotli::Decompressor::new(concat_chunk.as_slice(), 4096);
-            decoder
-                .read_to_end(&mut buffer)
-                .map_err(|_| anyhow::anyhow!("Failed to decompress using Brotli algorithm"))?;
-        },
+        // CompressionAlgorithm::Brotli => {
+        //     let mut decoder = brotli::Decompressor::new(concat_chunk.as_slice(), 4096);
+        //     decoder
+        //         .read_to_end(&mut buffer)
+        //         .map_err(|_| anyhow::anyhow!("Failed to decompress using Brotli algorithm"))?;
+        // },
     }
     Ok(buffer)
 }
