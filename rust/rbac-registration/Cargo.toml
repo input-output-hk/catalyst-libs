@@ -23,7 +23,7 @@ anyhow = "1.0.89"
 strum_macros = "0.26.4"
 minicbor = { version = "0.25.1", features = ["alloc", "derive", "half"] }
 brotli = "7.0.0"
-zstd = { version ="0.13.3",  features = ["wasm"]  }
+zstd = { version ="0.13.3",  default-features = false, features = ["wasm"]  }
 x509-cert = "0.2.5"
 der-parser = "9.0.0"
 tracing = "0.1.40"
