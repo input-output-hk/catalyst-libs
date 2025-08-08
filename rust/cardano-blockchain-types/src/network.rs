@@ -78,12 +78,12 @@ const DEFAULT_PREVIEW_MITHRIL_AGGREGATOR: &str =
 
 // Devnet Defaults
 /// Devnet Default Public Cardano Relay.
-const DEFAULT_DEVNET_RELAY: &str = "cat-net:3001";
+const DEFAULT_DEVNET_RELAY: &str = "localhost:3001";
 /// Preprod network Mithril Signature genesis vkey.
 const DEFAULT_DEVNET_MITHRIL_GENESIS_KEY: &str = include_str!("data/devnet-genesis.vkey");
 /// Default Mithril Aggregator to use.
 const DEFAULT_DEVNET_MITHRIL_AGGREGATOR: &str =
-    "http://cat-net:8080/aggregator";
+    "http://localhost:8080/aggregator";
 
 impl Network {
     /// Get the default Relay for a blockchain network.
