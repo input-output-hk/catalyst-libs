@@ -451,12 +451,12 @@ async fn live_sync_backfill_and_purge(
         return;
     };
 
+    stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+
     debug!(
         "Before Backfill: Size of the Live Chain is: {} Blocks",
         live_chain_length(cfg.chain)
     );
-
-    let live_chain_head: Point;
 
     loop {
         // We will re-attempt backfill, until its successful.
@@ -467,18 +467,10 @@ async fn live_sync_backfill_and_purge(
             sleep(Duration::from_secs(10)).await;
         }
 
-        if let Some(head_point) = get_live_head_point(cfg.chain) {
-            live_chain_head = head_point;
+        if get_live_head_point(cfg.chain).is_some() {
             break;
         }
     }
-
-    stats::new_mithril_update(
-        cfg.chain,
-        update.tip.slot_or_default(),
-        live_chain_length(cfg.chain) as u64,
-        live_chain_head.slot_or_default(),
-    );
 
     debug!(
         "After Backfill: Size of the Live Chain is: {} Blocks",
@@ -495,6 +487,8 @@ async fn live_sync_backfill_and_purge(
             error!("Mithril Sync Failed, can not continue chain sync either.");
             return;
         };
+
+        stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
 
         // We can't get an update sender until the sync is released.
         if update_sender.is_none() {
