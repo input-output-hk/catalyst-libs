@@ -193,8 +193,6 @@ pub(crate) fn new_live_block(
 pub(crate) fn new_mithril_update(
     chain: Network,
     mithril_tip: Slot,
-    total_live_blocks: u64,
-    tip_slot: Slot,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -209,8 +207,25 @@ pub(crate) fn new_mithril_update(
 
     chain_stats.mithril.updates = chain_stats.mithril.updates.saturating_add(1);
     chain_stats.mithril.tip = mithril_tip;
+}
+
+/// Track the current total live blocks count
+pub(crate) fn new_live_total_blocks(
+    chain: Network,
+    total_live_blocks: u64,
+) {
+    // This will actually always succeed.
+    let Some(stats) = lookup_stats(chain) else {
+        return;
+    };
+
+    let Ok(mut chain_stats) = stats.write() else {
+        // Worst case if this fails (it never should) is we stop updating stats.
+        error!("Stats RwLock should never be able to error.");
+        return;
+    };
+
     chain_stats.live.blocks = total_live_blocks;
-    chain_stats.live.tip = tip_slot;
 }
 
 /// When did we start the backfill.

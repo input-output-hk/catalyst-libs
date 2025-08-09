@@ -451,12 +451,12 @@ async fn live_sync_backfill_and_purge(
         return;
     };
 
+    stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+
     debug!(
         "Before Backfill: Size of the Live Chain is: {} Blocks",
         live_chain_length(cfg.chain)
     );
-
-    let live_chain_head: Point;
 
     loop {
         // We will re-attempt backfill, until its successful.
@@ -467,23 +467,15 @@ async fn live_sync_backfill_and_purge(
             sleep(Duration::from_secs(10)).await;
         }
 
-        if let Some(head_point) = get_live_head_point(cfg.chain) {
-            live_chain_head = head_point;
+        if get_live_head_point(cfg.chain).is_some() {
             break;
         }
     }
 
-    stats::new_mithril_update(
-        cfg.chain,
-        update.tip.slot_or_default(),
-        live_chain_length(cfg.chain) as u64,
-        live_chain_head.slot_or_default(),
-    );
+    let new_live_chain_length = live_chain_length(cfg.chain);
+    stats::new_live_total_blocks(cfg.chain, new_live_chain_length as u64);
 
-    debug!(
-        "After Backfill: Size of the Live Chain is: {} Blocks",
-        live_chain_length(cfg.chain)
-    );
+    debug!("After Backfill: Size of the Live Chain is: {new_live_chain_length} Blocks",);
 
     // Once Backfill is completed OK we can use the Blockchain data for Syncing and Querying
     sync_ready.signal();
@@ -501,6 +493,8 @@ async fn live_sync_backfill_and_purge(
             update_sender = get_chain_update_tx_queue(cfg.chain).await;
         }
 
+        stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+
         debug!("Mithril Tip has advanced to: {update:?} : PURGE NEEDED");
 
         let update_point: Point = update.tip.clone();
@@ -510,9 +504,11 @@ async fn live_sync_backfill_and_purge(
             error!("Mithril Purge Failed: {}", error);
         }
 
+        let new_live_chain_length = live_chain_length(cfg.chain);
+        stats::new_live_total_blocks(cfg.chain, new_live_chain_length as u64);
+
         debug!(
-            "After Purge: Size of the Live Chain is: {} Blocks: Triggering Sleeping Followers.",
-            live_chain_length(cfg.chain)
+            "After Purge: Size of the Live Chain is: {new_live_chain_length} Blocks: Triggering Sleeping Followers.",
         );
 
         // Trigger any sleeping followers that data has changed.
