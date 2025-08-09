@@ -1,0 +1,15 @@
+genesis-to-prev-hash = [
+    chain-id: ULID,
+    timestamp: #6.1(uint .ge 1722470400), ; Epoch-based date/time
+    ledger-type: UUID,
+    purpose-id: ULID / UUID,
+    validator,
+]
+
+UUID = #6.37(bytes) ; UUID type
+ULID = #6.32780(bytes) ; ULID type
+
+validator = (kid / [2* kid])
+kid = hash-bytes ; hash of the x509/c509 certificate
+
+;# include hash
