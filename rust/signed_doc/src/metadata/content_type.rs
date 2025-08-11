@@ -24,25 +24,25 @@ pub enum ContentType {
     Css,
     /// `text/css; charset=utf-8; template=handlebars`
     #[strum(to_string = "text/css; charset=utf-8; template=handlebars")]
-    CssTemplate,
+    CssHandlebars,
     /// `text/html; charset=utf-8`
     #[strum(to_string = "text/html; charset=utf-8")]
     Html,
     /// `text/html; charset=utf-8; template=handlebars`
     #[strum(to_string = "text/html; charset=utf-8; template=handlebars")]
-    HtmlTemplate,
+    HtmlHandlebars,
     /// `text/markdown; charset=utf-8`
     #[strum(to_string = "text/markdown; charset=utf-8")]
     Markdown,
     /// `text/markdown; charset=utf-8; template=handlebars`
     #[strum(to_string = "text/markdown; charset=utf-8; template=handlebars")]
-    MarkdownTemplate,
+    MarkdownHandlebars,
     /// `text/plain; charset=utf-8`
     #[strum(to_string = "text/plain; charset=utf-8")]
-    Text,
+    Plain,
     /// `text/plain; charset=utf-8; template=handlebars`
     #[strum(to_string = "text/plain; charset=utf-8; template=handlebars")]
-    TextTemplate,
+    PlainHandlebars,
 }
 
 impl FromStr for ContentType {
@@ -53,7 +53,14 @@ impl FromStr for ContentType {
             "application/cbor" => Ok(Self::Cbor),
             "application/cddl" => Ok(Self::Cddl),
             "application/json" => Ok(Self::Json),
-            "application/json+schema" => Ok(Self::JsonSchema),
+            "text/css; charset=utf-8" => Ok(Self::Css),
+            "text/css; charset=utf-8; template=handlebars" => Ok(Self::CssHandlebars),
+            "text/html; charset=utf-8" => Ok(Self::Html),
+            "text/html; charset=utf-8; template=handlebars" => Ok(Self::HtmlHandlebars),
+            "text/markdown; charset=utf-8" => Ok(Self::Markdown),
+            "text/markdown; charset=utf-8; template=handlebars" => Ok(Self::MarkdownHandlebars),
+            "text/plain; charset=utf-8" => Ok(Self::Plain),
+            "text/plain; charset=utf-8; template=handlebars" => Ok(Self::PlainHandlebars),
             _ => {
                 anyhow::bail!(
                     "Unsupported Content Type: {s:?}, Supported only: {:?}",
@@ -69,7 +76,9 @@ impl FromStr for ContentType {
 
 impl<'de> serde::Deserialize<'de> for ContentType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
+    where
+        D: serde::Deserializer<'de>,
+    {
         let s = String::deserialize(deserializer)?;
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -110,11 +119,9 @@ impl minicbor::Decode<'_, ()> for ContentType {
             Ok(val) if val == minicbor::data::Int::from(50_u8) => Ok(Self::Json),
             // CoAP Content Format CBOR
             Ok(val) if val == minicbor::data::Int::from(60_u8) => Ok(Self::Cbor),
-            Ok(val) => {
-                Err(minicbor::decode::Error::message(format!(
-                    "unsupported CoAP Content Formats value: {val}"
-                )))
-            },
+            Ok(val) => Err(minicbor::decode::Error::message(format!(
+                "unsupported CoAP Content Formats value: {val}"
+            ))),
             Err(_) => {
                 d.set_position(p);
                 d.str()?.parse().map_err(minicbor::decode::Error::message)
@@ -129,37 +136,38 @@ mod tests {
 
     #[test]
     fn content_type_string_test() {
-        assert_eq!(
-            ContentType::from_str("application/cbor").unwrap(),
-            ContentType::Cbor
-        );
-        assert_eq!(
-            ContentType::from_str("application/cddl").unwrap(),
-            ContentType::Cddl
-        );
-        assert_eq!(
-            ContentType::from_str("application/json").unwrap(),
-            ContentType::Json
-        );
-        assert_eq!(
-            ContentType::from_str("application/json+schema").unwrap(),
-            ContentType::JsonSchema
-        );
-        assert_eq!(
-            "application/cbor".parse::<ContentType>().unwrap(),
-            ContentType::Cbor
-        );
-        assert_eq!(
-            "application/cddl".parse::<ContentType>().unwrap(),
-            ContentType::Cddl
-        );
-        assert_eq!(
-            "application/json".parse::<ContentType>().unwrap(),
-            ContentType::Json
-        );
-        assert_eq!(
-            "application/json+schema".parse::<ContentType>().unwrap(),
-            ContentType::JsonSchema
-        );
+        let entries = [
+            ("application/cbor", ContentType::Cbor),
+            ("application/cddl", ContentType::Cddl),
+            ("application/json", ContentType::Json),
+            ("application/json+schema", ContentType::JsonSchema),
+            ("text/css; charset=utf-8", ContentType::Css),
+            (
+                "text/css; charset=utf-8; template=handlebars",
+                ContentType::CssHandlebars,
+            ),
+            ("text/html; charset=utf-8", ContentType::Html),
+            (
+                "text/html; charset=utf-8; template=handlebars",
+                ContentType::HtmlHandlebars,
+            ),
+            ("text/markdown; charset=utf-8", ContentType::Markdown),
+            (
+                "text/markdown; charset=utf-8; template=handlebars",
+                ContentType::MarkdownHandlebars,
+            ),
+            ("text/plain; charset=utf-8", ContentType::Plain),
+            (
+                "text/plain; charset=utf-8; template=handlebars",
+                ContentType::PlainHandlebars,
+            ),
+        ];
+
+        for (raw_text, variant) in entries {
+            assert_eq!(ContentType::from_str(raw_text).unwrap(), variant);
+        }
+        for (raw_text, variant) in entries {
+            assert_eq!(raw_text.parse::<ContentType>().unwrap(), variant);
+        }
     }
 }
