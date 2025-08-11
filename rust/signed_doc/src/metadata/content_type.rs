@@ -1,37 +1,48 @@
 //! Document Payload Content Type.
 
-use std::{
-    fmt::{Display, Formatter},
-    str::FromStr,
-};
+use std::{str::FromStr, string::ToString};
 
 use strum::VariantArray;
 
 /// Payload Content Type.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray, strum_macros::Display)]
 pub enum ContentType {
     /// `application/cbor`
+    #[strum(to_string = "application/cbor")]
     Cbor,
     /// `application/cddl`
+    #[strum(to_string = "application/cddl")]
     Cddl,
     /// `application/json`
+    #[strum(to_string = "application/json")]
     Json,
     /// `application/json+schema`
+    #[strum(to_string = "application/json+schema")]
     JsonSchema,
-}
-
-impl Display for ContentType {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> Result<(), std::fmt::Error> {
-        match self {
-            Self::Cbor => write!(f, "application/cbor"),
-            Self::Cddl => write!(f, "application/cddl"),
-            Self::Json => write!(f, "application/json"),
-            Self::JsonSchema => write!(f, "application/json+schema"),
-        }
-    }
+    /// `text/css; charset=utf-8`
+    #[strum(to_string = "text/css; charset=utf-8")]
+    Css,
+    /// `text/css; charset=utf-8; template=handlebars`
+    #[strum(to_string = "text/css; charset=utf-8; template=handlebars")]
+    CssTemplate,
+    /// `text/html; charset=utf-8`
+    #[strum(to_string = "text/html; charset=utf-8")]
+    Html,
+    /// `text/html; charset=utf-8; template=handlebars`
+    #[strum(to_string = "text/html; charset=utf-8; template=handlebars")]
+    HtmlTemplate,
+    /// `text/markdown; charset=utf-8`
+    #[strum(to_string = "text/markdown; charset=utf-8")]
+    Markdown,
+    /// `text/markdown; charset=utf-8; template=handlebars`
+    #[strum(to_string = "text/markdown; charset=utf-8; template=handlebars")]
+    MarkdownTemplate,
+    /// `text/plain; charset=utf-8`
+    #[strum(to_string = "text/plain; charset=utf-8")]
+    Text,
+    /// `text/plain; charset=utf-8; template=handlebars`
+    #[strum(to_string = "text/plain; charset=utf-8; template=handlebars")]
+    TextTemplate,
 }
 
 impl FromStr for ContentType {
