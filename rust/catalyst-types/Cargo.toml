@@ -19,7 +19,6 @@ name = "catalyst_types"
 displaydoc = "0.2.5"
 ed25519-dalek = "2.1.1"
 fluent-uri = "0.3.2"
-hex = "0.4.3"
 minicbor = { version = "0.25.1", features = ["std"] }
 num-traits = "0.2.19"
 orx-concurrent-vec = { version = "3.6.0", features = ["serde"] }
