@@ -65,7 +65,7 @@ impl ContentTypeRule {
             },
             ContentType::Cddl => {
                 // TODO: not implemented yet
-                anyhow::bail!("`application/cddl` is valid but unavailable yet")
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
             },
             ContentType::Cbor => {
                 let mut decoder = minicbor::Decoder::new(content);
@@ -78,7 +78,39 @@ impl ContentTypeRule {
             },
             ContentType::JsonSchema => {
                 // TODO: not implemented yet
-                anyhow::bail!("`application/json+schema` is valid but unavailable yet")
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::Css => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::CssHandlebars => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::Html => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::HtmlHandlebars => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::Markdown => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::MarkdownHandlebars => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::Plain => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
+            },
+            ContentType::PlainHandlebars => {
+                // TODO: not implemented yet
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
             },
         }
         Ok(())

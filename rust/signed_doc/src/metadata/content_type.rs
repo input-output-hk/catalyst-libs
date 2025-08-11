@@ -53,6 +53,7 @@ impl FromStr for ContentType {
             "application/cbor" => Ok(Self::Cbor),
             "application/cddl" => Ok(Self::Cddl),
             "application/json" => Ok(Self::Json),
+            "application/json+schema" => Ok(Self::JsonSchema),
             "text/css; charset=utf-8" => Ok(Self::Css),
             "text/css; charset=utf-8; template=handlebars" => Ok(Self::CssHandlebars),
             "text/html; charset=utf-8" => Ok(Self::Html),
@@ -76,9 +77,7 @@ impl FromStr for ContentType {
 
 impl<'de> serde::Deserialize<'de> for ContentType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
+    where D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -119,9 +118,11 @@ impl minicbor::Decode<'_, ()> for ContentType {
             Ok(val) if val == minicbor::data::Int::from(50_u8) => Ok(Self::Json),
             // CoAP Content Format CBOR
             Ok(val) if val == minicbor::data::Int::from(60_u8) => Ok(Self::Cbor),
-            Ok(val) => Err(minicbor::decode::Error::message(format!(
-                "unsupported CoAP Content Formats value: {val}"
-            ))),
+            Ok(val) => {
+                Err(minicbor::decode::Error::message(format!(
+                    "unsupported CoAP Content Formats value: {val}"
+                )))
+            },
             Err(_) => {
                 d.set_position(p);
                 d.str()?.parse().map_err(minicbor::decode::Error::message)
@@ -163,11 +164,11 @@ mod tests {
             ),
         ];
 
-        for (raw_text, variant) in entries {
-            assert_eq!(ContentType::from_str(raw_text).unwrap(), variant);
+        for (raw_str, variant) in entries {
+            assert_eq!(ContentType::from_str(raw_str).unwrap(), variant);
         }
-        for (raw_text, variant) in entries {
-            assert_eq!(raw_text.parse::<ContentType>().unwrap(), variant);
+        for (raw_str, variant) in entries {
+            assert_eq!(raw_str.parse::<ContentType>().unwrap(), variant);
         }
     }
 }
