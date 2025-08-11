@@ -16,7 +16,6 @@ workspace = true
 name = "catalyst_types"
 
 [dependencies]
-blake2b_simd = "1.0.2"
 displaydoc = "0.2.5"
 ed25519-dalek = "2.1.1"
 fluent-uri = "0.3.2"
@@ -24,13 +23,12 @@ hex = "0.4.3"
 minicbor = { version = "0.25.1", features = ["std"] }
 num-traits = "0.2.19"
 orx-concurrent-vec = { version = "3.6.0", features = ["serde"] }
-pallas-crypto = { version = "0.33.0" }
 serde = { version = "1.0.217", features = ["derive", "rc"] }
 thiserror = "2.0.11"
 base64-url = "3.0.0"
 uuid = { version = "1.12.0", features = ["v4", "v7", "serde"] }
 chrono = "0.4.39"
-fmmap = { version = "0.4.0", features = ["sync", "tokio"] }
+fmmap = { version = "0.4.0", features = ["sync"], optional = true }
 tracing = "0.1.41"
 strum = { version = "0.27.1", features = ["derive"] }
 
@@ -39,3 +37,8 @@ ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 proptest = { version = "1.6.0", features = ["attr-macro"] }
 rand = "0.8.5"
 serde_json = "1"
+
+[features]
+default = ["mmap"]
+mmap = ["fmmap"]  
+wasm = []
