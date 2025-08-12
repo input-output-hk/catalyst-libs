@@ -96,9 +96,7 @@ impl TryFrom<u64> for ContentType {
 
 impl<'de> serde::Deserialize<'de> for ContentType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
+    where D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -149,6 +147,8 @@ impl minicbor::Decode<'_, ()> for ContentType {
 
 #[cfg(test)]
 mod tests {
+    use minicbor::{Decode, Decoder, Encoder};
+
     use super::*;
 
     #[test]
@@ -185,6 +185,38 @@ mod tests {
         }
         for (raw_str, variant) in entries {
             assert_eq!(raw_str.parse::<ContentType>().unwrap(), variant);
+        }
+        for (raw_str, variant) in entries {
+            let mut e = Encoder::new(vec![]);
+            e.str(raw_str).unwrap();
+            let bytes = e.into_writer().clone();
+            let mut decoder = Decoder::new(bytes.as_slice());
+
+            assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
+        }
+    }
+
+    #[test]
+    fn cbor_coap_decoding_test() {
+        let coap_valid_entries = [
+            (vec![0x00], ContentType::Plain),
+            (vec![0x18, 0x32], ContentType::Json),
+            (vec![0x18, 0x3C], ContentType::Cbor),
+            (vec![0x19, 0x4E, 0x20], ContentType::Css),
+        ];
+
+        for (coap_code_bytes, variant) in coap_valid_entries {
+            let mut decoder = Decoder::new(coap_code_bytes.as_slice());
+            assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
+        }
+
+        let coap_invalid_entries = [
+            vec![0x13], // application/ace+cbor
+        ];
+
+        for coap_code_bytes in coap_invalid_entries {
+            let mut decoder = Decoder::new(coap_code_bytes.as_slice());
+            assert!(ContentType::decode(&mut decoder, &mut ()).is_err());
         }
     }
 }
