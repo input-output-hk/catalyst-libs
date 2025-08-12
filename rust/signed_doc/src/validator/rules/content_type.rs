@@ -63,10 +63,6 @@ impl ContentTypeRule {
                     anyhow::bail!("Invalid {} content: {e}", self.exp)
                 }
             },
-            ContentType::Cddl => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
             ContentType::Cbor => {
                 let mut decoder = minicbor::Decoder::new(content);
 
@@ -76,39 +72,16 @@ impl ContentTypeRule {
                     anyhow::bail!("Unused bytes remain in the input after decoding")
                 }
             },
-            ContentType::JsonSchema => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::Css => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::CssHandlebars => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::Html => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::HtmlHandlebars => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::Markdown => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::MarkdownHandlebars => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::Plain => {
-                // TODO: not implemented yet
-                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
-            },
-            ContentType::PlainHandlebars => {
+            ContentType::Cddl
+            | ContentType::JsonSchema
+            | ContentType::Css
+            | ContentType::CssHandlebars
+            | ContentType::Html
+            | ContentType::HtmlHandlebars
+            | ContentType::Markdown
+            | ContentType::MarkdownHandlebars
+            | ContentType::Plain
+            | ContentType::PlainHandlebars => {
                 // TODO: not implemented yet
                 anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
             },
