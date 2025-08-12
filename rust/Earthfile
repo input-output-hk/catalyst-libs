@@ -56,17 +56,36 @@ check:
 build:
     FROM +builder-src
 
-    DO rust-ci+EXECUTE \
-        --cmd="/scripts/std_build.py" \
-        --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
-        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=cbork-utils --libs=catalyst-types" \
-        --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
-        --args4="--bins=cbork/cbork --libs=rbac-registration --libs=catalyst-signed-doc" \
-        --args5="--cov_report=$HOME/build/coverage-report.info" \
-        --output="release/[^\./]+" \
-        --junit="cat-libs.junit-report.xml" \
-        --coverage="cat-libs.coverage.info" \
-        --docs="true"
+    RUN ARCH="$(uname -m)"
+    
+    IF [ "$ARCH" != "aarch64" && "$ARCH" != "arm64" ]
+        RUN echo "$ARCH"
+        RUN false
+        DO rust-ci+EXECUTE \
+            --cmd="/scripts/std_build.py" \
+            --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
+            --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=cbork-utils --libs=catalyst-types" \
+            --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
+            --args4="--bins=cbork/cbork --libs=rbac-registration --libs=catalyst-signed-doc" \
+            --args5="--cov_report=$HOME/build/coverage-report.info" \
+            --output="release/[^\./]+" \
+            --junit="cat-libs.junit-report.xml" \
+            --coverage="cat-libs.coverage.info" \
+            --docs="true"
+    ELSE
+        RUN echo "$ARCH"
+        RUN false
+        # because of the known issue https://github.com/rust-lang/rust/issues/141577 `llvm-cov` does not for `arm` architectures
+        DO rust-ci+EXECUTE \
+                --cmd="/scripts/std_build.py" \
+                --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
+                --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=cbork-utils --libs=catalyst-types" \
+                --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
+                --args4="--bins=cbork/cbork --libs=rbac-registration --libs=catalyst-signed-doc" \
+                --output="release/[^\./]+" \
+                --junit="cat-libs.junit-report.xml" \
+                --docs="true"
+    END
 
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
