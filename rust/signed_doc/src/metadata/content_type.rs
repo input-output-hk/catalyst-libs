@@ -75,9 +75,30 @@ impl FromStr for ContentType {
     }
 }
 
+impl TryFrom<u64> for ContentType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
+        // https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats
+        match value {
+            0 => Ok(Self::Plain),
+            50 => Ok(Self::Json),
+            60 => Ok(Self::Cbor),
+            20000 => Ok(Self::Css),
+            _ => {
+                anyhow::bail!(
+                    "Unsupported CoAP Content-Format: {value}, Supported only: 0, 50, 60, 20000",
+                )
+            },
+        }
+    }
+}
+
 impl<'de> serde::Deserialize<'de> for ContentType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
+    where
+        D: serde::Deserializer<'de>,
+    {
         let s = String::deserialize(deserializer)?;
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -114,14 +135,9 @@ impl minicbor::Decode<'_, ()> for ContentType {
     ) -> Result<Self, minicbor::decode::Error> {
         let p = d.position();
         match d.int() {
-            // CoAP Content Format JSON
-            Ok(val) if val == minicbor::data::Int::from(50_u8) => Ok(Self::Json),
-            // CoAP Content Format CBOR
-            Ok(val) if val == minicbor::data::Int::from(60_u8) => Ok(Self::Cbor),
             Ok(val) => {
-                Err(minicbor::decode::Error::message(format!(
-                    "unsupported CoAP Content Formats value: {val}"
-                )))
+                let val: u64 = val.try_into().map_err(minicbor::decode::Error::custom)?;
+                Self::try_from(val).map_err(minicbor::decode::Error::message)
             },
             Err(_) => {
                 d.set_position(p);
