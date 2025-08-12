@@ -59,6 +59,7 @@ build:
     RUN ARCH="$(uname -m)"
     
     IF [ "$(uname -m)" != "aarch64" && "$(uname -m)" != "arm64" ]
+        RUN false
         DO rust-ci+EXECUTE \
             --cmd="/scripts/std_build.py" \
             --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
