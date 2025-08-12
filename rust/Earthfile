@@ -58,7 +58,7 @@ build:
 
     LET ARCH=$(uname -m)
     RUN echo $ARCH
-    IF [ $ARCH != aarch64 && $ARCH != arm64 ]
+    IF [ "$ARCH" != "aarch64" ] && [ "$ARCH" != "arm64" ]
         RUN false
         DO rust-ci+EXECUTE \
             --cmd="/scripts/std_build.py" \
