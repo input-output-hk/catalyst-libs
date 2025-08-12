@@ -58,8 +58,8 @@ build:
 
     RUN ARCH="$(uname -m)"
     
-    IF [ "$ARCH" != "aarch64" && "$ARCH" != "arm64" ]
-        RUN echo "$ARCH"
+    IF [ "$(uname -m)" != "aarch64" && "$(uname -m)" != "arm64" ]
+        RUN echo "$(uname -m)"
         RUN false
         DO rust-ci+EXECUTE \
             --cmd="/scripts/std_build.py" \
@@ -73,7 +73,7 @@ build:
             --coverage="cat-libs.coverage.info" \
             --docs="true"
     ELSE
-        RUN echo "$ARCH"
+        RUN echo "$(uname -m)"
         RUN false
         # because of the known issue https://github.com/rust-lang/rust/issues/141577 `llvm-cov` does not for `arm` architectures
         DO rust-ci+EXECUTE \
