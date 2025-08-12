@@ -132,15 +132,12 @@ impl minicbor::Decode<'_, ()> for ContentType {
         _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let p = d.position();
-        match d.int() {
-            Ok(val) => {
-                let val: u64 = val.try_into().map_err(minicbor::decode::Error::custom)?;
-                Self::try_from(val).map_err(minicbor::decode::Error::message)
-            },
-            Err(_) => {
-                d.set_position(p);
-                d.str()?.parse().map_err(minicbor::decode::Error::message)
-            },
+        if let Ok(val) = d.int() {
+            let val: u64 = val.try_into().map_err(minicbor::decode::Error::custom)?;
+            Self::try_from(val).map_err(minicbor::decode::Error::message)
+        } else {
+            d.set_position(p);
+            d.str()?.parse().map_err(minicbor::decode::Error::message)
         }
     }
 }
