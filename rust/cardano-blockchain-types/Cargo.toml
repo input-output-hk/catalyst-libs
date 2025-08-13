@@ -23,7 +23,7 @@ pallas-addresses = { git = "https://github.com/input-output-hk/catalyst-pallas",
 pallas-primitives = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
 pallas-crypto = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
 # pallas-hardano = { git = "https://github.com/input-output-hk/catalyst-libs.git" }
-catalyst-types = { path = "../catalyst-types", default-features = false, features = ["wasm"]}
+catalyst-types = { path = "../catalyst-types" }
 cbork-utils = { path = "../cbork-utils" }
 
 ouroboros = "0.18.4"
