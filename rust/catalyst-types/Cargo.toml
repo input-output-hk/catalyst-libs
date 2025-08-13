@@ -27,17 +27,15 @@ thiserror = "2.0.11"
 base64-url = "3.0.0"
 uuid = { version = "1.12.0", features = ["v4", "v7", "serde"] }
 chrono = "0.4.39"
-fmmap = { version = "0.4.0", features = ["sync"], optional = true }
 tracing = "0.1.41"
 strum = { version = "0.27.1", features = ["derive"] }
+
+# Only include fmmap for non-wasm32 targets
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+fmmap = { version = "0.4.0", features = ["sync"] }
 
 [dev-dependencies]
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 proptest = { version = "1.6.0", features = ["attr-macro"] }
 rand = "0.8.5"
 serde_json = "1"
-
-[features]
-default = ["mmap"]
-mmap = ["fmmap"]  
-wasm = []
