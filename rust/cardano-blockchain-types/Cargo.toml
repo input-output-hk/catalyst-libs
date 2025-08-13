@@ -40,12 +40,12 @@ displaydoc = "0.2.5"
 thiserror = "2.0.11"
 
 # Remove
-pallas-traverse = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
-pallas-addresses = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
-pallas-primitives = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
-pallas-crypto = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
-pallas-codec = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-traverse = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-addresses = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-primitives = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-crypto = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-codec = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
 # Only include these for non-wasm32 targets
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pallas-network = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
-pallas-hardano = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-network = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-hardano = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
