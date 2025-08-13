@@ -214,32 +214,32 @@ mod tests {
     }
 
     #[test_case(
-        (vec![0x00], ContentType::Plain);
+        (&[0x00], ContentType::Plain);
         "text/plain; charset=utf-8"
     )]
     #[test_case(
-        (vec![0x18, 0x32], ContentType::Json);
+        (&[0x18, 0x32], ContentType::Json);
         "application/json"
     )]
     #[test_case(
-        (vec![0x18, 0x3C], ContentType::Cbor);
+        (&[0x18, 0x3C], ContentType::Cbor);
         "application/cbor"
     )]
     #[test_case(
-        (vec![0x19, 0x4E, 0x20], ContentType::Css);
+        (&[0x19, 0x4E, 0x20], ContentType::Css);
         "text/css; charset=utf-8"
     )]
-    fn cbor_coap_decoding_test((coap_code_bytes, variant): (Vec<u8>, ContentType)) {
-        let mut decoder = Decoder::new(coap_code_bytes.as_slice());
+    fn cbor_coap_decoding_test((coap_code_bytes, variant): (&[u8], ContentType)) {
+        let mut decoder = Decoder::new(coap_code_bytes);
         assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
     }
 
     #[test_case(
-        vec![0x13];
+        &[0x13];
         "application/ace+cbor"
     )]
-    fn cbor_unsupported_coap_decoding_test(coap_code_bytes: Vec<u8>) {
-        let mut decoder = Decoder::new(coap_code_bytes.as_slice());
+    fn cbor_unsupported_coap_decoding_test(coap_code_bytes: &[u8]) {
+        let mut decoder = Decoder::new(coap_code_bytes);
         assert!(ContentType::decode(&mut decoder, &mut ()).is_err());
     }
 }
