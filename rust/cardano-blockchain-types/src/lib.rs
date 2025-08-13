@@ -34,3 +34,12 @@ pub use stake_address::StakeAddress;
 pub use txn_index::TxnIndex;
 pub use txn_output_offset::TxnOutputOffset;
 pub use txn_witness::{TxnWitness, VKeyHash};
+
+pub use pallas_addresses;
+pub use pallas_crypto;
+#[cfg(not(target_arch = "wasm32"))]
+pub use pallas_hardano;
+#[cfg(not(target_arch = "wasm32"))]
+pub use pallas_network;
+pub use pallas_primitives;
+pub use pallas_traverse;
