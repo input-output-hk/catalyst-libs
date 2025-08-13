@@ -6,13 +6,13 @@
 use std::time::Duration;
 
 use anyhow::Context;
-use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
-use pallas::{
-    ledger::traverse::MultiEraHeader,
-    network::{
-        facades::PeerClient,
+use cardano_blockchain_types::{
+    pallas_network::{
+        facades,
         miniprotocols::chainsync::{self, HeaderContent, Tip},
     },
+    pallas_traverse::MultiEraHeader,
+    Fork, MultiEraBlock, Network, Point,
 };
 use tokio::{
     spawn,
@@ -51,12 +51,12 @@ const MAX_NODE_CONNECT_RETRIES: u64 = 5;
 async fn retry_connect(
     addr: &str,
     magic: u64,
-) -> std::result::Result<PeerClient, pallas::network::facades::Error> {
+) -> std::result::Result<facades::PeerClient, facades::Error> {
     let mut retries = MAX_NODE_CONNECT_RETRIES;
     loop {
         match timeout(
             Duration::from_secs(MAX_NODE_CONNECT_TIME_SECS),
-            PeerClient::connect(addr, magic),
+            facades::PeerClient::connect(addr, magic),
         )
         .await
         {
@@ -75,9 +75,9 @@ async fn retry_connect(
             Err(error) => {
                 retries = retries.saturating_sub(1);
                 if retries == 0 {
-                    return Err(pallas::network::facades::Error::ConnectFailure(
-                        tokio::io::Error::other(format!("failed to connect to {addr} : {error}")),
-                    ));
+                    return Err(facades::Error::ConnectFailure(tokio::io::Error::other(
+                        format!("failed to connect to {addr} : {error}"),
+                    )));
                 }
                 debug!("retrying {retries} connect to {addr} : {error:?}");
             },
@@ -87,7 +87,7 @@ async fn retry_connect(
 
 /// Purge the live chain, and intersect with TIP.
 async fn purge_and_intersect_tip(
-    client: &mut PeerClient,
+    client: &mut facades::PeerClient,
     chain: Network,
 ) -> Result<Point> {
     if let Err(error) = purge_live_chain(chain, &Point::TIP) {
@@ -105,7 +105,7 @@ async fn purge_and_intersect_tip(
 
 /// Resynchronize to the live tip in memory.
 async fn resync_live_tip(
-    client: &mut PeerClient,
+    client: &mut facades::PeerClient,
     chain: Network,
 ) -> Result<Point> {
     let sync_points = get_intersect_points(chain);
@@ -127,7 +127,7 @@ async fn resync_live_tip(
 
 /// Fetch a single block from the Peer, and decode it.
 async fn fetch_block_from_peer(
-    peer: &mut PeerClient,
+    peer: &mut facades::PeerClient,
     chain: Network,
     point: Point,
     previous_point: Point,
@@ -150,7 +150,7 @@ async fn fetch_block_from_peer(
 /// Fetch the rollback block, and try and insert it into the live-chain.
 /// If its a real rollback, it will purge the chain ahead of the block automatically.
 async fn process_rollback_actual(
-    peer: &mut PeerClient,
+    peer: &mut facades::PeerClient,
     chain: Network,
     point: Point,
     tip: &Tip,
@@ -198,7 +198,7 @@ async fn process_rollback_actual(
 
 /// Process a rollback detected from the peer.
 async fn process_rollback(
-    peer: &mut PeerClient,
+    peer: &mut facades::PeerClient,
     chain: Network,
     point: Point,
     tip: &Tip,
@@ -230,7 +230,7 @@ async fn process_rollback(
 
 /// Process a rollback detected from the peer.
 async fn process_next_block(
-    peer: &mut PeerClient,
+    peer: &mut facades::PeerClient,
     chain: Network,
     header: HeaderContent,
     tip: &Tip,
@@ -278,7 +278,7 @@ async fn process_next_block(
 ///
 /// We take ownership of the client because of that.
 async fn follow_chain(
-    peer: &mut PeerClient,
+    peer: &mut facades::PeerClient,
     chain: Network,
     fork_count: &mut Fork,
 ) -> anyhow::Result<()> {
@@ -341,7 +341,7 @@ const PEER_FAILURE_RECONNECT_DELAY: Duration = Duration::from_secs(10);
 async fn persistent_reconnect(
     addr: &str,
     chain: Network,
-) -> PeerClient {
+) -> facades::PeerClient {
     // Not yet connected to the peer.
     stats::peer_connected(chain, false, addr);
 

@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point, Slot};
+use cardano_blockchain_types::{pallas_primitives, Fork, MultiEraBlock, Network, Point, Slot};
 use crossbeam_skiplist::SkipMap;
 use rayon::prelude::*;
 use strum::IntoEnumIterator;
@@ -364,7 +364,7 @@ impl ProtectedLiveChainBlockList {
     }
 
     /// Get chain sync intersection points for communicating with peer node.
-    fn get_intersect_points(&self) -> Vec<pallas::network::miniprotocols::Point> {
+    fn get_intersect_points(&self) -> Vec<pallas_primitives::types::point::Point> {
         let mut intersect_points = Vec::new();
 
         let Ok(chain) = self.0.read() else {
@@ -562,7 +562,7 @@ pub(crate) fn purge_live_chain(
 
 /// Get intersection points to try and find best point to connect to the node on
 /// reconnect.
-pub(crate) fn get_intersect_points(chain: Network) -> Vec<pallas::network::miniprotocols::Point> {
+pub(crate) fn get_intersect_points(chain: Network) -> Vec<pallas_primitives::types::point::Point> {
     let live_chain = get_live_chain(chain);
     live_chain.get_intersect_points()
 }
