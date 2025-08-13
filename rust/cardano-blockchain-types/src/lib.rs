@@ -28,6 +28,7 @@ pub use metadata::cip36::{voting_pk::VotingPubKey, Cip36};
 pub use multi_era_block_data::MultiEraBlock;
 pub use network::Network;
 pub use pallas_addresses;
+pub use pallas_codec;
 pub use pallas_crypto;
 #[cfg(not(target_arch = "wasm32"))]
 pub use pallas_hardano;
