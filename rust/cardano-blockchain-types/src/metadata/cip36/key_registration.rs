@@ -12,7 +12,7 @@ use catalyst_types::{
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
-use pallas::ledger::addresses::Address;
+use pallas_addresses::Address;
 use strum::FromRepr;
 
 use super::voting_pk::VotingPubKey;
@@ -316,19 +316,17 @@ fn decode_payment_addr(
     let raw_addr = decode_bytes(d, "CIP36 Key Registration payment address")?;
     // Cannot convert raw address to Address type
     match Address::from_bytes(&raw_addr) {
-        Ok(addr) => {
-            match addr {
-                Address::Byron(byron_address) => {
-                    err_report.invalid_value(
-                        "Address",
-                        format!("{byron_address:?}").as_str(),
-                        "Expected non Byron address",
-                        "CIP36 Key Registration payment address",
-                    );
-                    Ok(None)
-                },
-                _ => Ok(Some(addr)),
-            }
+        Ok(addr) => match addr {
+            Address::Byron(byron_address) => {
+                err_report.invalid_value(
+                    "Address",
+                    format!("{byron_address:?}").as_str(),
+                    "Expected non Byron address",
+                    "CIP36 Key Registration payment address",
+                );
+                Ok(None)
+            },
+            _ => Ok(Some(addr)),
         },
         Err(e) => {
             err_report.conversion_error(

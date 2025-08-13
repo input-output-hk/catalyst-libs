@@ -8,10 +8,9 @@ use std::{
     fmt::{Debug, Display, Formatter},
 };
 
-use catalyst_types::hashes::Blake2b256Hash;
-use pallas::crypto::hash::Hash;
+use pallas_primitives::Hash;
 
-use crate::Slot;
+use crate::{hashes::Blake2b256Hash, Slot};
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
@@ -20,11 +19,11 @@ use crate::Slot;
 ///
 /// # Attributes
 ///
-/// * `Point` - The inner type is a `Point` from the `pallas::network::miniprotocols`
+/// * `Point` - The inner type is a `Point` from the `pallas_primitives::types::point`
 ///   module. This inner `Point` type encapsulates the specific details required to
 ///   identify a point in the blockchain.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Point(pallas::network::miniprotocols::Point);
+pub struct Point(pallas_primitives::types::point::Point);
 
 impl Point {
     /// The origin of the blockchain. It is used when the
@@ -38,9 +37,9 @@ impl Point {
     /// of the blockchain.
     ///
     /// The inner `Point` is created with the `Origin` variant from
-    /// `pallas::network::miniprotocols::Point`, indicating that this is a marker
+    /// `pallas_primitives::types::point::Point`, indicating that this is a marker
     /// for the blockchain's origin.
-    pub const ORIGIN: Point = Point(pallas::network::miniprotocols::Point::Origin);
+    pub const ORIGIN: Point = Point(pallas_primitives::types::point::Point::Origin);
     /// The tip of the blockchain at the current moment.
     /// It is used when the specific point in the blockchain is not known, but the
     /// interest is in the most recent block (the tip). The tip is the point where
@@ -54,7 +53,7 @@ impl Point {
     ///
     /// The inner `Point` is created with `u64::MAX` and an empty `Vec<u8>`, indicating
     /// that this is a special marker rather than a specific point in the blockchain.
-    pub const TIP: Point = Point(pallas::network::miniprotocols::Point::Specific(
+    pub const TIP: Point = Point(pallas_primitives::types::point::Point::Specific(
         u64::MAX,
         Vec::new(),
     ));
@@ -71,7 +70,7 @@ impl Point {
     /// The inner `Point` is created with `u64::MIN` and an empty `Vec<u8>`, indicating
     /// that this is a special marker for an unknown point, rather than a specific
     /// point in the blockchain.
-    pub const UNKNOWN: Point = Point(pallas::network::miniprotocols::Point::Specific(
+    pub const UNKNOWN: Point = Point(pallas_primitives::types::point::Point::Specific(
         u64::MIN,
         Vec::new(),
     ));
@@ -102,7 +101,7 @@ impl Point {
         slot: Slot,
         hash: Blake2b256Hash,
     ) -> Self {
-        Self(pallas::network::miniprotocols::Point::Specific(
+        Self(pallas_primitives::types::point::Point::Specific(
             slot.into(),
             hash.into(),
         ))
@@ -131,7 +130,7 @@ impl Point {
     /// ```
     #[must_use]
     pub fn fuzzy(slot: Slot) -> Self {
-        Self(pallas::network::miniprotocols::Point::Specific(
+        Self(pallas_primitives::types::point::Point::Specific(
             slot.into(),
             Vec::new(),
         ))
@@ -146,10 +145,10 @@ impl Point {
             Self::TIP
         } else {
             match self.0 {
-                pallas::network::miniprotocols::Point::Specific(slot, _) => {
+                pallas_primitives::types::point::Point::Specific(slot, _) => {
                     Self::fuzzy(slot.into())
                 },
-                pallas::network::miniprotocols::Point::Origin => Self::ORIGIN,
+                pallas_primitives::types::point::Point::Origin => Self::ORIGIN,
             }
         }
     }
@@ -175,8 +174,8 @@ impl Point {
             false
         } else {
             match self.0 {
-                pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
-                pallas::network::miniprotocols::Point::Origin => false,
+                pallas_primitives::types::point::Point::Specific(_, ref hash) => hash.is_empty(),
+                pallas_primitives::types::point::Point::Origin => false,
             }
         }
     }
@@ -199,10 +198,10 @@ impl Point {
     #[must_use]
     pub fn is_origin(&self) -> bool {
         match self.0 {
-            pallas::network::miniprotocols::Point::Specific(slot, ref hash) => {
+            pallas_primitives::types::point::Point::Specific(slot, ref hash) => {
                 slot == 0 && !hash.is_empty()
             },
-            pallas::network::miniprotocols::Point::Origin => true,
+            pallas_primitives::types::point::Point::Origin => true,
         }
     }
 
@@ -220,10 +219,10 @@ impl Point {
     #[must_use]
     pub fn is_unknown(&self) -> bool {
         match self.0 {
-            pallas::network::miniprotocols::Point::Specific(slot, ref hash) => {
+            pallas_primitives::types::point::Point::Specific(slot, ref hash) => {
                 slot == 0 && hash.is_empty()
             },
-            pallas::network::miniprotocols::Point::Origin => false,
+            pallas_primitives::types::point::Point::Origin => false,
         }
     }
 
@@ -241,10 +240,10 @@ impl Point {
     #[must_use]
     pub fn is_tip(&self) -> bool {
         match self.0 {
-            pallas::network::miniprotocols::Point::Specific(slot, ref hash) => {
+            pallas_primitives::types::point::Point::Specific(slot, ref hash) => {
                 slot == u64::MAX && hash.is_empty()
             },
-            pallas::network::miniprotocols::Point::Origin => false,
+            pallas_primitives::types::point::Point::Origin => false,
         }
     }
 
@@ -298,11 +297,11 @@ impl Point {
     #[must_use]
     pub fn hash_or_default(&self) -> Option<Blake2b256Hash> {
         match &self.0 {
-            pallas::network::miniprotocols::Point::Specific(_, hash) => {
+            pallas_primitives::types::point::Point::Specific(_, hash) => {
                 Blake2b256Hash::try_from(hash.clone()).ok()
             },
             // Origin has empty hash, so set it to None
-            pallas::network::miniprotocols::Point::Origin => None,
+            pallas_primitives::types::point::Point::Origin => None,
         }
     }
 
@@ -351,18 +350,16 @@ impl PartialEq<Option<Blake2b256Hash>> for Point {
         match other {
             Some(cmp_hash) => {
                 match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
+                    pallas_primitives::types::point::Point::Specific(_, ref hash) => {
                         // Compare vec to vec
                         *hash == <Blake2b256Hash as Into<Vec<u8>>>::into(*cmp_hash)
                     },
-                    pallas::network::miniprotocols::Point::Origin => false,
+                    pallas_primitives::types::point::Point::Origin => false,
                 }
             },
-            None => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
-                    pallas::network::miniprotocols::Point::Origin => true,
-                }
+            None => match self.0 {
+                pallas_primitives::types::point::Point::Specific(_, ref hash) => hash.is_empty(),
+                pallas_primitives::types::point::Point::Origin => true,
             },
         }
     }
@@ -409,14 +406,14 @@ impl Display for Point {
     }
 }
 
-impl From<pallas::network::miniprotocols::Point> for Point {
-    fn from(point: pallas::network::miniprotocols::Point) -> Self {
+impl From<pallas_primitives::types::point::Point> for Point {
+    fn from(point: pallas_primitives::types::point::Point) -> Self {
         Self(point)
     }
 }
 
-impl From<Point> for pallas::network::miniprotocols::Point {
-    fn from(point: Point) -> pallas::network::miniprotocols::Point {
+impl From<Point> for pallas_primitives::types::point::Point {
+    fn from(point: Point) -> pallas_primitives::types::point::Point {
         point.0
     }
 }
@@ -502,32 +499,24 @@ impl Default for Point {
 
 /// Compare Points, because Pallas does not impl `Ord` for `Point`.
 fn cmp_point(
-    a: &pallas::network::miniprotocols::Point,
-    b: &pallas::network::miniprotocols::Point,
+    a: &pallas_primitives::types::point::Point,
+    b: &pallas_primitives::types::point::Point,
 ) -> Ordering {
     match a {
-        pallas::network::miniprotocols::Point::Origin => {
-            match b {
-                pallas::network::miniprotocols::Point::Origin => Ordering::Equal,
-                pallas::network::miniprotocols::Point::Specific(..) => Ordering::Less,
-            }
+        pallas_primitives::types::point::Point::Origin => match b {
+            pallas_primitives::types::point::Point::Origin => Ordering::Equal,
+            pallas_primitives::types::point::Point::Specific(..) => Ordering::Less,
         },
-        pallas::network::miniprotocols::Point::Specific(slot, _) => {
-            match b {
-                pallas::network::miniprotocols::Point::Origin => Ordering::Greater,
-                pallas::network::miniprotocols::Point::Specific(other_slot, _) => {
-                    slot.cmp(other_slot)
-                },
-            }
+        pallas_primitives::types::point::Point::Specific(slot, _) => match b {
+            pallas_primitives::types::point::Point::Origin => Ordering::Greater,
+            pallas_primitives::types::point::Point::Specific(other_slot, _) => slot.cmp(other_slot),
         },
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::hashes::Blake2bHash;
-
-    use crate::point::*;
+    use crate::{hashes::Blake2bHash, point::*};
 
     #[test]
     fn test_cmp_hash_simple() {

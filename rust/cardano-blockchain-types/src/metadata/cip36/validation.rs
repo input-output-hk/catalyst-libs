@@ -145,7 +145,7 @@ mod tests {
 
     use catalyst_types::problem_report::ProblemReport;
     use ed25519_dalek::VerifyingKey;
-    use pallas::ledger::addresses::Address;
+    use pallas_addresses::Address;
 
     use crate::{
         metadata::cip36::{
