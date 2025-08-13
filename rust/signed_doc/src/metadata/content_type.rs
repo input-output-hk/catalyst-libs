@@ -145,75 +145,101 @@ impl minicbor::Decode<'_, ()> for ContentType {
 #[cfg(test)]
 mod tests {
     use minicbor::{Decode, Decoder, Encoder};
+    use test_case::test_case;
 
     use super::*;
 
-    #[test]
-    fn content_type_string_test() {
-        let entries = [
-            ("application/cbor", ContentType::Cbor),
-            ("application/cddl", ContentType::Cddl),
-            ("application/json", ContentType::Json),
-            ("application/json+schema", ContentType::JsonSchema),
-            ("text/css; charset=utf-8", ContentType::Css),
-            (
-                "text/css; charset=utf-8; template=handlebars",
-                ContentType::CssHandlebars,
-            ),
-            ("text/html; charset=utf-8", ContentType::Html),
-            (
-                "text/html; charset=utf-8; template=handlebars",
-                ContentType::HtmlHandlebars,
-            ),
-            ("text/markdown; charset=utf-8", ContentType::Markdown),
-            (
-                "text/markdown; charset=utf-8; template=handlebars",
-                ContentType::MarkdownHandlebars,
-            ),
-            ("text/plain; charset=utf-8", ContentType::Plain),
-            (
-                "text/plain; charset=utf-8; template=handlebars",
-                ContentType::PlainHandlebars,
-            ),
-        ];
+    #[test_case(
+        ("application/cbor", ContentType::Cbor);
+        "application/cbor"
+    )]
+    #[test_case(
+        ("application/cddl", ContentType::Cddl);
+        "application/cddl"
+    )]
+    #[test_case(
+        ("application/json", ContentType::Json);
+        "application/json"
+    )]
+    #[test_case(
+        ("application/json+schema", ContentType::JsonSchema);
+        "application/json+schema"
+    )]
+    #[test_case(
+        ("text/css; charset=utf-8", ContentType::Css);
+        "text/css; charset=utf-8"
+    )]
+    #[test_case(
+        ("text/css; charset=utf-8; template=handlebars", ContentType::CssHandlebars);
+        "text/css; charset=utf-8; template=handlebars"
+    )]
+    #[test_case(
+        ("text/html; charset=utf-8", ContentType::Html);
+        "text/html; charset=utf-8"
+    )]
+    #[test_case(
+        ("text/html; charset=utf-8; template=handlebars", ContentType::HtmlHandlebars);
+        "text/html; charset=utf-8; template=handlebars"
+    )]
+    #[test_case(
+        ("text/markdown; charset=utf-8", ContentType::Markdown);
+        "text/markdown; charset=utf-8"
+    )]
+    #[test_case(
+        ("text/markdown; charset=utf-8; template=handlebars", ContentType::MarkdownHandlebars);
+        "text/markdown; charset=utf-8; template=handlebars"
+    )]
+    #[test_case(
+        ("text/plain; charset=utf-8", ContentType::Plain);
+        "text/plain; charset=utf-8"
+    )]
+    #[test_case(
+        ("text/plain; charset=utf-8; template=handlebars", ContentType::PlainHandlebars);
+        "text/plain; charset=utf-8; template=handlebars"
+    )]
+    fn content_type_string_test((raw_str, variant): (&str, ContentType)) {
+        // from str
+        assert_eq!(ContentType::from_str(raw_str).unwrap(), variant);
 
-        for (raw_str, variant) in entries {
-            assert_eq!(ContentType::from_str(raw_str).unwrap(), variant);
-        }
-        for (raw_str, variant) in entries {
-            assert_eq!(raw_str.parse::<ContentType>().unwrap(), variant);
-        }
-        for (raw_str, variant) in entries {
-            let mut e = Encoder::new(vec![]);
-            e.str(raw_str).unwrap();
-            let bytes = e.into_writer().clone();
-            let mut decoder = Decoder::new(bytes.as_slice());
+        // parsing
+        assert_eq!(raw_str.parse::<ContentType>().unwrap(), variant);
 
-            assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
-        }
+        // decoding from cbor
+        let mut e = Encoder::new(vec![]);
+        e.str(raw_str).unwrap();
+        let bytes = e.into_writer().clone();
+        let mut decoder = Decoder::new(bytes.as_slice());
+
+        assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
     }
 
-    #[test]
-    fn cbor_coap_decoding_test() {
-        let coap_valid_entries = [
-            (vec![0x00], ContentType::Plain),
-            (vec![0x18, 0x32], ContentType::Json),
-            (vec![0x18, 0x3C], ContentType::Cbor),
-            (vec![0x19, 0x4E, 0x20], ContentType::Css),
-        ];
+    #[test_case(
+        (vec![0x00], ContentType::Plain);
+        "text/plain; charset=utf-8"
+    )]
+    #[test_case(
+        (vec![0x18, 0x32], ContentType::Json);
+        "application/json"
+    )]
+    #[test_case(
+        (vec![0x18, 0x3C], ContentType::Cbor);
+        "application/cbor"
+    )]
+    #[test_case(
+        (vec![0x19, 0x4E, 0x20], ContentType::Css);
+        "text/css; charset=utf-8"
+    )]
+    fn cbor_coap_decoding_test((coap_code_bytes, variant): (Vec<u8>, ContentType)) {
+        let mut decoder = Decoder::new(coap_code_bytes.as_slice());
+        assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
+    }
 
-        for (coap_code_bytes, variant) in coap_valid_entries {
-            let mut decoder = Decoder::new(coap_code_bytes.as_slice());
-            assert_eq!(ContentType::decode(&mut decoder, &mut ()).unwrap(), variant);
-        }
-
-        let coap_invalid_entries = [
-            vec![0x13], // application/ace+cbor
-        ];
-
-        for coap_code_bytes in coap_invalid_entries {
-            let mut decoder = Decoder::new(coap_code_bytes.as_slice());
-            assert!(ContentType::decode(&mut decoder, &mut ()).is_err());
-        }
+    #[test_case(
+        vec![0x13];
+        "application/ace+cbor"
+    )]
+    fn cbor_unsupported_coap_decoding_test(coap_code_bytes: Vec<u8>) {
+        let mut decoder = Decoder::new(coap_code_bytes.as_slice());
+        assert!(ContentType::decode(&mut decoder, &mut ()).is_err());
     }
 }
