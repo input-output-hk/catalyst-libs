@@ -2,7 +2,7 @@
 name = "cardano-blockchain-types"
 description = "Common Cardano Blockchain data types for use in both applications and crates"
 keywords = ["cardano", "catalyst", ]
-version = "0.0.5"
+version = "0.1.5"
 authors = [
     "Steven Johnson <steven.johnson@iohk.io>"
 ]
