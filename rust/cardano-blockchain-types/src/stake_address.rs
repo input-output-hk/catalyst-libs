@@ -8,8 +8,7 @@ use anyhow::{anyhow, Context};
 use pallas_addresses::{
     ShelleyAddress, ShelleyDelegationPart, ShelleyPaymentPart, StakeAddress as PallasStakeAddress,
 };
-use pallas_primitives::Hash;
-use pallas_primitives::conway;
+use pallas_primitives::{conway, Hash};
 
 use crate::{hashes::Blake2b224Hash, Network};
 

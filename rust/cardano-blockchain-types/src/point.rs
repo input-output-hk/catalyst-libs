@@ -357,9 +357,13 @@ impl PartialEq<Option<Blake2b256Hash>> for Point {
                     pallas_primitives::types::point::Point::Origin => false,
                 }
             },
-            None => match self.0 {
-                pallas_primitives::types::point::Point::Specific(_, ref hash) => hash.is_empty(),
-                pallas_primitives::types::point::Point::Origin => true,
+            None => {
+                match self.0 {
+                    pallas_primitives::types::point::Point::Specific(_, ref hash) => {
+                        hash.is_empty()
+                    },
+                    pallas_primitives::types::point::Point::Origin => true,
+                }
             },
         }
     }
@@ -503,13 +507,19 @@ fn cmp_point(
     b: &pallas_primitives::types::point::Point,
 ) -> Ordering {
     match a {
-        pallas_primitives::types::point::Point::Origin => match b {
-            pallas_primitives::types::point::Point::Origin => Ordering::Equal,
-            pallas_primitives::types::point::Point::Specific(..) => Ordering::Less,
+        pallas_primitives::types::point::Point::Origin => {
+            match b {
+                pallas_primitives::types::point::Point::Origin => Ordering::Equal,
+                pallas_primitives::types::point::Point::Specific(..) => Ordering::Less,
+            }
         },
-        pallas_primitives::types::point::Point::Specific(slot, _) => match b {
-            pallas_primitives::types::point::Point::Origin => Ordering::Greater,
-            pallas_primitives::types::point::Point::Specific(other_slot, _) => slot.cmp(other_slot),
+        pallas_primitives::types::point::Point::Specific(slot, _) => {
+            match b {
+                pallas_primitives::types::point::Point::Origin => Ordering::Greater,
+                pallas_primitives::types::point::Point::Specific(other_slot, _) => {
+                    slot.cmp(other_slot)
+                },
+            }
         },
     }
 }

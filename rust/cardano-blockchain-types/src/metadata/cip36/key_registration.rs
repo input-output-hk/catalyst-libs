@@ -316,17 +316,19 @@ fn decode_payment_addr(
     let raw_addr = decode_bytes(d, "CIP36 Key Registration payment address")?;
     // Cannot convert raw address to Address type
     match Address::from_bytes(&raw_addr) {
-        Ok(addr) => match addr {
-            Address::Byron(byron_address) => {
-                err_report.invalid_value(
-                    "Address",
-                    format!("{byron_address:?}").as_str(),
-                    "Expected non Byron address",
-                    "CIP36 Key Registration payment address",
-                );
-                Ok(None)
-            },
-            _ => Ok(Some(addr)),
+        Ok(addr) => {
+            match addr {
+                Address::Byron(byron_address) => {
+                    err_report.invalid_value(
+                        "Address",
+                        format!("{byron_address:?}").as_str(),
+                        "Expected non Byron address",
+                        "CIP36 Key Registration payment address",
+                    );
+                    Ok(None)
+                },
+                _ => Ok(Some(addr)),
+            }
         },
         Err(e) => {
             err_report.conversion_error(
