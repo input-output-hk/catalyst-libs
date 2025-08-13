@@ -3,9 +3,10 @@
 use std::sync::{Arc, LazyLock, RwLock};
 
 use cardano_blockchain_types::Network;
+use crossbeam_skiplist::SkipMap;
 use dashmap::DashMap;
 use serde::Serialize;
-use strum::{EnumIter, IntoEnumIterator};
+use strum::EnumIter;
 use tracing::error;
 
 /// Statistics related to a single depth of rollback
@@ -46,41 +47,25 @@ pub enum RollbackType {
 /// Individual rollback records.
 type RollbackRecords = DashMap<u64, Rollback>;
 /// Rollback Records per rollback type.
-type RollbackTypeMap = DashMap<RollbackType, Arc<RwLock<RollbackRecords>>>;
+type RollbackTypeMap = SkipMap<RollbackType, Arc<RwLock<RollbackRecords>>>;
 /// Record of rollbacks.
-type RollbackMap = DashMap<Network, RollbackTypeMap>;
+type RollbackMap = SkipMap<Network, RollbackTypeMap>;
 
 /// Statistics of rollbacks detected per chain.
-static ROLLBACKS_MAP: LazyLock<RollbackMap> = LazyLock::new(|| {
-    let map = RollbackMap::new();
-    for network in Network::iter() {
-        let type_map = RollbackTypeMap::new();
-        for rollback in RollbackType::iter() {
-            type_map.insert(rollback, Arc::new(RwLock::new(RollbackRecords::new())));
-        }
-        map.insert(network, type_map);
-    }
-    map
-});
+static ROLLBACKS_MAP: LazyLock<RollbackMap> = LazyLock::new(|| RollbackMap::new());
 
 /// Get the actual rollback map for a chain.
 fn lookup_rollback_map(
     chain: Network,
     rollback: RollbackType,
-) -> Option<Arc<RwLock<RollbackRecords>>> {
-    let Some(chain_rollback_map) = ROLLBACKS_MAP.get(&chain) else {
-        error!("Rollback stats SHOULD BE exhaustively pre-allocated.");
-        return None;
-    };
+) -> Arc<RwLock<RollbackRecords>> {
+    let chain_rollback_map = ROLLBACKS_MAP.get_or_insert_with(chain, || RollbackTypeMap::new());
     let chain_rollback_map = chain_rollback_map.value();
 
-    let Some(rollback_map) = chain_rollback_map.get(&rollback) else {
-        error!("Rollback stats SHOULD BE exhaustively pre-allocated.");
-        return None;
-    };
+    let rollback_map = chain_rollback_map
+        .get_or_insert_with(rollback, || Arc::new(RwLock::new(RollbackRecords::new())));
     let rollback_map = rollback_map.value();
-
-    Some(rollback_map.clone())
+    rollback_map.clone()
 }
 
 /// Extract the current rollback stats as a vec.
@@ -88,9 +73,7 @@ pub(crate) fn rollbacks(
     chain: Network,
     rollback: RollbackType,
 ) -> Vec<Rollback> {
-    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
-        return Vec::new();
-    };
+    let rollback_map = lookup_rollback_map(chain, rollback);
 
     let Ok(rollback_values) = rollback_map.read() else {
         error!("Rollback stats LOCK Poisoned, should not happen.");
@@ -112,9 +95,7 @@ pub(crate) fn rollbacks_reset(
     chain: Network,
     rollback: RollbackType,
 ) -> Vec<Rollback> {
-    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
-        return Vec::new();
-    };
+    let rollback_map = lookup_rollback_map(chain, rollback);
 
     let Ok(rollbacks) = rollback_map.write() else {
         error!("Rollback stats LOCK Poisoned, should not happen.");
@@ -132,9 +113,7 @@ pub(crate) fn rollback(
     rollback: RollbackType,
     depth: u64,
 ) {
-    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
-        return;
-    };
+    let rollback_map = lookup_rollback_map(chain, rollback);
 
     let Ok(rollbacks) = rollback_map.write() else {
         error!("Rollback stats LOCK Poisoned, should not happen.");
