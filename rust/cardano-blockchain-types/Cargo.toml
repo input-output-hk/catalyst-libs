@@ -39,12 +39,13 @@ serde_json = "1.0.134"
 displaydoc = "0.2.5"
 thiserror = "2.0.11"
 
-pallas-traverse = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
-pallas-addresses = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
-pallas-primitives = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
-pallas-crypto = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
-pallas-codec = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
+# Remove
+pallas-traverse = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-addresses = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-primitives = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-crypto = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-codec = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
 # Only include these for non-wasm32 targets
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pallas-network = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
-pallas-hardano = { git = "https://github.com/input-output-hk/catalyst-pallas", branch = "feat/pallas-network-types" }
+pallas-network = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
+pallas-hardano = { git = "https://github.com/input-output-hk/catalyst-pallas.git", branch = "feat/pallas-network-types" }
