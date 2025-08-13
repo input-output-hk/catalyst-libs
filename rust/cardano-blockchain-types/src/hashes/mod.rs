@@ -31,11 +31,9 @@ pub const BLAKE_2B256_SIZE: usize = 256 / 8;
 pub type Blake2b256Hash = Blake2bHash<BLAKE_2B256_SIZE>;
 
 /// Number of bytes in a blake2b 128 hash.
-#[allow(dead_code)]
 pub const BLAKE_2B128_SIZE: usize = 128 / 8;
 
 /// `Blake2B` 128bit Hash
-#[allow(dead_code)]
 pub type Blake2b128Hash = Blake2bHash<BLAKE_2B128_SIZE>;
 
 /// Errors that can occur when converting to a `Blake2bHash`.
