@@ -1,7 +1,7 @@
 //! Transaction input hash type
 
 use anyhow::Context;
-use catalyst_types::hashes::Blake2b128Hash;
+use cardano_blockchain_types::hashes::Blake2b128Hash;
 
 /// A 16-byte hash of the transaction inputs field.
 ///
