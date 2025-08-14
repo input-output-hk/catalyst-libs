@@ -74,7 +74,7 @@ impl SyncReadyWaiter {
 /// Lock to prevent using any blockchain data for a network UNTIL it is synced to TIP.
 /// Pre-initialized for all possible blockchains, so it's safe to use `expect` to access a
 /// value.
-static SYNC_READY: LazyLock<DashMap<Network, RwLock<SyncReady>>> = LazyLock::new(|| DashMap::new());
+static SYNC_READY: LazyLock<DashMap<Network, RwLock<SyncReady>>> = LazyLock::new(DashMap::new);
 
 /// Write Lock the `SYNC_READY` lock for a network.
 /// When we are signaled to be ready, set it to true and release the lock.

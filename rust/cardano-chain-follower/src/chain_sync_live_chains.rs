@@ -28,10 +28,10 @@ struct ProtectedLiveChainBlockList(Arc<RwLock<LiveChainBlockList>>);
 
 /// Handle to the mithril sync thread. One for each Network ONLY.
 static LIVE_CHAINS: LazyLock<SkipMap<Network, ProtectedLiveChainBlockList>> =
-    LazyLock::new(|| SkipMap::new());
+    LazyLock::new(SkipMap::new);
 
 /// Latest TIP received from the Peer Node.
-static PEER_TIP: LazyLock<SkipMap<Network, Point>> = LazyLock::new(|| SkipMap::new());
+static PEER_TIP: LazyLock<SkipMap<Network, Point>> = LazyLock::new(SkipMap::new);
 
 /// Initial slot age to probe.
 const INITIAL_SLOT_PROBE_AGE: u64 = 40;
@@ -446,7 +446,7 @@ impl ProtectedLiveChainBlockList {
 
 /// Get the `LiveChainBlockList` for a particular `Network`.
 fn get_live_chain(chain: Network) -> ProtectedLiveChainBlockList {
-    let entry = LIVE_CHAINS.get_or_insert_with(chain, || ProtectedLiveChainBlockList::new());
+    let entry = LIVE_CHAINS.get_or_insert_with(chain, ProtectedLiveChainBlockList::new);
 
     let value = entry.value();
     value.clone()

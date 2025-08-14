@@ -51,16 +51,14 @@ type RollbackTypeMap = DashMap<RollbackType, Arc<RwLock<RollbackRecords>>>;
 type RollbackMap = DashMap<Network, RollbackTypeMap>;
 
 /// Statistics of rollbacks detected per chain.
-static ROLLBACKS_MAP: LazyLock<RollbackMap> = LazyLock::new(|| RollbackMap::new());
+static ROLLBACKS_MAP: LazyLock<RollbackMap> = LazyLock::new(RollbackMap::new);
 
 /// Get the actual rollback map for a chain.
 fn lookup_rollback_map(
     chain: Network,
     rollback: RollbackType,
 ) -> Arc<RwLock<RollbackRecords>> {
-    let chain_rollback_map = ROLLBACKS_MAP
-        .entry(chain)
-        .or_insert_with(|| RollbackTypeMap::new());
+    let chain_rollback_map = ROLLBACKS_MAP.entry(chain).or_default();
     let chain_rollback_map = chain_rollback_map.value();
 
     let rollback_map = chain_rollback_map

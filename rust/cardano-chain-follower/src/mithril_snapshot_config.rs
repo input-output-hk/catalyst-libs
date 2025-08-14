@@ -30,7 +30,7 @@ use crate::{
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
 
 /// Handle to the mithril sync thread. One for each Network ONLY.
-static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| DashMap::new());
+static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(DashMap::new);
 
 /// Subdirectory where we unpack archives temporarily.
 const TMP_SUB_DIR: &str = "tmp";
@@ -336,7 +336,7 @@ impl MithrilSnapshotConfig {
         // hex.
         let vkey = remove_whitespace(&self.genesis_key);
         if !is_hex(&vkey) {
-            return Err(Error::MithrilGenesisVKeyNotHex(self.chain));
+            return Err(Error::MithrilGenesisVKeyNotHex(Box::new(self.chain)));
         }
 
         Ok(())
@@ -353,25 +353,25 @@ impl MithrilSnapshotConfig {
         // We do this by trying to use it to get a list of snapshots.
         let client = mithril_client::ClientBuilder::aggregator(&url, &key)
             .build()
-            .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(Box::new(self.chain), url.clone(), e))?;
 
         let snapshots = client
             .cardano_database()
             .list()
             .await
-            .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(Box::new(self.chain), url.clone(), e))?;
 
         // Check we have a snapshot, and its for our network.
         match snapshots.first() {
             Some(snapshot_info) => {
                 if snapshot_info.network != self.chain.to_string() {
                     Err(Error::MithrilClientNetworkMismatch(
-                        self.chain,
+                        Box::new(self.chain),
                         snapshot_info.network.clone(),
                     ))?;
                 }
             },
-            None => return Err(Error::MithrilClientNoSnapshots(self.chain, url)),
+            None => return Err(Error::MithrilClientNoSnapshots(Box::new(self.chain), url)),
         }
 
         Ok(())
@@ -405,7 +405,9 @@ impl MithrilSnapshotConfig {
 
         if (*locked_handle).is_some() {
             debug!("Mithril Already Running for {}", self.chain);
-            return Err(Error::MithrilSnapshotSyncAlreadyRunning(self.chain));
+            return Err(Error::MithrilSnapshotSyncAlreadyRunning(Box::new(
+                self.chain,
+            )));
         }
 
         self.validate().await?;

@@ -29,7 +29,7 @@ const DEFAULT_IMMUTABLE_SLOT_WINDOW: u64 = 12 * 60 * 60;
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
 
 /// Handle to the mithril sync thread. One for each Network ONLY.
-static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| DashMap::new());
+static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(DashMap::new);
 
 /// A Follower Connection to the Cardano Network.
 #[derive(Clone, Debug)]
@@ -145,7 +145,7 @@ impl ChainSyncConfig {
 
         if (*locked_handle).is_some() {
             debug!("Chain Sync Already Running for {}", self.chain);
-            return Err(Error::ChainSyncAlreadyRunning(self.chain));
+            return Err(Error::ChainSyncAlreadyRunning(Box::new(self.chain)));
         }
 
         // Start the Mithril Snapshot Follower

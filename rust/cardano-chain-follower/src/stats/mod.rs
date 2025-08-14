@@ -34,7 +34,7 @@ pub struct Statistics {
 /// Type we use to manage the Sync Task handle map.
 type StatsMap = DashMap<Network, Arc<RwLock<Statistics>>>;
 /// The statistics being maintained per chain.
-static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(|| StatsMap::default());
+static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(StatsMap::default);
 
 /// Get the stats for a particular chain.
 fn lookup_stats(chain: Network) -> Arc<RwLock<Statistics>> {
