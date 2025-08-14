@@ -10,7 +10,7 @@ use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::VerifyingKey;
 use key_registration::Cip36KeyRegistration;
 use minicbor::{Decode, Decoder};
-use pallas::ledger::addresses::Address;
+use pallas_addresses::Address;
 use registration_witness::Cip36RegistrationWitness;
 use voting_pk::VotingPubKey;
 

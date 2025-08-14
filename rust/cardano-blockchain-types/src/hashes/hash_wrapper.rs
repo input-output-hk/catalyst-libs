@@ -5,7 +5,8 @@
 /// # Examples
 ///
 /// ```
-/// use catalyst_types::{define_hashes, hashes::Blake2b128Hash};
+/// use cardano_blockchain_types::define_hashes;
+/// use cardano_blockchain_types::hashes::Blake2b128Hash;
 ///
 /// define_hashes!(
 ///     /// You can document the declared types...
