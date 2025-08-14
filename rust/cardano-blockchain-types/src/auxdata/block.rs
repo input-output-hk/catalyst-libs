@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::bail;
 use dashmap::DashMap;
-use pallas::ledger::traverse::MultiEraBlock;
+use pallas_traverse::MultiEraBlock;
 
 use super::aux_data::TransactionAuxData;
 use crate::txn_index::TxnIndex;
@@ -44,19 +44,19 @@ impl TryFrom<&MultiEraBlock<'_>> for BlockAuxData {
             if let Some(_metadata) = block.as_byron() {
                 // Nothing to do here.
             } else if let Some(alonzo_block) = block.as_alonzo() {
-                for (txn_idx, metadata) in alonzo_block.auxiliary_data_set.iter() {
+                for (txn_idx, metadata) in &alonzo_block.auxiliary_data_set {
                     let mut d = minicbor::Decoder::new(metadata.raw_cbor());
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
                     aux_data.insert((*txn_idx).into(), txn_aux_data);
                 }
             } else if let Some(babbage_block) = block.as_babbage() {
-                for (txn_idx, metadata) in babbage_block.auxiliary_data_set.iter() {
+                for (txn_idx, metadata) in &babbage_block.auxiliary_data_set {
                     let mut d = minicbor::Decoder::new(metadata.raw_cbor());
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
                     aux_data.insert((*txn_idx).into(), txn_aux_data);
                 }
             } else if let Some(conway_block) = block.as_conway() {
-                for (txn_idx, metadata) in conway_block.auxiliary_data_set.iter() {
+                for (txn_idx, metadata) in &conway_block.auxiliary_data_set {
                     let mut d = minicbor::Decoder::new(metadata.raw_cbor());
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
                     aux_data.insert((*txn_idx).into(), txn_aux_data);

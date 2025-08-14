@@ -6,7 +6,7 @@
 use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Context, Error, Result};
-use pallas::ledger::addresses::Address;
+use pallas_addresses::Address;
 
 /// A URI in the CIP-0134 format.
 ///
@@ -70,7 +70,7 @@ impl Cip0134Uri {
     ///
     /// ```
     /// use cardano_blockchain_types::Cip0134Uri;
-    /// use pallas::ledger::addresses::{Address, Network};
+    /// use pallas_addresses::{Address, Network};
     ///
     /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
     /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
@@ -106,7 +106,7 @@ impl TryFrom<&[u8]> for Cip0134Uri {
 
 #[cfg(test)]
 mod tests {
-    use pallas::ledger::addresses::{Address, Network};
+    use pallas_addresses::{Address, Network};
 
     use super::*;
 

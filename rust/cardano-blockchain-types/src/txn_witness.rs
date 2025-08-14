@@ -1,12 +1,12 @@
 //! Transaction Witness
 use std::fmt::{Display, Formatter};
 
-use catalyst_types::{conversion::vkey_from_bytes, hashes::Blake2b224Hash};
+use catalyst_types::conversion::vkey_from_bytes;
 use dashmap::{DashMap, DashSet};
 use ed25519_dalek::VerifyingKey;
-use pallas::ledger::traverse::MultiEraTx;
+use pallas_traverse::MultiEraTx;
 
-use crate::TxnIndex;
+use crate::{hashes::Blake2b224Hash, TxnIndex};
 
 /// Hash of a witness verifying public key
 pub type VKeyHash = Blake2b224Hash;
@@ -31,7 +31,7 @@ impl TxnWitness {
         /// Update the temporary map with the witnesses.
         fn update_map(
             map: &WitnessMap,
-            vkey_witness_set: Option<&Vec<pallas::ledger::primitives::conway::VKeyWitness>>,
+            vkey_witness_set: Option<&Vec<pallas_primitives::conway::VKeyWitness>>,
             i: usize,
         ) -> anyhow::Result<()> {
             if let Some(vkey_witness_set) = vkey_witness_set {
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn tx_witness() {
         let alonzo = alonzo_block();
-        let alonzo_block = pallas::ledger::traverse::MultiEraBlock::decode(&alonzo)
+        let alonzo_block = pallas_traverse::MultiEraBlock::decode(&alonzo)
             .expect("Failed to decode MultiEraBlock");
         let txs_alonzo = alonzo_block.txs();
         let tx_witness_alonzo = TxnWitness::new(&txs_alonzo).expect("Failed to create TxnWitness");
@@ -139,7 +139,7 @@ mod tests {
         assert!(tx_witness_alonzo.check_witness_in_tx(&vkey1_hash, 0.into()));
 
         let babbage = babbage_block();
-        let babbage_block = pallas::ledger::traverse::MultiEraBlock::decode(&babbage)
+        let babbage_block = pallas_traverse::MultiEraBlock::decode(&babbage)
             .expect("Failed to decode MultiEraBlock");
         let txs_babbage = babbage_block.txs();
         let tx_witness_babbage =
