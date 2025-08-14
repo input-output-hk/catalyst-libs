@@ -122,9 +122,8 @@ fn decompress(
 mod tests {
     use std::collections::HashMap;
 
-    use cardano_blockchain_types::Point;
+    use cardano_blockchain_types::{pallas_traverse::MultiEraTx, Point};
     use catalyst_types::problem_report::ProblemReport;
-    use pallas::ledger::traverse::MultiEraTx;
 
     use super::*;
     use crate::{cardano::cip509::PointTxnIdx, utils::test};
