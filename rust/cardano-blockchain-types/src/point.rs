@@ -282,8 +282,7 @@ impl Point {
     /// # Examples
     ///
     /// ```
-    /// use cardano_blockchain_types::Point;
-    /// use catalyst_types::hashes::Blake2b256Hash;
+    /// use cardano_blockchain_types::{hashes::Blake2b256Hash, Point};
     ///
     /// let specific_point = Point::new(42.into(), [0; 32].into());
     /// assert_eq!(
