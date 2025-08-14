@@ -2,9 +2,8 @@
 
 use std::collections::HashMap;
 
-use pallas::{
-    crypto::hash::Hash,
-    ledger::{addresses::ShelleyAddress, primitives::conway::Value},
+use cardano_blockchain_types::{
+    pallas_addresses::ShelleyAddress, pallas_crypto::hash::Hash, pallas_primitives::conway::Value,
 };
 
 use super::point_tx_idx::PointTxnIdx;

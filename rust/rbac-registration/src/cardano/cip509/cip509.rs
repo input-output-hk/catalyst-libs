@@ -9,12 +9,16 @@ use std::{
 
 use anyhow::{anyhow, Context};
 use cardano_blockchain_types::{
-    MetadatumLabel, MultiEraBlock, StakeAddress, TransactionId, TxnIndex,
+    hashes::{Blake2b256Hash, TransactionId, BLAKE_2B256_SIZE},
+    pallas_addresses::{Address, ShelleyAddress},
+    pallas_codec::utils::Nullable,
+    pallas_primitives::conway,
+    pallas_traverse::MultiEraTx,
+    MetadatumLabel, MultiEraBlock, StakeAddress, TxnIndex,
 };
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
     cbor_utils::{report_duplicated_key, report_missing_keys},
-    hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
@@ -22,14 +26,6 @@ use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
     decode::{self},
     Decode, Decoder,
-};
-use pallas::{
-    codec::utils::Nullable,
-    ledger::{
-        addresses::{Address, ShelleyAddress},
-        primitives::conway,
-        traverse::MultiEraTx,
-    },
 };
 use strum_macros::FromRepr;
 use tracing::warn;
@@ -459,7 +455,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
 
 /// Records the payment history for the given set of addresses.
 fn payment_history(
-    txn: &conway::MintedTx,
+    txn: &conway::Tx,
     track_payment_addresses: &[ShelleyAddress],
     origin: &PointTxnIdx,
     report: &ProblemReport,
@@ -474,7 +470,7 @@ fn payment_history(
         .collect();
 
     for (index, output) in txn.transaction_body.outputs.iter().enumerate() {
-        let conway::PseudoTransactionOutput::PostAlonzo(output) = output else {
+        let conway::TransactionOutput::PostAlonzo(output) = output else {
             continue;
         };
 

@@ -10,10 +10,9 @@ use c509_certificate::{
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
     C509ExtensionType,
 };
-use cardano_blockchain_types::{Cip0134Uri, StakeAddress};
+use cardano_blockchain_types::{pallas_addresses::Address, Cip0134Uri, StakeAddress};
 use catalyst_types::problem_report::ProblemReport;
 use der_parser::der::parse_der_sequence;
-use pallas::ledger::addresses::Address;
 use tracing::debug;
 use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
 
@@ -304,7 +303,7 @@ fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
 
 #[cfg(test)]
 mod tests {
-    use pallas::ledger::addresses::{Address, Network};
+    use cardano_blockchain_types::pallas_addresses::{Address, Network};
 
     use crate::{cardano::cip509::Cip509, utils::test};
 
