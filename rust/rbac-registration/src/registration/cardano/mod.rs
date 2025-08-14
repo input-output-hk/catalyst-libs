@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::Context;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{Point, StakeAddress, TransactionId, TxnIndex};
+use cardano_blockchain_types::{hashes::TransactionId, Point, StakeAddress, TxnIndex};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
