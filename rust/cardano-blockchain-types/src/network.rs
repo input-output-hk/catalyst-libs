@@ -4,10 +4,11 @@ use std::{ffi::OsStr, path::PathBuf};
 
 use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
-use pallas::{
-    ledger::{addresses::Network as PallasNetwork, traverse::wellknown::GenesisValues},
-    network::miniprotocols::{MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC},
+use pallas_addresses::Network as PallasNetwork;
+use pallas_primitives::types::network_constant::{
+    MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC,
 };
+use pallas_traverse::wellknown::GenesisValues;
 use tracing::debug;
 
 use crate::Slot;
