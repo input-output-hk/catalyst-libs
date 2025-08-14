@@ -8,9 +8,8 @@ use std::sync::LazyLock;
 
 use cardano_blockchain_types::Network;
 use dashmap::DashMap;
-use strum::IntoEnumIterator;
 use tokio::{sync::Mutex, task::JoinHandle};
-use tracing::{debug, error};
+use tracing::debug;
 
 use crate::{
     chain_sync::chain_sync,
@@ -30,13 +29,7 @@ const DEFAULT_IMMUTABLE_SLOT_WINDOW: u64 = 12 * 60 * 60;
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
 
 /// Handle to the mithril sync thread. One for each Network ONLY.
-static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
-    let map = DashMap::new();
-    for network in Network::iter() {
-        map.insert(network, Mutex::new(None));
-    }
-    map
-});
+static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| DashMap::new());
 
 /// A Follower Connection to the Cardano Network.
 #[derive(Clone, Debug)]
@@ -145,13 +138,9 @@ impl ChainSyncConfig {
         stats::sync_started(self.chain);
 
         // Start the Chain Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
-            None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
-                return Err(Error::Internal); // Should not get here.
-            },
-            Some(entry) => entry,
-        };
+        let lock_entry = SYNC_JOIN_HANDLE_MAP
+            .entry(self.chain)
+            .or_insert_with(|| Mutex::new(None));
         let mut locked_handle = lock_entry.value().lock().await;
 
         if (*locked_handle).is_some() {
