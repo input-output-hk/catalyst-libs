@@ -2,8 +2,11 @@
 
 use std::{io, path::PathBuf};
 
-use cardano_blockchain_types::Network;
-use pallas::network::miniprotocols::chainsync;
+use cardano_blockchain_types::{
+    pallas_hardano,
+    pallas_network::{self, miniprotocols::chainsync},
+    pallas_traverse, Network,
+};
 use thiserror::Error;
 
 /// Crate error type.
@@ -14,10 +17,10 @@ pub enum Error {
     Codec(String),
     /// Client connection error.
     #[error("Client error: {0:?}")]
-    Client(pallas::network::facades::Error),
+    Client(pallas_network::facades::Error),
     /// Blockfetch protocol error.
     #[error("Blockfetch error: {0:?}")]
-    Blockfetch(pallas::network::miniprotocols::blockfetch::ClientError),
+    Blockfetch(pallas_network::miniprotocols::blockfetch::ClientError),
     /// Chainsync protocol error.
     #[error("Chainsync error: {0:?}")]
     Chainsync(chainsync::ClientError),
@@ -47,7 +50,7 @@ pub enum Error {
     MithrilSnapshotChunk(pallas_hardano::storage::immutable::chunk::Error),
     /// Mithril snapshot traversal error.
     #[error("Failed to traverse block(s) from Mithril snapshot")]
-    MithrilSnapshotTraverse(pallas::ledger::traverse::Error),
+    MithrilSnapshotTraverse(pallas_traverse::Error),
     /// Failed to parse network error.
     #[error("Failed to parse network")]
     ParseNetwork,

@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
+use cardano_blockchain_types::{pallas_traverse, Fork, MultiEraBlock, Network, Point};
 use logcall::logcall;
 use tokio::task;
 use tracing::{debug, error};
@@ -104,8 +104,7 @@ impl MithrilSnapshotIterator {
 
             match next {
                 Some(Ok(raw_block)) => {
-                    let Ok(block) = pallas::ledger::traverse::MultiEraBlock::decode(&raw_block)
-                    else {
+                    let Ok(block) = pallas_traverse::MultiEraBlock::decode(&raw_block) else {
                         return None;
                     };
 
@@ -267,9 +266,7 @@ impl Iterator for MithrilSnapshotIteratorInner {
 
                 // We cannot fully decode this block because we don't know its previous point,
                 // So this MUST be the first block in iteration, so use it as the previous.
-                if let Ok(raw_decoded_block) =
-                    pallas::ledger::traverse::MultiEraBlock::decode(&block)
-                {
+                if let Ok(raw_decoded_block) = pallas_traverse::MultiEraBlock::decode(&block) {
                     // debug!("Pre Previous update 2 : {:?}", self.previous);
                     self.previous = Point::new(
                         raw_decoded_block.slot().into(),
