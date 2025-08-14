@@ -63,10 +63,6 @@ impl ContentTypeRule {
                     anyhow::bail!("Invalid {} content: {e}", self.exp)
                 }
             },
-            ContentType::Cddl => {
-                // TODO: not implemented yet
-                anyhow::bail!("`application/cddl` is valid but unavailable yet")
-            },
             ContentType::Cbor => {
                 let mut decoder = minicbor::Decoder::new(content);
 
@@ -76,9 +72,18 @@ impl ContentTypeRule {
                     anyhow::bail!("Unused bytes remain in the input after decoding")
                 }
             },
-            ContentType::JsonSchema => {
+            ContentType::Cddl
+            | ContentType::JsonSchema
+            | ContentType::Css
+            | ContentType::CssHandlebars
+            | ContentType::Html
+            | ContentType::HtmlHandlebars
+            | ContentType::Markdown
+            | ContentType::MarkdownHandlebars
+            | ContentType::Plain
+            | ContentType::PlainHandlebars => {
                 // TODO: not implemented yet
-                anyhow::bail!("`application/json+schema` is valid but unavailable yet")
+                anyhow::bail!("`{}` is valid but unavailable yet", self.exp)
             },
         }
         Ok(())

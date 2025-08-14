@@ -21,17 +21,7 @@ pub(crate) const ENVVAR_MITHRIL_EXE_NAME: &str = "MITHRIL_EXE_NAME";
 
 /// Enum of possible Cardano networks.
 #[derive(
-    Debug,
-    Copy,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    strum::EnumIter,
-    strum::VariantNames,
-    strum::Display,
+    Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, strum::VariantNames, strum::Display,
 )]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
