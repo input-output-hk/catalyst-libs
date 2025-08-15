@@ -39,7 +39,12 @@ impl ReplyRule {
             if let Some(reply_ref) = doc.doc_meta().reply() {
                 let reply_validator = |ref_doc: CatalystSignedDocument| {
                     // Validate type
-                    if !referenced_doc_check(&ref_doc, exp_reply_type, "reply", doc.report()) {
+                    if !referenced_doc_check(
+                        &ref_doc,
+                        std::slice::from_ref(exp_reply_type),
+                        "reply",
+                        doc.report(),
+                    ) {
                         return false;
                     }
 
