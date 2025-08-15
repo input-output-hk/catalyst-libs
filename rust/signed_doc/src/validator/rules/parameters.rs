@@ -758,7 +758,7 @@ mod tests {
         }
         => false
         ;
-        "refence to the not known document"
+        "reference to the not known document"
     )]
     #[tokio::test]
     async fn parameter_specified_test(
