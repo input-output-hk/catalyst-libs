@@ -1,4 +1,4 @@
-//! Catalyst Signed Documents code generation macroses from the defined `signed_doc.json`
+//! Catalyst Signed Documents code generation macro's from the defined `signed_doc.json`
 //! spec.
 
 mod error;
