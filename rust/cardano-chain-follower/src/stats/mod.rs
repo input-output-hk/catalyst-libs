@@ -13,7 +13,6 @@ use chrono::Utc;
 use dashmap::DashMap;
 use rollback::{rollbacks, rollbacks_reset, RollbackType};
 use serde::Serialize;
-use strum::IntoEnumIterator;
 use thread::ThreadStat;
 use tracing::error;
 
@@ -35,35 +34,24 @@ pub struct Statistics {
 /// Type we use to manage the Sync Task handle map.
 type StatsMap = DashMap<Network, Arc<RwLock<Statistics>>>;
 /// The statistics being maintained per chain.
-static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(|| {
-    let map = StatsMap::default();
-
-    for network in Network::iter() {
-        let stats = Statistics::default();
-        map.insert(network, Arc::new(RwLock::new(stats)));
-    }
-    map
-});
+static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(StatsMap::default);
 
 /// Get the stats for a particular chain.
-fn lookup_stats(chain: Network) -> Option<Arc<RwLock<Statistics>>> {
-    let Some(chain_entry) = STATS_MAP.get(&chain) else {
-        error!("Stats MUST BE exhaustively pre-allocated.");
-        return None;
-    };
+fn lookup_stats(chain: Network) -> Arc<RwLock<Statistics>> {
+    let chain_entry = STATS_MAP
+        .entry(chain)
+        .or_insert_with(|| Arc::new(RwLock::new(Statistics::default())));
 
     let chain_stats = chain_entry.value();
 
-    Some(chain_stats.clone())
+    chain_stats.clone()
 }
 
 impl Statistics {
     /// Get a new statistics struct for a given blockchain network.
     #[must_use]
     pub fn new(chain: Network) -> Self {
-        let Some(stats) = lookup_stats(chain) else {
-            return Statistics::default();
-        };
+        let stats = lookup_stats(chain);
 
         let Ok(chain_stats) = stats.read() else {
             return Statistics::default();
@@ -87,9 +75,7 @@ impl Statistics {
     /// Get the current tips of the immutable chain and live chain.
     pub(crate) fn tips(chain: Network) -> (Slot, Slot) {
         let zero_slot = Slot::from_saturating(0);
-        let Some(stats) = lookup_stats(chain) else {
-            return (zero_slot, zero_slot);
-        };
+        let stats = lookup_stats(chain);
 
         let Ok(chain_stats) = stats.read() else {
             return (zero_slot, zero_slot);
@@ -101,9 +87,7 @@ impl Statistics {
     /// Reset amd return cumulative counters contained in the statistics.
     #[must_use]
     pub fn reset(chain: Network) -> Self {
-        let Some(stats) = lookup_stats(chain) else {
-            return Statistics::default();
-        };
+        let stats = lookup_stats(chain);
 
         let Ok(mut chain_stats) = stats.write() else {
             return Statistics::default();
@@ -147,10 +131,7 @@ pub(crate) fn stats_invalid_block(
     chain: Network,
     immutable: bool,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -172,10 +153,7 @@ pub(crate) fn new_live_block(
     head_slot: Slot,
     tip_slot: Slot,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -194,10 +172,7 @@ pub(crate) fn new_mithril_update(
     chain: Network,
     mithril_tip: Slot,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -214,10 +189,7 @@ pub(crate) fn new_live_total_blocks(
     chain: Network,
     total_live_blocks: u64,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -230,10 +202,7 @@ pub(crate) fn new_live_total_blocks(
 
 /// When did we start the backfill.
 pub(crate) fn backfill_started(chain: Network) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -256,10 +225,7 @@ pub(crate) fn backfill_ended(
     chain: Network,
     backfill_size: u64,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -277,10 +243,7 @@ pub(crate) fn peer_connected(
     active: bool,
     peer_address: &str,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -302,10 +265,7 @@ pub(crate) fn peer_connected(
 
 /// Record when we started syncing
 pub(crate) fn sync_started(chain: Network) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -319,10 +279,7 @@ pub(crate) fn sync_started(chain: Network) {
 /// Record when we first reached tip. This can safely be called multiple times.
 /// Except for overhead, only the first call will actually record the time.
 pub(crate) fn tip_reached(chain: Network) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -337,10 +294,7 @@ pub(crate) fn tip_reached(chain: Network) {
 
 /// Record that a Mithril snapshot Download has started.
 pub(crate) fn mithril_dl_started(chain: Network) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -357,10 +311,7 @@ pub(crate) fn mithril_dl_finished(
     chain: Network,
     dl_size: Option<u64>,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -385,10 +336,7 @@ pub(crate) fn mithril_dl_finished(
 
 /// Record that extracting the mithril snapshot archive has started.
 pub(crate) fn mithril_extract_started(chain: Network) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -409,10 +357,7 @@ pub(crate) fn mithril_extract_finished(
     changed_files: u64,
     new_files: u64,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -449,10 +394,7 @@ pub(crate) fn mithril_validation_state(
     chain: Network,
     mithril_state: MithrilValidationState,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -490,10 +432,7 @@ pub(crate) fn mithril_sync_failure(
     chain: Network,
     failure: MithrilSyncFailures,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -540,10 +479,7 @@ pub(crate) fn start_thread(
     name: &str,
     is_service: bool,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -561,10 +497,7 @@ pub(crate) fn stop_thread(
     chain: Network,
     name: &str,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -582,10 +515,7 @@ pub(crate) fn resume_thread(
     chain: Network,
     name: &str,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -603,10 +533,7 @@ pub(crate) fn pause_thread(
     chain: Network,
     name: &str,
 ) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -625,8 +552,7 @@ pub fn thread_stat(
     chain: Network,
     name: &str,
 ) -> Option<ThreadStat> {
-    // This will actually always succeed.
-    let stats = lookup_stats(chain)?;
+    let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
         // Worst case if this fails (it never should) is we stop updating stats.
@@ -640,9 +566,7 @@ pub fn thread_stat(
 /// Get the names of all the thread statistics.
 #[allow(dead_code)]
 pub fn thread_stat_names(chain: Network) -> Vec<String> {
-    let Some(stats) = lookup_stats(chain) else {
-        return Vec::new();
-    };
+    let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
         error!("Stats RwLock should never be able to error.");
@@ -714,17 +638,10 @@ mod tests {
     }
 
     #[test]
-    fn test_lookup_stats() {
-        let network = Network::Preprod;
-        let stats = lookup_stats(network);
-        assert!(stats.is_some());
-    }
-
-    #[test]
     fn test_new_live_block() {
         let network = Network::Preprod;
         new_live_block(network, 100, 50.into(), 200.into());
-        let stats = lookup_stats(network).unwrap();
+        let stats = lookup_stats(network);
         let stats = stats.read().unwrap();
         assert_eq!(stats.live.blocks, 100);
         assert_eq!(stats.live.head_slot, 50.into());
@@ -735,7 +652,7 @@ mod tests {
     fn test_mithril_dl_started() {
         let network = Network::Preprod;
         mithril_dl_started(network);
-        let stats = lookup_stats(network).unwrap();
+        let stats = lookup_stats(network);
         let stats = stats.read().unwrap();
         assert!(stats.mithril.dl_start <= Utc::now());
     }
