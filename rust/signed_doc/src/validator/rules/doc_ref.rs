@@ -93,9 +93,10 @@ pub(crate) fn referenced_doc_check(
 }
 
 #[cfg(test)]
-#[allow(clippy::similar_names, clippy::too_many_lines)]
+#[allow(clippy::too_many_lines)]
 mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
+    use test_case::test_case;
 
     use super::*;
     use crate::{
@@ -103,162 +104,278 @@ mod tests {
         providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
     };
 
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the one correct document, non optional rule"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let ref_doc_1 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_1).unwrap();
+            let ref_doc_2 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_2).unwrap();
+            let ref_doc_3 = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+            .build();
+            provider.add_document(None, &ref_doc_3).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc_1.doc_id().unwrap(),
+                        ref_doc_1.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_2.doc_id().unwrap(),
+                        ref_doc_2.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_3.doc_id().unwrap(),
+                        ref_doc_3.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the multiple documents, non optional rule"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let ref_doc_1 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_1).unwrap();
+            let ref_doc_2 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_2).unwrap();
+            let ref_doc_3 = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
+            .build();
+            provider.add_document(None, &ref_doc_3).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc_1.doc_id().unwrap(),
+                        ref_doc_1.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_2.doc_id().unwrap(),
+                        ref_doc_2.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_3.doc_id().unwrap(),
+                        ref_doc_3.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the multiple documents, one of them invalid `type` field"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let ref_doc_1 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_1).unwrap();
+            let ref_doc_2 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_2).unwrap();
+            let ref_doc_3 = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .build();
+            provider.add_document(None, &ref_doc_3).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc_1.doc_id().unwrap(),
+                        ref_doc_1.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_2.doc_id().unwrap(),
+                        ref_doc_2.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_3.doc_id().unwrap(),
+                        ref_doc_3.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the multiple documents, one of them missing `type` field"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(Some(DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default())), &ref_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "invalid reference to the document, which has different id and ver fields as stated in the `ref` field"
+    )]
+    #[test_case(
+        false,
+        |_, _| {
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        UuidV7::new(),
+                        UuidV7::new(),
+                        DocLocator::default(),
+                    ),
+                    ]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the missing one document"
+    )]
+    #[test_case(
+        true,
+        |exp_param_types, provider| {
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the one correct document, optional rule"
+    )]
+    #[test_case(
+        true,
+        |_, _| {
+            Builder::new()
+                .build()
+        }
+        => true
+        ;
+        "missing ref field, optional rule"
+    )]
+    #[test_case(
+        false,
+        |_, _| {
+            Builder::new()
+                .build()
+        }
+        => false
+        ;
+        "missing ref field, non optional rule"
+    )]
     #[tokio::test]
-    async fn ref_rule_specified_test() {
+    async fn ref_specified_test(
+        optional: bool,
+        doc_gen: impl FnOnce(
+            &[DocType; 2],
+            &mut TestCatalystSignedDocumentProvider,
+        ) -> CatalystSignedDocument,
+    ) -> bool {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        let exp_ref_type = UuidV4::new();
+        let exp_param_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
-        let valid_referenced_doc_id = UuidV7::new();
-        let valid_referenced_doc_ver = UuidV7::new();
-        let different_id_and_ver_referenced_doc_id = UuidV7::new();
-        let different_id_and_ver_referenced_doc_ver = UuidV7::new();
-        let another_type_referenced_doc_id = UuidV7::new();
-        let another_type_referenced_doc_ver = UuidV7::new();
-        let missing_type_referenced_doc_id = UuidV7::new();
-        let missing_type_referenced_doc_ver = UuidV7::new();
-
-        // Prepare provider documents
-        {
-            // Valid one
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(valid_referenced_doc_id))
-                .with_metadata_field(SupportedField::Ver(valid_referenced_doc_ver))
-                .with_metadata_field(SupportedField::Type(exp_ref_type.into()))
-                .build();
-            provider.add_document(None, &doc).unwrap();
-
-            // Having different id and ver in registered reference
-            let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(different_id_and_ver_referenced_doc_id))
-                .with_metadata_field(SupportedField::Ver(different_id_and_ver_referenced_doc_ver))
-                .with_metadata_field(SupportedField::Type(exp_ref_type.into()))
-                .build();
-            provider.add_document(Some(doc_ref), &doc).unwrap();
-
-            // Having another `type` field
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(another_type_referenced_doc_id))
-                .with_metadata_field(SupportedField::Ver(another_type_referenced_doc_id))
-                .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
-                .build();
-            provider.add_document(None, &doc).unwrap();
-
-            // Missing `type` field in the referenced document
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(missing_type_referenced_doc_id))
-                .with_metadata_field(SupportedField::Ver(missing_type_referenced_doc_ver))
-                .build();
-            provider.add_document(None, &doc).unwrap();
-        }
-
-        // Create a document where `ref` field is required and referencing a valid document in
-        // provider. Using doc ref of new implementation.
         let rule = RefRule::Specified {
-            exp_ref_types: vec![exp_ref_type.into()],
-            optional: false,
+            exp_ref_types: exp_param_types.to_vec(),
+            optional,
         };
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    valid_referenced_doc_id,
-                    valid_referenced_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // Having multiple refs, where one ref doc is not found.
-        // Checking match all of
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![
-                    DocumentRef::new(
-                        valid_referenced_doc_id,
-                        valid_referenced_doc_ver,
-                        DocLocator::default(),
-                    ),
-                    DocumentRef::new(
-                        different_id_and_ver_referenced_doc_id,
-                        different_id_and_ver_referenced_doc_ver,
-                        DocLocator::default(),
-                    ),
-                ]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Invalid the ref doc id and ver doesn't match the id and ver in ref doc ref
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    different_id_and_ver_referenced_doc_id,
-                    different_id_and_ver_referenced_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // All correct, `ref` field is missing, but its optional
-        let rule = RefRule::Specified {
-            exp_ref_types: vec![exp_ref_type.into()],
-            optional: true,
-        };
-        let doc = Builder::new().build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // Missing `ref` field, but its required
-        let rule = RefRule::Specified {
-            exp_ref_types: vec![exp_ref_type.into()],
-            optional: false,
-        };
-        let doc = Builder::new().build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Reference to the document with another `type` field
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    another_type_referenced_doc_id,
-                    another_type_referenced_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Missing `type` field in the referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    missing_type_referenced_doc_id,
-                    missing_type_referenced_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // cannot find a referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
+        let doc = doc_gen(&exp_param_types, &mut provider);
+        rule.check(&doc, &provider).await.unwrap()
     }
 
     #[tokio::test]
