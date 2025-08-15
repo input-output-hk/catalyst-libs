@@ -1,8 +1,12 @@
 //! `parameters` rule type impl.
 
+use catalyst_types::problem_report::ProblemReport;
+use futures::FutureExt;
+
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
-    CatalystSignedDocument, DocType,
+    providers::CatalystSignedDocumentProvider,
+    validator::{rules::doc_ref::referenced_doc_check, utils::validate_doc_refs},
+    CatalystSignedDocument, DocType, DocumentRefs,
 };
 
 /// `parameters` field validation rule
@@ -38,38 +42,51 @@ impl ParametersRule {
         {
             if let Some(parameters_ref) = doc.doc_meta().parameters() {
                 let parameters_validator = |ref_doc: CatalystSignedDocument| {
-                    let Ok(ref_doc_type) = ref_doc.doc_type() else {
-                        doc.report().missing_field(
-                            "type",
-                            &format!("{context}, Referenced document must have type field"),
-                        );
-                        return false;
-                    };
-
-                    // Check that the type matches one of the expected ones
-                    if exp_parameters_type
-                        .iter()
-                        .all(|exp_type| ref_doc_type != exp_type)
-                    {
-                        doc.report().invalid_value(
-                            "parameters",
-                            &ref_doc_type.to_string(),
-                            &exp_parameters_type
-                                .iter()
-                                .fold(String::new(), |s, v| format!("{s}, {v}")),
-                            &format!("{context}, Invalid referenced document type"),
-                        );
-                        return false;
-                    }
-                    true
+                    referenced_doc_check(&ref_doc, exp_parameters_type, "parameters", doc.report())
                 };
-                return validate_doc_refs(
+                let parameters_check =
+                    validate_doc_refs(parameters_ref, provider, doc.report(), parameters_validator)
+                        .boxed();
+
+                let template_link_check = link_check(
+                    doc.doc_meta().template(),
                     parameters_ref,
+                    "template",
                     provider,
                     doc.report(),
-                    parameters_validator,
                 )
-                .await;
+                .boxed();
+                let ref_link_check = link_check(
+                    doc.doc_meta().doc_ref(),
+                    parameters_ref,
+                    "ref",
+                    provider,
+                    doc.report(),
+                )
+                .boxed();
+                let reply_link_check = link_check(
+                    doc.doc_meta().reply(),
+                    parameters_ref,
+                    "reply",
+                    provider,
+                    doc.report(),
+                )
+                .boxed();
+
+                let checks = [
+                    parameters_check,
+                    template_link_check,
+                    ref_link_check,
+                    reply_link_check,
+                ];
+                let res = futures::future::join_all(checks)
+                    .await
+                    .into_iter()
+                    .collect::<anyhow::Result<Vec<_>>>()?
+                    .iter()
+                    .all(|res| *res);
+
+                return Ok(res);
             } else if !optional {
                 doc.report().missing_field(
                     "parameters",
@@ -93,10 +110,53 @@ impl ParametersRule {
     }
 }
 
+/// Parameter Link reference check
+pub(crate) async fn link_check<Provider>(
+    ref_field: Option<&DocumentRefs>,
+    exp_parameters: &DocumentRefs,
+    field_name: &str,
+    provider: &Provider,
+    report: &ProblemReport,
+) -> anyhow::Result<bool>
+where
+    Provider: CatalystSignedDocumentProvider,
+{
+    let Some(ref_field) = ref_field else {
+        return Ok(true);
+    };
+
+    let link_validator = |ref_doc: CatalystSignedDocument| {
+        let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
+            report.missing_field(
+                "parameters",
+                &format!(
+                    "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
+                ),
+            );
+            return false;
+        };
+
+        if exp_parameters != ref_doc_parameters {
+            report.invalid_value(
+                "parameters",
+                &format!("Reference doc param: {ref_doc_parameters}",),
+                &format!("Doc param: {exp_parameters}"),
+                &format!(
+                    "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
+                ),
+            );
+            return false;
+        }
+        true
+    };
+
+    validate_doc_refs(ref_field, provider, report, link_validator).await
+}
+
 #[cfg(test)]
-#[allow(clippy::similar_names, clippy::too_many_lines)]
 mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
+    use test_case::test_case;
 
     use super::*;
     use crate::{
@@ -104,171 +164,620 @@ mod tests {
         providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
     };
 
-    #[tokio::test]
-    async fn ref_rule_specified_test() {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
-
-        let exp_parameters_cat_type = UuidV4::new();
-        let exp_parameters_cam_type = UuidV4::new();
-        let exp_parameters_brand_type = UuidV4::new();
-
-        let exp_param_type: Vec<DocType> = vec![
-            exp_parameters_cat_type.into(),
-            exp_parameters_cam_type.into(),
-            exp_parameters_brand_type.into(),
-        ];
-
-        let valid_category_doc_id = UuidV7::new();
-        let valid_category_doc_ver = UuidV7::new();
-        let valid_brand_doc_id = UuidV7::new();
-        let valid_brand_doc_ver = UuidV7::new();
-        let another_type_category_doc_id = UuidV7::new();
-        let another_type_category_doc_ver = UuidV7::new();
-        let missing_type_category_doc_id = UuidV7::new();
-        let missing_type_category_doc_ver = UuidV7::new();
-
-        // Prepare provider documents
-        {
-            // Category doc
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(valid_category_doc_id))
-                .with_metadata_field(SupportedField::Ver(valid_category_doc_ver))
-                .with_metadata_field(SupportedField::Type(exp_parameters_cat_type.into()))
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
                 .build();
-            provider.add_document(None, &doc).unwrap();
+            provider.add_document(None, &parameter_doc).unwrap();
 
-            // Brand doc
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(valid_brand_doc_id))
-                .with_metadata_field(SupportedField::Ver(valid_brand_doc_ver))
-                .with_metadata_field(SupportedField::Type(exp_parameters_cat_type.into()))
+            Builder::new()
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, non optional rule"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
                 .build();
-            provider.add_document(None, &doc).unwrap();
+            provider.add_document(None, &parameter_doc).unwrap();
 
-            // Other type
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(another_type_category_doc_id))
-                .with_metadata_field(SupportedField::Ver(another_type_category_doc_ver))
+            let common_parameter_field: DocumentRefs = vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into();
+            let template_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
+                .build();
+            provider.add_document(None, &template_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Template(
+                    vec![DocumentRef::new(
+                        template_doc.doc_id().unwrap(),
+                        template_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(common_parameter_field))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, with valid template field"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Template(
+                    vec![DocumentRef::new(
+                        UuidV7::new(),
+                        UuidV7::new(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing template doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let template_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .build();
+            provider.add_document(None, &template_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Template(
+                    vec![DocumentRef::new(
+                        template_doc.doc_id().unwrap(),
+                        template_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing parameters field in template doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let template_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    UuidV7::new(),
+                    UuidV7::new(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build();
+            provider.add_document(None, &template_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Template(
+                    vec![DocumentRef::new(
+                        template_doc.doc_id().unwrap(),
+                        template_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with different parameters field in template doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let common_parameter_field: DocumentRefs = vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into();
+            let replied_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
+                .build();
+            provider.add_document(None, &replied_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Reply(
+                    vec![DocumentRef::new(
+                        replied_doc.doc_id().unwrap(),
+                        replied_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(common_parameter_field))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, with valid reply field"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Reply(
+                    vec![DocumentRef::new(
+                        UuidV7::new(),
+                        UuidV7::new(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing reply doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let reply_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .build();
+            provider.add_document(None, &reply_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Reply(
+                    vec![DocumentRef::new(
+                        reply_doc.doc_id().unwrap(),
+                        reply_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing parameters field in replied doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let reply_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    UuidV7::new(),
+                    UuidV7::new(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build();
+            provider.add_document(None, &reply_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Reply(
+                    vec![DocumentRef::new(
+                        reply_doc.doc_id().unwrap(),
+                        reply_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with different parameters field in reply doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let common_parameter_field: DocumentRefs = vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into();
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(common_parameter_field))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, with valid ref field"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        UuidV7::new(),
+                        UuidV7::new(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing ref doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing parameters field in ref doc"
+    )]
+    #[test_case(
+        false,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    UuidV7::new(),
+                    UuidV7::new(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into()
+                ))
+                .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
+                    parameter_doc.doc_id().unwrap(),
+                    parameter_doc.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into()))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with different parameters field in ref doc"
+    )]
+    #[test_case(
+        true,
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, optional rule"
+    )]
+    #[test_case(
+        true,
+        |_, _| {
+            Builder::new()
+                .build()
+        }
+        => true
+        ;
+        "missing parameters field, optional rule"
+    )]
+    #[test_case(
+        false,
+        |_, _| {
+            Builder::new()
+                .build()
+        }
+        => false
+        ;
+        "missing parameters field, non optional rule"
+    )]
+    #[test_case(
+        false,
+        |_, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
                 .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
                 .build();
-            provider.add_document(None, &doc).unwrap();
+            provider.add_document(None, &parameter_doc).unwrap();
 
-            // Missing `type` field in the referenced document
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(missing_type_category_doc_id))
-                .with_metadata_field(SupportedField::Ver(missing_type_category_doc_ver))
-                .build();
-            provider.add_document(None, &doc).unwrap();
+            Builder::new()
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
         }
+        => false
+        ;
+        "valid reference to the invalid parameters document, wrong parameters type field value"
+    )]
+    #[test_case(
+        false,
+        |_, provider| {
+            let parameter_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .build();
+            provider.add_document(None, &parameter_doc).unwrap();
 
-        // Create a document where `parameters` field is required and referencing a valid document
-        // in provider. Using doc ref of new implementation.
-        let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_param_type.clone(),
-            optional: false,
-        };
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    valid_category_doc_id,
-                    valid_category_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // Parameters contain multiple ref
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Parameters(
-                vec![
-                    DocumentRef::new(
-                        valid_category_doc_id,
-                        valid_category_doc_ver,
+            Builder::new()
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![DocumentRef::new(
+                        parameter_doc.doc_id().unwrap(),
+                        parameter_doc.doc_ver().unwrap(),
                         DocLocator::default(),
-                    ),
-                    DocumentRef::new(
-                        valid_brand_doc_id,
-                        valid_brand_doc_ver,
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the invalid parameters document, missing type field"
+    )]
+    #[test_case(
+        false,
+        |_, _| {
+            Builder::new()
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![DocumentRef::new(
+                        UuidV7::new(),
+                        UuidV7::new(),
                         DocLocator::default(),
-                    ),
-                ]
-                .into(),
-            ))
-            .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "refence to the not known document"
+    )]
+    #[tokio::test]
+    async fn parameter_specified_test(
+        optional: bool,
+        doc_gen: impl FnOnce(
+            &[DocType; 2],
+            &mut TestCatalystSignedDocumentProvider,
+        ) -> CatalystSignedDocument,
+    ) -> bool {
+        let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        // Parameters contain multiple ref, but one of them is invalid (not registered).
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Parameters(
-                vec![
-                    DocumentRef::new(
-                        valid_category_doc_id,
-                        valid_category_doc_ver,
-                        DocLocator::default(),
-                    ),
-                    DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default()),
-                ]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
+        let exp_param_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
-        // All correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_param_type.clone(),
-            optional: true,
+            exp_parameters_type: exp_param_types.to_vec(),
+            optional,
         };
-        let doc = Builder::new().build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // Missing `parameters` field, but its required
-        let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_param_type,
-            optional: false,
-        };
-        let doc = Builder::new().build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Reference to the document with another `type` field
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    another_type_category_doc_id,
-                    another_type_category_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Missing `type` field in the referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    missing_type_category_doc_id,
-                    missing_type_category_doc_ver,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Cannot find a referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
+        let doc = doc_gen(&exp_param_types, &mut provider);
+        rule.check(&doc, &provider).await.unwrap()
     }
 
     #[tokio::test]

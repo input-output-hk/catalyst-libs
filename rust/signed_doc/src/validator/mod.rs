@@ -12,8 +12,8 @@ use std::{
 use anyhow::Context;
 use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 use rules::{
-    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, LinkField,
-    ParameterLinkRefRule, ParametersRule, RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
+    ReplyRule, Rules, SectionRule, SignatureKidRule,
 };
 
 use crate::{
@@ -61,9 +61,6 @@ fn proposal_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
-        param_link_ref: ParameterLinkRefRule::Specified {
-            field: LinkField::Template,
-        },
     }
 }
 
@@ -89,7 +86,7 @@ fn proposal_comment_rule() -> Rules {
             exp_template_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: PROPOSAL.clone(),
+            exp_ref_types: vec![PROPOSAL.clone()],
             optional: false,
         },
         reply: ReplyRule::Specified {
@@ -103,10 +100,6 @@ fn proposal_comment_rule() -> Rules {
         },
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
-        },
-        // Link field can be either template or ref
-        param_link_ref: ParameterLinkRefRule::Specified {
-            field: LinkField::Template,
         },
     }
 }
@@ -146,16 +139,13 @@ fn proposal_submission_action_rule() -> Rules {
             optional: false,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: PROPOSAL.clone(),
+            exp_ref_types: vec![PROPOSAL.clone()],
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
-        },
-        param_link_ref: ParameterLinkRefRule::Specified {
-            field: LinkField::Ref,
         },
     }
 }
