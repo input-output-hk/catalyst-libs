@@ -1,21 +1,18 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.4.4 AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:fix/add_python_tools_for_docs_generation AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:fix/add_python_tools_for_docs_generation AS debian
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cue:fix/add_python_tools_for_docs_generation AS cue
 
 IMPORT ../docs AS docs
 
-# cspell: words cuelang
-
-# Get cue binary
-cue-bin:
-    FROM cuelang/cue:0.13.1
-    SAVE ARTIFACT /usr/bin/cue
-
-
 # builder - debian plus cue binary
 builder:
-    FROM debian:stable-20250203-slim
-    COPY +cue-bin/cue /usr/bin/cue
+    FROM python-ci+python-base
+
+    # Eval V3 currently broken with our specifications.
+    ENV CUE_EXPERIMENT=evalv3=0
+    DO cue+INSTALL
 
 # Copy all the source we need to build the docs
 src:
@@ -23,32 +20,41 @@ src:
 
     WORKDIR /src
     COPY . .
-    ENV CUE_EXPERIMENT="embed"
 
     SAVE ARTIFACT signed_doc.json
 
-# Check that the generated signed docs data matches the src.
-check:
-    FROM +src
-    RUN cue fmt --check -s --files ./definitions
-    RUN cd definitions; CUE_EXPERIMENT=evalv3=0 cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
-
-# Check the the generated signed docs documentation matches the generated signed docs data
-check-docs-generation:
-    FROM python-ci+python-base
-    COPY ./generators generators
-    COPY +src/signed_doc.json .
-    COPY --dir docs+generated-signed-docs-pages/signed_doc signed_doc
-     # Check our validation code actually works properly
-    RUN cd generators; \
-        uv run validator ../signed_doc.json
-    RUN cd generators; \
-        uv run docs -o "../signed_doc" ../signed_doc.json 
-
-
-#  Regenerate - using the builder
+# Regenerate the full signed document specification json file.
 regenerate:
     FROM +src
 
-    RUN cue export -f -s ./signed_docs/docs:signed_docs --out json --outfile signed_doc.json
-    SAVE ARTIFACT --keep-ts signed_doc.json AS LOCAL .
+    # Make sure keys are sorted so its both reproducible, AND diffs easily.
+    RUN cd definitions; \
+        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
+
+    RUN cd generators; \
+        uv run docs -g -o "../../gen" ../signed_doc.json 
+
+    SAVE ARTIFACT --keep-ts signed_doc.json
+    SAVE ARTIFACT --keep-ts ../gen gen
+
+regenerate-local:
+    FROM +regenerate
+
+    SAVE ARTIFACT ../gen AS LOCAL temp_gen
+    SAVE ARTIFACT signed_doc.json AS LOCAL signed_doc.json
+
+# Check that the generated signed docs data matches the src.
+# Check the the generated signed docs documentation matches the generated signed docs data
+check:
+    FROM +src
+    RUN cue fmt --check -s --files ./definitions
+    RUN cd definitions; \
+        cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+
+    # Get the current docs
+    COPY --keep-ts docs+generated-pages/signed_doc /docs
+
+    # Check our validation code actually works properly
+    RUN cd generators; \
+        uv run docs -o "../../docs" ../signed_doc.json 
+

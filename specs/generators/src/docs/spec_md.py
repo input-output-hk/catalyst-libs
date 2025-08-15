@@ -9,6 +9,7 @@ from spec.cddl.cose import CoseHeader, HeaderType
 from spec.signed_doc import SignedDoc
 
 from .cddl_file import CDDLFile
+from .cddl_validation import CDDLEarthfile
 from .doc_generator import DocGenerator
 
 
@@ -97,9 +98,11 @@ class SpecMd(DocGenerator):
     def generate(self) -> bool:
         """Generate a `spec.md` file from the definitions."""
         signed_doc_cddl = CDDLFile(self._args, self._spec, "signed_document")
-        if not signed_doc_cddl.save_or_validate():
-            return False
+        signed_doc_cddl_ok = signed_doc_cddl.save_or_validate()
+
+        cddl_earthfile = CDDLEarthfile(self._args, self._spec)
+        cddl_earthfile_ok = cddl_earthfile.save_or_validate()
 
         self.generate_from_page_template(signed_doc_cddl=signed_doc_cddl, header_type=HeaderType)
 
-        return super().generate()
+        return super().generate() and signed_doc_cddl_ok and cddl_earthfile_ok
