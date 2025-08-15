@@ -17,6 +17,7 @@ COPY_SRC:
         cbork cbork-abnf-parser cbork-cddl-parser cbork-utils \
         hermes-ipfs \
         signed_doc \
+        catalyst-signed-doc-macro \
         rbac-registration \
         immutable-ledger .
 
@@ -63,7 +64,7 @@ build:
             --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
             --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=cbork-utils --libs=catalyst-types" \
             --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
-            --args4="--bins=cbork/cbork --libs=rbac-registration --libs=catalyst-signed-doc" \
+            --args4="--bins=cbork/cbork --libs=rbac-registration --libs=catalyst-signed-doc --libs=catalyst-signed-doc-macro" \
             --args5="--cov_report=$HOME/build/coverage-report.info" \
             --output="release/[^\./]+" \
             --junit="cat-libs.junit-report.xml" \
