@@ -105,12 +105,11 @@ mod tests {
     };
 
     #[test_case(
-        false,
-        |exp_param_types, provider| {
+        |exp_types, provider| {
             let ref_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
                 .build();
             provider.add_document(None, &ref_doc).unwrap();
 
@@ -127,27 +126,26 @@ mod tests {
         }
         => true
         ;
-        "valid reference to the one correct document, non optional rule"
+        "valid reference to the one correct document"
     )]
     #[test_case(
-        false,
-        |exp_param_types, provider| {
+        |exp_types, provider| {
             let ref_doc_1 = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
                 .build();
             provider.add_document(None, &ref_doc_1).unwrap();
             let ref_doc_2 = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
                 .build();
             provider.add_document(None, &ref_doc_2).unwrap();
             let ref_doc_3 = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+            .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
             provider.add_document(None, &ref_doc_3).unwrap();
 
@@ -174,21 +172,20 @@ mod tests {
         }
         => true
         ;
-        "valid reference to the multiple documents, non optional rule"
+        "valid reference to the multiple documents"
     )]
     #[test_case(
-        false,
-        |exp_param_types, provider| {
+        |exp_types, provider| {
             let ref_doc_1 = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
                 .build();
             provider.add_document(None, &ref_doc_1).unwrap();
             let ref_doc_2 = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
                 .build();
             provider.add_document(None, &ref_doc_2).unwrap();
             let ref_doc_3 = Builder::new()
@@ -224,18 +221,17 @@ mod tests {
         "valid reference to the multiple documents, one of them invalid `type` field"
     )]
     #[test_case(
-        false,
-        |exp_param_types, provider| {
+        |exp_types, provider| {
             let ref_doc_1 = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
                 .build();
             provider.add_document(None, &ref_doc_1).unwrap();
             let ref_doc_2 = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
                 .build();
             provider.add_document(None, &ref_doc_2).unwrap();
             let ref_doc_3 = Builder::new()
@@ -270,12 +266,11 @@ mod tests {
         "valid reference to the multiple documents, one of them missing `type` field"
     )]
     #[test_case(
-        false,
-        |exp_param_types, provider| {
+        |exp_types, provider| {
             let ref_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
                 .build();
             provider.add_document(Some(DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default())), &ref_doc).unwrap();
 
@@ -295,7 +290,6 @@ mod tests {
         "invalid reference to the document, which has different id and ver fields as stated in the `ref` field"
     )]
     #[test_case(
-        false,
         |_, _| {
             Builder::new()
                 .with_metadata_field(SupportedField::Ref(
@@ -313,69 +307,58 @@ mod tests {
         ;
         "valid reference to the missing one document"
     )]
-    #[test_case(
-        true,
-        |exp_param_types, provider| {
-            let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(UuidV7::new()))
-                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
-                .build();
-            provider.add_document(None, &ref_doc).unwrap();
-
-            Builder::new()
-                .with_metadata_field(SupportedField::Ref(
-                    vec![DocumentRef::new(
-                        ref_doc.doc_id().unwrap(),
-                        ref_doc.doc_ver().unwrap(),
-                        DocLocator::default(),
-                    )]
-                    .into(),
-                ))
-                .build()
-        }
-        => true
-        ;
-        "valid reference to the one correct document, optional rule"
-    )]
-    #[test_case(
-        true,
-        |_, _| {
-            Builder::new()
-                .build()
-        }
-        => true
-        ;
-        "missing ref field, optional rule"
-    )]
-    #[test_case(
-        false,
-        |_, _| {
-            Builder::new()
-                .build()
-        }
-        => false
-        ;
-        "missing ref field, non optional rule"
-    )]
     #[tokio::test]
     async fn ref_specified_test(
-        optional: bool,
         doc_gen: impl FnOnce(
             &[DocType; 2],
             &mut TestCatalystSignedDocumentProvider,
-        ) -> CatalystSignedDocument,
+        ) -> CatalystSignedDocument
     ) -> bool {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        let exp_param_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
+        let exp_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
+        let doc = doc_gen(&exp_types, &mut provider);
+
+        let non_optional_res = RefRule::Specified {
+            exp_ref_types: exp_types.to_vec(),
+            optional: false,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        let optional_res = RefRule::Specified {
+            exp_ref_types: exp_types.to_vec(),
+            optional: true,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        assert_eq!(non_optional_res, optional_res);
+        non_optional_res
+    }
+
+    #[tokio::test]
+    async fn ref_specified_optional_test() {
+        let provider = TestCatalystSignedDocumentProvider::default();
         let rule = RefRule::Specified {
-            exp_ref_types: exp_param_types.to_vec(),
-            optional,
+            exp_ref_types: vec![UuidV4::new().into()],
+            optional: true,
         };
-        let doc = doc_gen(&exp_param_types, &mut provider);
-        rule.check(&doc, &provider).await.unwrap()
+
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        let provider = TestCatalystSignedDocumentProvider::default();
+        let rule = RefRule::Specified {
+            exp_ref_types: vec![UuidV4::new().into()],
+            optional: false,
+        };
+
+        let doc = Builder::new().build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 
     #[tokio::test]
