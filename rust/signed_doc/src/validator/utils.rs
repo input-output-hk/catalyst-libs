@@ -1,6 +1,8 @@
 //! Validation utility functions
 
 use catalyst_types::problem_report::ProblemReport;
+use jsonschema::Draft;
+use serde_json::Value;
 
 use crate::{
     providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef, DocumentRefs,
@@ -73,4 +75,24 @@ where
         }
     }
     Ok(all_valid)
+}
+
+/// Detect the draft version from the `$schema` field.
+/// Falls back to `Draft::Draft202012` if missing or unrecognized.
+pub(crate) fn detect_draft(schema: &Value) -> Draft {
+    if let Some(uri) = schema.get("$schema").and_then(|s| s.as_str()) {
+        if uri.contains("draft-04") {
+            return Draft::Draft4;
+        } else if uri.contains("draft-06") {
+            return Draft::Draft6;
+        } else if uri.contains("draft-07") {
+            return Draft::Draft7;
+        } else if uri.contains("2019-09") {
+            return Draft::Draft201909;
+        } else if uri.contains("2020-12") {
+            return Draft::Draft202012;
+        }
+    }
+    // fallback
+    Draft::Draft202012
 }

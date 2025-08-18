@@ -24,6 +24,7 @@ use crate::{
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     signature::{tbs_data, Signature},
+    validator::utils::detect_draft,
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -116,15 +117,16 @@ fn proposal_submission_action_rule() -> Rules {
         CATEGORY_PARAMETERS.clone(),
     ];
 
+    let proposal_action_json_schema_content = &serde_json::from_str(include_str!(
+        "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
+    ))
+    .expect("Must be a valid json file");
+
     let proposal_action_json_schema = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft202012)
-        .build(
-            &serde_json::from_str(include_str!(
-                "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
-            ))
-            .expect("Must be a valid json file"),
-        )
+        .with_draft(detect_draft(proposal_action_json_schema_content))
+        .build(proposal_action_json_schema_content)
         .expect("Must be a valid json scheme file");
+
     Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
