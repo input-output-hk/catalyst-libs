@@ -32,15 +32,18 @@ fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> 
     let mut consts_definitions = Vec::new();
     for (doc_name, doc_spec) in spec.docs {
         let const_type_name_ident = doc_name.ident();
+        let doc_name = doc_name.name();
         let type_uuid = doc_spec.doc_type;
 
         let const_definition = quote! {
-            /// Catalyst Signed Document type constant definition.
+            #[doc = #doc_name ]
+            #[doc = "type constant definition"]
             pub const #const_type_name_ident: crate::DocType = match crate::DocType::try_from_uuid(catalyst_types::uuid::uuid!(#type_uuid)) {
                 Ok(v) => v,
                 Err(_) => panic!("invalid uuid v4 value"),
             };
         };
+        println!("{const_definition}");
         consts_definitions.push(const_definition);
     }
 

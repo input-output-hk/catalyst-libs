@@ -18,6 +18,11 @@ pub(crate) struct CatalystSignedDocSpec {
 pub(crate) struct DocumentName(String);
 
 impl DocumentName {
+    /// returns document name
+    pub(crate) fn name(&self) -> &str {
+        &self.0
+    }
+
     /// returns a document name as a `Ident` in the following form
     /// `"PROPOSAL_FORM_TEMPLATE"`
     pub(crate) fn ident(&self) -> Ident {
