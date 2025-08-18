@@ -7,7 +7,25 @@ use anyhow::Context;
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub(crate) struct CatatalystSignedDocSpec {
-    pub(crate) docs: HashMap<String, DocSpec>,
+    pub(crate) docs: HashMap<DocumentName, DocSpec>,
+}
+
+/// A thin wrapper over the string document name values, mapping each of them from
+/// "Proposal Form template" to "PROPOSAL_FORM_TEMPLATE"
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub(crate) struct DocumentName(pub(crate) String);
+
+impl<'de> serde::Deserialize<'de> for DocumentName {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        Ok(Self(
+            String::deserialize(deserializer)?
+                .split_whitespace()
+                .map(|word| word.to_uppercase())
+                .collect::<Vec<_>>()
+                .join("_"),
+        ))
+    }
 }
 
 /// Specific document type definition

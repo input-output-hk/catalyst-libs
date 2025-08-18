@@ -31,12 +31,7 @@ fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> 
 
     let mut consts_definitions = Vec::new();
     for (doc_name, doc_spec) in spec.docs {
-        let const_type_name = doc_name
-            .split_whitespace()
-            .map(|word| word.to_uppercase())
-            .collect::<Vec<_>>()
-            .join("_");
-        let const_type_name_ident = format_ident!("{const_type_name}",);
+        let const_type_name_ident = format_ident!("{}", doc_name.0);
         let type_uuid = doc_spec.doc_type;
 
         let const_definition = quote! {
