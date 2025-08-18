@@ -7,7 +7,7 @@ mod signed_doc_spec;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::{error::process_error, signed_doc_spec::CatatalystSignedDocSpec};
+use crate::{error::process_error, signed_doc_spec::CatalystSignedDocSpec};
 
 /// Defines consts for all Catalyst Signed Documents types values
 /// e.g.
@@ -27,7 +27,7 @@ pub fn catalyst_signed_documents_types_consts(
 
 /// `catalyst_signed_documents_types_consts` macro implementation
 fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> {
-    let spec = CatatalystSignedDocSpec::load_signed_doc_spec()?;
+    let spec = CatalystSignedDocSpec::load_signed_doc_spec()?;
 
     let mut consts_definitions = Vec::new();
     for (doc_name, doc_spec) in spec.docs {
