@@ -2,7 +2,6 @@
 
 use std::{
     path::{Path, PathBuf},
-    str::FromStr,
     sync::LazyLock,
 };
 
@@ -10,7 +9,6 @@ use anyhow::bail;
 use cardano_blockchain_types::{Network, Point};
 use dashmap::DashMap;
 use futures::future::join_all;
-use strum::IntoEnumIterator;
 use tokio::{
     fs::{self},
     io::{self},
@@ -32,13 +30,7 @@ use crate::{
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
 
 /// Handle to the mithril sync thread. One for each Network ONLY.
-static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
-    let map = DashMap::new();
-    for network in Network::iter() {
-        map.insert(network, Mutex::new(None));
-    }
-    map
-});
+static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(DashMap::new);
 
 /// Subdirectory where we unpack archives temporarily.
 const TMP_SUB_DIR: &str = "tmp";
@@ -344,7 +336,7 @@ impl MithrilSnapshotConfig {
         // hex.
         let vkey = remove_whitespace(&self.genesis_key);
         if !is_hex(&vkey) {
-            return Err(Error::MithrilGenesisVKeyNotHex(self.chain));
+            return Err(Error::MithrilGenesisVKeyNotHex(Box::new(self.chain)));
         }
 
         Ok(())
@@ -361,23 +353,25 @@ impl MithrilSnapshotConfig {
         // We do this by trying to use it to get a list of snapshots.
         let client = mithril_client::ClientBuilder::aggregator(&url, &key)
             .build()
-            .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(Box::new(self.chain), url.clone(), e))?;
 
         let snapshots = client
             .cardano_database()
             .list()
             .await
-            .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(Box::new(self.chain), url.clone(), e))?;
 
         // Check we have a snapshot, and its for our network.
         match snapshots.first() {
             Some(snapshot_info) => {
-                let network = snapshot_info.network.as_str();
-                let _aggregator_network = Network::from_str(network).map_err(|_err| {
-                    Error::MithrilClientNetworkMismatch(self.chain, network.to_string())
-                })?;
+                if snapshot_info.network != self.chain.to_string() {
+                    Err(Error::MithrilClientNetworkMismatch(
+                        Box::new(self.chain),
+                        snapshot_info.network.clone(),
+                    ))?;
+                }
             },
-            None => return Err(Error::MithrilClientNoSnapshots(self.chain, url)),
+            None => return Err(Error::MithrilClientNoSnapshots(Box::new(self.chain), url)),
         }
 
         Ok(())
@@ -403,18 +397,17 @@ impl MithrilSnapshotConfig {
         );
 
         // Start the Mithril Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
-            None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
-                return Err(Error::Internal); // Should not get here.
-            },
-            Some(entry) => entry,
-        };
+        let lock_entry = SYNC_JOIN_HANDLE_MAP
+            .entry(self.chain)
+            .or_insert_with(|| Mutex::new(None));
+
         let mut locked_handle = lock_entry.value().lock().await;
 
         if (*locked_handle).is_some() {
             debug!("Mithril Already Running for {}", self.chain);
-            return Err(Error::MithrilSnapshotSyncAlreadyRunning(self.chain));
+            return Err(Error::MithrilSnapshotSyncAlreadyRunning(Box::new(
+                self.chain,
+            )));
         }
 
         self.validate().await?;

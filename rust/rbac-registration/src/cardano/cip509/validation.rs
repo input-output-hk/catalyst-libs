@@ -7,20 +7,22 @@
 use std::borrow::Cow;
 
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{Network, TxnWitness, VKeyHash};
-use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
+use cardano_blockchain_types::{
     hashes::{Blake2b128Hash, Blake2b256Hash},
-    problem_report::ProblemReport,
-};
-use ed25519_dalek::{Signature, VerifyingKey};
-use pallas::{
-    codec::{
+    pallas_addresses::Address,
+    pallas_codec::{
         minicbor::{Encode, Encoder},
         utils::Bytes,
     },
-    ledger::{addresses::Address, primitives::conway, traverse::MultiEraTx},
+    pallas_primitives::conway,
+    pallas_traverse::MultiEraTx,
+    Network, TxnWitness, VKeyHash,
 };
+use catalyst_types::{
+    catalyst_id::{role_index::RoleId, CatalystId},
+    problem_report::ProblemReport,
+};
+use ed25519_dalek::{Signature, VerifyingKey};
 use x509_cert::{der::Encode as X509Encode, Certificate as X509};
 
 use crate::cardano::cip509::{
@@ -44,7 +46,7 @@ pub(crate) const URI: u8 = 134;
 /// Checks that hashing transactions inputs produces the value equal to the given one.
 pub fn validate_txn_inputs_hash(
     hash: &TxInputHash,
-    transaction: &conway::MintedTx,
+    transaction: &conway::Tx,
     report: &ProblemReport,
 ) {
     let context = "Cip509 transaction input hash validation";
@@ -118,7 +120,7 @@ pub fn validate_aux(
 /// Checks that all public keys extracted from x509 and c509 certificates are present in
 /// the witness set of the transaction.
 pub fn validate_stake_public_key(
-    transaction: &conway::MintedTx,
+    transaction: &conway::Tx,
     uris: Option<&Cip0134UriSet>,
     report: &ProblemReport,
 ) {

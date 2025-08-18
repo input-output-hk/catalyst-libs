@@ -2,13 +2,13 @@
 
 use std::{ffi::OsStr, path::PathBuf};
 
-use anyhow::anyhow;
 use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
-use pallas::{
-    ledger::{addresses::Network as PallasNetwork, traverse::wellknown::GenesisValues},
-    network::miniprotocols::{MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC},
+use pallas_addresses::Network as PallasNetwork;
+use pallas_primitives::types::network_constant::{
+    MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC,
 };
+use pallas_traverse::wellknown::GenesisValues;
 use tracing::debug;
 
 use crate::Slot;
@@ -22,29 +22,46 @@ pub(crate) const ENVVAR_MITHRIL_EXE_NAME: &str = "MITHRIL_EXE_NAME";
 
 /// Enum of possible Cardano networks.
 #[derive(
-    Debug,
-    Copy,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    strum::EnumIter,
-    strum::VariantNames,
-    strum::EnumString,
-    strum::Display,
+    Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, strum::VariantNames, strum::Display,
 )]
-#[strum(ascii_case_insensitive)]
 #[strum(serialize_all = "snake_case")]
-#[repr(usize)]
+#[non_exhaustive]
 pub enum Network {
     /// Cardano mainnet network.
-    Mainnet = 0,
+    Mainnet,
     /// Cardano pre-production network.
-    Preprod = 1,
+    Preprod,
     /// Cardano preview network.
-    Preview = 2,
+    Preview,
+    /// Cardano devnet network.
+    Devnet {
+        /// Mithril signature genesis key for a blockchain.
+        genesis_key: &'static str,
+        /// Cardano blockchain networking magic number genesis block setting
+        magic: u64,
+        /// Cardano blockchain network id genesis block setting
+        network_id: u64,
+        /// Cardano byron epoch length genesis block setting
+        byron_epoch_length: u32,
+        /// Cardano byron slot length genesis block setting
+        byron_slot_length: u32,
+        /// Cardano byron known slot genesis block setting
+        byron_known_slot: u64,
+        /// Cardano byron known hash genesis block setting
+        byron_known_hash: &'static str,
+        /// Cardano byron known time genesis block setting
+        byron_known_time: u64,
+        /// Cardano shelley epoch length genesis block setting
+        shelley_epoch_length: u32,
+        /// Cardano shelley slot length genesis block setting
+        shelley_slot_length: u32,
+        /// Cardano shelley known slot genesis block setting
+        shelley_known_slot: u64,
+        /// Cardano shelley known hash genesis block setting
+        shelley_known_hash: &'static str,
+        /// Cardano shelley known time genesis block setting
+        shelley_known_time: u64,
+    },
 }
 
 // Mainnet Defaults.
@@ -74,40 +91,49 @@ const DEFAULT_PREVIEW_MITHRIL_GENESIS_KEY: &str = include_str!("data/preview-gen
 const DEFAULT_PREVIEW_MITHRIL_AGGREGATOR: &str =
     "https://aggregator.pre-release-preview.api.mithril.network/aggregator";
 
+// Devnet Defaults
+/// Devnet Default Cardano Relay.
+const DEFAULT_DEVNET_RELAY: &str = "127.0.0.1:3001";
+/// Default Mithril Aggregator to use.
+const DEFAULT_DEVNET_MITHRIL_AGGREGATOR: &str = "http://127.0.0.1:8080/aggregator";
+
 impl Network {
     /// Get the default Relay for a blockchain network.
     #[must_use]
-    pub fn default_relay(self) -> String {
+    pub fn default_relay(&self) -> String {
         match self {
             Network::Mainnet => DEFAULT_MAINNET_RELAY.to_string(),
             Network::Preprod => DEFAULT_PREPROD_RELAY.to_string(),
             Network::Preview => DEFAULT_PREVIEW_RELAY.to_string(),
+            Network::Devnet { .. } => DEFAULT_DEVNET_RELAY.to_string(),
         }
     }
 
     /// Get the default aggregator for a blockchain.
     #[must_use]
-    pub fn default_mithril_aggregator(self) -> String {
+    pub fn default_mithril_aggregator(&self) -> String {
         match self {
             Network::Mainnet => DEFAULT_MAINNET_MITHRIL_AGGREGATOR.to_string(),
             Network::Preprod => DEFAULT_PREPROD_MITHRIL_AGGREGATOR.to_string(),
             Network::Preview => DEFAULT_PREVIEW_MITHRIL_AGGREGATOR.to_string(),
+            Network::Devnet { .. } => DEFAULT_DEVNET_MITHRIL_AGGREGATOR.to_string(),
         }
     }
 
     /// Get the default Mithril Signature genesis key for a blockchain.
     #[must_use]
-    pub fn default_mithril_genesis_key(self) -> String {
+    pub fn default_mithril_genesis_key(&self) -> String {
         match self {
             Network::Mainnet => DEFAULT_MAINNET_MITHRIL_GENESIS_KEY.to_string(),
             Network::Preprod => DEFAULT_PREPROD_MITHRIL_GENESIS_KEY.to_string(),
             Network::Preview => DEFAULT_PREVIEW_MITHRIL_GENESIS_KEY.to_string(),
+            Network::Devnet { genesis_key, .. } => (*genesis_key).to_string(),
         }
     }
 
     /// Get the default storage location for mithril snapshots.
     /// Defaults to: `<platform data_local_dir>/<exe name>/mithril/<network>`
-    pub fn default_mithril_path(self) -> PathBuf {
+    pub fn default_mithril_path(&self) -> PathBuf {
         // Get the base path for storing Data.
         // IF the ENV var is set, use that.
         // Otherwise use the system default data path for an application.
@@ -150,18 +176,59 @@ impl Network {
 
     /// Return genesis values for given network
     #[must_use]
-    pub fn genesis_values(self) -> GenesisValues {
+    pub fn genesis_values(&self) -> GenesisValues {
         match self {
             Network::Mainnet => GenesisValues::mainnet(),
             Network::Preprod => GenesisValues::preprod(),
             Network::Preview => GenesisValues::preview(),
+            Network::Devnet {
+                magic,
+                network_id,
+                byron_epoch_length,
+                byron_slot_length,
+                byron_known_slot,
+                byron_known_hash,
+                byron_known_time,
+                shelley_epoch_length,
+                shelley_slot_length,
+                shelley_known_slot,
+                shelley_known_hash,
+                shelley_known_time,
+                ..
+            } => {
+                GenesisValues {
+                    magic: *magic,
+                    network_id: *network_id,
+                    byron_epoch_length: *byron_epoch_length,
+                    byron_slot_length: *byron_slot_length,
+                    byron_known_slot: *byron_known_slot,
+                    byron_known_hash: (*byron_known_hash).to_string(),
+                    byron_known_time: *byron_known_time,
+                    shelley_epoch_length: *shelley_epoch_length,
+                    shelley_slot_length: *shelley_slot_length,
+                    shelley_known_slot: *shelley_known_slot,
+                    shelley_known_hash: (*shelley_known_hash).to_string(),
+                    shelley_known_time: *shelley_known_time,
+                }
+            },
+        }
+    }
+
+    /// Return networking magic number.
+    #[must_use]
+    pub fn magic_number(&self) -> u64 {
+        match self {
+            Network::Mainnet => MAINNET_MAGIC,
+            Network::Preprod => PRE_PRODUCTION_MAGIC,
+            Network::Preview => PREVIEW_MAGIC,
+            Network::Devnet { magic, .. } => *magic,
         }
     }
 
     /// Convert a given slot# to its Wall Time for a Blockchain network.
     #[must_use]
     pub fn slot_to_time(
-        self,
+        &self,
         slot: Slot,
     ) -> DateTime<Utc> {
         let genesis = self.genesis_values();
@@ -178,7 +245,7 @@ impl Network {
     /// The Slot does not have to be a valid slot present in the blockchain.
     #[must_use]
     pub fn time_to_slot(
-        self,
+        &self,
         time: DateTime<Utc>,
     ) -> Option<Slot> {
         let genesis = self.genesis_values();
@@ -215,82 +282,54 @@ impl Network {
     }
 }
 
-impl From<Network> for u64 {
-    fn from(network: Network) -> Self {
-        match network {
-            Network::Mainnet => MAINNET_MAGIC,
-            Network::Preprod => PRE_PRODUCTION_MAGIC,
-            Network::Preview => PREVIEW_MAGIC,
-        }
-    }
-}
-
 impl From<Network> for PallasNetwork {
     fn from(value: Network) -> Self {
-        match value {
-            Network::Mainnet => PallasNetwork::Mainnet,
-            Network::Preprod | Network::Preview => PallasNetwork::Testnet,
-        }
+        PallasNetwork::from(&value)
     }
 }
 
-impl TryFrom<PallasNetwork> for Network {
-    type Error = anyhow::Error;
-
-    fn try_from(value: PallasNetwork) -> Result<Self, Self::Error> {
+impl From<&Network> for PallasNetwork {
+    fn from(value: &Network) -> Self {
         match value {
-            PallasNetwork::Mainnet => Ok(Network::Mainnet),
-            PallasNetwork::Testnet => Ok(Network::Preprod),
-            n @ PallasNetwork::Other(_) => Err(anyhow!("Unsupported network: {n:?}")),
+            Network::Mainnet => PallasNetwork::Mainnet,
+            Network::Preprod | Network::Preview | Network::Devnet { .. } => PallasNetwork::Testnet,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use anyhow::Ok;
     use chrono::{TimeZone, Utc};
     use strum::VariantNames;
 
     use super::*;
 
     #[test]
-    fn test_from_str() -> anyhow::Result<()> {
-        let mainnet = Network::from_str("mainnet")?;
-        let preprod = Network::from_str("preprod")?;
-        let preview = Network::from_str("preview")?;
-
-        assert_eq!(mainnet, Network::Mainnet);
-        assert_eq!(preprod, Network::Preprod);
-        assert_eq!(preview, Network::Preview);
-
-        let mainnet = Network::from_str("Mainnet")?;
-        let preprod = Network::from_str("Preprod")?;
-        let preview = Network::from_str("Preview")?;
-
-        assert_eq!(mainnet, Network::Mainnet);
-        assert_eq!(preprod, Network::Preprod);
-        assert_eq!(preview, Network::Preview);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_variant_to_usize() {
-        assert_eq!(Network::Mainnet as usize, 0);
-        assert_eq!(Network::Preprod as usize, 1);
-        assert_eq!(Network::Preview as usize, 2);
-    }
-
-    #[test]
     fn test_variant_to_string() {
         assert_eq!(Network::Mainnet.to_string(), "mainnet");
         assert_eq!(Network::Preprod.to_string(), "preprod");
         assert_eq!(Network::Preview.to_string(), "preview");
+        assert_eq!(
+            Network::Devnet {
+                genesis_key: "genesis_key",
+                magic: 0,
+                network_id: 0,
+                byron_epoch_length: 0,
+                byron_slot_length: 0,
+                byron_known_slot: 0,
+                byron_known_hash: "byron_known_hash",
+                byron_known_time: 0,
+                shelley_epoch_length: 0,
+                shelley_slot_length: 0,
+                shelley_known_slot: 0,
+                shelley_known_hash: "shelley_known_hash",
+                shelley_known_time: 0
+            }
+            .to_string(),
+            "devnet"
+        );
 
-        let expected_names = ["mainnet", "preprod", "preview"];
+        let expected_names = ["mainnet", "preprod", "preview", "devnet"];
         assert_eq!(Network::VARIANTS, expected_names);
     }
 

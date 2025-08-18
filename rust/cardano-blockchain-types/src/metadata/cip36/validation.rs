@@ -87,9 +87,11 @@ impl Cip36 {
             return;
         };
 
-        let valid = match self.network {
+        let valid = match &self.network {
             Network::Mainnet => network_tag.value() == 1,
-            Network::Preprod | Network::Preview => network_tag.value() == 0,
+            Network::Preprod | Network::Preview | Network::Devnet { .. } => {
+                network_tag.value() == 0
+            },
         };
 
         // Report invalid network tag if necessary
@@ -145,7 +147,7 @@ mod tests {
 
     use catalyst_types::problem_report::ProblemReport;
     use ed25519_dalek::VerifyingKey;
-    use pallas::ledger::addresses::Address;
+    use pallas_addresses::Address;
 
     use crate::{
         metadata::cip36::{

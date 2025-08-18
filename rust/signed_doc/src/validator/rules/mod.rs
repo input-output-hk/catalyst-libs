@@ -8,7 +8,6 @@ use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 mod content_encoding;
 mod content_type;
 mod doc_ref;
-mod param_link_ref;
 mod parameters;
 mod reply;
 mod section;
@@ -18,7 +17,6 @@ mod template;
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
-pub(crate) use param_link_ref::{LinkField, ParameterLinkRefRule};
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
@@ -43,8 +41,6 @@ pub(crate) struct Rules {
     pub(crate) parameters: ParametersRule,
     /// `kid` field validation rule
     pub(crate) kid: SignatureKidRule,
-    /// Link reference rule
-    pub(crate) param_link_ref: ParameterLinkRefRule,
 }
 
 impl Rules {
@@ -66,7 +62,6 @@ impl Rules {
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
             self.kid.check(doc).boxed(),
-            self.param_link_ref.check(doc, provider).boxed(),
         ];
 
         let res = futures::future::join_all(rules)

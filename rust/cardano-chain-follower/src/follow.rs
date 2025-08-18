@@ -1,7 +1,9 @@
 //! Cardano chain follow module.
 
-use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
-use pallas::network::miniprotocols::txmonitor::{TxBody, TxId};
+use cardano_blockchain_types::{
+    pallas_network::miniprotocols::txmonitor::{TxBody, TxId},
+    Fork, MultiEraBlock, Network, Point,
+};
 use tokio::sync::broadcast::{self};
 use tracing::{debug, error, warn};
 
@@ -409,13 +411,15 @@ impl ChainFollower {
 
 #[cfg(test)]
 mod tests {
+    use cardano_blockchain_types::pallas_traverse;
+
     use super::*;
 
     fn mock_block() -> MultiEraBlock {
         let raw_block = hex::decode(include_str!("./../test_data/shelley.block"))
             .expect("Failed to decode hex block.");
 
-        let pallas_block = pallas::ledger::traverse::MultiEraBlock::decode(raw_block.as_slice())
+        let pallas_block = pallas_traverse::MultiEraBlock::decode(raw_block.as_slice())
             .expect("cannot decode block");
 
         let previous_point = Point::new(

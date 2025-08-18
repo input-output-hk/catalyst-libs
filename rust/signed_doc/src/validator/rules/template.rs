@@ -10,7 +10,6 @@ use crate::{
 
 /// Enum represents different content schemas, against which documents content would be
 /// validated.
-#[allow(dead_code)]
 pub(crate) enum ContentSchema {
     /// Draft 7 JSON schema
     Json(jsonschema::Validator),
@@ -19,14 +18,12 @@ pub(crate) enum ContentSchema {
 /// Document's content validation rule
 pub(crate) enum ContentRule {
     /// Based on the 'template' field and loaded corresponding template document
-    #[allow(dead_code)]
     Templated {
         /// expected `type` field of the template
         exp_template_type: DocType,
     },
     /// Statically defined document's content schema.
     /// `template` field should not been specified
-    #[allow(dead_code)]
     Static(ContentSchema),
     /// 'template' field is not specified
     #[allow(dead_code)]
@@ -35,7 +32,6 @@ pub(crate) enum ContentRule {
 
 impl ContentRule {
     /// Field validation rule
-    #[allow(dead_code)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
@@ -52,8 +48,12 @@ impl ContentRule {
                 return Ok(false);
             };
             let template_validator = |template_doc: CatalystSignedDocument| {
-                if !referenced_doc_check(&template_doc, exp_template_type, "template", doc.report())
-                {
+                if !referenced_doc_check(
+                    &template_doc,
+                    std::slice::from_ref(exp_template_type),
+                    "template",
+                    doc.report(),
+                ) {
                     return false;
                 }
                 let Ok(template_content_type) = template_doc.doc_content_type() else {
@@ -144,7 +144,7 @@ fn templated_json_schema_check(
 
     content_schema_check(doc, &ContentSchema::Json(schema_validator))
 }
-#[allow(dead_code)]
+
 /// Validating the document's content against the provided schema
 fn content_schema_check(
     doc: &CatalystSignedDocument,

@@ -2,13 +2,13 @@
 
 use std::{borrow::Cow, collections::HashMap};
 
-use cardano_blockchain_types::TxnWitness;
-use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
-use pallas::ledger::{
-    addresses::{Address, ShelleyAddress},
-    primitives::conway,
-    traverse::MultiEraTx,
+use cardano_blockchain_types::{
+    pallas_addresses::{Address, ShelleyAddress},
+    pallas_primitives::conway,
+    pallas_traverse::MultiEraTx,
+    TxnWitness,
 };
+use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 
 use crate::cardano::cip509::{
     rbac::role_data::CborRoleData, utils::cip19::extract_key_hash, KeyLocalRef,
@@ -32,7 +32,7 @@ impl RoleData {
     #[must_use]
     pub fn new(
         data: CborRoleData,
-        txn: &conway::MintedTx,
+        txn: &conway::Tx,
         report: &ProblemReport,
     ) -> Self {
         let payment_key = if data.number == Some(RoleId::Role0) && data.payment_key.is_none() {
@@ -101,7 +101,7 @@ impl RoleData {
 /// Converts the payment key from the form encoded in CBOR role data to `ShelleyAddress`.
 fn convert_payment_key(
     index: Option<u16>,
-    txn: &conway::MintedTx,
+    txn: &conway::Tx,
     context: &str,
     report: &ProblemReport,
 ) -> Option<ShelleyAddress> {
@@ -118,8 +118,8 @@ fn convert_payment_key(
     };
 
     let address = match outputs.get(index) {
-        Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
-        Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
+        Some(conway::TransactionOutput::PostAlonzo(o)) => &o.address,
+        Some(conway::TransactionOutput::Legacy(o)) => &o.address,
         None => {
             report.other(
                 &format!(

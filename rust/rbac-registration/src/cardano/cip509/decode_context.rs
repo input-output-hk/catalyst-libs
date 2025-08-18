@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
+use cardano_blockchain_types::{pallas_addresses::ShelleyAddress, pallas_primitives::conway};
 use catalyst_types::problem_report::ProblemReport;
-use pallas::ledger::{addresses::ShelleyAddress, primitives::conway};
 
 use crate::cardano::cip509::{Payment, PointTxnIdx};
 
@@ -12,7 +12,7 @@ pub struct DecodeContext<'r, 't> {
     /// A slot and a transaction index.
     pub origin: PointTxnIdx,
     /// A transaction.
-    pub txn: &'t conway::MintedTx<'t>,
+    pub txn: &'t conway::Tx<'t>,
     /// A payment history.
     pub payment_history: HashMap<ShelleyAddress, Vec<Payment>>,
     /// A problem report.

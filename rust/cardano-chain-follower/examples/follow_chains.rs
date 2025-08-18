@@ -6,11 +6,12 @@
 //#![allow(clippy::unwrap_used)]
 
 use cardano_blockchain_types::{
-    Cip36, Fork, MetadatumLabel, MultiEraBlock, Network, Point, Slot, TransactionId, TxnIndex,
+    hashes::TransactionId, pallas_crypto, pallas_traverse, Cip36, Fork, MetadatumLabel,
+    MultiEraBlock, Network, Point, Slot, TxnIndex,
 };
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
-use pallas::ledger::traverse::MultiEraTx;
+use pallas_traverse::MultiEraTx;
 use rbac_registration::cardano::cip509::Cip509;
 
 /// Use Mimalloc for the global allocator.
@@ -502,23 +503,23 @@ fn update_largest_metadata(
 
 /// Helper function for logging the raw box auxiliary data.
 fn raw_aux_info(
-    block: &pallas::ledger::traverse::MultiEraBlock,
+    block: &pallas_traverse::MultiEraBlock,
     network: Network,
 ) {
     match block {
-        pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
+        pallas_traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
             info!(
                 chain = network.to_string(),
                 "Raw Aux Data: {:02x?}", b.auxiliary_data_set
             );
         },
-        pallas::ledger::traverse::MultiEraBlock::Babbage(b) => {
+        pallas_traverse::MultiEraBlock::Babbage(b) => {
             info!(
                 chain = network.to_string(),
                 "Raw Aux Data: {:02x?}", b.auxiliary_data_set
             );
         },
-        pallas::ledger::traverse::MultiEraBlock::Conway(b) => {
+        pallas_traverse::MultiEraBlock::Conway(b) => {
             info!(
                 chain = network.to_string(),
                 "Raw Aux Data: {:02x?}", b.auxiliary_data_set
@@ -530,12 +531,12 @@ fn raw_aux_info(
 
 /// Helper function for updating the largest auxiliary data.
 fn update_largest_aux(
-    block: &pallas::ledger::traverse::MultiEraBlock,
+    block: &pallas_traverse::MultiEraBlock,
     network: Network,
     largest_metadata_size: &mut usize,
 ) {
     match block {
-        pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(ref b, _) => {
+        pallas_traverse::MultiEraBlock::AlonzoCompatible(ref b, _) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),
@@ -546,7 +547,7 @@ fn update_largest_aux(
                 );
             });
         },
-        pallas::ledger::traverse::MultiEraBlock::Babbage(ref b) => {
+        pallas_traverse::MultiEraBlock::Babbage(ref b) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),
@@ -557,7 +558,7 @@ fn update_largest_aux(
                 );
             });
         },
-        pallas::ledger::traverse::MultiEraBlock::Conway(ref b) => {
+        pallas_traverse::MultiEraBlock::Conway(ref b) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),

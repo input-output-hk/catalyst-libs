@@ -4,8 +4,19 @@ use std::{fmt, str::FromStr};
 
 use blake2b_simd::Params;
 use displaydoc::Display;
-use pallas_crypto::hash::Hash;
+use pallas_primitives::Hash;
 use thiserror::Error;
+
+use crate::define_hashes;
+
+mod hash_wrapper;
+
+define_hashes!(
+    /// A transaction ID - Blake2b-256 hash of a transaction.
+    (TransactionId, Blake2b256Hash),
+    /// A public key hash - raw Blake2b-224 hash of an Ed25519 public key (has no discriminator, just the hash).
+    (PubKeyHash, Blake2b224Hash),
+);
 
 /// Number of bytes in a blake2b 224 hash.
 pub const BLAKE_2B224_SIZE: usize = 224 / 8;

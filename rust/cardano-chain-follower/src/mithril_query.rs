@@ -2,8 +2,10 @@
 
 use std::path::Path;
 
-use cardano_blockchain_types::{Network, Point};
-use pallas_hardano::storage::immutable::FallibleBlock;
+use cardano_blockchain_types::{
+    pallas_hardano::{self},
+    Network, Point,
+};
 use tokio::task;
 
 use crate::{
@@ -12,7 +14,8 @@ use crate::{
 };
 
 /// Synchronous Immutable block iterator.
-pub(crate) type ImmutableBlockIterator = Box<dyn Iterator<Item = FallibleBlock> + Send + Sync>;
+pub(crate) type ImmutableBlockIterator =
+    Box<dyn Iterator<Item = pallas_hardano::storage::immutable::FallibleBlock> + Send + Sync>;
 
 /// Get a mithril snapshot iterator.
 pub(crate) async fn make_mithril_iterator(

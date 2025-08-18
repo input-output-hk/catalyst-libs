@@ -13,7 +13,7 @@ pub(crate) enum RefRule {
     /// Is 'ref' specified
     Specified {
         /// expected `type` field of the referenced doc
-        exp_ref_type: DocType,
+        exp_ref_types: Vec<DocType>,
         /// optional flag for the `ref` field
         optional: bool,
     },
@@ -32,13 +32,13 @@ impl RefRule {
     {
         let context: &str = "Ref rule check";
         if let Self::Specified {
-            exp_ref_type,
+            exp_ref_types,
             optional,
         } = self
         {
             if let Some(doc_ref) = doc.doc_meta().doc_ref() {
                 let ref_validator = |ref_doc: CatalystSignedDocument| {
-                    referenced_doc_check(&ref_doc, exp_ref_type, "ref", doc.report())
+                    referenced_doc_check(&ref_doc, exp_ref_types, "ref", doc.report())
                 };
                 return validate_doc_refs(doc_ref, provider, doc.report(), ref_validator).await;
             } else if !optional {
@@ -65,7 +65,7 @@ impl RefRule {
 /// A generic implementation of the referenced document validation.
 pub(crate) fn referenced_doc_check(
     ref_doc: &CatalystSignedDocument,
-    exp_ref_type: &DocType,
+    exp_ref_types: &[DocType],
     field_name: &str,
     report: &ProblemReport,
 ) -> bool {
@@ -74,12 +74,18 @@ pub(crate) fn referenced_doc_check(
         return false;
     };
 
-    if ref_doc_type != exp_ref_type {
+    // Check that the type matches one of the expected ones
+    if exp_ref_types
+        .iter()
+        .all(|exp_type| ref_doc_type != exp_type)
+    {
         report.invalid_value(
             field_name,
             &ref_doc_type.to_string(),
-            &exp_ref_type.to_string(),
-            "Invalid referenced document type",
+            &exp_ref_types
+                .iter()
+                .fold(String::new(), |s, v| format!("{s}, {v}")),
+            &format!("Invalid referenced document type, during validation of {field_name} field"),
         );
         return false;
     }
@@ -150,7 +156,7 @@ mod tests {
         // Create a document where `ref` field is required and referencing a valid document in
         // provider. Using doc ref of new implementation.
         let rule = RefRule::Specified {
-            exp_ref_type: exp_ref_type.into(),
+            exp_ref_types: vec![exp_ref_type.into()],
             optional: false,
         };
         let doc = Builder::new()
@@ -201,7 +207,7 @@ mod tests {
 
         // All correct, `ref` field is missing, but its optional
         let rule = RefRule::Specified {
-            exp_ref_type: exp_ref_type.into(),
+            exp_ref_types: vec![exp_ref_type.into()],
             optional: true,
         };
         let doc = Builder::new().build();
@@ -209,7 +215,7 @@ mod tests {
 
         // Missing `ref` field, but its required
         let rule = RefRule::Specified {
-            exp_ref_type: exp_ref_type.into(),
+            exp_ref_types: vec![exp_ref_type.into()],
             optional: false,
         };
         let doc = Builder::new().build();

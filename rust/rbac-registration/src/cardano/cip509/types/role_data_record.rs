@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
+use cardano_blockchain_types::pallas_addresses::ShelleyAddress;
 use catalyst_types::catalyst_id::key_rotation::KeyRotation;
-use pallas::ledger::addresses::ShelleyAddress;
 
 use super::{CertOrPk, PointData, PointTxnIdx};
 

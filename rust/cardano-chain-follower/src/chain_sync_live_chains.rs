@@ -6,11 +6,10 @@ use std::{
     time::Duration,
 };
 
-use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point, Slot};
+use cardano_blockchain_types::{pallas_primitives, Fork, MultiEraBlock, Network, Point, Slot};
 use crossbeam_skiplist::SkipMap;
 use rayon::prelude::*;
-use strum::IntoEnumIterator;
-use tracing::{debug, error};
+use tracing::debug;
 
 use crate::{
     error::{Error, Result},
@@ -28,22 +27,11 @@ type LiveChainBlockList = SkipMap<Point, MultiEraBlock>;
 struct ProtectedLiveChainBlockList(Arc<RwLock<LiveChainBlockList>>);
 
 /// Handle to the mithril sync thread. One for each Network ONLY.
-static LIVE_CHAINS: LazyLock<SkipMap<Network, ProtectedLiveChainBlockList>> = LazyLock::new(|| {
-    let map = SkipMap::new();
-    for network in Network::iter() {
-        map.insert(network, ProtectedLiveChainBlockList::new());
-    }
-    map
-});
+static LIVE_CHAINS: LazyLock<SkipMap<Network, ProtectedLiveChainBlockList>> =
+    LazyLock::new(SkipMap::new);
 
 /// Latest TIP received from the Peer Node.
-static PEER_TIP: LazyLock<SkipMap<Network, Point>> = LazyLock::new(|| {
-    let map = SkipMap::new();
-    for network in Network::iter() {
-        map.insert(network, Point::UNKNOWN);
-    }
-    map
-});
+static PEER_TIP: LazyLock<SkipMap<Network, Point>> = LazyLock::new(SkipMap::new);
 
 /// Initial slot age to probe.
 const INITIAL_SLOT_PROBE_AGE: u64 = 40;
@@ -364,7 +352,7 @@ impl ProtectedLiveChainBlockList {
     }
 
     /// Get chain sync intersection points for communicating with peer node.
-    fn get_intersect_points(&self) -> Vec<pallas::network::miniprotocols::Point> {
+    fn get_intersect_points(&self) -> Vec<pallas_primitives::types::point::Point> {
         let mut intersect_points = Vec::new();
 
         let Ok(chain) = self.0.read() else {
@@ -458,27 +446,7 @@ impl ProtectedLiveChainBlockList {
 
 /// Get the `LiveChainBlockList` for a particular `Network`.
 fn get_live_chain(chain: Network) -> ProtectedLiveChainBlockList {
-    // Get a reference to our live chain storage.
-    // This SHOULD always exist, because its initialized exhaustively.
-    // If this FAILS, Recreate a blank chain, but log an error as its a serious UNRECOVERABLE
-    // BUG.
-    let entry = if let Some(entry) = LIVE_CHAINS.get(&chain) {
-        entry
-    } else {
-        error!(
-            chain = chain.to_string(),
-            "Internal Error: Chain Sync Failed to find chain in LIVE_CHAINS"
-        );
-
-        // Try and correct the error.
-        LIVE_CHAINS.insert(chain, ProtectedLiveChainBlockList::new());
-
-        // This should NOT fail, because we just inserted it, its catastrophic failure if it does.
-        #[allow(clippy::expect_used)]
-        LIVE_CHAINS
-            .get(&chain)
-            .expect("Internal Error: Chain Sync Failed to find chain in LIVE_CHAINS")
-    };
+    let entry = LIVE_CHAINS.get_or_insert_with(chain, ProtectedLiveChainBlockList::new);
 
     let value = entry.value();
     value.clone()
@@ -562,7 +530,7 @@ pub(crate) fn purge_live_chain(
 
 /// Get intersection points to try and find best point to connect to the node on
 /// reconnect.
-pub(crate) fn get_intersect_points(chain: Network) -> Vec<pallas::network::miniprotocols::Point> {
+pub(crate) fn get_intersect_points(chain: Network) -> Vec<pallas_primitives::types::point::Point> {
     let live_chain = get_live_chain(chain);
     live_chain.get_intersect_points()
 }
