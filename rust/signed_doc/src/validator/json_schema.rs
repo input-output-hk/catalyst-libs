@@ -1,5 +1,4 @@
 /// A wrapper around a JSON Schema validator.
-
 use anyhow::{anyhow, Result};
 use jsonschema::{options, Draft, Validator};
 use serde_json::Value;
