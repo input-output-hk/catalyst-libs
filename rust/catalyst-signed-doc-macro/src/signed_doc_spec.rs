@@ -10,30 +10,25 @@ use quote::format_ident;
 #[derive(serde::Deserialize)]
 pub(crate) struct CatalystSignedDocSpec {
     /// A collection of document's specs
-    pub(crate) docs: DocumentSpecs,
+    pub(crate) docs: HashMap<DocumentName, DocSpec>,
 }
 
-/// A collection of document's specs
-#[derive(serde::Deserialize)]
-pub(crate) struct DocumentSpecs(HashMap<String, DocSpec>);
+// A thin wrapper over the string document name values
+#[derive(serde::Deserialize, PartialEq, Eq, Hash)]
+pub(crate) struct DocumentName(String);
 
-impl IntoIterator for DocumentSpecs {
-    type IntoIter = std::iter::Map<
-        <HashMap<String, DocSpec> as IntoIterator>::IntoIter,
-        fn((String, DocSpec)) -> (Ident, String, DocSpec),
-    >;
-    type Item = (Ident, String, DocSpec);
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter().map(|(doc_name, spec)| {
-            let doc_name_ident = doc_name
+impl DocumentName {
+    /// returns a document name as a `Ident` in the following form
+    /// `"PROPOSAL_FORM_TEMPLATE"`
+    pub(crate) fn ident(&self) -> Ident {
+        format_ident!(
+            "{}",
+            self.0
                 .split_whitespace()
                 .map(str::to_uppercase)
                 .collect::<Vec<_>>()
-                .join("_");
-            let doc_name_ident = format_ident!("{}", doc_name_ident);
-            (doc_name_ident, doc_name, spec)
-        })
+                .join("_")
+        )
     }
 }
 

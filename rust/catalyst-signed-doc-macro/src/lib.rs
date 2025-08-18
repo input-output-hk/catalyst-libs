@@ -30,7 +30,8 @@ fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> 
     let spec = CatalystSignedDocSpec::load_signed_doc_spec()?;
 
     let mut consts_definitions = Vec::new();
-    for (const_type_name_ident, _doc_name, doc_spec) in spec.docs {
+    for (doc_name, doc_spec) in spec.docs {
+        let const_type_name_ident = doc_name.ident();
         let type_uuid = doc_spec.doc_type;
 
         let const_definition = quote! {
