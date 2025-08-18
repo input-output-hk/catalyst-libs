@@ -347,7 +347,7 @@ async fn persistent_reconnect(
 
     loop {
         // We never have a connection if we end up around the loop, so make a new one.
-        match retry_connect(addr, chain.into()).await {
+        match retry_connect(addr, chain.magic_number()).await {
             Ok(peer) => {
                 // Successfully connected to the peer.
                 stats::peer_connected(chain, true, addr);

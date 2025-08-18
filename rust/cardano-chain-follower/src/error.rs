@@ -38,10 +38,10 @@ pub enum Error {
     FollowTaskNotRunning,
     /// Chain Sync already running error.
     #[error("Chain Sync already running for network: {0}")]
-    ChainSyncAlreadyRunning(Network),
+    ChainSyncAlreadyRunning(Box<Network>),
     /// Mithril snapshot already running error.
     #[error("Mithril Snapshot Sync already running for network: {0}")]
-    MithrilSnapshotSyncAlreadyRunning(Network),
+    MithrilSnapshotSyncAlreadyRunning(Box<Network>),
     /// Mithril snapshot error.
     #[error("Failed to read block(s) from Mithril snapshot")]
     MithrilSnapshot(Option<pallas_hardano::storage::immutable::Error>),
@@ -59,7 +59,7 @@ pub enum Error {
     MithrilSnapshotDirectoryNotFound(String),
     /// Mithril Snapshot path is already configured for another network
     #[error("Mithril Snapshot path `{0}` is already configured for network `{1}`")]
-    MithrilSnapshotDirectoryAlreadyConfiguredForNetwork(PathBuf, Network),
+    MithrilSnapshotDirectoryAlreadyConfiguredForNetwork(PathBuf, Box<Network>),
     /// Mithril Snapshot path is already configured for this network
     #[error("Mithril Snapshot path `{0}` is already configured as `{1}`")]
     MithrilSnapshotDirectoryAlreadyConfigured(PathBuf, PathBuf),
@@ -78,31 +78,31 @@ pub enum Error {
     MithrilAggregatorURLAlreadyConfigured(String, String),
     /// Mithril aggregator URL is already defined for a network.
     #[error("Mithril Aggregator URL `{0}` is already configured for network `{1}`")]
-    MithrilAggregatorURLAlreadyConfiguredForNetwork(String, Network),
+    MithrilAggregatorURLAlreadyConfiguredForNetwork(String, Box<Network>),
     /// Mithril aggregator URL is not a valid URL
     #[error("Mithril Aggregator URL `{0}` is not a valid URL: `{1}`")]
     MithrilAggregatorURLParse(String, url::ParseError),
     /// General Mithril Client Error
     #[error("Mithril Client Error for {0} @ {1}: {2}")]
-    MithrilClient(Network, String, anyhow::Error),
+    MithrilClient(Box<Network>, String, anyhow::Error),
     /// General Mithril Index DB Error
     #[error("Mithril Index DB Error for {0}: {1}")]
-    MithrilIndexDB(Network, anyhow::Error),
+    MithrilIndexDB(Box<Network>, anyhow::Error),
     /// Mithril Aggregator has no Snapshots
     #[error("Mithril Aggregator does not list any Mithril Snapshots for {0} @ {1}")]
-    MithrilClientNoSnapshots(Network, String),
+    MithrilClientNoSnapshots(Box<Network>, String),
     /// Mithril Aggregator mismatch
     #[error("Mithril Aggregator network mismatch.  Wanted {0} Got {1}")]
-    MithrilClientNetworkMismatch(Network, String),
+    MithrilClientNetworkMismatch(Box<Network>, String),
     /// Mithril genesis VKEY Mismatch
     #[error("Mithril Genesis VKEY for Network {0} is already set, and can not be changed to a different value.")]
-    MithrilGenesisVKeyMismatch(Network),
+    MithrilGenesisVKeyMismatch(Box<Network>),
     /// Mithril genesis VKEY is not properly HEX Encoded
     #[error("Mithril Genesis VKEY for Network {0} is not hex encoded.  Needs to be only HEX Ascii characters, and even length.")]
-    MithrilGenesisVKeyNotHex(Network),
+    MithrilGenesisVKeyNotHex(Box<Network>),
     /// Mithril Auto-update requires an Aggregator and a VKEY and a Path
     #[error("Mithril Auto Update Network {0} failed to start. No Aggregator and/or Genesis VKEY and/or Path are configured.")]
-    MithrilUpdateRequiresAggregatorAndVkeyAndPath(Network),
+    MithrilUpdateRequiresAggregatorAndVkeyAndPath(Box<Network>),
     /// Internal Error
     #[error("Internal error")]
     Internal,
