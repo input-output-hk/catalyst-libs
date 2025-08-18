@@ -29,8 +29,9 @@ regenerate-signed-doc-json:
 
 # Fix and Check Markdown files
 regenerate: check regenerate-signed-doc-json validate && validate-docs
-    # Generate the markdown docs from the specification.
-    cd generators; uv run docs -g -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    earthly +regenerate-local
+    rm -rf "../docs/src/architecture/08_concepts/signed_doc"
+    mv temp_gen "../docs/src/architecture/08_concepts/signed_doc"
 
 # Validate the generated signed_docs.json is correct against the cue schema.
 validate:
@@ -43,7 +44,7 @@ validate:
 # Validate the generated docs is correct against the signed_docs.json.
 validate-docs:
     # Check our validation code actually works properly
-    cd generators; uv run docs -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    earthly +check
 
 # Pre Push Checks - intended to be run by a git pre-push hook.
 pre-push: format-python-code lint-python regenerate validate

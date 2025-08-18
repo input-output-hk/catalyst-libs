@@ -1,14 +1,21 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.4.4 AS cddl-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.5.7 AS cddl-ci
 
-todo-check-cddl:
+check-cddl:
     FROM cddl-ci+cddl-base
 
     WORKDIR /cddl
 
-    COPY ./additional_meta.cddl ./hash.cddl ./signed_doc_meta.cddl .
+    COPY *.cddl .
 
-    RUN cddlc -2 hash.cddl
-    RUN cddlc -2 additional_meta.cddl
-    RUN cddlc -2 signed_doc_meta.cddl
+    RUN status=0; \
+        while IFS= read -r file; do \
+            echo "Processing: $file"; \
+            if ! output=$(cddlc -2 -v -r -u "$file" 2>&1); then \
+                echo "❌ Error processing: $file"; \
+                echo "$output"; \
+                status=1; \
+            fi; \
+        done < <(find . -type f -name '*.cddl'); \
+        exit $status
