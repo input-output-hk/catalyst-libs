@@ -15,6 +15,7 @@ members = [
     "vote-tx-v1",
     "vote-tx-v2",
     "signed_doc",
+    "catalyst-signed-doc-macro",
     "rbac-registration",
 ]
 
