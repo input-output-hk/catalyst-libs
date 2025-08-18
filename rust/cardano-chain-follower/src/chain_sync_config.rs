@@ -138,8 +138,10 @@ impl ChainSyncConfig {
         stats::sync_started(self.chain);
 
         // Start the Chain Sync - IFF its not already running.
+        #[allow(clippy::expect_used)]
         let lock_entry = SYNC_JOIN_HANDLE_MAP
-            .entry(self.chain)
+            .try_entry(self.chain)
+            .expect("")
             .or_insert_with(|| Mutex::new(None));
         let mut locked_handle = lock_entry.value().lock().await;
 

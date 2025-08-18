@@ -72,8 +72,6 @@ impl SyncReadyWaiter {
 }
 
 /// Lock to prevent using any blockchain data for a network UNTIL it is synced to TIP.
-/// Pre-initialized for all possible blockchains, so it's safe to use `expect` to access a
-/// value.
 static SYNC_READY: LazyLock<DashMap<Network, RwLock<SyncReady>>> = LazyLock::new(DashMap::new);
 
 /// Write Lock the `SYNC_READY` lock for a network.
@@ -83,8 +81,10 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
 
     tokio::spawn(async move {
         stats::start_thread(chain, stats::thread::name::WAIT_FOR_SYNC_READY, true);
+        #[allow(clippy::expect_used)]
         let lock_entry = SYNC_READY
-            .entry(chain)
+            .try_entry(chain)
+            .expect("")
             .or_insert_with(|| RwLock::new(SyncReady::new()));
 
         let lock = lock_entry.value();
@@ -104,8 +104,10 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
 
 /// Get a Read lock on the Sync State, and return if we are ready or not.
 async fn check_sync_ready(chain: Network) -> bool {
+    #[allow(clippy::expect_used)]
     let lock_entry = SYNC_READY
-        .entry(chain)
+        .try_entry(chain)
+        .expect("")
         .or_insert_with(|| RwLock::new(SyncReady::new()));
     let lock = lock_entry.value();
 
@@ -133,8 +135,10 @@ pub(crate) async fn block_until_sync_ready(chain: Network) {
 pub(crate) async fn get_chain_update_rx_queue(
     chain: Network
 ) -> broadcast::Receiver<chain_update::Kind> {
+    #[allow(clippy::expect_used)]
     let lock_entry = SYNC_READY
-        .entry(chain)
+        .try_entry(chain)
+        .expect("")
         .or_insert_with(|| RwLock::new(SyncReady::new()));
 
     let lock = lock_entry.value();
@@ -148,8 +152,10 @@ pub(crate) async fn get_chain_update_rx_queue(
 pub(crate) async fn get_chain_update_tx_queue(
     chain: Network
 ) -> Option<broadcast::Sender<chain_update::Kind>> {
+    #[allow(clippy::expect_used)]
     let lock_entry = SYNC_READY
-        .entry(chain)
+        .try_entry(chain)
+        .expect("")
         .or_insert_with(|| RwLock::new(SyncReady::new()));
 
     let lock = lock_entry.value();

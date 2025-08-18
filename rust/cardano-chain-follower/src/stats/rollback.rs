@@ -58,11 +58,14 @@ fn lookup_rollback_map(
     chain: Network,
     rollback: RollbackType,
 ) -> Arc<RwLock<RollbackRecords>> {
-    let chain_rollback_map = ROLLBACKS_MAP.entry(chain).or_default();
+    #[allow(clippy::expect_used)]
+    let chain_rollback_map = ROLLBACKS_MAP.try_entry(chain).expect("").or_default();
     let chain_rollback_map = chain_rollback_map.value();
 
+    #[allow(clippy::expect_used)]
     let rollback_map = chain_rollback_map
-        .entry(rollback)
+        .try_entry(rollback)
+        .expect("")
         .or_insert_with(|| Arc::new(RwLock::new(RollbackRecords::new())));
     let rollback_map = rollback_map.value();
 
