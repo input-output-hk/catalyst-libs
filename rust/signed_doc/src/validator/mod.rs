@@ -124,7 +124,7 @@ fn proposal_submission_action_rule() -> Rules {
     ];
 
     let proposal_action_json_schema = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft7)
+        .with_draft(jsonschema::Draft::Draft202012)
         .build(
             &serde_json::from_str(include_str!(
                 "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"

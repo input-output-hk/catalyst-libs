@@ -132,7 +132,7 @@ fn templated_json_schema_check(
         return false;
     };
     let Ok(schema_validator) = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft7)
+        .with_draft(jsonschema::Draft::Draft202012)
         .build(&template_json_schema)
     else {
         doc.report().functional_validation(
@@ -430,7 +430,7 @@ mod tests {
 
         let json_schema = ContentSchema::Json(
             jsonschema::options()
-                .with_draft(jsonschema::Draft::Draft7)
+                .with_draft(jsonschema::Draft::Draft202012)
                 .build(&serde_json::json!({}))
                 .unwrap(),
         );
