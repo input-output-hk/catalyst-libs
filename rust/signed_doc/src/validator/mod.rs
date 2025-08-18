@@ -1,5 +1,6 @@
 //! Catalyst Signed Documents validation logic
 
+pub(crate) mod json_schema;
 pub(crate) mod rules;
 pub(crate) mod utils;
 
@@ -24,7 +25,6 @@ use crate::{
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     signature::{tbs_data, Signature},
-    validator::utils::detect_draft,
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -122,10 +122,9 @@ fn proposal_submission_action_rule() -> Rules {
     ))
     .expect("Must be a valid json file");
 
-    let proposal_action_json_schema = jsonschema::options()
-        .with_draft(detect_draft(proposal_action_json_schema_content))
-        .build(proposal_action_json_schema_content)
-        .expect("Must be a valid json scheme file");
+    let json_schema::JsonSchema(proposal_action_json_schema) =
+        json_schema::JsonSchema::new(proposal_action_json_schema_content)
+            .expect("Must be a valid json scheme file");
 
     Rules {
         content_type: ContentTypeRule {
