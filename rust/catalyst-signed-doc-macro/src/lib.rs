@@ -43,7 +43,6 @@ fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> 
                 Err(_) => panic!("invalid uuid v4 value"),
             };
         };
-        println!("{const_definition}");
         consts_definitions.push(const_definition);
     }
 
