@@ -216,7 +216,7 @@ where
 fn validate_id_and_ver<Provider>(
     doc: &CatalystSignedDocument,
     provider: &Provider,
-) -> anyhow::Result<bool> 
+) -> anyhow::Result<bool>
 where
     Provider: CatalystSignedDocumentProvider,
 {
