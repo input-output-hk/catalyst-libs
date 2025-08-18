@@ -165,7 +165,6 @@ mod tests {
     };
 
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -187,10 +186,9 @@ mod tests {
         }
         => true
         ;
-        "valid reference to the valid parameters document, non optional rule"
+        "valid reference to the valid parameters document"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -230,7 +228,6 @@ mod tests {
         "valid reference to the valid parameters document, with valid template field"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -261,7 +258,6 @@ mod tests {
         "valid reference to the valid parameters document, with missing template doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -299,7 +295,6 @@ mod tests {
         "valid reference to the valid parameters document, with missing parameters field in template doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -343,7 +338,6 @@ mod tests {
         "valid reference to the valid parameters document, with different parameters field in template doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -383,7 +377,6 @@ mod tests {
         "valid reference to the valid parameters document, with valid reply field"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -414,7 +407,6 @@ mod tests {
         "valid reference to the valid parameters document, with missing reply doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -452,7 +444,6 @@ mod tests {
         "valid reference to the valid parameters document, with missing parameters field in replied doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -496,7 +487,6 @@ mod tests {
         "valid reference to the valid parameters document, with different parameters field in reply doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -536,7 +526,6 @@ mod tests {
         "valid reference to the valid parameters document, with valid ref field"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -567,7 +556,6 @@ mod tests {
         "valid reference to the valid parameters document, with missing ref doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -605,7 +593,6 @@ mod tests {
         "valid reference to the valid parameters document, with missing parameters field in ref doc"
     )]
     #[test_case(
-        false,
         |exp_param_types, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -649,52 +636,6 @@ mod tests {
         "valid reference to the valid parameters document, with different parameters field in ref doc"
     )]
     #[test_case(
-        true,
-        |exp_param_types, provider| {
-            let parameter_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(UuidV7::new()))
-                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
-                .build();
-            provider.add_document(None, &parameter_doc).unwrap();
-
-            Builder::new()
-                .with_metadata_field(SupportedField::Parameters(
-                    vec![DocumentRef::new(
-                        parameter_doc.doc_id().unwrap(),
-                        parameter_doc.doc_ver().unwrap(),
-                        DocLocator::default(),
-                    )]
-                    .into(),
-                ))
-                .build()
-        }
-        => true
-        ;
-        "valid reference to the valid parameters document, optional rule"
-    )]
-    #[test_case(
-        true,
-        |_, _| {
-            Builder::new()
-                .build()
-        }
-        => true
-        ;
-        "missing parameters field, optional rule"
-    )]
-    #[test_case(
-        false,
-        |_, _| {
-            Builder::new()
-                .build()
-        }
-        => false
-        ;
-        "missing parameters field, non optional rule"
-    )]
-    #[test_case(
-        false,
         |_, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -719,7 +660,6 @@ mod tests {
         "valid reference to the invalid parameters document, wrong parameters type field value"
     )]
     #[test_case(
-        false,
         |_, provider| {
             let parameter_doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -743,7 +683,6 @@ mod tests {
         "valid reference to the invalid parameters document, missing type field"
     )]
     #[test_case(
-        false,
         |_, _| {
             Builder::new()
                 .with_metadata_field(SupportedField::Parameters(
@@ -762,22 +701,56 @@ mod tests {
     )]
     #[tokio::test]
     async fn parameter_specified_test(
-        optional: bool,
         doc_gen: impl FnOnce(
             &[DocType; 2],
             &mut TestCatalystSignedDocumentProvider,
-        ) -> CatalystSignedDocument,
+        ) -> CatalystSignedDocument
     ) -> bool {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
         let exp_param_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
-        let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_param_types.to_vec(),
-            optional,
-        };
         let doc = doc_gen(&exp_param_types, &mut provider);
-        rule.check(&doc, &provider).await.unwrap()
+
+        let non_optional_res = ParametersRule::Specified {
+            exp_parameters_type: exp_param_types.to_vec(),
+            optional: false,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        let optional_res = ParametersRule::Specified {
+            exp_parameters_type: exp_param_types.to_vec(),
+            optional: true,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        assert_eq!(non_optional_res, optional_res);
+        non_optional_res
+    }
+
+    #[tokio::test]
+    async fn ref_specified_optional_test() {
+        let provider = TestCatalystSignedDocumentProvider::default();
+        let rule = ParametersRule::Specified {
+            exp_parameters_type: vec![UuidV4::new().into()],
+            optional: true,
+        };
+
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        let provider = TestCatalystSignedDocumentProvider::default();
+        let rule = ParametersRule::Specified {
+            exp_parameters_type: vec![UuidV4::new().into()],
+            optional: false,
+        };
+
+        let doc = Builder::new().build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 
     #[tokio::test]
