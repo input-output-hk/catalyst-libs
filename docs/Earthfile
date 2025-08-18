@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/docs:v3.5.1 AS docs-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/docs:v3.5.7 AS docs-ci
 
 IMPORT .. AS repo
 
@@ -14,7 +14,7 @@ src:
 
 # Save a copy of the generated doc pages, so they can be validated.
 # These need to be in-sync with the signed docs specification data.
-generated-signed-docs-pages:
+generated-pages:
     FROM +src
 
     SAVE ARTIFACT src/architecture/08_concepts/signed_doc signed_doc
