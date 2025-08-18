@@ -83,7 +83,7 @@ fn get_sync_ready(chain: Network) -> SyncReadyRef {
         Some(res) => res,
         None => {
             SYNC_READY.insert(chain, RwLock::new(SyncReady::new()));
-            #[allow(dead_code)]
+            #[allow(clippy::expect_used)]
             SYNC_READY
                 .get(&chain)
                 .expect("cannot fail, we just inserted the value")
@@ -98,7 +98,6 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
 
     tokio::spawn(async move {
         stats::start_thread(chain, stats::thread::name::WAIT_FOR_SYNC_READY, true);
-        #[allow(clippy::expect_used)]
         let lock_entry = get_sync_ready(chain);
 
         let lock = lock_entry.value();
@@ -118,7 +117,6 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
 
 /// Get a Read lock on the Sync State, and return if we are ready or not.
 async fn check_sync_ready(chain: Network) -> bool {
-    #[allow(clippy::expect_used)]
     let lock_entry = get_sync_ready(chain);
     let lock = lock_entry.value();
 
@@ -146,7 +144,6 @@ pub(crate) async fn block_until_sync_ready(chain: Network) {
 pub(crate) async fn get_chain_update_rx_queue(
     chain: Network
 ) -> broadcast::Receiver<chain_update::Kind> {
-    #[allow(clippy::expect_used)]
     let lock_entry = get_sync_ready(chain);
 
     let lock = lock_entry.value();
@@ -160,7 +157,6 @@ pub(crate) async fn get_chain_update_rx_queue(
 pub(crate) async fn get_chain_update_tx_queue(
     chain: Network
 ) -> Option<broadcast::Sender<chain_update::Kind>> {
-    #[allow(clippy::expect_used)]
     let lock_entry = get_sync_ready(chain);
 
     let lock = lock_entry.value();

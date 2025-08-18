@@ -38,14 +38,14 @@ static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(StatsMap::default);
 
 /// Get the stats for a particular chain.
 fn lookup_stats(chain: Network) -> Arc<RwLock<Statistics>> {
-    #[allow(clippy::expect_used)]
-    let chain_entry = STATS_MAP
-        .try_entry(chain).expect("")
-        .or_insert_with(|| Arc::new(RwLock::new(Statistics::default())));
-
-    let chain_stats = chain_entry.value();
-
-    chain_stats.clone()
+    match STATS_MAP.get(&chain) {
+        Some(chain_entry) => chain_entry.value().clone(),
+        None => {
+            let res = Arc::new(RwLock::new(Statistics::default()));
+            STATS_MAP.insert(chain, res.clone());
+            res
+        },
+    }
 }
 
 impl Statistics {
