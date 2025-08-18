@@ -5,7 +5,7 @@ mod error;
 mod signed_doc_spec;
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 
 use crate::{error::process_error, signed_doc_spec::CatalystSignedDocSpec};
 
@@ -30,8 +30,7 @@ fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> 
     let spec = CatalystSignedDocSpec::load_signed_doc_spec()?;
 
     let mut consts_definitions = Vec::new();
-    for (doc_name, doc_spec) in spec.docs {
-        let const_type_name_ident = format_ident!("{}", doc_name.0);
+    for (const_type_name_ident, _doc_name, doc_spec) in spec.docs {
         let type_uuid = doc_spec.doc_type;
 
         let const_definition = quote! {

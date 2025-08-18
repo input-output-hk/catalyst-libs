@@ -3,34 +3,44 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
+use proc_macro2::Ident;
+use quote::format_ident;
 
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub(crate) struct CatalystSignedDocSpec {
-    pub(crate) docs: HashMap<DocumentName, DocSpec>,
+    /// A collection of document's specs
+    pub(crate) docs: DocumentSpecs,
 }
 
-/// A thin wrapper over the string document name values, mapping each of them from
-/// "Proposal Form template" to "PROPOSAL_FORM_TEMPLATE"
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub(crate) struct DocumentName(pub(crate) String);
+/// A collection of document's specs
+#[derive(serde::Deserialize)]
+pub(crate) struct DocumentSpecs(HashMap<String, DocSpec>);
 
-impl<'de> serde::Deserialize<'de> for DocumentName {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
-        Ok(Self(
-            String::deserialize(deserializer)?
+impl IntoIterator for DocumentSpecs {
+    type IntoIter = std::iter::Map<
+        <HashMap<String, DocSpec> as IntoIterator>::IntoIter,
+        fn((String, DocSpec)) -> (Ident, String, DocSpec),
+    >;
+    type Item = (Ident, String, DocSpec);
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter().map(|(doc_name, spec)| {
+            let doc_name_ident = doc_name
                 .split_whitespace()
-                .map(|word| word.to_uppercase())
+                .map(str::to_uppercase)
                 .collect::<Vec<_>>()
-                .join("_"),
-        ))
+                .join("_");
+            let doc_name_ident = format_ident!("{}", doc_name_ident);
+            (doc_name_ident, doc_name, spec)
+        })
     }
 }
 
 /// Specific document type definition
 #[derive(serde::Deserialize)]
 pub(crate) struct DocSpec {
+    /// Document type UUID v4 value
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
 }
