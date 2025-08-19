@@ -30,6 +30,7 @@ The Section form element, can appear as a child of:
 
 * The Root Object of the [JSON Schema][JSON Schema-2020-12]
 * [Section](section.md)
+* [Section Optional](section_optional.md)
 
 ## Definition
 
@@ -251,6 +252,13 @@ This is an Example Form Template showing just the Section form element, and its 
         "section": {
           "additionalProperties": false,
           "type": "object"
+        },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -260,11 +268,30 @@ This is an Example Form Template showing just the Section form element, and its 
           "properties": {
             "exampleSection": {
               "$ref": "#/$defs/section",
-              "properties": {},
+              "properties": {
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
+                }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
+            },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
               "x-flatten": false,
               "x-icon": "bookmark"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

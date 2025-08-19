@@ -31,7 +31,7 @@ dictionary: section: {
 		The visual display of sections has no impact on how it is represented
 		in the data captured.
 		"""
-	parent: ["{}", "section"]
+	parent: ["{}", "section", "sectionOptional"]
 	definition: type: "object"
 	parameters: {
 		title: {

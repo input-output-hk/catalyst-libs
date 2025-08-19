@@ -47,6 +47,13 @@
             "additionalProperties": false,
             "type": "object"
         },
+        "sectionOptional": {
+            "additionalProperties": false,
+            "type": [
+                "object",
+                "null"
+            ]
+        },
         "singleGroupedTagSelector": {
             "additionalProperties": false,
             "required": [

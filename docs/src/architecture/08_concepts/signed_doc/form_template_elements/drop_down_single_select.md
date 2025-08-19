@@ -262,6 +262,13 @@ This is an Example Form Template showing just the Drop Down Single Select form e
         "section": {
           "additionalProperties": false,
           "type": "object"
+        },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -297,12 +304,30 @@ This is an Example Form Template showing just the Drop Down Single Select form e
                   "title": "Selector",
                   "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
                   "x-icon": "emoji-happy"
+                },
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
                 }
               },
               "x-flatten": false,
               "x-icon": "bookmark"
+            },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

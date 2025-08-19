@@ -276,6 +276,13 @@ This is an Example Form Template showing just the Single Line Text Entry form el
           "additionalProperties": false,
           "type": "object"
         },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
         "singleLineTextEntry": {
           "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
@@ -290,6 +297,12 @@ This is an Example Form Template showing just the Single Line Text Entry form el
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
+                },
                 "exampleSingleLineTextEntry": {
                   "$ref": "#/$defs/singleLineTextEntry",
                   "default": "Rocket",
@@ -305,6 +318,12 @@ This is an Example Form Template showing just the Single Line Text Entry form el
               "x-flatten": false,
               "x-icon": "bookmark"
             },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
+            },
             "exampleSingleLineTextEntry": {
               "$ref": "#/$defs/singleLineTextEntry",
               "default": "Rocket",
@@ -317,6 +336,12 @@ This is an Example Form Template showing just the Single Line Text Entry form el
               "x-placeholder": "???"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

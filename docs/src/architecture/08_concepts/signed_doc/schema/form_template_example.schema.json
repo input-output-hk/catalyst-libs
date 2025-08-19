@@ -41,6 +41,13 @@
             "additionalProperties": false,
             "type": "object"
         },
+        "sectionOptional": {
+            "additionalProperties": false,
+            "type": [
+                "object",
+                "null"
+            ]
+        },
         "singleGroupedTagSelector": {
             "additionalProperties": false,
             "required": [
@@ -284,6 +291,12 @@
                             "x-guidance": "Video killed the radio star.",
                             "x-icon": "bottom-rail-toggle"
                         },
+                        "exampleSectionOptional": {
+                            "$ref": "#/$defs/sectionOptional",
+                            "x-final-optional": true,
+                            "x-flatten": false,
+                            "x-icon": "bookmark"
+                        },
                         "exampleSingleGroupedTagSelector": {
                             "$ref": "#/$defs/singleGroupedTagSelector",
                             "properties": {}
@@ -358,6 +371,12 @@
                     "x-flatten": false,
                     "x-icon": "bookmark"
                 },
+                "exampleSectionOptional": {
+                    "$ref": "#/$defs/sectionOptional",
+                    "x-final-optional": true,
+                    "x-flatten": false,
+                    "x-icon": "bookmark"
+                },
                 "exampleSingleGroupedTagSelector": {
                     "$ref": "#/$defs/singleGroupedTagSelector",
                     "properties": {}
@@ -429,6 +448,12 @@
                     "x-icon": "emoji-happy"
                 }
             },
+            "x-flatten": false,
+            "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+            "$ref": "#/$defs/sectionOptional",
+            "x-final-optional": true,
             "x-flatten": false,
             "x-icon": "bookmark"
         }

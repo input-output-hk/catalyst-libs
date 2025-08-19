@@ -137,7 +137,8 @@ class TemplateGenericSchema(RootModel[dict[str, Any]]):
         try:
             validator.validate(instance=self.root)  # type: ignore reportUnknownMemberType
         except Exception as e:
-            msg = f"Generic Form Schema must be a valid Json Schema 2020-12. {e}"
+            schema_txt = json.dumps(self.root,indent=2)
+            msg = f"Generic Form Schema must be a valid Json Schema 2020-12. {e}\n{schema_txt}"
             raise ValueError(msg) from e
 
     def basic(self) -> dict[str, typing.Any]:

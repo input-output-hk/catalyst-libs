@@ -301,6 +301,13 @@ This is an Example Form Template showing just the Single Line Https Url Entry Li
           "additionalProperties": false,
           "type": "object"
         },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
         "singleLineHttpsUrlEntry": {
           "contentMediaType": "text/plain",
           "format": "uri",
@@ -323,6 +330,12 @@ This is an Example Form Template showing just the Single Line Https Url Entry Li
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
+                },
                 "exampleSingleLineHttpsUrlEntryList": {
                   "$ref": "#/$defs/singleLineHttpsUrlEntryList",
                   "description": "All the development domains used by your project.",
@@ -341,6 +354,12 @@ This is an Example Form Template showing just the Single Line Https Url Entry Li
               "x-flatten": false,
               "x-icon": "bookmark"
             },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
+            },
             "exampleSingleLineHttpsUrlEntryList": {
               "$ref": "#/$defs/singleLineHttpsUrlEntryList",
               "description": "All the development domains used by your project.",
@@ -356,6 +375,12 @@ This is an Example Form Template showing just the Single Line Https Url Entry Li
               ]
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }
