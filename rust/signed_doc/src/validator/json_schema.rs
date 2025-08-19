@@ -11,7 +11,7 @@ use serde_json::Value;
 /// Attempts to detect the draft version from the `$schema` field.
 /// If not specified, it tries Draft2020-12 first, then falls back to Draft7.
 /// Returns an error if schema is invalid for both.
-pub(crate) struct JsonSchema(pub(crate) Validator);
+pub(crate) struct JsonSchema(Validator);
 
 impl Deref for JsonSchema {
     type Target = Validator;
@@ -127,5 +127,13 @@ mod tests {
             result.is_err(),
             "Expected invalid schema to return an error"
         );
+    }
+
+    #[test]
+    fn empty_object_schema() {
+        let schema = json!({});
+
+        let result = JsonSchema::try_from(&schema);
+        assert!(result.is_ok());
     }
 }

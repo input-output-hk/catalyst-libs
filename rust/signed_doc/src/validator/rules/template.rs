@@ -133,10 +133,7 @@ fn templated_json_schema_check(
         );
         return false;
     };
-    let Ok(schema_validator) = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft202012)
-        .build(&template_json_schema)
-    else {
+    let Ok(schema) = json_schema::JsonSchema::try_from(&template_json_schema) else {
         doc.report().functional_validation(
             "Template document content must be Draft 7 JSON schema",
             "Invalid referenced template document content",
@@ -144,10 +141,7 @@ fn templated_json_schema_check(
         return false;
     };
 
-    content_schema_check(
-        doc,
-        &ContentSchema::Json(json_schema::JsonSchema(schema_validator)),
-    )
+    content_schema_check(doc, &ContentSchema::Json(schema))
 }
 
 /// Validating the document's content against the provided schema
@@ -432,13 +426,8 @@ mod tests {
     #[tokio::test]
     async fn content_rule_static_test() {
         let provider = TestCatalystSignedDocumentProvider::default();
-
-        let validator = jsonschema::options()
-            .with_draft(jsonschema::Draft::Draft202012)
-            .build(&serde_json::json!({}))
-            .unwrap();
-
-        let content_schema = ContentSchema::Json(json_schema::JsonSchema(validator));
+        let schema = json_schema::JsonSchema::try_from(&serde_json::json!({})).unwrap();
+        let content_schema = ContentSchema::Json(schema);
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
         // all correct
