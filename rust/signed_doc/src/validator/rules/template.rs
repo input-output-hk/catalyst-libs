@@ -4,15 +4,17 @@ use std::fmt::Write;
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::ContentType, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_doc_refs, CatalystSignedDocument, DocType,
+    metadata::ContentType,
+    providers::CatalystSignedDocumentProvider,
+    validator::{json_schema, utils::validate_doc_refs},
+    CatalystSignedDocument, DocType,
 };
 
 /// Enum represents different content schemas, against which documents content would be
 /// validated.
 pub(crate) enum ContentSchema {
     /// Draft 7 JSON schema
-    Json(jsonschema::Validator),
+    Json(json_schema::JsonSchema),
 }
 
 /// Document's content validation rule
@@ -131,10 +133,7 @@ fn templated_json_schema_check(
         );
         return false;
     };
-    let Ok(schema_validator) = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft7)
-        .build(&template_json_schema)
-    else {
+    let Ok(schema) = json_schema::JsonSchema::try_from(&template_json_schema) else {
         doc.report().functional_validation(
             "Template document content must be Draft 7 JSON schema",
             "Invalid referenced template document content",
@@ -142,7 +141,7 @@ fn templated_json_schema_check(
         return false;
     };
 
-    content_schema_check(doc, &ContentSchema::Json(schema_validator))
+    content_schema_check(doc, &ContentSchema::Json(schema))
 }
 
 /// Validating the document's content against the provided schema
@@ -427,17 +426,12 @@ mod tests {
     #[tokio::test]
     async fn content_rule_static_test() {
         let provider = TestCatalystSignedDocumentProvider::default();
-
-        let json_schema = ContentSchema::Json(
-            jsonschema::options()
-                .with_draft(jsonschema::Draft::Draft7)
-                .build(&serde_json::json!({}))
-                .unwrap(),
-        );
+        let schema = json_schema::JsonSchema::try_from(&serde_json::json!({})).unwrap();
+        let content_schema = ContentSchema::Json(schema);
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
         // all correct
-        let rule = ContentRule::Static(json_schema);
+        let rule = ContentRule::Static(content_schema);
         let doc = Builder::new().with_content(json_content.clone()).build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 

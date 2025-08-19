@@ -1,5 +1,6 @@
 //! Catalyst Signed Documents validation logic
 
+pub(crate) mod json_schema;
 pub(crate) mod rules;
 pub(crate) mod utils;
 
@@ -116,15 +117,15 @@ fn proposal_submission_action_rule() -> Rules {
         CATEGORY_PARAMETERS.clone(),
     ];
 
-    let proposal_action_json_schema = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft7)
-        .build(
-            &serde_json::from_str(include_str!(
-                "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
-            ))
-            .expect("Must be a valid json file"),
-        )
-        .expect("Must be a valid json scheme file");
+    let proposal_action_json_schema_content = &serde_json::from_str(include_str!(
+        "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
+    ))
+    .expect("Must be a valid json file");
+
+    let proposal_action_json_schema =
+        json_schema::JsonSchema::try_from(proposal_action_json_schema_content)
+            .expect("Must be a valid json scheme file");
+
     Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
