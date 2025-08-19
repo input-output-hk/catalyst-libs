@@ -92,5 +92,12 @@ copyright: #copyrightNotice & {
 				* Add standard ICON definitions for Forms.
 				"""
 		},
+		{
+			version:  "0.1.1"
+			modified: "2025-08-19"
+			changes: """
+				* Define an Optional Section in a Form Template, to enable partial form submission while in Draft.
+				"""
+		},
 	]
 }

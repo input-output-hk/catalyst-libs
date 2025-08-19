@@ -258,6 +258,13 @@ This is an Example Form Template showing just the Single Select form element, an
           "additionalProperties": false,
           "type": "object"
         },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
         "singleSelect": {
           "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
@@ -272,6 +279,12 @@ This is an Example Form Template showing just the Single Select form element, an
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
+                },
                 "exampleSingleSelect": {
                   "$ref": "#/$defs/singleSelect",
                   "default": "option 1",
@@ -289,6 +302,12 @@ This is an Example Form Template showing just the Single Select form element, an
               "x-flatten": false,
               "x-icon": "bookmark"
             },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
+            },
             "exampleSingleSelect": {
               "$ref": "#/$defs/singleSelect",
               "default": "option 1",
@@ -303,6 +322,12 @@ This is an Example Form Template showing just the Single Select form element, an
               "x-icon": "emoji-happy"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

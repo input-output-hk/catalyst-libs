@@ -15,6 +15,7 @@ import (
 	"integer" |
 	"number" |
 	"object" |
+	["object", "null"] |
 	*"string"
 
 // List of properties allowed in the `property` field of `jsonParameter`
@@ -191,6 +192,18 @@ _allParameters: {
 			If present, and true, then form element is to be flattened into its parent.
 			Typically this parameter is only present in sections.
 			The UI is free to decide how it presents flattened sections.
+			"""
+	}
+	"x-final-optional"?: #parameter & {
+		type:     "boolean"
+		required: "optional"
+		description: """
+			If present, and true, then this section may be `null` in a Finalized Form.
+			The default behavior is that Optional Sections **MUST NOT** be `null` in Finalized Forms.
+			This parameter allows that to be over-ridden, on a section by section basis.
+			This parameter is only present in Optional Sections.
+			This parameter informs post json schema validation to allow `null` sections 
+			based on the status of the Form, whereas typically they are always rejected.
 			"""
 	}
 }

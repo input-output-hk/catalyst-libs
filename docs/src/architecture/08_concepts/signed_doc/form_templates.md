@@ -130,6 +130,7 @@ possible Form Element.
 | Multi Select | [multiSelect](form_template_elements/multi_select.md) |
 | Radio Button Select | [radioButtonSelect](form_template_elements/radio_button_select.md) |
 | Section | [section](form_template_elements/section.md) |
+| Section Optional | [sectionOptional](form_template_elements/section_optional.md) |
 | Single Grouped Tag Selector | [singleGroupedTagSelector](form_template_elements/single_grouped_tag_selector.md) |
 | Single Line Https Url Entry | [singleLineHttpsUrlEntry](form_template_elements/single_line_https_url_entry.md) |
 | Single Line Https Url Entry List | [singleLineHttpsUrlEntryList](form_template_elements/single_line_https_url_entry_list.md) |

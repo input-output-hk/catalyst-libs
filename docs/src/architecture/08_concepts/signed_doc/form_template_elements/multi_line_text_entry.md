@@ -281,6 +281,13 @@ This is an Example Form Template showing just the Multi Line Text Entry form ele
         "section": {
           "additionalProperties": false,
           "type": "object"
+        },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -312,12 +319,30 @@ This is an Example Form Template showing just the Multi Line Text Entry form ele
                   "x-guidance": "It's useful to explain things here.",
                   "x-icon": "academic-cap",
                   "x-placeholder": "What's your explanation?"
+                },
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
                 }
               },
               "x-flatten": false,
               "x-icon": "bookmark"
+            },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

@@ -2,6 +2,7 @@
 package form_template
 
 import (
+	"list"
 	"github.com/input-output-hk/catalyst-libs/specs/regex"
 )
 
@@ -29,7 +30,8 @@ import (
 	readOnly?: true
 
 	// Form Elements which hold other form elements
-	if type == "object" {
+
+	if list.Contains(list.FlattenN([type], -1), "object") {
 		// MUST not allow undefined properties
 		additionalProperties: false // IF false, can not define extra fields.
 		// MAY list properties as non optional by including them in a `required` list.
@@ -41,7 +43,8 @@ import (
 	}
 
 	// Form Elements which are a list of other Form Elements
-	if type == "array" {
+	if list.Contains(list.FlattenN([type], -1), "array") {
+		//if type == "array" {
 		// Just the name of the array element
 		_itemElement: #itemElement
 		// The type of Form Elements in the list.
@@ -54,7 +57,8 @@ import (
 		maxItems?: int
 	}
 
-	if type == "string" {
+	if list.Contains(list.FlattenN([type], -1), "string") {
+		//if type == "string" {
 		format?:           #formatChoices
 		contentMediaType?: #contentMediaTypeChoices
 		pattern?:          regex.#regex

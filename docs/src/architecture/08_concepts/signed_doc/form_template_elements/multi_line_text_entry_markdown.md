@@ -287,6 +287,13 @@ This is an Example Form Template showing just the Multi Line Text Entry [Markdow
         "section": {
           "additionalProperties": false,
           "type": "object"
+        },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "type": "object",
@@ -318,12 +325,30 @@ This is an Example Form Template showing just the Multi Line Text Entry [Markdow
                   "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
                   "x-icon": "book-open",
                   "x-placeholder": "# ..."
+                },
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
                 }
               },
               "x-flatten": false,
               "x-icon": "bookmark"
+            },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

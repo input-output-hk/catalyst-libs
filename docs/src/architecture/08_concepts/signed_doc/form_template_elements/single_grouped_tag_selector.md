@@ -216,6 +216,13 @@ This is an Example Form Template showing just the Single Grouped Tag Selector fo
           "additionalProperties": false,
           "type": "object"
         },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
         "singleGroupedTagSelector": {
           "additionalProperties": false,
           "required": [
@@ -233,6 +240,12 @@ This is an Example Form Template showing just the Single Grouped Tag Selector fo
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
+                },
                 "exampleSingleGroupedTagSelector": {
                   "$ref": "#/$defs/singleGroupedTagSelector",
                   "properties": {}
@@ -241,11 +254,23 @@ This is an Example Form Template showing just the Single Grouped Tag Selector fo
               "x-flatten": false,
               "x-icon": "bookmark"
             },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
+            },
             "exampleSingleGroupedTagSelector": {
               "$ref": "#/$defs/singleGroupedTagSelector",
               "properties": {}
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }

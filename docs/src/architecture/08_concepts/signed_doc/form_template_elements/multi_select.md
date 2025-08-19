@@ -289,6 +289,13 @@ This is an Example Form Template showing just the Multi Select form element, and
           "additionalProperties": false,
           "type": "object"
         },
+        "sectionOptional": {
+          "additionalProperties": false,
+          "type": [
+            "object",
+            "null"
+          ]
+        },
         "singleSelect": {
           "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
@@ -352,12 +359,30 @@ This is an Example Form Template showing just the Multi Select form element, and
                   "title": "Select Items",
                   "x-guidance": "Select two items only, no more, no less.",
                   "x-icon": "cursor-click"
+                },
+                "exampleSectionOptional": {
+                  "$ref": "#/$defs/sectionOptional",
+                  "x-final-optional": true,
+                  "x-flatten": false,
+                  "x-icon": "bookmark"
                 }
               },
               "x-flatten": false,
               "x-icon": "bookmark"
+            },
+            "exampleSectionOptional": {
+              "$ref": "#/$defs/sectionOptional",
+              "x-final-optional": true,
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
           },
+          "x-flatten": false,
+          "x-icon": "bookmark"
+        },
+        "exampleSectionOptional": {
+          "$ref": "#/$defs/sectionOptional",
+          "x-final-optional": true,
           "x-flatten": false,
           "x-icon": "bookmark"
         }
