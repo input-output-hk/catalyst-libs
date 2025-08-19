@@ -79,15 +79,14 @@ type SyncReadyRef = dashmap::mapref::one::Ref<'static, Network, RwLock<SyncReady
 /// returns `SYNC_READY` entry by the provided network, if not present inserts the default
 /// value
 fn get_sync_ready(chain: Network) -> SyncReadyRef {
-    match SYNC_READY.get(&chain) {
-        Some(res) => res,
-        None => {
-            SYNC_READY.insert(chain, RwLock::new(SyncReady::new()));
-            #[allow(clippy::expect_used)]
-            SYNC_READY
-                .get(&chain)
-                .expect("cannot fail, we just inserted the value")
-        },
+    if let Some(sync_entry) = SYNC_READY.get(&chain) {
+        sync_entry
+    } else {
+        SYNC_READY.insert(chain, RwLock::new(SyncReady::new()));
+        #[allow(clippy::expect_used)]
+        SYNC_READY
+            .get(&chain)
+            .expect("cannot fail, we just inserted the value")
     }
 }
 

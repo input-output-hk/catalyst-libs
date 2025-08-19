@@ -38,13 +38,12 @@ static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(StatsMap::default);
 
 /// Get the stats for a particular chain.
 fn lookup_stats(chain: Network) -> Arc<RwLock<Statistics>> {
-    match STATS_MAP.get(&chain) {
-        Some(chain_entry) => chain_entry.value().clone(),
-        None => {
-            let res = Arc::new(RwLock::new(Statistics::default()));
-            STATS_MAP.insert(chain, res.clone());
-            res
-        },
+    if let Some(chain_entry) = STATS_MAP.get(&chain) {
+        chain_entry.value().clone()
+    } else {
+        let res = Arc::new(RwLock::new(Statistics::default()));
+        STATS_MAP.insert(chain, res.clone());
+        res
     }
 }
 
