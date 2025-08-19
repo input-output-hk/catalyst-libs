@@ -1,6 +1,8 @@
 //! A wrapper around a JSON Schema validator.
 
-use anyhow::{anyhow, Result};
+use std::ops::Deref;
+
+use anyhow::anyhow;
 use jsonschema::{options, Draft, Validator};
 use serde_json::Value;
 
@@ -11,10 +13,18 @@ use serde_json::Value;
 /// Returns an error if schema is invalid for both.
 pub(crate) struct JsonSchema(pub(crate) Validator);
 
-impl JsonSchema {
-    /// Creates a `JsonSchema` from the JSON object.
-    /// Returns error if unsupported schema draft is used.
-    pub(crate) fn new(schema: &Value) -> Result<Self> {
+impl Deref for JsonSchema {
+    type Target = Validator;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl TryFrom<&Value> for JsonSchema {
+    type Error = anyhow::Error;
+
+    fn try_from(schema: &Value) -> std::result::Result<Self, Self::Error> {
         let draft_version = if let Some(schema) = schema.get("$schema").and_then(|s| s.as_str()) {
             if schema.contains("draft-07") {
                 Some(Draft::Draft7)
@@ -69,7 +79,7 @@ mod tests {
             }
         });
 
-        let result = JsonSchema::new(&schema);
+        let result = JsonSchema::try_from(&schema);
         assert!(result.is_ok(), "Expected Draft7 schema to be valid");
     }
 
@@ -83,7 +93,7 @@ mod tests {
             }
         });
 
-        let result = JsonSchema::new(&schema);
+        let result = JsonSchema::try_from(&schema);
         assert!(result.is_ok(), "Expected Draft2020-12 schema to be valid");
     }
 
@@ -97,7 +107,7 @@ mod tests {
             }
         });
 
-        let result = JsonSchema::new(&schema);
+        let result = JsonSchema::try_from(&schema);
         assert!(
             result.is_ok(),
             "Expected schema without $schema to fallback and succeed"
@@ -112,7 +122,7 @@ mod tests {
             "type": "not-a-valid-type"
         });
 
-        let result = JsonSchema::new(&schema);
+        let result = JsonSchema::try_from(&schema);
         assert!(
             result.is_err(),
             "Expected invalid schema to return an error"

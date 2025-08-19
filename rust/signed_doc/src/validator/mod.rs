@@ -122,8 +122,8 @@ fn proposal_submission_action_rule() -> Rules {
     ))
     .expect("Must be a valid json file");
 
-    let json_schema::JsonSchema(proposal_action_json_schema) =
-        json_schema::JsonSchema::new(proposal_action_json_schema_content)
+    let proposal_action_json_schema =
+        json_schema::JsonSchema::try_from(proposal_action_json_schema_content)
             .expect("Must be a valid json scheme file");
 
     Rules {
