@@ -18,6 +18,7 @@ mod snapshot_id;
 mod stats;
 pub mod turbo_downloader;
 
+pub use cardano_blockchain_types::*;
 pub use chain_sync_config::ChainSyncConfig;
 pub use chain_update::{ChainUpdate, Kind};
 pub use error::Result;

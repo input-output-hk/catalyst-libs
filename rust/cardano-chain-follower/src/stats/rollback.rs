@@ -58,14 +58,19 @@ fn lookup_rollback_map(
     chain: Network,
     rollback: RollbackType,
 ) -> Arc<RwLock<RollbackRecords>> {
-    let chain_rollback_map = ROLLBACKS_MAP.entry(chain).or_default();
-    let chain_rollback_map = chain_rollback_map.value();
+    let Some(chain_rollback_map) = ROLLBACKS_MAP.get(&chain) else {
+        let res = Arc::new(RwLock::new(RollbackRecords::new()));
+        let chain_rollback_map = DashMap::new();
+        chain_rollback_map.insert(rollback, res.clone());
+        ROLLBACKS_MAP.insert(chain, chain_rollback_map);
+        return res;
+    };
 
-    let rollback_map = chain_rollback_map
-        .entry(rollback)
-        .or_insert_with(|| Arc::new(RwLock::new(RollbackRecords::new())));
-    let rollback_map = rollback_map.value();
-
+    let Some(rollback_map) = chain_rollback_map.get(&rollback) else {
+        let res = Arc::new(RwLock::new(RollbackRecords::new()));
+        chain_rollback_map.insert(rollback, res.clone());
+        return res;
+    };
     rollback_map.clone()
 }
 
