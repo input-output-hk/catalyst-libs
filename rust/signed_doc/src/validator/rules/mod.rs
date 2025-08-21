@@ -3,7 +3,7 @@
 
 use futures::FutureExt;
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{providers::CatalystSignedDocumentProvider, validator::id_and_ver::{IdRule, VerRule}, CatalystSignedDocument};
 
 mod content_encoding;
 mod content_type;
@@ -25,6 +25,10 @@ pub(crate) use template::{ContentRule, ContentSchema};
 
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {
+    /// 'id' field validation rule
+    pub(crate) id: Option<IdRule>,
+    /// 'ver' field validation rule
+    pub(crate) ver: Option<VerRule>,
     /// 'content-type' field validation rule
     pub(crate) content_type: ContentTypeRule,
     /// 'content-encoding' field validation rule
