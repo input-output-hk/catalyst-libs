@@ -84,7 +84,7 @@ where
 {
     let mut all_valid = true;
 
-    for dr in doc_refs.doc_refs() {
+    for dr in doc_refs.iter() {
         if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
             let is_valid = referenced_doc_type_check(ref_doc, exp_ref_types, field_name, report)
                 && referenced_doc_id_and_ver_check(ref_doc, dr, field_name, report)

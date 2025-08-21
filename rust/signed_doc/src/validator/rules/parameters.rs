@@ -129,7 +129,7 @@ where
 
     let mut all_valid = true;
 
-    for dr in ref_field.doc_refs() {
+    for dr in ref_field.iter() {
         if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
             let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
                 report.missing_field(
