@@ -4,8 +4,7 @@ use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider,
-    validator::{rules::doc_ref::referenced_doc_check, utils::validate_doc_refs},
+    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
     CatalystSignedDocument, DocType, DocumentRefs,
 };
 
@@ -41,12 +40,15 @@ impl ParametersRule {
         } = self
         {
             if let Some(parameters_ref) = doc.doc_meta().parameters() {
-                let parameters_validator = |ref_doc: CatalystSignedDocument| {
-                    referenced_doc_check(&ref_doc, exp_parameters_type, "parameters", doc.report())
-                };
-                let parameters_check =
-                    validate_doc_refs(parameters_ref, provider, doc.report(), parameters_validator)
-                        .boxed();
+                let parameters_check = doc_refs_check(
+                    parameters_ref,
+                    exp_parameters_type,
+                    "parameters",
+                    provider,
+                    doc.report(),
+                    |_| true,
+                )
+                .boxed();
 
                 let template_link_check = link_check(
                     doc.doc_meta().template(),
@@ -125,32 +127,41 @@ where
         return Ok(true);
     };
 
-    let link_validator = |ref_doc: CatalystSignedDocument| {
-        let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
-            report.missing_field(
-                "parameters",
-                &format!(
-                    "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
-                ),
-            );
-            return false;
-        };
+    let mut all_valid = true;
 
-        if exp_parameters != ref_doc_parameters {
-            report.invalid_value(
-                "parameters",
-                &format!("Reference doc param: {ref_doc_parameters}",),
-                &format!("Doc param: {exp_parameters}"),
-                &format!(
-                    "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
-                ),
+    for dr in ref_field.doc_refs() {
+        if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
+            let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
+                report.missing_field(
+                    "parameters",
+                    &format!(
+                        "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
+                    ),
+                );
+                all_valid = false;
+                continue;
+            };
+
+            if exp_parameters != ref_doc_parameters {
+                report.invalid_value(
+                    "parameters",
+                    &format!("Reference doc param: {ref_doc_parameters}",),
+                    &format!("Doc param: {exp_parameters}"),
+                    &format!(
+                        "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
+                    ),
+                );
+                all_valid = false;
+            }
+        } else {
+            report.functional_validation(
+                &format!("Cannot retrieve a document {dr}"),
+                &format!("Referenced document link validation for the `{field_name}` field"),
             );
-            return false;
+            all_valid = false;
         }
-        true
-    };
-
-    validate_doc_refs(ref_field, provider, report, link_validator).await
+    }
+    Ok(all_valid)
 }
 
 #[cfg(test)]

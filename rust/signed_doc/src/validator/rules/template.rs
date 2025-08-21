@@ -2,11 +2,10 @@
 
 use std::fmt::Write;
 
-use super::doc_ref::referenced_doc_check;
 use crate::{
     metadata::ContentType,
     providers::CatalystSignedDocumentProvider,
-    validator::{json_schema, utils::validate_doc_refs},
+    validator::{json_schema, rules::doc_ref::doc_refs_check},
     CatalystSignedDocument, DocType,
 };
 
@@ -49,15 +48,8 @@ impl ContentRule {
                     .missing_field("template", &format!("{context}, doc"));
                 return Ok(false);
             };
-            let template_validator = |template_doc: CatalystSignedDocument| {
-                if !referenced_doc_check(
-                    &template_doc,
-                    std::slice::from_ref(exp_template_type),
-                    "template",
-                    doc.report(),
-                ) {
-                    return false;
-                }
+
+            let template_validator = |template_doc: &CatalystSignedDocument| {
                 let Ok(template_content_type) = template_doc.doc_content_type() else {
                     doc.report().missing_field(
                         "content-type",
@@ -66,7 +58,7 @@ impl ContentRule {
                     return false;
                 };
                 match template_content_type {
-                    ContentType::Json => templated_json_schema_check(doc, &template_doc),
+                    ContentType::Json => templated_json_schema_check(doc, template_doc),
                     ContentType::Cddl
                     | ContentType::Cbor
                     | ContentType::JsonSchema
@@ -83,8 +75,16 @@ impl ContentRule {
                     },
                 }
             };
-            return validate_doc_refs(template_ref, provider, doc.report(), template_validator)
-                .await;
+
+            return doc_refs_check(
+                template_ref,
+                std::slice::from_ref(exp_template_type),
+                "template",
+                provider,
+                doc.report(),
+                template_validator,
+            )
+            .await;
         }
         if let Self::Static(content_schema) = self {
             if let Some(template) = doc.doc_meta().template() {

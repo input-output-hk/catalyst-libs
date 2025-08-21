@@ -2,7 +2,6 @@
 
 pub(crate) mod json_schema;
 pub(crate) mod rules;
-pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
