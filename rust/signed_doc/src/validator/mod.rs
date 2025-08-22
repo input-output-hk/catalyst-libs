@@ -22,11 +22,7 @@ use crate::{
     doc_types::{
         BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
         PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
-    },
-    metadata::DocType,
-    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
-    signature::{tbs_data, Signature},
-    CatalystSignedDocument, ContentEncoding, ContentType,
+    }, metadata::DocType, providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider}, signature::{tbs_data, Signature}, validator::{id::IdRule, ver::VerRule}, CatalystSignedDocument, ContentEncoding, ContentType
 };
 
 /// A table representing a full set or validation rules per document id.
@@ -43,8 +39,8 @@ fn proposal_rule() -> Rules {
         CATEGORY_PARAMETERS.clone(),
     ];
     Rules {
-        id: None,
-        ver: None,
+        id: Some(IdRule),
+        ver: Some(VerRule),
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -79,8 +75,8 @@ fn proposal_comment_rule() -> Rules {
         CATEGORY_PARAMETERS.clone(),
     ];
     Rules {
-        id: None,
-        ver: None,
+        id: Some(IdRule),
+        ver: Some(VerRule),
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -132,8 +128,8 @@ fn proposal_submission_action_rule() -> Rules {
             .expect("Must be a valid json scheme file");
 
     Rules {
-        id: None,
-        ver: None,
+        id: Some(IdRule),
+        ver: Some(VerRule),
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
