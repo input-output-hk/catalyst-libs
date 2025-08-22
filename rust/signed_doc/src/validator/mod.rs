@@ -22,7 +22,12 @@ use crate::{
     doc_types::{
         BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
         PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
-    }, metadata::DocType, providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider}, signature::{tbs_data, Signature}, validator::{id::IdRule, ver::VerRule}, CatalystSignedDocument, ContentEncoding, ContentType
+    },
+    metadata::DocType,
+    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    signature::{tbs_data, Signature},
+    validator::{id::IdRule, ver::VerRule},
+    CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.
