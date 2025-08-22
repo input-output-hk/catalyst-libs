@@ -1,10 +1,8 @@
 //! Catalyst Signed Documents validation logic
 
-pub(crate) mod id;
 pub(crate) mod json_schema;
 pub(crate) mod rules;
 pub(crate) mod utils;
-pub(crate) mod ver;
 
 use std::{
     collections::HashMap,
@@ -14,8 +12,8 @@ use std::{
 use anyhow::Context;
 use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 use rules::{
-    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
-    ReplyRule, Rules, SectionRule, SignatureKidRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, IdRule, ParametersRule,
+    RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule, VerRule,
 };
 
 use crate::{
@@ -26,7 +24,6 @@ use crate::{
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     signature::{tbs_data, Signature},
-    validator::{id::IdRule, ver::VerRule},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -297,7 +294,10 @@ mod tests {
         builder::tests::Builder,
         metadata::SupportedField,
         providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
-        validator::{document_rules_init, id::IdRule, ver::VerRule},
+        validator::{
+            document_rules_init,
+            rules::{IdRule, VerRule},
+        },
         UuidV7,
     };
 
