@@ -2,9 +2,12 @@
 
 use crate::CatalystSignedDocument;
 
+/// Signed Document `ver` field validation rule
 pub(crate) struct VerRule;
 
 impl VerRule {
+    /// Validates document `ver` field on the timestamps:
+    /// 1. document `ver` cannot be smaller than document `id` field
     pub(crate) fn check(
         &self,
         doc: &CatalystSignedDocument,
@@ -12,15 +15,14 @@ impl VerRule {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(
                 "id",
-                "Can't get a document id during the validation process",
+                "Cannot get the document field during the field validation",
             );
             return Ok(false);
         };
-
         let Ok(ver) = doc.doc_ver() else {
             doc.report().missing_field(
                 "ver",
-                "Can't get a document ver during the validation process",
+                "Cannot get the document field during the field validation",
             );
             return Ok(false);
         };
@@ -32,9 +34,9 @@ impl VerRule {
                 "ver < id",
                 &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
             );
-            Ok(false)
-        } else {
-            Ok(true)
+            return Ok(false);
         }
+
+        Ok(true)
     }
 }
