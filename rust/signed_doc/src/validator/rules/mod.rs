@@ -88,7 +88,7 @@ impl Rules {
     }
 }
 
-/// An async no-op function to pass the rule validation.
+/// An async no-op function to pass a rule validation.
 #[allow(clippy::unused_async)]
 pub async fn pass() -> anyhow::Result<bool> {
     Ok(true)
