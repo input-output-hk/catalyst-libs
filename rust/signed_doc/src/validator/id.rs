@@ -17,8 +17,9 @@ impl IdRule {
     /// 2. If `provider.future_threshold()` not `None`, document `id` cannot be too far
     ///    behind (`past_threshold` arg) from `SystemTime::now()` based on the provide
     ///    threshold
-    pub(crate) fn check<Provider>(
-        self,
+    #[allow(clippy::unused_async)]
+    pub(crate) async fn check<Provider>(
+        &self,
         doc: &CatalystSignedDocument,
         provider: &Provider,
     ) -> anyhow::Result<bool>
@@ -38,7 +39,7 @@ impl IdRule {
         let (id_time_secs, id_time_nanos) = id
             .uuid()
             .get_timestamp()
-            .ok_or(anyhow::anyhow!("Document id field must be a UUIDv7"))?
+            .ok_or(anyhow::anyhow!("Document `id` field must be a UUIDv7"))?
             .to_unix();
 
         let Some(id_time) =

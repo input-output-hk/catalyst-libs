@@ -8,7 +8,8 @@ pub(crate) struct VerRule;
 impl VerRule {
     /// Validates document `ver` field on the timestamps:
     /// 1. document `ver` cannot be smaller than document `id` field
-    pub(crate) fn check(
+    #[allow(clippy::unused_async)]
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
