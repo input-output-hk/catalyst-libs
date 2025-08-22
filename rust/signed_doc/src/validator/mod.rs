@@ -1,9 +1,10 @@
 //! Catalyst Signed Documents validation logic
 
-pub(crate) mod ver;
+pub(crate) mod id;
 pub(crate) mod json_schema;
 pub(crate) mod rules;
 pub(crate) mod utils;
+pub(crate) mod ver;
 
 use std::{
     collections::HashMap,
@@ -22,7 +23,11 @@ use crate::{
     doc_types::{
         BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
         PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
-    }, metadata::DocType, providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider}, signature::{tbs_data, Signature}, CatalystSignedDocument, ContentEncoding, ContentType
+    },
+    metadata::DocType,
+    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    signature::{tbs_data, Signature},
+    CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.

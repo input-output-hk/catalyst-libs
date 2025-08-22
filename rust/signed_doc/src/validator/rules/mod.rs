@@ -3,7 +3,11 @@
 
 use futures::FutureExt;
 
-use crate::{providers::CatalystSignedDocumentProvider, validator::id_and_ver::{IdRule, VerRule}, CatalystSignedDocument};
+use crate::{
+    providers::CatalystSignedDocumentProvider,
+    validator::{id::IdRule, ver::VerRule},
+    CatalystSignedDocument,
+};
 
 mod content_encoding;
 mod content_type;
