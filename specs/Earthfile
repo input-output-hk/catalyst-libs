@@ -23,9 +23,20 @@ src:
 
     SAVE ARTIFACT signed_doc.json
 
+# Regenerate the json spec file.
+regenerate-json:
+    FROM +src
+    # Make sure keys are sorted so its both reproducible, AND diffs easily.
+    RUN cd definitions; \
+        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
+
+    SAVE ARTIFACT --keep-ts signed_doc.json
+
 # Regenerate the full signed document specification json file.
 regenerate:
     FROM +src
+
+    COPY +regenerate-json/signed_doc.json .
 
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
     RUN cd definitions; \
@@ -36,6 +47,12 @@ regenerate:
 
     SAVE ARTIFACT --keep-ts signed_doc.json
     SAVE ARTIFACT --keep-ts ../gen gen
+
+regenerate-local-json:
+    FROM +regenerate-json
+
+    SAVE ARTIFACT signed_doc.json AS LOCAL signed_doc.json
+
 
 regenerate-local:
     FROM +regenerate
@@ -48,6 +65,8 @@ regenerate-local:
 check:
     FROM +src
     RUN cue fmt --check -s --files ./definitions
+    RUN cd definitions; \
+        cue vet ./cddl 
     RUN cd definitions; \
         cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
 
