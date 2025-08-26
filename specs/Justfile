@@ -3,7 +3,7 @@
 # Developer convenience functions
 
 # required to get cuelang to enable file embedding
-export  CUE_EXPERIMENT := "embed"
+export  CUE_EXPERIMENT := "evalv3=0"
 default:
     @just --list --unsorted
 
@@ -19,16 +19,14 @@ format:
 
 # Check the signed document cue files are valid.
 check: format
-    cd definitions; cue vet ./signed_docs/docs:signed_docs -c
-    cd definitions; cue vet ./form_template/elements:form_template -c
+    earthly +check
 
 # Regenerate the full signed document specification json file.
 regenerate-signed-doc-json:
-    # Make sure keys are sorted so its both reproducible, AND diffs easily.
-    cd definitions; cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
+    earthly +regenerate-local-json
 
 # Fix and Check Markdown files
-regenerate: check regenerate-signed-doc-json validate && validate-docs
+regenerate: 
     earthly +regenerate-local
     rm -rf "../docs/src/architecture/08_concepts/signed_doc"
     mv temp_gen "../docs/src/architecture/08_concepts/signed_doc"
