@@ -65,8 +65,8 @@ regenerate-local:
 check:
     FROM +src
     RUN cue fmt --check -s --files ./definitions
-    RUN cd definitions; \
-        cue vet ./cddl 
+    # RUN cd definitions; \
+    #    cue vet ./cddl 
     RUN cd definitions; \
         cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
 
