@@ -41,3 +41,90 @@ impl VerRule {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::time::SystemTime;
+
+    use test_case::test_case;
+    use uuid::{Timestamp, Uuid};
+
+    use super::*;
+    use crate::{builder::tests::Builder, metadata::SupportedField, UuidV7};
+
+    #[test_case(
+        || {
+            let uuid_v7 = UuidV7::new();
+            Builder::new()
+                .with_metadata_field(SupportedField::Id(uuid_v7))
+                .with_metadata_field(SupportedField::Ver(uuid_v7))
+                .build()
+        }
+        => true;
+        "`ver` and `id` are equal"
+    )]
+    #[test_case(
+        || {
+            let now = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+                .try_into()
+                .unwrap();
+            let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+                .try_into()
+                .unwrap();
+            Builder::new()
+                .with_metadata_field(SupportedField::Id(id))
+                .with_metadata_field(SupportedField::Ver(ver))
+                .build()
+        }
+        => true;
+        "`ver` greater than `id` are equal"
+    )]
+    #[test_case(
+        || {
+            let now = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+                .try_into()
+                .unwrap();
+            let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+                .try_into()
+                .unwrap();
+            Builder::new()
+                .with_metadata_field(SupportedField::Id(id))
+                .with_metadata_field(SupportedField::Ver(ver))
+                .build()
+        }
+        => false;
+        "`ver` less than `id` are equal"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .build()
+        }
+        => false;
+        "missing `ver` field"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .build()
+        }
+        => false;
+        "missing `id` field"
+    )]
+    #[tokio::test]
+    async fn ver_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
+        let doc = doc_gen();
+
+        VerRule.check(&doc).await.unwrap()
+    }
+}

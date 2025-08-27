@@ -30,9 +30,9 @@ pub(crate) use ver::VerRule;
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {
     /// 'id' field validation rule
-    pub(crate) id: Option<IdRule>,
+    pub(crate) id: IdRule,
     /// 'ver' field validation rule
-    pub(crate) ver: Option<VerRule>,
+    pub(crate) ver: VerRule,
     /// 'content-type' field validation rule
     pub(crate) content_type: ContentTypeRule,
     /// 'content-encoding' field validation rule
@@ -62,12 +62,8 @@ impl Rules {
         Provider: CatalystSignedDocumentProvider,
     {
         let rules = [
-            self.id
-                .as_ref()
-                .map_or_else(|| pass().boxed(), |rule| rule.check(doc, provider).boxed()),
-            self.ver
-                .as_ref()
-                .map_or_else(|| pass().boxed(), |rule| rule.check(doc).boxed()),
+            self.id.check(doc, provider).boxed(),
+            self.ver.check(doc).boxed(),
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),
             self.content.check(doc, provider).boxed(),
@@ -86,10 +82,4 @@ impl Rules {
             .all(|res| *res);
         Ok(res)
     }
-}
-
-/// An async no-op function to pass a rule validation.
-#[allow(clippy::unused_async)]
-pub async fn pass() -> anyhow::Result<bool> {
-    Ok(true)
 }

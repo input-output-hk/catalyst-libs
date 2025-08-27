@@ -40,8 +40,8 @@ fn proposal_rule() -> Rules {
         CATEGORY_PARAMETERS.clone(),
     ];
     Rules {
-        id: Some(IdRule),
-        ver: Some(VerRule),
+        id: IdRule,
+        ver: VerRule,
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -76,8 +76,8 @@ fn proposal_comment_rule() -> Rules {
         CATEGORY_PARAMETERS.clone(),
     ];
     Rules {
-        id: Some(IdRule),
-        ver: Some(VerRule),
+        id: IdRule,
+        ver: VerRule,
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -129,8 +129,8 @@ fn proposal_submission_action_rule() -> Rules {
             .expect("Must be a valid json scheme file");
 
     Rules {
-        id: Some(IdRule),
-        ver: Some(VerRule),
+        id: IdRule,
+        ver: VerRule,
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -285,92 +285,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::time::SystemTime;
-
-    use uuid::{Timestamp, Uuid};
-
-    use crate::{
-        builder::tests::Builder,
-        metadata::SupportedField,
-        providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
-        validator::{
-            document_rules_init,
-            rules::{IdRule, VerRule},
-        },
-        UuidV7,
-    };
-
-    #[tokio::test]
-    async fn document_id_and_ver_test() {
-        let provider = TestCatalystSignedDocumentProvider::default();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-
-        let uuid_v7 = UuidV7::new();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(uuid_v7))
-            .with_metadata_field(SupportedField::Ver(uuid_v7))
-            .build();
-
-        let is_id_valid = IdRule.check(&doc, &provider).await.unwrap();
-        let is_ver_valid = VerRule.check(&doc).await.unwrap();
-        assert!(is_id_valid && is_ver_valid);
-
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
-            .try_into()
-            .unwrap();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
-            .try_into()
-            .unwrap();
-        assert!(ver < id);
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(ver))
-            .build();
-
-        let is_id_valid = IdRule.check(&doc, &provider).await.unwrap();
-        let is_ver_valid = VerRule.check(&doc).await.unwrap();
-        assert!(is_id_valid);
-        assert!(!is_ver_valid);
-
-        let to_far_in_past = Uuid::new_v7(Timestamp::from_unix_time(
-            now - provider.past_threshold().unwrap().as_secs() - 1,
-            0,
-            0,
-            0,
-        ))
-        .try_into()
-        .unwrap();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(to_far_in_past))
-            .with_metadata_field(SupportedField::Ver(to_far_in_past))
-            .build();
-
-        let is_id_valid = IdRule.check(&doc, &provider).await.unwrap();
-        let is_ver_valid = VerRule.check(&doc).await.unwrap();
-        assert!(!is_id_valid);
-        assert!(is_ver_valid);
-
-        let to_far_in_future = Uuid::new_v7(Timestamp::from_unix_time(
-            now + provider.future_threshold().unwrap().as_secs() + 1,
-            0,
-            0,
-            0,
-        ))
-        .try_into()
-        .unwrap();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(to_far_in_future))
-            .with_metadata_field(SupportedField::Ver(to_far_in_future))
-            .build();
-
-        let is_id_valid = IdRule.check(&doc, &provider).await.unwrap();
-        let is_ver_valid = VerRule.check(&doc).await.unwrap();
-        assert!(!is_id_valid);
-        assert!(is_ver_valid);
-    }
+    use crate::validator::document_rules_init;
 
     #[test]
     fn document_rules_init_test() {
