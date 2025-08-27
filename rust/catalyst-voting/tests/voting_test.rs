@@ -1,4 +1,5 @@
 //! A general voting integration test, which performs a full voting procedure.
+#![allow(clippy::explicit_deref_methods)]
 
 use catalyst_voting::vote_protocol::{
     committee::ElectionSecretKey,
