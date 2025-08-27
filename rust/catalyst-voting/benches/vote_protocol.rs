@@ -8,7 +8,8 @@
     missing_docs,
     clippy::missing_docs_in_private_items,
     clippy::unwrap_used,
-    clippy::similar_names
+    clippy::similar_names,
+    clippy::explicit_deref_methods
 )]
 
 use catalyst_voting::{

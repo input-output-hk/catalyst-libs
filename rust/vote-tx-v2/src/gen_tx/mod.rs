@@ -124,6 +124,7 @@ fn cose_protected_header() -> coset::Header {
         .build()
 }
 
+#[allow(clippy::explicit_deref_methods)]
 #[cfg(test)]
 mod tests {
     use proptest::{prelude::any_with, sample::size_range};

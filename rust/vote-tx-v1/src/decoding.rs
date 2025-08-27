@@ -219,6 +219,7 @@ impl Tx {
 }
 
 #[cfg(test)]
+#[allow(clippy::explicit_deref_methods)]
 mod tests {
     use catalyst_voting::{
         crypto::{ed25519::PrivateKey, rng::rand_core::OsRng},

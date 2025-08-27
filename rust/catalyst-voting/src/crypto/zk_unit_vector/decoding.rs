@@ -155,6 +155,7 @@ impl ResponseRandomness {
 }
 
 #[cfg(test)]
+#[allow(clippy::explicit_deref_methods)]
 mod tests {
     use test_strategy::proptest;
 
