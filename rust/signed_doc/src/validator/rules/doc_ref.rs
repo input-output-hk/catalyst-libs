@@ -3,8 +3,8 @@
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
-    CatalystSignedDocument, DocType,
+    providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocType, DocumentRef,
+    DocumentRefs,
 };
 
 /// `ref` field validation rule
@@ -36,11 +36,16 @@ impl RefRule {
             optional,
         } = self
         {
-            if let Some(doc_ref) = doc.doc_meta().doc_ref() {
-                let ref_validator = |ref_doc: CatalystSignedDocument| {
-                    referenced_doc_check(&ref_doc, exp_ref_types, "ref", doc.report())
-                };
-                return validate_doc_refs(doc_ref, provider, doc.report(), ref_validator).await;
+            if let Some(doc_refs) = doc.doc_meta().doc_ref() {
+                return doc_refs_check(
+                    doc_refs,
+                    exp_ref_types,
+                    "ref",
+                    provider,
+                    doc.report(),
+                    |_| true,
+                )
+                .await;
             } else if !optional {
                 doc.report()
                     .missing_field("ref", &format!("{context}, document must have ref field"));
@@ -62,15 +67,98 @@ impl RefRule {
     }
 }
 
-/// A generic implementation of the referenced document validation.
-pub(crate) fn referenced_doc_check(
+/// Validate all the document references by the defined validation rules,
+/// plus conducting additional validations with the provided `validator`.
+/// Document all possible error in doc report (no fail fast)
+pub(crate) async fn doc_refs_check<Provider, Validator>(
+    doc_refs: &DocumentRefs,
+    exp_ref_types: &[DocType],
+    field_name: &str,
+    provider: &Provider,
+    report: &ProblemReport,
+    validator: Validator,
+) -> anyhow::Result<bool>
+where
+    Provider: CatalystSignedDocumentProvider,
+    Validator: Fn(&CatalystSignedDocument) -> bool,
+{
+    let mut all_valid = true;
+
+    for dr in doc_refs.iter() {
+        if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
+            let is_valid = referenced_doc_type_check(ref_doc, exp_ref_types, field_name, report)
+                && referenced_doc_id_and_ver_check(ref_doc, dr, field_name, report)
+                && validator(ref_doc);
+
+            if !is_valid {
+                all_valid = false;
+            }
+        } else {
+            report.functional_validation(
+                &format!("Cannot retrieve a document {dr}"),
+                &format!("Referenced document validation for the `{field_name}` field"),
+            );
+            all_valid = false;
+        }
+    }
+    Ok(all_valid)
+}
+
+/// Validation check that the provided `ref_doc` is a correct referenced document found by
+/// `original_doc_ref`
+fn referenced_doc_id_and_ver_check(
+    ref_doc: &CatalystSignedDocument,
+    original_doc_ref: &DocumentRef,
+    field_name: &str,
+    report: &ProblemReport,
+) -> bool {
+    let Ok(id) = ref_doc.doc_id() else {
+        report.missing_field(
+            "id",
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return false;
+    };
+
+    let Ok(ver) = ref_doc.doc_ver() else {
+        report.missing_field(
+            "ver",
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return false;
+    };
+
+    // id and version must match the values in ref doc
+    if &id != original_doc_ref.id() && &ver != original_doc_ref.ver() {
+        report.invalid_value(
+            "id and version",
+            &format!("id: {id}, ver: {ver}"),
+            &format!(
+                "id: {}, ver: {}",
+                original_doc_ref.id(),
+                original_doc_ref.ver()
+            ),
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return false;
+    }
+
+    true
+}
+
+/// Validation check that the provided `ref_doc` has an expected `type` field value from
+/// the allowed  `exp_ref_types` list
+fn referenced_doc_type_check(
     ref_doc: &CatalystSignedDocument,
     exp_ref_types: &[DocType],
     field_name: &str,
     report: &ProblemReport,
 ) -> bool {
     let Ok(ref_doc_type) = ref_doc.doc_type() else {
-        report.missing_field("type", "Referenced document must have type field");
+        report.missing_field(
+            "type",
+            &format!("Document reference validation for the `{field_name}` field"),
+        );
         return false;
     };
 

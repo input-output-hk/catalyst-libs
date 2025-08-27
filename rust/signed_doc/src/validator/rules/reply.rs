@@ -1,8 +1,7 @@
 //! `reply` rule type impl.
 
-use super::doc_ref::referenced_doc_check;
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
+    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
     CatalystSignedDocument, DocType,
 };
 
@@ -37,17 +36,7 @@ impl ReplyRule {
         } = self
         {
             if let Some(reply_ref) = doc.doc_meta().reply() {
-                let reply_validator = |ref_doc: CatalystSignedDocument| {
-                    // Validate type
-                    if !referenced_doc_check(
-                        &ref_doc,
-                        std::slice::from_ref(exp_reply_type),
-                        "reply",
-                        doc.report(),
-                    ) {
-                        return false;
-                    }
-
+                let reply_validator = |ref_doc: &CatalystSignedDocument| {
                     // Get `ref` from both the doc and the ref doc
                     let Some(ref_doc_dr) = ref_doc.doc_meta().doc_ref() else {
                         doc.report()
@@ -73,7 +62,16 @@ impl ReplyRule {
                     }
                     true
                 };
-                return validate_doc_refs(reply_ref, provider, doc.report(), reply_validator).await;
+
+                return doc_refs_check(
+                    reply_ref,
+                    std::slice::from_ref(exp_reply_type),
+                    "reply",
+                    provider,
+                    doc.report(),
+                    reply_validator,
+                )
+                .await;
             } else if !optional {
                 doc.report().missing_field(
                     "reply",

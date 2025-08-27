@@ -2,7 +2,7 @@
 
 mod doc_locator;
 mod doc_ref;
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
 use catalyst_types::uuid::{CborContext, UuidV7};
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
@@ -16,6 +16,14 @@ use crate::CompatibilityPolicy;
 /// List of document reference instance.
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub struct DocumentRefs(Vec<DocumentRef>);
+
+impl Deref for DocumentRefs {
+    type Target = Vec<DocumentRef>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl DocumentRefs {
     /// Returns true if provided `cbor` bytes is a valid old format.
@@ -48,14 +56,6 @@ pub enum DocRefError {
     /// Cannot decode hex.
     #[error("Cannot decode hex: {0}")]
     HexDecode(String),
-}
-
-impl DocumentRefs {
-    /// Get a list of document reference instance.
-    #[must_use]
-    pub fn doc_refs(&self) -> &Vec<DocumentRef> {
-        &self.0
-    }
 }
 
 impl From<Vec<DocumentRef>> for DocumentRefs {
