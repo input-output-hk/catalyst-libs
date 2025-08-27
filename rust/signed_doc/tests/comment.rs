@@ -126,13 +126,14 @@ async fn test_valid_comment_doc() {
 
     // Create a main comment doc, contain all fields mention in the document (except
     // revocations and section)
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -180,13 +181,14 @@ async fn test_invalid_comment_doc_wrong_role() {
 
     // Create a main comment doc, contain all fields mention in the document (except
     // revocations and section)
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -224,13 +226,14 @@ async fn test_invalid_comment_doc_wrong_role() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc_missing_parameters() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -266,13 +269,14 @@ async fn test_invalid_comment_doc_missing_parameters() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc_missing_template() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -308,13 +312,14 @@ async fn test_invalid_comment_doc_missing_template() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc_missing_ref() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             // "ref": {
             //     "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
             //     "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),

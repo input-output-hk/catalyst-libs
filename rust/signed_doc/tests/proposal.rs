@@ -73,13 +73,14 @@ async fn test_valid_proposal_doc() {
 
     // Create a main proposal doc, contain all fields mention in the document (except
     // collaborations and revocations)
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "template": {
                 "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
                 "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
@@ -118,13 +119,14 @@ async fn test_invalid_proposal_doc_wrong_role() {
 
     // Create a main proposal doc, contain all fields mention in the document (except
     // collaborations and revocations)
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "template": {
                 "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
                 "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
@@ -153,13 +155,14 @@ async fn test_invalid_proposal_doc_wrong_role() {
 
 #[tokio::test]
 async fn test_invalid_proposal_doc_missing_template() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             // "template": {
             //     "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
             //     "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
@@ -186,13 +189,14 @@ async fn test_invalid_proposal_doc_missing_template() {
 
 #[tokio::test]
 async fn test_invalid_proposal_doc_missing_parameters() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "template": {
                 "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
                 "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),

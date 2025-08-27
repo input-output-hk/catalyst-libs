@@ -10,7 +10,6 @@ pub(crate) struct VerRule;
 impl VerRule {
     /// Validates document `ver` field on the timestamps:
     /// 1. document `ver` cannot be smaller than document `id` field
-    #[allow(clippy::unused_async)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
@@ -47,8 +46,8 @@ impl VerRule {
         }
 
         if ver != id {
-            let first_submited_doc = DocumentRef::new(id, id, DocLocator::default());
-            if provider.try_get_doc(&first_submited_doc).await?.is_none() {
+            let first_submitted_doc = DocumentRef::new(id, id, DocLocator::default());
+            if provider.try_get_doc(&first_submitted_doc).await?.is_none() {
                 doc.report().functional_validation(
                     &format!("`ver` and `id` are not equal, ver: {ver}, id: {id}. Document with `id` and `ver` being equal MUST exist"),
                     "Cannot get a first version document from the provider, document for which `id` and `ver` are equal.",
@@ -109,7 +108,7 @@ mod tests {
                 .build()
         }
         => true;
-        "`ver` greater than `id` are equal"
+        "`ver` greater than `id`"
     )]
     #[test_case(
         |provider| {
@@ -117,7 +116,7 @@ mod tests {
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-            let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+            let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
                 .try_into()
                 .unwrap();
             let first_doc = Builder::new()
@@ -135,7 +134,7 @@ mod tests {
                 .build()
         }
         => false;
-        "`ver` less than `id` are equal"
+        "`ver` less than `id`"
     )]
     #[test_case(
         |_| {
