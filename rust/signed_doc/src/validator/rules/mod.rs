@@ -63,7 +63,7 @@ impl Rules {
     {
         let rules = [
             self.id.check(doc, provider).boxed(),
-            self.ver.check(doc).boxed(),
+            self.ver.check(doc, provider).boxed(),
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),
             self.content.check(doc, provider).boxed(),
