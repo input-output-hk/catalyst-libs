@@ -452,9 +452,8 @@ fn check_writable(path: &Path) -> bool {
     }
 
     // Can't read the directory for any reason, so can't write to the directory.
-    let path_iterator = match path.read_dir() {
-        Err(_) => return false,
-        Ok(entries) => entries,
+    let Ok(path_iterator) = path.read_dir() else {
+        return false;
     };
 
     // Recursively check the contents of the directory
