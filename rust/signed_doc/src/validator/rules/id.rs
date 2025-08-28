@@ -116,6 +116,7 @@ mod tests {
         "valid id"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let now = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -137,6 +138,7 @@ mod tests {
         "`id` to far in past"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let now = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)

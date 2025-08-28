@@ -71,8 +71,7 @@ impl VerRule {
             };
 
             let Ok(doc_type) = doc.doc_type() else {
-                doc.report()
-                    .missing_field("type", &format!("Missing `type` field."));
+                doc.report().missing_field("type", "Missing `type` field.");
                 return Ok(false);
             };
 
@@ -120,6 +119,7 @@ mod tests {
         "`ver` and `id` are equal"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let doc_type = UuidV4::new();
             let now = SystemTime::now()
@@ -149,6 +149,7 @@ mod tests {
         "`ver` greater than `id`"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let doc_type = UuidV4::new();
             let now = SystemTime::now()
@@ -178,6 +179,7 @@ mod tests {
         "`ver` less than `id`"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let doc_type = UuidV4::new();
             let now = SystemTime::now()
@@ -218,6 +220,7 @@ mod tests {
         "`ver` less than `ver` field for of the latest known document"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |_| {
             let doc_type = UuidV4::new();
             let now = SystemTime::now()
@@ -240,6 +243,7 @@ mod tests {
         "missing first version document"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let doc_type = UuidV4::new();
             let now = SystemTime::now()
@@ -268,6 +272,7 @@ mod tests {
         "missing `type` field"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let doc_type = UuidV4::new();
             let now = SystemTime::now()
@@ -296,6 +301,7 @@ mod tests {
         "missing `type` field for the latest known document"
     )]
     #[test_case(
+        #[allow(clippy::arithmetic_side_effects)]
         |provider| {
             let now = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
