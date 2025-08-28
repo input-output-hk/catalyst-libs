@@ -7,7 +7,6 @@ use anyhow::Context;
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
 /// Signed Document `id` field validation rule
-#[derive(Default)]
 pub(crate) struct IdRule;
 
 impl IdRule {
