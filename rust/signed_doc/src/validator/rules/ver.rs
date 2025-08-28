@@ -55,7 +55,7 @@ impl VerRule {
             if last_doc_ver >= ver {
                 doc.report().functional_validation(
                     &format!("New document ver should be greater that the submitted latest known. New document ver: {ver}, latest known ver: {last_doc_ver}"),
-                    &format!("Document's `ver` field should continuously incrising, for the the id {id}"),
+                    &format!("Document's `ver` field should continuously increasing, for the the id {id}"),
                 );
                 is_valid = false;
             }
