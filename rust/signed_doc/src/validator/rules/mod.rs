@@ -8,23 +8,31 @@ use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 mod content_encoding;
 mod content_type;
 mod doc_ref;
+mod id;
 mod parameters;
 mod reply;
 mod section;
 mod signature_kid;
 mod template;
+mod ver;
 
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
+pub(crate) use id::IdRule;
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::{ContentRule, ContentSchema};
+pub(crate) use ver::VerRule;
 
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {
+    /// 'id' field validation rule
+    pub(crate) id: IdRule,
+    /// 'ver' field validation rule
+    pub(crate) ver: VerRule,
     /// 'content-type' field validation rule
     pub(crate) content_type: ContentTypeRule,
     /// 'content-encoding' field validation rule
@@ -54,6 +62,8 @@ impl Rules {
         Provider: CatalystSignedDocumentProvider,
     {
         let rules = [
+            self.id.check(doc, provider).boxed(),
+            self.ver.check(doc, provider).boxed(),
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),
             self.content.check(doc, provider).boxed(),

@@ -65,13 +65,14 @@ async fn test_valid_submission_action() {
     key_provider.add_pk(kid.clone(), pk);
 
     // Create a main proposal submission doc, contain all fields mention in the document
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -111,13 +112,14 @@ async fn test_invalid_submission_action_wrong_role() {
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     // Create a main proposal submission doc, contain all fields mention in the document
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -148,13 +150,14 @@ async fn test_invalid_submission_action_wrong_role() {
 
 #[tokio::test]
 async fn test_invalid_submission_action_corrupted_json() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -181,13 +184,14 @@ async fn test_invalid_submission_action_corrupted_json() {
 
 #[tokio::test]
 async fn test_invalid_submission_action_missing_ref() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             // "ref": {
             //     "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
             //     "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -216,13 +220,14 @@ async fn test_invalid_submission_action_missing_ref() {
 
 #[tokio::test]
 async fn test_invalid_submission_action_missing_parameters() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),

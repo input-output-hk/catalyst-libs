@@ -2,7 +2,7 @@
 
 use std::{future::Future, time::Duration};
 
-use catalyst_types::catalyst_id::CatalystId;
+use catalyst_types::{catalyst_id::CatalystId, uuid::UuidV7};
 use ed25519_dalek::VerifyingKey;
 
 use crate::{CatalystSignedDocument, DocumentRef};
@@ -18,10 +18,17 @@ pub trait VerifyingKeyProvider {
 
 /// `CatalystSignedDocument` Provider trait
 pub trait CatalystSignedDocumentProvider: Send + Sync {
-    /// Try to get `CatalystSignedDocument`from document reference
+    /// Try to get `CatalystSignedDocument` from document reference
     fn try_get_doc(
         &self,
         doc_ref: &DocumentRef,
+    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+
+    /// Try to get the last known version of the `CatalystSignedDocument`, same
+    /// `id` and the highest known `ver`.
+    fn try_get_last_doc(
+        &self,
+        id: UuidV7,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 
     /// Returns a future threshold value, which is used in the validation of the `ver`
@@ -48,7 +55,6 @@ pub mod tests {
 
     ///  Simple testing implementation of `CatalystSignedDocumentProvider`
     #[derive(Default, Debug)]
-
     pub struct TestCatalystSignedDocumentProvider(HashMap<DocumentRef, CatalystSignedDocument>);
 
     impl TestCatalystSignedDocumentProvider {
@@ -80,6 +86,18 @@ pub mod tests {
             doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             Ok(self.0.get(doc_ref).cloned())
+        }
+
+        async fn try_get_last_doc(
+            &self,
+            id: catalyst_types::uuid::UuidV7,
+        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+            Ok(self
+                .0
+                .iter()
+                .filter(|(doc_ref, _)| doc_ref.id() == &id)
+                .max_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
+                .map(|(_, doc)| doc.clone()))
         }
 
         fn future_threshold(&self) -> Option<std::time::Duration> {
