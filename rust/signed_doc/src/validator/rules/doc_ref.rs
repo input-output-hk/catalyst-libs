@@ -8,7 +8,6 @@ use crate::{
 };
 
 /// `ref` field validation rule
-#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum RefRule {
     /// Is 'ref' specified
     Specified {
@@ -52,7 +51,7 @@ impl RefRule {
                 return Ok(false);
             }
         }
-        if &Self::NotSpecified == self {
+        if let Self::NotSpecified = self {
             if let Some(doc_ref) = doc.doc_meta().doc_ref() {
                 doc.report().unknown_field(
                     "ref",
