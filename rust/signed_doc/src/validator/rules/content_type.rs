@@ -3,6 +3,7 @@
 use crate::{metadata::ContentType, CatalystSignedDocument};
 
 /// `content-type` field validation rule
+#[derive(Debug)]
 pub(crate) struct ContentTypeRule {
     /// expected `content-type` field
     pub(crate) exp: ContentType,

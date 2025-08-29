@@ -28,6 +28,7 @@ pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use ver::VerRule;
 
 /// Struct represented a full collection of rules for all fields
+#[derive(Debug)]
 pub(crate) struct Rules {
     /// 'id' field validation rule
     pub(crate) id: IdRule,

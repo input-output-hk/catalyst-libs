@@ -3,10 +3,7 @@
 pub(crate) mod json_schema;
 pub(crate) mod rules;
 
-use std::{
-    collections::HashMap,
-    sync::{Arc, LazyLock},
-};
+use std::{collections::HashMap, sync::LazyLock};
 
 use anyhow::Context;
 use catalyst_signed_doc_macro;
@@ -27,7 +24,7 @@ use crate::{
 catalyst_signed_doc_macro::catalyst_signed_documents_rules!();
 
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<DocType, Arc<Rules>>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
 
 /// Proposal
 /// Require field: type, id, ver, template, parameters
@@ -156,22 +153,18 @@ fn proposal_submission_action_rule() -> Rules {
 }
 
 /// `DOCUMENT_RULES` initialization function
-fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
+fn document_rules_init() -> HashMap<DocType, Rules> {
     let mut document_rules_map = HashMap::new();
 
     for (doc_type, rule) in documents_rules() {
-        document_rules_map.insert(doc_type, Arc::new(rule));
+        document_rules_map.insert(doc_type, rule);
     }
 
-    let proposal_rules = Arc::new(proposal_rule());
-    let comment_rules = Arc::new(proposal_comment_rule());
-    let action_rules = Arc::new(proposal_submission_action_rule());
-
-    document_rules_map.insert(PROPOSAL.clone(), Arc::clone(&proposal_rules));
-    document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));
+    document_rules_map.insert(PROPOSAL.clone(), proposal_rule());
+    document_rules_map.insert(PROPOSAL_COMMENT.clone(), proposal_comment_rule());
     document_rules_map.insert(
         PROPOSAL_SUBMISSION_ACTION.clone(),
-        Arc::clone(&action_rules),
+        proposal_submission_action_rule(),
     );
 
     document_rules_map

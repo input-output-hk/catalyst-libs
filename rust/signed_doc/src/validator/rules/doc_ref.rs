@@ -8,6 +8,7 @@ use crate::{
 };
 
 /// `ref` field validation rule
+#[derive(Debug)]
 pub(crate) enum RefRule {
     /// Is 'ref' specified
     Specified {

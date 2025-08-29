@@ -3,6 +3,7 @@
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
 /// Signed Document `ver` field validation rule
+#[derive(Debug)]
 pub(crate) struct VerRule;
 
 impl VerRule {

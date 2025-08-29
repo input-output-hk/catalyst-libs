@@ -9,6 +9,7 @@ use crate::{
 };
 
 /// `parameters` field validation rule
+#[derive(Debug)]
 pub(crate) enum ParametersRule {
     /// Is `parameters` specified
     Specified {

@@ -6,6 +6,7 @@ use crate::{
 };
 
 /// `reply` field validation rule
+#[derive(Debug)]
 pub(crate) enum ReplyRule {
     /// Is 'reply' specified
     Specified {
