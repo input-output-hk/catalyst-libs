@@ -5,6 +5,7 @@ use futures::FutureExt;
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
+mod content;
 mod content_encoding;
 mod content_type;
 mod doc_ref;
@@ -13,9 +14,9 @@ mod parameters;
 mod reply;
 mod section;
 mod signature_kid;
-mod template;
 mod ver;
 
+pub(crate) use content::{ContentRule, ContentSchema};
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
@@ -24,10 +25,10 @@ pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature_kid::SignatureKidRule;
-pub(crate) use template::{ContentRule, ContentSchema};
 pub(crate) use ver::VerRule;
 
 /// Struct represented a full collection of rules for all fields
+#[derive(Debug)]
 pub(crate) struct Rules {
     /// 'id' field validation rule
     pub(crate) id: IdRule,

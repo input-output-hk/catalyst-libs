@@ -1,6 +1,6 @@
 //! `template` rule type impl.
 
-use std::fmt::Write;
+use std::fmt::{Debug, Write};
 
 use crate::{
     metadata::ContentType,
@@ -16,7 +16,19 @@ pub(crate) enum ContentSchema {
     Json(json_schema::JsonSchema),
 }
 
+impl Debug for ContentSchema {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            Self::Json(_) => writeln!(f, "JsonSchema"),
+        }
+    }
+}
+
 /// Document's content validation rule
+#[derive(Debug)]
 pub(crate) enum ContentRule {
     /// Based on the 'template' field and loaded corresponding template document
     Templated {

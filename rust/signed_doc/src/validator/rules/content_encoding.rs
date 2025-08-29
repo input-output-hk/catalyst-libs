@@ -3,6 +3,7 @@
 use crate::{metadata::ContentEncoding, CatalystSignedDocument};
 
 /// `content-encoding` field validation rule
+#[derive(Debug)]
 pub(crate) struct ContentEncodingRule {
     /// expected `content-encoding` field
     pub(crate) exp: ContentEncoding,
