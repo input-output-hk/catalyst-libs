@@ -103,8 +103,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, UuidV4, UuidV7,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        UuidV4, UuidV7,
     };
 
     #[test_case(
@@ -349,9 +349,9 @@ mod tests {
     )]
     #[tokio::test]
     async fn ver_test(
-        doc_gen: impl FnOnce(&mut TestCatalystSignedDocumentProvider) -> CatalystSignedDocument
+        doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
+        let mut provider = TestCatalystProvider::default();
         let doc = doc_gen(&mut provider);
 
         VerRule.check(&doc, &provider).await.unwrap()

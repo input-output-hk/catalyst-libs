@@ -101,8 +101,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, UuidV7,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        UuidV7,
     };
 
     #[test_case(
@@ -170,9 +170,9 @@ mod tests {
     )]
     #[tokio::test]
     async fn id_test(
-        doc_gen: impl FnOnce(&TestCatalystSignedDocumentProvider) -> CatalystSignedDocument
+        doc_gen: impl FnOnce(&TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let doc = doc_gen(&provider);
 
         IdRule.check(&doc, &provider).await.unwrap()

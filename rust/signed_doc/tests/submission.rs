@@ -4,10 +4,7 @@
 
 use std::sync::LazyLock;
 
-use catalyst_signed_doc::{
-    providers::tests::{TestCatalystSignedDocumentProvider, TestVerifyingKeyProvider},
-    *,
-};
+use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
@@ -61,8 +58,8 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[tokio::test]
 async fn test_valid_submission_action() {
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
-    let mut key_provider = TestVerifyingKeyProvider::default();
-    key_provider.add_pk(kid.clone(), pk);
+    let mut provider = TestCatalystProvider::default();
+    provider.add_pk(kid.clone(), pk);
 
     // Create a main proposal submission doc, contain all fields mention in the document
     let id = UuidV7::new();
@@ -92,17 +89,11 @@ async fn test_valid_submission_action() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
-
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid, "{:?}", doc.problem_report());
-
-    let is_valid = validator::validate_signatures(&doc, &key_provider)
-        .await
-        .unwrap();
     assert!(is_valid);
     assert!(!doc.problem_report().is_problematic());
 }
@@ -139,7 +130,7 @@ async fn test_invalid_submission_action_wrong_role() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -173,7 +164,7 @@ async fn test_invalid_submission_action_corrupted_json() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -209,7 +200,7 @@ async fn test_invalid_submission_action_missing_ref() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -245,7 +236,7 @@ async fn test_invalid_submission_action_missing_parameters() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
