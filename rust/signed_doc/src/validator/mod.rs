@@ -17,10 +17,7 @@ use rules::{
 };
 
 use crate::{
-    doc_types::{
-        BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
-        PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
-    },
+    doc_types::*,
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     signature::{tbs_data, Signature},
