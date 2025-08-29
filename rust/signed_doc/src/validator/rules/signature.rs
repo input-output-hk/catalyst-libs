@@ -112,6 +112,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    // cspell: words mutlisig
+
     use std::io::Write;
 
     use catalyst_types::catalyst_id::role_index::RoleId;
