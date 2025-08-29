@@ -13,7 +13,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
     for (doc_name, _doc_spec) in spec.docs {
         let const_type_name_ident = doc_name.ident();
 
-        // TODO: impleemnt a proper initialisation for all specific validation rules
+        // TODO: implement a proper initialisation for all specific validation rules
         let rules = quote! {
             crate::validator::rules::Rules {
                 id: crate::validator::rules::IdRule,
