@@ -79,17 +79,16 @@ impl Rules {
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
             self.kid.check(doc).boxed(),
+            self.signature.check(doc, provider).boxed(),
         ];
 
-        let rules_res = futures::future::join_all(rules)
+        let res = futures::future::join_all(rules)
             .await
             .into_iter()
             .collect::<anyhow::Result<Vec<_>>>()?
             .iter()
             .all(|res| *res);
 
-        let sig_res = self.signature.check(doc, provider).await?;
-
-        Ok(rules_res && sig_res)
+        Ok(res)
     }
 }
