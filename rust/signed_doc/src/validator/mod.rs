@@ -8,8 +8,7 @@ use std::{
     sync::{Arc, LazyLock},
 };
 
-use anyhow::Context;
-use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
+use catalyst_types::catalyst_id::role_index::RoleId;
 use rules::{
     ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, IdRule, ParametersRule,
     RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule, VerRule,
@@ -22,7 +21,7 @@ use crate::{
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
-    signature::{tbs_data, Signature},
+    validator::rules::SignatureRule,
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -62,6 +61,7 @@ fn proposal_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
+        signature: SignatureRule { mutlisig: true },
     }
 }
 
@@ -104,6 +104,7 @@ fn proposal_comment_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
+        signature: SignatureRule { mutlisig: true },
     }
 }
 
@@ -152,6 +153,7 @@ fn proposal_submission_action_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
+        signature: SignatureRule { mutlisig: true },
     }
 }
 
@@ -185,7 +187,7 @@ pub async fn validate<Provider>(
     provider: &Provider,
 ) -> anyhow::Result<bool>
 where
-    Provider: CatalystSignedDocumentProvider,
+    Provider: CatalystSignedDocumentProvider + VerifyingKeyProvider,
 {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
@@ -205,82 +207,6 @@ where
         return Ok(false);
     };
     rules.check(doc, provider).await
-}
-
-/// Verify document signatures.
-/// Return true if all signatures are valid, otherwise return false.
-///
-/// # Errors
-/// If `provider` returns error, fails fast throwing that error.
-pub async fn validate_signatures(
-    doc: &CatalystSignedDocument,
-    provider: &impl VerifyingKeyProvider,
-) -> anyhow::Result<bool> {
-    if doc.signatures().is_empty() {
-        doc.report().other(
-            "Catalyst Signed Document is unsigned",
-            "During Catalyst Signed Document signature validation",
-        );
-        return Ok(false);
-    }
-
-    let sign_rules = doc
-        .signatures()
-        .iter()
-        .map(|sign| validate_signature(doc, sign, provider, doc.report()));
-
-    let res = futures::future::join_all(sign_rules)
-        .await
-        .into_iter()
-        .collect::<anyhow::Result<Vec<_>>>()?
-        .iter()
-        .all(|res| *res);
-
-    Ok(res)
-}
-
-/// A single signature validation function
-async fn validate_signature<Provider>(
-    doc: &CatalystSignedDocument,
-    sign: &Signature,
-    provider: &Provider,
-    report: &ProblemReport,
-) -> anyhow::Result<bool>
-where
-    Provider: VerifyingKeyProvider,
-{
-    let kid = sign.kid();
-
-    let Some(pk) = provider.try_get_key(kid).await? else {
-        report.other(
-            &format!("Missing public key for {kid}."),
-            "During public key extraction",
-        );
-        return Ok(false);
-    };
-
-    let tbs_data = tbs_data(kid, doc.doc_meta(), doc.content()).context("Probably a bug, cannot build CBOR COSE bytes for signature verification from the structurally valid COSE object.")?;
-
-    let Ok(signature_bytes) = sign.signature().try_into() else {
-        report.invalid_value(
-            "cose signature",
-            &format!("{}", sign.signature().len()),
-            &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
-            "During encoding cose signature to bytes",
-        );
-        return Ok(false);
-    };
-
-    let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
-    if pk.verify_strict(&tbs_data, &signature).is_err() {
-        report.functional_validation(
-            &format!("Verification failed for signature with Key ID {kid}"),
-            "During signature validation with verifying key",
-        );
-        return Ok(false);
-    }
-
-    Ok(true)
 }
 
 #[cfg(test)]
