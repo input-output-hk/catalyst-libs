@@ -9,6 +9,7 @@ use crate::{
     CatalystSignedDocument,
 };
 
+/// Signed Document signatures validation rule.
 #[derive(Debug)]
 pub(crate) struct SignatureRule {
     /// Allows multiple signatures.
