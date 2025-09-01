@@ -5,6 +5,7 @@ use catalyst_types::catalyst_id::role_index::RoleId;
 use crate::CatalystSignedDocument;
 
 ///  COSE signature `kid` (Catalyst Id) role validation
+#[derive(Debug)]
 pub(crate) struct SignatureKidRule {
     /// expected `RoleId` values for the `kid` field
     pub(crate) exp: &'static [RoleId],
