@@ -4,10 +4,7 @@
 
 use std::sync::LazyLock;
 
-use catalyst_signed_doc::{
-    providers::tests::{TestCatalystSignedDocumentProvider, TestVerifyingKeyProvider},
-    *,
-};
+use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
@@ -68,8 +65,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[tokio::test]
 async fn test_valid_proposal_doc() {
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
-    let mut key_provider = TestVerifyingKeyProvider::default();
-    key_provider.add_pk(kid.clone(), pk);
+    let mut provider = TestCatalystProvider::default();
+    provider.add_pk(kid.clone(), pk);
 
     // Create a main proposal doc, contain all fields mention in the document (except
     // collaborations and revocations)
@@ -98,17 +95,11 @@ async fn test_valid_proposal_doc() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
-
     provider.add_document(None, &PROPOSAL_TEMPLATE_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid);
-
-    let is_valid = validator::validate_signatures(&doc, &key_provider)
-        .await
-        .unwrap();
     assert!(is_valid);
     assert!(!doc.problem_report().is_problematic());
 }
@@ -144,7 +135,7 @@ async fn test_invalid_proposal_doc_wrong_role() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &PROPOSAL_TEMPLATE_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -178,7 +169,7 @@ async fn test_invalid_proposal_doc_missing_template() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &PROPOSAL_TEMPLATE_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -212,7 +203,7 @@ async fn test_invalid_proposal_doc_missing_parameters() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
 
     provider.add_document(None, &PROPOSAL_TEMPLATE_DOC).unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
