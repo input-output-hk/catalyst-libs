@@ -275,15 +275,15 @@ impl Cip509 {
         self.catalyst_id.as_ref()
     }
 
-    /// Returns a list of addresses extract from certificate URIs.
+    /// Returns a list of addresses extracted from certificate URIs of a specific role.
     #[must_use]
     pub fn certificate_addresses(
         &self,
-        index: usize,
+        role: usize,
     ) -> HashSet<Address> {
         self.metadata
             .as_ref()
-            .map(|m| m.certificate_uris.addresses(index))
+            .map(|m| m.certificate_uris.role_addresses(role))
             .unwrap_or_default()
     }
 

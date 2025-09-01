@@ -389,7 +389,7 @@ pub fn validate_role_data(
 
             // Can contain different kind of address URIs, but for role 0
             // there should be at least 1 stake address
-            if !metadata.certificate_uris.contain_stake_address(0) {
+            if metadata.certificate_uris.role_stake_addresses(0).is_empty() {
                 report.missing_field(
                     "The role 0 certificate must have at least one stake address",
                     context,

@@ -2,11 +2,14 @@
 
 mod update_rbac;
 
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use anyhow::Context;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{hashes::TransactionId, Point, TxnIndex};
+use cardano_blockchain_types::{hashes::TransactionId, Point, StakeAddress, TxnIndex};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
@@ -246,12 +249,11 @@ impl RegistrationChain {
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 
-    // FIXME
-    // /// Returns a set of role 0 stake addresses.
-    // #[must_use]
-    // pub fn role_0_stake_addresses(&self) -> HashSet<StakeAddress> {
-    //     self.inner.certificate_uris.stake_addresses(0)
-    // }
+    /// Returns all stake addresses associated to this registration.
+    #[must_use]
+    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
+        self.inner.certificate_uris.stake_addresses()
+    }
 }
 
 /// Inner structure of registration chain.
