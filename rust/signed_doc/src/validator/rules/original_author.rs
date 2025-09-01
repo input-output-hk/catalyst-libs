@@ -57,21 +57,20 @@ mod tests {
     fn doc_builder(
         doc_id: UuidV7,
         doc_ver: UuidV7,
-        authors: &[CatalystAuthorId],
-    ) -> (DocumentRef, CatalystSignedDocument) {
+        authors: [CatalystAuthorId; 3],
+    ) -> (UuidV7, [CatalystAuthorId; 3], CatalystSignedDocument) {
         let mut doc_builder = Builder::new()
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(doc_ver))
             .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .with_metadata_field(SupportedField::ContentType(ContentType::Json))
             .with_content(vec![1, 2, 3]);
-        for author in authors {
+        for author in &authors {
             doc_builder = doc_builder
                 .add_signature(|m| author.sk.sign(&m).to_vec(), author.kid.clone())
                 .unwrap();
         }
-        let doc_ref = DocumentRef::new(doc_id, doc_ver, DocLocator::default());
-        (doc_ref, doc_builder.build())
+        (doc_id, authors, doc_builder.build())
     }
 
     fn gen_authors() -> [CatalystAuthorId; 3] {
@@ -82,26 +81,28 @@ mod tests {
         ]
     }
 
-    fn gen_original_doc(authors: &[CatalystAuthorId]) -> (DocumentRef, CatalystSignedDocument) {
-        let doc_id = UuidV7::new();
-        let doc_ver_1 = UuidV7::new();
-        doc_builder(doc_id, doc_ver_1, authors)
+    fn gen_next_ver_doc(
+        doc_id: UuidV7,
+        authors: [CatalystAuthorId; 3],
+    ) -> CatalystSignedDocument {
+        let (_, _, new_doc) = doc_builder(doc_id, UuidV7::new(), authors);
+        new_doc
     }
 
-    fn gen_next_ver_doc(
-        latest_doc_ref: &DocumentRef,
-        authors: &[CatalystAuthorId],
-    ) -> (DocumentRef, CatalystSignedDocument) {
-        doc_builder(*latest_doc_ref.id(), UuidV7::new(), authors)
+    fn gen_original_doc_and_provider() -> (UuidV7, [CatalystAuthorId; 3], TestCatalystProvider) {
+        let authors = gen_authors();
+        let doc_id = UuidV7::new();
+        let doc_ver_1 = UuidV7::new();
+        let (_, _, doc_1) = doc_builder(doc_id, doc_ver_1, authors.clone());
+        let mut provider = TestCatalystProvider::default();
+        provider.add_document(None, &doc_1).unwrap();
+        (doc_id, authors, provider)
     }
 
     #[test_case(
         || {
-            let authors = &gen_authors();
-            let (doc_ref_1, doc_1) = gen_original_doc(authors);
-            let mut provider = TestCatalystProvider::default();
-            provider.add_document(None, &doc_1).unwrap();
-            let (_, doc_2) = gen_next_ver_doc(&doc_ref_1, authors);
+            let (doc_id, authors, provider) = gen_original_doc_and_provider();
+            let doc_2 = gen_next_ver_doc(doc_id, authors);
             (doc_2, provider)
     }
     => true
@@ -110,13 +111,9 @@ mod tests {
     )]
     #[test_case(
         || {
-            let authors = &gen_authors();
-            let (doc_ref_1, doc_1) = gen_original_doc(authors);
-
-            let mut provider = TestCatalystProvider::default();
-            provider.add_document(None, &doc_1).unwrap();
-            let other_authors = &gen_authors();
-            let (_, doc_2) = gen_next_ver_doc(&doc_ref_1, other_authors);
+            let (doc_id, _, provider) = gen_original_doc_and_provider();
+            let other_authors = gen_authors();
+            let doc_2 = gen_next_ver_doc(doc_id, other_authors);
             (doc_2, provider)
     }
     => false
