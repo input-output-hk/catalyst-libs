@@ -66,6 +66,7 @@ impl ReplyRule {
                 return doc_refs_check(
                     reply_ref,
                     std::slice::from_ref(exp_reply_type),
+                    false,
                     "reply",
                     provider,
                     doc.report(),

@@ -90,6 +90,7 @@ fn proposal_comment_rule() -> Rules {
         },
         doc_ref: RefRule::Specified {
             exp_ref_types: vec![PROPOSAL.clone()],
+            multiple: true,
             optional: false,
         },
         reply: ReplyRule::Specified {
@@ -146,6 +147,7 @@ fn proposal_submission_action_rule() -> Rules {
         },
         doc_ref: RefRule::Specified {
             exp_ref_types: vec![PROPOSAL.clone()],
+            multiple: true,
             optional: false,
         },
         reply: ReplyRule::NotSpecified,

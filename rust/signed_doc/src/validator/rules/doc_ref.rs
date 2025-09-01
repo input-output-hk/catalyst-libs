@@ -14,6 +14,8 @@ pub(crate) enum RefRule {
     Specified {
         /// expected `type` field of the referenced doc
         exp_ref_types: Vec<DocType>,
+        /// allows multiple document references or only one
+        multiple: bool,
         /// optional flag for the `ref` field
         optional: bool,
     },
@@ -33,6 +35,7 @@ impl RefRule {
         let context: &str = "Ref rule check";
         if let Self::Specified {
             exp_ref_types,
+            multiple,
             optional,
         } = self
         {
@@ -40,6 +43,7 @@ impl RefRule {
                 return doc_refs_check(
                     doc_refs,
                     exp_ref_types,
+                    *multiple,
                     "ref",
                     provider,
                     doc.report(),
@@ -73,6 +77,7 @@ impl RefRule {
 pub(crate) async fn doc_refs_check<Provider, Validator>(
     doc_refs: &DocumentRefs,
     exp_ref_types: &[DocType],
+    multiple: bool,
     field_name: &str,
     provider: &Provider,
     report: &ProblemReport,
@@ -83,6 +88,18 @@ where
     Validator: Fn(&CatalystSignedDocument) -> bool,
 {
     let mut all_valid = true;
+
+    if !multiple && doc_refs.len() > 1 {
+        report.other(
+            format!(
+                "Only ONE document reference is allowed, found {} document references",
+                doc_refs.len()
+            )
+            .as_str(),
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return Ok(false);
+    }
 
     for dr in doc_refs.iter() {
         if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
@@ -396,7 +413,7 @@ mod tests {
         "valid reference to the missing one document"
     )]
     #[tokio::test]
-    async fn ref_specified_test(
+    async fn ref_multiple_specified_test(
         doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
         let mut provider = TestCatalystProvider::default();
@@ -407,6 +424,7 @@ mod tests {
 
         let non_optional_res = RefRule::Specified {
             exp_ref_types: exp_types.to_vec(),
+            multiple: true,
             optional: false,
         }
         .check(&doc, &provider)
@@ -415,6 +433,109 @@ mod tests {
 
         let optional_res = RefRule::Specified {
             exp_ref_types: exp_types.to_vec(),
+            multiple: true,
+            optional: true,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        assert_eq!(non_optional_res, optional_res);
+        non_optional_res
+    }
+
+    #[test_case(
+        |exp_types, provider| {
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the one correct document"
+    )]
+    #[test_case(
+        |exp_types, provider| {
+            let ref_doc_1 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_1).unwrap();
+            let ref_doc_2 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_2).unwrap();
+            let ref_doc_3 = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+            .build();
+            provider.add_document(None, &ref_doc_3).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc_1.doc_id().unwrap(),
+                        ref_doc_1.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_2.doc_id().unwrap(),
+                        ref_doc_2.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_3.doc_id().unwrap(),
+                        ref_doc_3.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the multiple documents"
+    )]
+    #[tokio::test]
+    async fn ref_non_multiple_specified_test(
+        doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
+    ) -> bool {
+        let mut provider = TestCatalystProvider::default();
+
+        let exp_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
+
+        let doc = doc_gen(&exp_types, &mut provider);
+
+        let non_optional_res = RefRule::Specified {
+            exp_ref_types: exp_types.to_vec(),
+            multiple: false,
+            optional: false,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        let optional_res = RefRule::Specified {
+            exp_ref_types: exp_types.to_vec(),
+            multiple: false,
             optional: true,
         }
         .check(&doc, &provider)
@@ -430,6 +551,7 @@ mod tests {
         let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
             exp_ref_types: vec![UuidV4::new().into()],
+            multiple: true,
             optional: true,
         };
 
@@ -439,6 +561,7 @@ mod tests {
         let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
             exp_ref_types: vec![UuidV4::new().into()],
+            multiple: true,
             optional: false,
         };
 
