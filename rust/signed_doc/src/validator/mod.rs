@@ -61,7 +61,7 @@ fn proposal_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
-        signature: SignatureRule { mutlisig: true },
+        signature: SignatureRule { mutlisig: false },
     }
 }
 
