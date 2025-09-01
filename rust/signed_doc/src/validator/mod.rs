@@ -159,12 +159,10 @@ fn proposal_submission_action_rule() -> Rules {
 
 /// `DOCUMENT_RULES` initialization function
 fn document_rules_init() -> HashMap<DocType, Rules> {
-    let mut document_rules_map = HashMap::new();
+    let mut document_rules_map: HashMap<DocType, Rules> = documents_rules().collect();
 
-    for (doc_type, rule) in documents_rules() {
-        document_rules_map.insert(doc_type, rule);
-    }
-
+    // TODO: remove this redefinitions of the validation rules after
+    // `catalyst_signed_documents_rules!` macro would be fully finished
     document_rules_map.insert(PROPOSAL.clone(), proposal_rule());
     document_rules_map.insert(PROPOSAL_COMMENT.clone(), proposal_comment_rule());
     document_rules_map.insert(
