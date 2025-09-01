@@ -3,7 +3,10 @@
 
 use futures::FutureExt;
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{
+    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    CatalystSignedDocument,
+};
 
 mod content;
 mod content_encoding;
@@ -13,6 +16,7 @@ mod id;
 mod parameters;
 mod reply;
 mod section;
+mod signature;
 mod signature_kid;
 mod ver;
 
@@ -24,6 +28,7 @@ pub(crate) use id::IdRule;
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
+pub(crate) use signature::SignatureRule;
 pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use ver::VerRule;
 
@@ -50,6 +55,8 @@ pub(crate) struct Rules {
     pub(crate) parameters: ParametersRule,
     /// `kid` field validation rule
     pub(crate) kid: SignatureKidRule,
+    /// document's signatures validation rule
+    pub(crate) signature: SignatureRule,
 }
 
 impl Rules {
@@ -60,7 +67,7 @@ impl Rules {
         provider: &Provider,
     ) -> anyhow::Result<bool>
     where
-        Provider: CatalystSignedDocumentProvider,
+        Provider: CatalystSignedDocumentProvider + VerifyingKeyProvider,
     {
         let rules = [
             self.id.check(doc, provider).boxed(),
@@ -73,6 +80,7 @@ impl Rules {
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
             self.kid.check(doc).boxed(),
+            self.signature.check(doc, provider).boxed(),
         ];
 
         let res = futures::future::join_all(rules)
@@ -81,6 +89,7 @@ impl Rules {
             .collect::<anyhow::Result<Vec<_>>>()?
             .iter()
             .all(|res| *res);
+
         Ok(res)
     }
 }

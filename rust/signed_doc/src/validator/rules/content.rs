@@ -211,14 +211,14 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        DocLocator, DocumentRef,
     };
 
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
     async fn content_rule_templated_test() {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
+        let mut provider = TestCatalystProvider::default();
 
         let exp_template_type = UuidV4::new();
         let content_type = ContentType::Json;
@@ -437,7 +437,7 @@ mod tests {
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
     async fn content_rule_static_test() {
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let schema = json_schema::JsonSchema::try_from(&serde_json::json!({})).unwrap();
         let content_schema = ContentSchema::Json(schema);
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
@@ -470,7 +470,7 @@ mod tests {
     #[tokio::test]
     async fn template_rule_not_specified_test() {
         let rule = ContentRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());

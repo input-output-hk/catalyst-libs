@@ -171,8 +171,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        DocLocator, DocumentRef,
     };
 
     #[test_case(
@@ -712,12 +712,9 @@ mod tests {
     )]
     #[tokio::test]
     async fn parameter_specified_test(
-        doc_gen: impl FnOnce(
-            &[DocType; 2],
-            &mut TestCatalystSignedDocumentProvider,
-        ) -> CatalystSignedDocument
+        doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
+        let mut provider = TestCatalystProvider::default();
 
         let exp_param_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
@@ -745,7 +742,7 @@ mod tests {
 
     #[tokio::test]
     async fn ref_specified_optional_test() {
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = ParametersRule::Specified {
             exp_parameters_type: vec![UuidV4::new().into()],
             optional: true,
@@ -754,7 +751,7 @@ mod tests {
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = ParametersRule::Specified {
             exp_parameters_type: vec![UuidV4::new().into()],
             optional: false,
@@ -767,7 +764,7 @@ mod tests {
     #[tokio::test]
     async fn parameters_rule_not_specified_test() {
         let rule = ParametersRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
