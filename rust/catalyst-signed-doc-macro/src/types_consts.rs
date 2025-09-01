@@ -1,4 +1,4 @@
-//! catalyst_signed_documents_types_consts! macro implementation
+//! `catalyst_signed_documents_types_consts!` macro implementation
 
 use proc_macro2::TokenStream;
 use quote::quote;

@@ -1,4 +1,4 @@
-//! catalyst_signed_documents_rules! macro implementation
+//! `catalyst_signed_documents_rules!` macro implementation
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -37,7 +37,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
         };
 
         let rule_definition = quote! {
-            (#const_type_name_ident, #rules),
+            (crate::doc_types::#const_type_name_ident, #rules),
         };
         rules_definitions.push(rule_definition);
     }
