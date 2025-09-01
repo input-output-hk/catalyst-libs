@@ -20,7 +20,16 @@ impl OriginalAuthorRule {
         let Some(original_doc) = provider.try_get_last_doc(doc_id).await? else {
             return Ok(true);
         };
-        Ok(original_doc.authors() == doc.authors())
+        let is_valid = original_doc.authors() == doc.authors();
+        if !is_valid {
+            doc.report().functional_validation(
+                &format!("New document authors must match the authors from the previous version for Document ID {doc_id}"),
+                &format!(
+                    "Document's signatures must be identical to previous version for Document ID {doc_id}"
+                ),
+            );
+        }
+        Ok(is_valid)
     }
 }
 
@@ -36,7 +45,7 @@ mod tests {
     use super::*;
     use crate::{
         builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-        ContentType, DocLocator, DocumentRef,
+        ContentType,
     };
 
     #[derive(Clone)]
