@@ -36,6 +36,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
                 signature: crate::validator::rules::SignatureRule {
                     mutlisig: false
                 },
+                original_author: crate::validator::rules::OriginalAuthorRule,
             }
         };
 
