@@ -117,14 +117,13 @@ pub fn validate_aux(
     }
 }
 
-/// Checks that all public keys extracted from x509 and c509 certificates are present in
-/// the witness set of the transaction.
-pub fn validate_stake_public_key(
+/// Check certificate URI addresses, if any, must be witnessed in the transaction.
+pub fn validate_cert_addrs(
     transaction: &conway::Tx,
     uris: Option<&Cip0134UriSet>,
     report: &ProblemReport,
 ) {
-    let context = "Cip509 stake public key validation";
+    let context = "Cip509 certificate URI address validation";
 
     let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
     let witness = match TxnWitness::new(std::slice::from_ref(&transaction)) {
@@ -135,23 +134,17 @@ pub fn validate_stake_public_key(
         },
     };
 
-    let pk_addrs = extract_stake_addresses(uris);
-    if pk_addrs.is_empty() {
-        report.other(
-            "Unable to find stake addresses in Cip509 certificates",
-            context,
-        );
-        return;
-    }
+    let stake_addrs = extract_stake_addresses(uris);
+    let payment_addrs = extract_payment_addresses(uris);
 
-    for (hash, address) in pk_addrs {
+    for (hash, address) in stake_addrs.into_iter().chain(payment_addrs) {
         if !witness.check_witness_in_tx(&hash, 0.into()) {
             report.other(
-                &format!(
-                    "Payment Key '{address}' (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable."
-                ),
-                context,
-            );
+                    &format!(
+                        "Address '{address}', key hash (0x{hash}) is not present in the transaction witness set, and can not be verified as owned"
+                    ),
+                    context,
+                );
         }
     }
 }
@@ -177,6 +170,41 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, Strin
                     .try_into()
                     .ok()
                     .map(|hash| (hash, bech32))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Extracts all payment addresses from both X509 and C509 certificates containing in the
+/// given `Cip509`. Returns a list of pairs containing verifying public key hash (only the
+/// payment part) and `bech32` string representation of address.
+fn extract_payment_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, String)> {
+    let Some(uris) = uris else {
+        return Vec::new();
+    };
+
+    uris.x_uris()
+        .iter()
+        .chain(uris.c_uris())
+        .flat_map(|(_index, uris)| uris.iter())
+        .filter_map(|uri| {
+            if let Address::Shelley(a) = uri.address() {
+                match a.payment() {
+                    // Shelley payment part is used to sign the transaction
+                    cardano_blockchain_types::pallas_addresses::ShelleyPaymentPart::Key(hash) => {
+                        match a.to_bech32() {
+                            Ok(bech32) => {
+                                hash.as_slice().try_into().ok().map(|hash| (hash, bech32))
+                            },
+                            Err(_) => None,
+                        }
+                    },
+                    cardano_blockchain_types::pallas_addresses::ShelleyPaymentPart::Script(_) => {
+                        None
+                    },
+                }
             } else {
                 None
             }
@@ -357,6 +385,15 @@ pub fn validate_role_data(
                 )
             {
                 report.other("The role 0 certificate must be present", context);
+            }
+
+            // Can contain different kind of address URIs, but for role 0
+            // there should be at least 1 stake address
+            if !metadata.certificate_uris.contain_stake_address(0) {
+                report.missing_field(
+                    "The role 0 certificate must have at least one stake address",
+                    context,
+                );
             }
         } else {
             // For other roles there still must be exactly one certificate at 0 index, but it must

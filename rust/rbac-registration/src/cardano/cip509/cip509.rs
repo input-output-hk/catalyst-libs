@@ -13,7 +13,7 @@ use cardano_blockchain_types::{
     pallas_addresses::{Address, ShelleyAddress},
     pallas_primitives::{conway, Nullable},
     pallas_traverse::MultiEraTx,
-    MetadatumLabel, MultiEraBlock, StakeAddress, TxnIndex,
+    MetadatumLabel, MultiEraBlock, TxnIndex,
 };
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
@@ -36,7 +36,7 @@ use crate::cardano::cip509::{
     types::{PaymentHistory, TxInputHash, ValidationSignature},
     utils::Cip0134UriSet,
     validation::{
-        validate_aux, validate_role_data, validate_self_sign_cert, validate_stake_public_key,
+        validate_aux, validate_cert_addrs, validate_role_data, validate_self_sign_cert,
         validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
@@ -172,12 +172,11 @@ impl Cip509 {
             txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
-        if cip509.role_data(RoleId::Role0).is_some() {
-            // The following check is only performed for the role 0.
-            validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
-        }
         if let Some(metadata) = &cip509.metadata {
             cip509.catalyst_id = validate_role_data(metadata, block.network(), &cip509.report);
+            // General check for all roles, check whether the addresses in the certificate URIs are
+            // witnessed in the transaction.
+            validate_cert_addrs(txn, cip509.certificate_uris(), &report);
             validate_self_sign_cert(metadata, &report);
         }
 
@@ -276,12 +275,15 @@ impl Cip509 {
         self.catalyst_id.as_ref()
     }
 
-    /// Returns a list of role 0 stake addresses.
+    /// Returns a list of addresses extract from certificate URIs.
     #[must_use]
-    pub fn role_0_stake_addresses(&self) -> HashSet<StakeAddress> {
+    pub fn certificate_addresses(
+        &self,
+        index: usize,
+    ) -> HashSet<Address> {
         self.metadata
             .as_ref()
-            .map(|m| m.certificate_uris.stake_addresses(0))
+            .map(|m| m.certificate_uris.addresses(index))
             .unwrap_or_default()
     }
 

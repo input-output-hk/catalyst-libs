@@ -10,7 +10,7 @@ use c509_certificate::{
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
     C509ExtensionType,
 };
-use cardano_blockchain_types::{pallas_addresses::Address, Cip0134Uri, StakeAddress};
+use cardano_blockchain_types::{pallas_addresses::Address, Cip0134Uri};
 use catalyst_types::problem_report::ProblemReport;
 use der_parser::der::parse_der_sequence;
 use tracing::debug;
@@ -72,22 +72,33 @@ impl Cip0134UriSet {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
-    /// Returns a list of stake addresses by the given index.
+    /// Returns a list of addresses by the given index.
     #[must_use]
-    pub fn stake_addresses(
+    pub fn addresses(
         &self,
         index: usize,
-    ) -> HashSet<StakeAddress> {
+    ) -> HashSet<Address> {
         let mut result = HashSet::new();
 
         if let Some(uris) = self.x_uris().get(&index) {
-            result.extend(convert_stake_addresses(uris));
+            result.extend(uris.iter().map(|uri| uri.address().clone()));
         }
         if let Some(uris) = self.c_uris().get(&index) {
-            result.extend(convert_stake_addresses(uris));
+            result.extend(uris.iter().map(|uri| uri.address().clone()));
         }
 
         result
+    }
+
+    /// Return true if the given index contains at least one stake address.
+    #[must_use]
+    pub fn contain_stake_address(
+        &self,
+        index: usize,
+    ) -> bool {
+        self.addresses(index)
+            .iter()
+            .any(|address| matches!(address, Address::Stake(_)))
     }
 
     /// Return the updated URIs set.
@@ -287,18 +298,6 @@ fn extract_c509_uris(
     }
 
     result
-}
-
-/// Converts a list of `Cip0134Uri` to a list of stake addresses.
-fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
-    uris.iter()
-        .filter_map(|uri| {
-            match uri.address() {
-                Address::Stake(a) => Some(a.clone().into()),
-                _ => None,
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
