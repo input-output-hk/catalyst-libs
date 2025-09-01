@@ -33,6 +33,9 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
                 kid: crate::validator::rules::SignatureKidRule {
                     exp: &[],
                 },
+                signature: crate::validator::rules::SignatureRule {
+                    mutlisig: false
+                },
             }
         };
 
