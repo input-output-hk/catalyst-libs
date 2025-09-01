@@ -344,6 +344,9 @@ mod tests {
         let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
+        assert_eq!(set.role_addresses(0).len(), 1);
+        assert_eq!(set.role_stake_addresses(0).len(), 1);
+        assert_eq!(set.stake_addresses().len(), 1);
 
         let x_uris = set.x_uris();
         assert_eq!(x_uris.len(), 1);
