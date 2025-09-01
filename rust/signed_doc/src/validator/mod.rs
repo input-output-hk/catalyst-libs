@@ -104,7 +104,7 @@ fn proposal_comment_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
-        signature: SignatureRule { mutlisig: true },
+        signature: SignatureRule { mutlisig: false },
     }
 }
 
@@ -153,7 +153,7 @@ fn proposal_submission_action_rule() -> Rules {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
-        signature: SignatureRule { mutlisig: true },
+        signature: SignatureRule { mutlisig: false },
     }
 }
 
