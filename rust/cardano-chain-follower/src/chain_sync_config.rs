@@ -133,12 +133,9 @@ impl ChainSyncConfig {
         stats::sync_started(self.chain);
 
         // Start the Chain Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
-            None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
-                return Err(Error::Internal); // Should not get here.
-            },
-            Some(entry) => entry,
+        let Some(lock_entry) = SYNC_JOIN_HANDLE_MAP.get(&self.chain) else {
+            error!("Join Map improperly initialized: Missing {}!!", self.chain);
+            return Err(Error::Internal); // Should not get here.
         };
         let mut locked_handle = lock_entry.value().lock().await;
 

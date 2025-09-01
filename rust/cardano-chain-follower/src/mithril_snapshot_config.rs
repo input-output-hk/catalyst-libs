@@ -392,12 +392,9 @@ impl MithrilSnapshotConfig {
         );
 
         // Start the Mithril Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
-            None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
-                return Err(Error::Internal); // Should not get here.
-            },
-            Some(entry) => entry,
+        let Some(lock_entry) = SYNC_JOIN_HANDLE_MAP.get(&self.chain) else {
+            error!("Join Map improperly initialized: Missing {}!!", self.chain);
+            return Err(Error::Internal); // Should not get here.
         };
         let mut locked_handle = lock_entry.value().lock().await;
 
@@ -448,9 +445,8 @@ fn check_writable(path: &Path) -> bool {
     }
 
     // Can't read the directory for any reason, so can't write to the directory.
-    let path_iterator = match path.read_dir() {
-        Err(_) => return false,
-        Ok(entries) => entries,
+    let Ok(path_iterator) = path.read_dir() else {
+        return false;
     };
 
     // Recursively check the contents of the directory
