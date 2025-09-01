@@ -141,7 +141,7 @@ pub fn validate_cert_addrs(
         if !witness.check_witness_in_tx(&hash, 0.into()) {
             report.other(
                     &format!(
-                        "Address '{address}', key hash (0x{hash}) is not present in the transaction witness set, and can not be verified as owned"
+                        "Address '{address}', key hash (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable"
                     ),
                     context,
                 );
