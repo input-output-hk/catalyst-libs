@@ -2,7 +2,7 @@
 
 pub(crate) mod doc_ref;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 use proc_macro2::Ident;
 use quote::format_ident;
@@ -63,6 +63,35 @@ pub(crate) enum IsRequired {
     Yes,
     Excluded,
     Optional,
+}
+
+pub(crate) struct DocTypes(Vec<DocumentName>);
+
+impl Deref for DocTypes {
+    type Target = Vec<DocumentName>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for DocTypes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        #[derive(serde::Deserialize)]
+        #[serde(untagged)]
+        enum SingleOrVec {
+            Single(DocumentName),
+            Multiple(Vec<DocumentName>),
+        }
+        let value = Option::<SingleOrVec>::deserialize(deserializer)?;
+        let result = match value {
+            Some(SingleOrVec::Single(item)) => vec![item],
+            Some(SingleOrVec::Multiple(items)) => items,
+            None => vec![],
+        };
+        Ok(Self(result))
+    }
 }
 
 impl CatalystSignedDocSpec {
