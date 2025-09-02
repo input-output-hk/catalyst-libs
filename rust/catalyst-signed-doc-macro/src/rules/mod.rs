@@ -13,7 +13,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
     for (doc_name, doc_spec) in spec.docs {
         let const_type_name_ident = doc_name.ident();
 
-        let content_type_rule: TokenStream = doc_spec.metadata.content_type.try_into()?;
+        let content_type_rule: TokenStream = doc_spec.headers.content_type.try_into()?;
 
         // TODO: implement a proper initialization for all specific validation rules
         let rules = quote! {

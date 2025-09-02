@@ -31,12 +31,12 @@ impl TryInto<TokenStream> for IsRequired {
 /// Document's metadata fields definition
 #[derive(serde::Deserialize)]
 #[allow(clippy::missing_docs_in_private_items)]
-pub(crate) struct Metadata {
+pub(crate) struct Headers {
     #[serde(rename = "content type")]
-    pub(crate) content_type: ContentType,
+    pub(crate) content_type: ContentType,    
 }
 
-/// `signed_doc.json` "ref" field JSON object
+/// `signed_doc.json` "content type" field JSON object
 #[derive(serde::Deserialize)]
 #[allow(clippy::missing_docs_in_private_items)]
 pub(crate) struct ContentType {
@@ -50,30 +50,30 @@ impl TryInto<TokenStream> for ContentType {
 
     fn try_into(self) -> Result<TokenStream, Self::Error> {
         let exp = match self.value.as_str() {
-            "application/cbor" => quote! { ContentType::Cbor },
-            "application/cddl" => quote! { ContentType::Cddl },
-            "application/json" => quote! { ContentType::Json },
-            "application/json+schema" => quote! { ContentType::JsonSchema },
-            "text/css; charset=utf-8" => quote! { ContentType::Css },
-            "text/css; charset=utf-8; template=handlebars" => quote! { ContentType::CssHandlebars },
-            "text/html; charset=utf-8" => quote! { ContentType::Html },
+            "application/cbor" => quote! { ContentTypeRule::Cbor },
+            "application/cddl" => quote! { ContentTypeRule::Cddl },
+            "application/json" => quote! { ContentTypeRule::Json },
+            "application/json+schema" => quote! { ContentTypeRule::JsonSchema },
+            "text/css; charset=utf-8" => quote! { ContentTypeRule::Css },
+            "text/css; charset=utf-8; template=handlebars" => quote! { ContentTypeRule::CssHandlebars },
+            "text/html; charset=utf-8" => quote! { ContentTypeRule::Html },
             "text/html; charset=utf-8; template=handlebars" => {
-                quote! { ContentType::HtmlHandlebars }
+                quote! { ContentTypeRule::HtmlHandlebars }
             },
-            "text/markdown; charset=utf-8" => quote! { ContentType::Markdown },
+            "text/markdown; charset=utf-8" => quote! { ContentTypeRule::Markdown },
             "text/markdown; charset=utf-8; template=handlebars" => {
-                quote! { ContentType::MarkdownHandlebars }
+                quote! { ContentTypeRule::MarkdownHandlebars }
             },
-            "text/plain; charset=utf-8" => quote! { ContentType::Plain },
+            "text/plain; charset=utf-8" => quote! { ContentTypeRule::Plain },
             "text/plain; charset=utf-8; template=handlebars" => {
-                quote! { ContentType::PlainHandlebars }
+                quote! { ContentTypeRule::PlainHandlebars }
             },
             _ => return Err(anyhow::anyhow!("Unsupported Content Type: {}", self.value)),
         };
 
         Ok(quote! {
             crate::validator::rules::ContentTypeRule {
-                exp: #exp,
+                exp: crate::validator::rules::#exp,
             }
         })
     }
