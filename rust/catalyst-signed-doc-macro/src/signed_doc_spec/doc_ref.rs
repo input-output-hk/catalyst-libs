@@ -1,4 +1,4 @@
-//! `signed_doc.json` "ref" field JSON defintion
+//! `signed_doc.json` "ref" field JSON definition
 
 use crate::signed_doc_spec::{DocTypes, IsRequired};
 

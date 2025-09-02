@@ -49,7 +49,7 @@ pub(crate) struct DocSpec {
     pub(crate) metadata: Metadata,
 }
 
-/// Document's metadata fields defintion
+/// Document's metadata fields definition
 #[derive(serde::Deserialize)]
 #[allow(clippy::missing_docs_in_private_items)]
 pub(crate) struct Metadata {
@@ -57,7 +57,7 @@ pub(crate) struct Metadata {
     pub(crate) doc_ref: doc_ref::Ref,
 }
 
-/// "required" field defition
+/// "required" field definition
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[allow(clippy::missing_docs_in_private_items)]
