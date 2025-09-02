@@ -13,6 +13,7 @@ mod content_encoding;
 mod content_type;
 mod doc_ref;
 mod id;
+mod original_author;
 mod parameters;
 mod reply;
 mod section;
@@ -25,6 +26,7 @@ pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
 pub(crate) use id::IdRule;
+pub(crate) use original_author::OriginalAuthorRule;
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
@@ -57,6 +59,8 @@ pub(crate) struct Rules {
     pub(crate) kid: SignatureKidRule,
     /// document's signatures validation rule
     pub(crate) signature: SignatureRule,
+    /// Original Author validation rule.
+    pub(crate) original_author: OriginalAuthorRule,
 }
 
 impl Rules {
@@ -81,6 +85,7 @@ impl Rules {
             self.parameters.check(doc, provider).boxed(),
             self.kid.check(doc).boxed(),
             self.signature.check(doc, provider).boxed(),
+            self.original_author.check(doc, provider).boxed(),
         ];
 
         let res = futures::future::join_all(rules)

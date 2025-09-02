@@ -43,6 +43,7 @@ impl ParametersRule {
                 let parameters_check = doc_refs_check(
                     parameters_ref,
                     exp_parameters_type,
+                    false,
                     "parameters",
                     provider,
                     doc.report(),
