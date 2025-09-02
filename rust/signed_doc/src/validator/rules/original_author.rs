@@ -113,10 +113,8 @@ mod tests {
             let (doc_id, authors, provider) = gen_original_doc_and_provider();
             let doc_2 = gen_next_ver_doc(doc_id, authors);
             (doc_2, provider)
-    }
-    => true
-    ;
-    "Catalyst Signed Document has the same authors as the previous version"
+        } => true ;
+        "Catalyst Signed Document has the same authors as the previous version"
     )]
     #[test_case(
         || {
@@ -124,10 +122,8 @@ mod tests {
             let other_authors = gen_authors();
             let doc_2 = gen_next_ver_doc(doc_id, other_authors);
             (doc_2, provider)
-    }
-    => false
-    ;
-    "Catalyst Signed Document has the different authors from the previous version"
+        } => false ;
+        "Catalyst Signed Document has the different authors from the previous version"
     )]
     #[tokio::test]
     async fn original_author_rule_test(
