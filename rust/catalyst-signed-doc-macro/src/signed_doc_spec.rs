@@ -44,7 +44,7 @@ pub(crate) struct DocSpec {
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
     /// Document type metadata definitions
-    pub(crate) metadata: node::MetadataNode,
+    pub(crate) metadata: field::MetadataNode,
 }
 
 impl CatalystSignedDocSpec {
@@ -58,7 +58,7 @@ impl CatalystSignedDocSpec {
     }
 }
 
-pub(crate) mod node {
+pub(crate) mod field {
     /// "required" field definition
     #[derive(serde::Deserialize)]
     #[serde(rename_all = "lowercase")]
