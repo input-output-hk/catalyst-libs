@@ -1,5 +1,7 @@
 //! Catalyst Signed Document spec type
 
+pub(crate) mod doc_ref;
+
 use std::collections::HashMap;
 
 use proc_macro2::Ident;
@@ -51,14 +53,23 @@ pub(crate) struct DocSpec {
 #[derive(serde::Deserialize)]
 pub(crate) struct Metadata {
     #[serde(rename = "ref")]
-    pub(crate) doc_ref: crate::rules::doc_ref::Ref,
+    pub(crate) doc_ref: doc_ref::Ref,
+}
+
+/// "required" field defition
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum IsRequired {
+    Yes,
+    Excluded,
+    Optional,
 }
 
 impl CatalystSignedDocSpec {
     /// Loading a Catalyst Signed Documents spec from the `signed_doc.json`
     // #[allow(dependency_on_unit_never_type_fallback)]
     pub(crate) fn load_signed_doc_spec() -> anyhow::Result<CatalystSignedDocSpec> {
-        let signed_doc_str = include_str!("../../../specs/signed_doc.json");
+        let signed_doc_str = include_str!("../../../../specs/signed_doc.json");
         let signed_doc_spec = serde_json::from_str(signed_doc_str)?;
         Ok(signed_doc_spec)
     }
