@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use anyhow::Context;
 use proc_macro2::Ident;
 use quote::format_ident;
 
@@ -43,6 +42,16 @@ pub(crate) struct DocSpec {
     /// Document type UUID v4 value
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
+
+    /// Document type metadata definitions
+    pub(crate) metadata: Metadata,
+}
+
+/// Document's metadata fields defintion
+#[derive(serde::Deserialize)]
+pub(crate) struct Metadata {
+    #[serde(rename = "ref")]
+    pub(crate) doc_ref: crate::rules::doc_ref::Ref,
 }
 
 impl CatalystSignedDocSpec {
@@ -50,8 +59,7 @@ impl CatalystSignedDocSpec {
     // #[allow(dependency_on_unit_never_type_fallback)]
     pub(crate) fn load_signed_doc_spec() -> anyhow::Result<CatalystSignedDocSpec> {
         let signed_doc_str = include_str!("../../../specs/signed_doc.json");
-        let signed_doc_spec = serde_json::from_str(signed_doc_str)
-            .context("Catalyst Signed Documents spec must be a JSON object")?;
+        let signed_doc_spec = serde_json::from_str(signed_doc_str)?;
         Ok(signed_doc_spec)
     }
 }
