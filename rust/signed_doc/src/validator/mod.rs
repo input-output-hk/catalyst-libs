@@ -8,8 +8,8 @@ use std::{collections::HashMap, sync::LazyLock};
 use catalyst_signed_doc_macro;
 use catalyst_types::catalyst_id::role_index::RoleId;
 use rules::{
-    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, IdRule, ParametersRule,
-    RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule, VerRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, IdRule, OriginalAuthorRule,
+    ParametersRule, RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule, VerRule,
 };
 
 use crate::{
@@ -62,6 +62,7 @@ fn proposal_rule() -> Rules {
             exp: &[RoleId::Proposer],
         },
         signature: SignatureRule { mutlisig: false },
+        original_author: OriginalAuthorRule,
     }
 }
 
@@ -90,6 +91,7 @@ fn proposal_comment_rule() -> Rules {
         },
         doc_ref: RefRule::Specified {
             exp_ref_types: vec![PROPOSAL.clone()],
+            multiple: false,
             optional: false,
         },
         reply: ReplyRule::Specified {
@@ -105,6 +107,7 @@ fn proposal_comment_rule() -> Rules {
             exp: &[RoleId::Role0],
         },
         signature: SignatureRule { mutlisig: false },
+        original_author: OriginalAuthorRule,
     }
 }
 
@@ -146,6 +149,7 @@ fn proposal_submission_action_rule() -> Rules {
         },
         doc_ref: RefRule::Specified {
             exp_ref_types: vec![PROPOSAL.clone()],
+            multiple: false,
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
@@ -154,6 +158,7 @@ fn proposal_submission_action_rule() -> Rules {
             exp: &[RoleId::Proposer],
         },
         signature: SignatureRule { mutlisig: false },
+        original_author: OriginalAuthorRule,
     }
 }
 
