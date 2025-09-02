@@ -3,6 +3,7 @@
 
 mod error;
 mod rules;
+mod field;
 mod signed_doc_spec;
 mod types_consts;
 

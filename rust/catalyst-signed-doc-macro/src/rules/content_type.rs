@@ -2,14 +2,14 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::signed_doc_spec::{self, field::IsRequired};
+use crate::field;
 
 /// Generating `RefRule` instantiation
-pub(crate) fn ref_rule(ref_spec: &signed_doc_spec::field::ContentType) -> anyhow::Result<TokenStream> {
+pub(crate) fn ref_rule(ref_spec: &field::ContentType) -> anyhow::Result<TokenStream> {
     let optional = match ref_spec.required {
-        IsRequired::Yes => true,
-        IsRequired::Optional => false,
-        IsRequired::Excluded => {
+        field::IsRequired::Yes => true,
+        field::IsRequired::Optional => false,
+        field::IsRequired::Excluded => {
             return Ok(quote! {
                 crate::validator::rules::RefRule::NotSpecified
             });

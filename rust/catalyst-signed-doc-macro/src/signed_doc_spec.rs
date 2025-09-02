@@ -6,6 +6,8 @@ use anyhow::Context;
 use proc_macro2::Ident;
 use quote::format_ident;
 
+use crate::field;
+
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub(crate) struct CatalystSignedDocSpec {
@@ -55,34 +57,6 @@ impl CatalystSignedDocSpec {
         let signed_doc_spec = serde_json::from_str(signed_doc_str)
             .context("Catalyst Signed Documents spec must be a JSON object")?;
         Ok(signed_doc_spec)
-    }
-}
-
-pub(crate) mod field {
-    /// "required" field definition
-    #[derive(serde::Deserialize)]
-    #[serde(rename_all = "lowercase")]
-    #[allow(clippy::missing_docs_in_private_items)]
-    pub(crate) enum IsRequired {
-        Yes,
-        Excluded,
-        Optional,
-    }
-
-    /// Document's metadata fields definition
-    #[derive(serde::Deserialize)]
-    #[allow(clippy::missing_docs_in_private_items)]
-    pub(crate) struct MetadataNode {
-        #[serde(rename = "ref")]
-        pub(crate) content_type: ContentType,
-    }
-
-    /// `signed_doc.json` "ref" field JSON object
-    #[derive(serde::Deserialize)]
-    #[allow(clippy::missing_docs_in_private_items)]
-    pub(crate) struct ContentType {
-        pub(crate) required: IsRequired,
-        pub(crate) value: Vec<String>,
     }
 }
 
