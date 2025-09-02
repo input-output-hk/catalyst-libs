@@ -512,7 +512,7 @@ mod tests {
         }
         => false
         ;
-        "valid reference to the multiple documents"
+        "valid document with multiple references"
     )]
     #[tokio::test]
     async fn ref_non_multiple_specified_test(
