@@ -1,5 +1,7 @@
 //! `catalyst_signed_documents_rules!` macro implementation
 
+pub(crate) mod content_type;
+
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -10,8 +12,10 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
     let spec = CatalystSignedDocSpec::load_signed_doc_spec()?;
 
     let mut rules_definitions = Vec::new();
-    for (doc_name, _doc_spec) in spec.docs {
+    for (doc_name, doc_spec) in spec.docs {
         let const_type_name_ident = doc_name.ident();
+
+        let content_type_rule = content_type::ref_rule(&doc_spec.metadata.content_type)?;
 
         // TODO: implement a proper initialization for all specific validation rules
         let rules = quote! {

@@ -43,6 +43,8 @@ pub(crate) struct DocSpec {
     /// Document type UUID v4 value
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
+    /// Document type metadata definitions
+    pub(crate) metadata: node::MetadataNode,
 }
 
 impl CatalystSignedDocSpec {
@@ -53,6 +55,34 @@ impl CatalystSignedDocSpec {
         let signed_doc_spec = serde_json::from_str(signed_doc_str)
             .context("Catalyst Signed Documents spec must be a JSON object")?;
         Ok(signed_doc_spec)
+    }
+}
+
+pub(crate) mod node {
+    /// "required" field definition
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "lowercase")]
+    #[allow(clippy::missing_docs_in_private_items)]
+    pub(crate) enum IsRequired {
+        Yes,
+        Excluded,
+        Optional,
+    }
+
+    /// Document's metadata fields definition
+    #[derive(serde::Deserialize)]
+    #[allow(clippy::missing_docs_in_private_items)]
+    pub(crate) struct MetadataNode {
+        #[serde(rename = "ref")]
+        pub(crate) content_type: ContentType,
+    }
+
+    /// `signed_doc.json` "ref" field JSON object
+    #[derive(serde::Deserialize)]
+    #[allow(clippy::missing_docs_in_private_items)]
+    pub(crate) struct ContentType {
+        pub(crate) required: IsRequired,
+        pub(crate) value: Vec<String>,
     }
 }
 
