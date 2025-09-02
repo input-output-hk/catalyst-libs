@@ -91,6 +91,7 @@ impl ContentRule {
             return doc_refs_check(
                 template_ref,
                 std::slice::from_ref(exp_template_type),
+                false,
                 "template",
                 provider,
                 doc.report(),
