@@ -51,6 +51,7 @@ pub(crate) struct DocSpec {
 
 /// Document's metadata fields defintion
 #[derive(serde::Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
 pub(crate) struct Metadata {
     #[serde(rename = "ref")]
     pub(crate) doc_ref: doc_ref::Ref,
@@ -59,12 +60,14 @@ pub(crate) struct Metadata {
 /// "required" field defition
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[allow(clippy::missing_docs_in_private_items)]
 pub(crate) enum IsRequired {
     Yes,
     Excluded,
     Optional,
 }
 
+/// A helper type for deserialization "type" metadata field
 pub(crate) struct DocTypes(Vec<DocumentName>);
 
 impl Deref for DocTypes {
@@ -76,6 +79,7 @@ impl Deref for DocTypes {
 }
 
 impl<'de> serde::Deserialize<'de> for DocTypes {
+    #[allow(clippy::missing_docs_in_private_items)]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         #[derive(serde::Deserialize)]
