@@ -8,8 +8,8 @@ use crate::signed_doc_spec::{self, IsRequired};
 /// Generating `RefRule` instantiation
 pub(crate) fn ref_rule(ref_spec: &signed_doc_spec::doc_ref::Ref) -> anyhow::Result<TokenStream> {
     let optional = match ref_spec.required {
-        IsRequired::Yes => true,
-        IsRequired::Optional => false,
+        IsRequired::Yes => false,
+        IsRequired::Optional => true,
         IsRequired::Excluded => {
             return Ok(quote! {
                 crate::validator::rules::RefRule::NotSpecified
