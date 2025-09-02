@@ -466,7 +466,7 @@ mod tests {
         }
         => true
         ;
-        "valid reference to the one correct document"
+        "valid document with a single reference"
     )]
     #[test_case(
         |exp_types, provider| {
