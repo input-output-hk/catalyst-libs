@@ -1,4 +1,6 @@
 //! Structs for JSON fields.
+use proc_macro2::TokenStream;
+use quote::quote;
 
 /// "required" field definition
 #[derive(serde::Deserialize)]
@@ -8,6 +10,22 @@ pub(crate) enum IsRequired {
     Yes,
     Excluded,
     Optional,
+}
+
+impl TryInto<TokenStream> for IsRequired {
+    type Error = anyhow::Error;
+
+    fn try_into(self) -> Result<TokenStream, Self::Error> {
+        match self {
+            Self::Yes => Ok(quote! { true }),
+            Self::Optional => Ok(quote! { false }),
+            Self::Excluded => {
+                return Ok(quote! {
+                    crate::validator::rules::RefRule::NotSpecified
+                });
+            },
+        }
+    }
 }
 
 /// Document's metadata fields definition
