@@ -1,7 +1,5 @@
 //! `catalyst_signed_documents_rules!` macro implementation
 
-pub(crate) mod content_type;
-
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -15,16 +13,14 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
     for (doc_name, doc_spec) in spec.docs {
         let const_type_name_ident = doc_name.ident();
 
-        let content_type_rule = content_type::ref_rule(&doc_spec.metadata.content_type)?;
+        let content_type_rule: TokenStream = doc_spec.metadata.content_type.try_into()?;
 
         // TODO: implement a proper initialization for all specific validation rules
         let rules = quote! {
             crate::validator::rules::Rules {
                 id: crate::validator::rules::IdRule,
                 ver: crate::validator::rules::VerRule,
-                content_type: crate::validator::rules::ContentTypeRule {
-                    exp: ContentType::Json,
-                },
+                content_type: #content_type_rule,
                 content_encoding: crate::validator::rules::ContentEncodingRule {
                     exp: ContentEncoding::Brotli,
                     optional: false,

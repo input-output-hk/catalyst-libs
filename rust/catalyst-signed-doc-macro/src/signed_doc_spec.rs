@@ -46,7 +46,7 @@ pub(crate) struct DocSpec {
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
     /// Document type metadata definitions
-    pub(crate) metadata: field::MetadataNode,
+    pub(crate) metadata: field::Metadata,
 }
 
 impl CatalystSignedDocSpec {
