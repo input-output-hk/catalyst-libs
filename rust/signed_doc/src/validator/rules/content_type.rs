@@ -20,7 +20,7 @@ impl ContentTypeRule {
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
         if let Self::NotSpecified = &self {
-            if let Ok(content_type) = doc.doc_meta().content_type() {
+            if let Ok(content_type) = doc.doc_content_type() {
                 doc.report().unknown_field(
                     "content-type",
                     &content_type.to_string().as_str(),
