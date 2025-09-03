@@ -1,6 +1,7 @@
 //! `catalyst_signed_documents_rules!` macro implementation
 
-pub(crate) mod doc_ref;
+mod content;
+mod doc_ref;
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -16,6 +17,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
         let const_type_name_ident = doc_name.ident();
 
         let ref_rule = doc_ref::ref_rule(&doc_spec.metadata.doc_ref)?;
+        let content_rule = content::content_rule(&doc_spec.payload, &doc_spec.metadata.template)?;
         // TODO: implement a proper initialization for all specific validation rules
         let rules = quote! {
             crate::validator::rules::Rules {
@@ -28,7 +30,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
                     exp: ContentEncoding::Brotli,
                     optional: false,
                 },
-                content: crate::validator::rules::ContentRule::NotSpecified,
+                content: #content_rule,
                 parameters: crate::validator::rules::ParametersRule::NotSpecified,
                 doc_ref: #ref_rule,
                 reply: crate::validator::rules::ReplyRule::NotSpecified,

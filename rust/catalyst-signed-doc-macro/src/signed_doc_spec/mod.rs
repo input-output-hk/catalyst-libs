@@ -42,13 +42,12 @@ impl DocumentName {
 
 /// Specific document type definition
 #[derive(serde::Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
 pub(crate) struct DocSpec {
-    /// Document type UUID v4 value
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
-
-    /// Document type metadata definitions
     pub(crate) metadata: Metadata,
+    pub(crate) payload: payload::Payload,
 }
 
 /// Document's metadata fields definition
@@ -57,6 +56,7 @@ pub(crate) struct DocSpec {
 pub(crate) struct Metadata {
     #[serde(rename = "ref")]
     pub(crate) doc_ref: doc_ref::Ref,
+    pub(crate) template: template::Template,
 }
 
 /// "required" field definition
