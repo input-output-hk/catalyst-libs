@@ -72,22 +72,55 @@ impl Cip0134UriSet {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
-    /// Returns a list of stake addresses by the given index.
+    /// Returns a list of addresses by the given role.
     #[must_use]
-    pub fn stake_addresses(
+    pub fn role_addresses(
         &self,
-        index: usize,
-    ) -> HashSet<StakeAddress> {
+        role: usize,
+    ) -> HashSet<Address> {
         let mut result = HashSet::new();
 
-        if let Some(uris) = self.x_uris().get(&index) {
-            result.extend(convert_stake_addresses(uris));
+        if let Some(uris) = self.x_uris().get(&role) {
+            result.extend(uris.iter().map(|uri| uri.address().clone()));
         }
-        if let Some(uris) = self.c_uris().get(&index) {
-            result.extend(convert_stake_addresses(uris));
+        if let Some(uris) = self.c_uris().get(&role) {
+            result.extend(uris.iter().map(|uri| uri.address().clone()));
         }
 
         result
+    }
+
+    /// Returns a list of stake addresses by the given role.
+    #[must_use]
+    pub fn role_stake_addresses(
+        &self,
+        role: usize,
+    ) -> HashSet<StakeAddress> {
+        self.role_addresses(role)
+            .iter()
+            .filter_map(|address| {
+                match address {
+                    Address::Stake(a) => Some(a.clone().into()),
+                    _ => None,
+                }
+            })
+            .collect()
+    }
+
+    /// Returns a list of all stake addresses.
+    #[must_use]
+    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
+        self.x_uris()
+            .values()
+            .chain(self.c_uris().values())
+            .flat_map(|uris| uris.iter())
+            .filter_map(|uri| {
+                match uri.address() {
+                    Address::Stake(a) => Some(a.clone().into()),
+                    _ => None,
+                }
+            })
+            .collect()
     }
 
     /// Return the updated URIs set.
@@ -289,18 +322,6 @@ fn extract_c509_uris(
     result
 }
 
-/// Converts a list of `Cip0134Uri` to a list of stake addresses.
-fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
-    uris.iter()
-        .filter_map(|uri| {
-            match uri.address() {
-                Address::Stake(a) => Some(a.clone().into()),
-                _ => None,
-            }
-        })
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
 
@@ -323,6 +344,9 @@ mod tests {
         let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
+        assert_eq!(set.role_addresses(0).len(), 1);
+        assert_eq!(set.role_stake_addresses(0).len(), 1);
+        assert_eq!(set.stake_addresses().len(), 1);
 
         let x_uris = set.x_uris();
         assert_eq!(x_uris.len(), 1);
