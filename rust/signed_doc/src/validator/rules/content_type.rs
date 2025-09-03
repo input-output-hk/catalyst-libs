@@ -23,8 +23,8 @@ impl ContentTypeRule {
             if let Ok(content_type) = doc.doc_content_type() {
                 doc.report().unknown_field(
                     "content-type",
-                    &content_type.to_string().as_str(),
-                    &format!("document does not expect to have the content type field"),
+                    content_type.to_string().as_str(),
+                    "document does not expect to have the content type field",
                 );
                 return Ok(false);
             }
