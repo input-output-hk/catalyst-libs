@@ -1,6 +1,8 @@
 //! Catalyst Signed Document spec type
 
 pub(crate) mod doc_ref;
+pub(crate) mod payload;
+pub(crate) mod template;
 
 use std::{collections::HashMap, ops::Deref};
 
