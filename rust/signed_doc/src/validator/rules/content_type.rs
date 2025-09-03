@@ -16,7 +16,7 @@ impl ContentTypeRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        let Ok(content_type) = doc.doc_content_type() else {
+        let Some(content_type) = doc.doc_content_type() else {
             doc.report().missing_field(
                 "content-type",
                 "Cannot get a content type field during the field validation",
