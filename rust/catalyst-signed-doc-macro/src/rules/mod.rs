@@ -22,7 +22,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
                 id: crate::validator::rules::IdRule,
                 ver: crate::validator::rules::VerRule,
                 content_type: crate::validator::rules::ContentTypeRule::NotSpecified,
-                content_encoding: crate::validator::rules::ContentEncodingRule {
+                content_encoding: crate::validator::rules::ContentEncodingRule::Specified {
                     exp: ContentEncoding::Brotli,
                     optional: false,
                 },

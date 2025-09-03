@@ -47,24 +47,23 @@ impl ContentTypeRule {
                 );
                 return Ok(false);
             }
+            let Ok(content) = doc.decoded_content() else {
+                doc.report().functional_validation(
+                    "Invalid Document content, cannot get decoded bytes",
+                    "Cannot get a document content during the content type field validation",
+                );
+                return Ok(false);
+            };
+            if self.validate(&content).is_err() {
+                doc.report().invalid_value(
+                    "payload",
+                    &hex::encode(content),
+                    &format!("Invalid Document content, should {content_type} encodable"),
+                    "Invalid Document content",
+                );
+                return Ok(false);
+            }
         }
-        let Ok(content) = doc.decoded_content() else {
-            doc.report().functional_validation(
-                "Invalid Document content, cannot get decoded bytes",
-                "Cannot get a document content during the content type field validation",
-            );
-            return Ok(false);
-        };
-        if self.validate(&content).is_err() {
-            doc.report().invalid_value(
-                "payload",
-                &hex::encode(content),
-                &format!("Invalid Document content, should {content_type} encodable"),
-                "Invalid Document content",
-            );
-            return Ok(false);
-        }
-
         Ok(true)
     }
 
