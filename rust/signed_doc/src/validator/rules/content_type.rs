@@ -5,10 +5,12 @@ use crate::{metadata::ContentType, CatalystSignedDocument};
 /// `content-type` field validation rule
 #[derive(Debug)]
 pub(crate) enum ContentTypeRule {
+    /// Content Type field must be present with the specific type in the document.
     Specified {
         /// expected `content-type` field
         exp: ContentType,
     },
+    /// Content Type field must not be present in the document.
     NotSpecified,
 }
 
