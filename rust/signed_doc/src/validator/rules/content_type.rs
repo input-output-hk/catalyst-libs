@@ -19,20 +19,31 @@ impl ContentTypeRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        let Ok(content_type) = doc.doc_content_type() else {
-            doc.report().missing_field(
-                "content-type",
-                "Cannot get a content type field during the field validation",
-            );
-            return Ok(false);
-        };
         if let Self::Specified { exp } = &self {
+            let Ok(content_type) = doc.doc_content_type() else {
+                doc.report().missing_field(
+                    "content-type",
+                    "Cannot get a content type field during the field validation",
+                );
+                return Ok(false);
+            };
+
             if content_type != *exp {
                 doc.report().invalid_value(
                     "content-type",
                     content_type.to_string().as_str(),
                     exp.to_string().as_str(),
                     "Invalid Document content-type value",
+                );
+                return Ok(false);
+            }
+        }
+        if let Self::NotSpecified = &self {
+            if let Ok(content_type) = doc.doc_meta().content_type() {
+                doc.report().unknown_field(
+                    "content-type",
+                    &content_type.to_string().as_str(),
+                    &format!("document does not expect to have the content type field"),
                 );
                 return Ok(false);
             }
