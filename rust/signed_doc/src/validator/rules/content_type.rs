@@ -216,4 +216,18 @@ mod tests {
         let doc = Builder::new().build();
         assert!(matches!(json_rule.check(&doc).await, Ok(false)));
     }
+
+    #[tokio::test]
+    async fn content_type_not_specified_rule_test() {
+        let content_type = ContentType::Json;
+        let rule = ContentTypeRule::NotSpecified;
+
+        let doc = Builder::new()
+            .with_metadata_field(SupportedField::ContentType(content_type))
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc).await.unwrap());
+    }
 }
