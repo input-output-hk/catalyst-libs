@@ -44,7 +44,7 @@ fn proposal_rule() -> Rules {
         content_type: ContentTypeRule::Specified {
             exp: ContentType::Json,
         },
-        content_encoding: ContentEncodingRule {
+        content_encoding: ContentEncodingRule::Specified {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
@@ -82,7 +82,7 @@ fn proposal_comment_rule() -> Rules {
         content_type: ContentTypeRule::Specified {
             exp: ContentType::Json,
         },
-        content_encoding: ContentEncodingRule {
+        content_encoding: ContentEncodingRule::Specified {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
@@ -138,7 +138,7 @@ fn proposal_submission_action_rule() -> Rules {
         content_type: ContentTypeRule::Specified {
             exp: ContentType::Json,
         },
-        content_encoding: ContentEncodingRule {
+        content_encoding: ContentEncodingRule::Specified {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
