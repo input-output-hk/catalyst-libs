@@ -5,9 +5,9 @@ import typing
 
 from pydantic import HttpUrl
 
+from spec.optional import OptionalField
 from spec.payload import DRAFT7_SCHEMA, DRAFT202012_SCHEMA
 from spec.signed_doc import SignedDoc
-from spec.optional import OptionalField
 
 from .doc_generator import DocGenerator
 from .doc_relationship_diagrams import DocRelationshipFile
