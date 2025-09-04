@@ -348,9 +348,7 @@
         "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
         "format": "HTTP Content Encoding",
         "required": "optional",
-        "value": [
-          "br"
-        ]
+        "value": "br"
       }
     },
     "headersOrder": [
@@ -382,6 +380,7 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "description": "Brand Parameters define the parameter data required for the\nsystem at the Brand level.\n\nParameter Data includes things such as:\n\n* Functional parameters\n* Timeline data\n* Branded Content and Copy\n\nThe content of the parameters is defined solely by the \nBrand Parameters Form Template.\n\nThis allows parameters to vary based on individual system\nrequirements over time.\n\nFunctional Parameters are mapped using the (TBD Functional Parameters Map).\n\nThe payload of a Brand is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -395,9 +394,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -473,7 +470,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "Brand Parameters Document controlling the Brand \nwithin a Brand.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
+        "description": "Brand Parameters Document controlling the Brand \nwithin a Brand.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -505,6 +503,7 @@
     "Brand Parameters Form Template": {
       "authors": {},
       "description": "A Brand Parameters Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Brand Parameters Form Template is a JSON Schema Document.\n\nBrand Parameters entry *SHOULD* use the hints when collecting \ndata defined by the Brand Parameters Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Brand Parameters Presentation Template can be used to\nformat the Brand Parameters data for presentation.\n\nThe Brand Parameters Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Brand Parameters.\n\nThe payload of a Brand Parameters is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -518,9 +517,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -593,7 +590,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nBrand Parameters Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nBrand Parameters Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -631,6 +629,7 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "description": "Campaign Parameters define the parameter data required for the\nsystem at the Campaign level.\n\nParameter Data includes things such as:\n\n* Functional parameters\n* Timeline data\n* Branded Content and Copy\n\nThe content of the parameters is defined solely by the \nCampaign Parameters Form Template.\n\nThis allows parameters to vary based on individual system\nrequirements over time.\n\nFunctional Parameters are mapped using the (TBD Functional Parameters Map).\n\nThe payload of a Campaign is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -644,9 +643,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -725,7 +722,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "Campaign Parameters Document controlling the Campaign \nwithin a Brand.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
+        "description": "Campaign Parameters Document controlling the Campaign \nwithin a Brand.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -757,6 +755,7 @@
     "Campaign Parameters Form Template": {
       "authors": {},
       "description": "A Campaign Parameters Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Campaign Parameters Form Template is a JSON Schema Document.\n\nCampaign Parameters entry *SHOULD* use the hints when collecting \ndata defined by the Campaign Parameters Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Campaign Parameters Presentation Template can be used to\nformat the Campaign Parameters data for presentation.\n\nThe Campaign Parameters Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Campaign Parameters.\n\nThe payload of a Campaign Parameters is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -770,9 +769,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -850,7 +847,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nCampaign Parameters Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nCampaign Parameters Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -888,6 +886,7 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "description": "Category Parameters define the parameter data required for the\nsystem at the Category level.\n\nParameter Data includes things such as:\n\n* Functional parameters\n* Timeline data\n* Branded Content and Copy\n\nThe content of the parameters is defined solely by the \nCategory Parameters Form Template.\n\nThis allows parameters to vary based on individual system\nrequirements over time.\n\nFunctional Parameters are mapped using the (TBD Functional Parameters Map).\n\nThe payload of a Category is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -901,9 +900,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -982,7 +979,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "Category Parameters Document controlling the Category \nwithin a Campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
+        "description": "Category Parameters Document controlling the Category \nwithin a Campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -1014,6 +1012,7 @@
     "Category Parameters Form Template": {
       "authors": {},
       "description": "A Category Parameters Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Category Parameters Form Template is a JSON Schema Document.\n\nCategory Parameters entry *SHOULD* use the hints when collecting \ndata defined by the Category Parameters Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Category Parameters Presentation Template can be used to\nformat the Category Parameters data for presentation.\n\nThe Category Parameters Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Category Parameters.\n\nThe payload of a Category Parameters is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1027,9 +1026,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -1107,7 +1104,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nCategory Parameters Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nCategory Parameters Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -1142,6 +1140,7 @@
     "Comment Moderation Action": {
       "authors": {},
       "description": "A Moderation Action performed on any Comment.",
+      "draft": true,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1155,9 +1154,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -1234,6 +1231,10 @@
         }
       },
       "notes": [],
+      "payload": {
+        "description": "Comment moderation action payload",
+        "required": "yes"
+      },
       "signers": {
         "roles": {
           "user": [
@@ -1262,6 +1263,21 @@
         "front_end": "* Allows a voter to select a Representative from a list of eligible candidates for a category.\n* The voter signs this document to confirm their delegation choice."
       },
       "description": "Delegation by a Registered User to a Representative for\na contest.\n\nThis delegation allows votes cast by the Representative\nto use the voting power of the delegating User, in addition\nto their own personal voting power and that of all other Users \nwho delegate to the same Representative.\n\nDelegation is for a specific Contest.\nMultiple Delegations must be published if there are multiple\nContests within a Brand/Campaign or Category.\n\nThis is because different Contests may have different rules.\nAnd not all Representatives will choose to nominate\nfor every Contest.\n\nA Representative ***MAY NOT*** delegate to a different Representative\nfor any contest they have nominated for.\nThey ***MAY*** however nominate a Representative in any contest they\nhave not nominated for.",
+      "draft": false,
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "excluded"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "excluded"
+        }
+      },
       "metadata": {
         "chain": {
           "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
@@ -1341,7 +1357,7 @@
       "notes": [],
       "payload": {
         "description": "  There is no payload.",
-        "nil": true
+        "required": "excluded"
       },
       "signers": {
         "roles": {
@@ -1369,6 +1385,7 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "description": "Contest Parameters define the parameter data required for the\nsystem at the Contest level.\n\nParameter Data includes things such as:\n\n* Functional parameters\n* Timeline data\n* Branded Content and Copy\n\nThe content of the parameters is defined solely by the \nContest Parameters Form Template.\n\nThis allows parameters to vary based on individual system\nrequirements over time.\n\nFunctional Parameters are mapped using the (TBD Functional Parameters Map).\n\nThe payload of a Contest is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1382,9 +1399,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -1467,7 +1482,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "Contest Parameters Document controlling the Contest \nwithin a Brand/Campaign/Category.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
+        "description": "Contest Parameters Document controlling the Contest \nwithin a Brand/Campaign/Category.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -1499,6 +1515,7 @@
     "Contest Parameters Form Template": {
       "authors": {},
       "description": "A Contest Parameters Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Contest Parameters Form Template is a JSON Schema Document.\n\nContest Parameters entry *SHOULD* use the hints when collecting \ndata defined by the Contest Parameters Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Contest Parameters Presentation Template can be used to\nformat the Contest Parameters data for presentation.\n\nThe Contest Parameters Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Contest Parameters.\n\nThe payload of a Contest Parameters is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1512,9 +1529,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -1594,7 +1609,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nContest Parameters Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nContest Parameters Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -1629,6 +1645,7 @@
     "Presentation Template": {
       "authors": {},
       "description": "A Presentation Template defines how the data\ncaptured by the *ANY* Set of Form Template or system dynamic data is to be displayed.\n\nMultiple Presentation Templates will exist, and will be associated with multiple document types. \nThere is no strict 1:1 relationship between any document, its template and a presentation template.\n\nThe presentation templates are context sensitive, and each template defines the sources\nof published document information they require.\n\nPresentation Templates can reference any data contained\nin the referenced Documents, as well as any documents linked by:\n\n* `ref`\n* `reply`\n* `parameters`\n\nThe presentation of the payload of all data when not capturing or displaying a \nForm via its Form Template is controlled by one or more Presentation Template documents.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1642,9 +1659,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -1725,6 +1740,7 @@
       "notes": [],
       "payload": {
         "description": "The Presentation Template is defined by its schema.\nSee `[presentation_templates.md](TODO)`",
+        "required": "yes",
         "schema": {
           "$defs": {
             "cardDescription": {
@@ -1844,6 +1860,7 @@
         "front_end": "As validity of the documents is currently enforced by the backend, \nthe front end does not need to validate the document has been signed\ncorrectly.\nIt may do so, but it is not required."
       },
       "description": "A Proposal is a document which describes a proposed solution or project to\naddress the criteria of a category within a campaign.\n\nThe proposal itself is a draft document, it is not submitted for consideration\nunless a `Proposal Submission Action` is submitted which references it.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1857,9 +1874,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -1944,7 +1959,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "Proposal Document drafted for submission to a category of a campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
+        "description": "Proposal Document drafted for submission to a category of a campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -1979,6 +1995,7 @@
         "front_end": "Comments are valid for any version of the document, however\nas comments refer to a specific version of a document, they may\nlose context when displayed against the latest version of a document.\nIn these cases, the front end should clearly show that a comment was on\na different version of the document.\n\nIf the front end posts a reply to another comment: \n\n* it should reference the comment being replied to in the `reply` field. \n* The `ref` field must refer to the same document, but can be a different version."
       },
       "description": "A Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1992,9 +2009,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2086,7 +2101,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Document which must validate against the referenced template."
+        "description": "JSON Document which must validate against the referenced template.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -2116,6 +2132,7 @@
     "Proposal Comment Form Template": {
       "authors": {},
       "description": "A Proposal Comment Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Proposal Comment Form Template is a JSON Schema Document.\n\nProposal Comment entry *SHOULD* use the hints when collecting \ndata defined by the Proposal Comment Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Proposal Comment Presentation Template can be used to\nformat the Proposal Comment data for presentation.\n\nThe Proposal Comment Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Proposal Comment.\n\nThe payload of a Proposal Comment is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2129,9 +2146,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2211,7 +2226,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Comment Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Comment Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -2246,6 +2262,7 @@
     "Proposal Form Template": {
       "authors": {},
       "description": "A Proposal Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Proposal Form Template is a JSON Schema Document.\n\nProposal entry *SHOULD* use the hints when collecting \ndata defined by the Proposal Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Proposal Presentation Template can be used to\nformat the Proposal data for presentation.\n\nThe Proposal Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Proposal.\n\nThe payload of a Proposal is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2259,9 +2276,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2341,7 +2356,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -2376,6 +2392,7 @@
     "Proposal Moderation Action": {
       "authors": {},
       "description": "A Moderation action performed on a Proposal.",
+      "draft": true,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2389,9 +2406,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2466,6 +2481,10 @@
         }
       },
       "notes": [],
+      "payload": {
+        "description": "Comment moderation action payload",
+        "required": "yes"
+      },
       "signers": {
         "roles": {
           "user": [
@@ -2492,6 +2511,7 @@
         "front_end": "A proposal with `collaborators` will not be shown as having a confirmed collaborator,\nunless there exists a `draft` or `final` proposal submission from that collaborator.\n\nAny document that lists a collaborator should be highlighted to that collaborator so\nthey can take appropriate action, such as:\n\n* Confirm they are a collaborator by submitting this document as `draft`\n* Agree to being a collaborator on the final submission by submitting this document as `final`\n* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`\n* Remove themselves permanently as a collaborator by publishing a new version with them removed.\n\nTo eliminate the necessity for collaborators to accept collaboration on every version, \nthey will be considered as agreeing to be a collaborator on any version of the document\nthat lists them, if their latest submission is `draft` or `final`.\n\nIf their latest submission on a document is `hide` they should be considered to not\nhave agreed to be a collaborator.\n\n*NOTE* `final` status ONLY applies to the exactly referenced document and version."
       },
       "description": "Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  \nUnless they all submit the same version of the proposal\nthe proposal will not be seen as submitted.\n\nThe payload is a fixed format.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2505,9 +2525,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2616,6 +2634,7 @@
             "title": "Hidden Proposal Submission"
           }
         ],
+        "required": "yes",
         "schema": {
           "$defs": {
             "action": {
@@ -2691,6 +2710,7 @@
         "front_end": "* Allows a Representative to create or update their profile for a category.\n* The Representative sets their status to 'active' to be discoverable for delegation.\n* The Representative `revokes` the Nomination to signal they are no longer \n\tparticipating in the category.\n* Nominations are not valid if the latest Delegation by the Representative does NOT\n\treference their latest Nomination."
       },
       "description": "A Representative Nomination Document is created to opt\nin as a Representative Voter for a specific Contest on a Brand/Campaign or Category.\n\nThis Document is a kind of `Profile` that is primarily used to\nhelp justify the Representatives Nomination to prospective delegators.\n\nThe user must have registered as a Representative.\nThe presence of this document signifies the user's intent to participate in that \ncontest as a Representative.\n\nThe document's structure is defined by the associated \nRep Nomination Form Template.\nThis allows an Admin to specify contest-specific requirements.\n\nThe Representative can retract their nomination by using the `revoke` metadata to\nrevoke this Nomination document.\n\nIt is an extension of all other profiles attached to the same Catalyst ID.\n\nProfiles themselves are intentionally general, however they may be\nlinked to a Brand/Campaign/Category via the template used by the profile.\n\nThe payload of a profile is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2704,9 +2724,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2790,7 +2808,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Representative's profile data for a specific contest.\nIts structure is defined by the referenced template document.\n\nIn the case of Revoking a nomination the payload is `nil`."
+        "description": "The Representative's profile data for a specific contest.\nIts structure is defined by the referenced template document.\n\nIn the case of Revoking a nomination the payload is `nil`.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -2815,6 +2834,7 @@
     "Rep Nomination Form Template": {
       "authors": {},
       "description": "A Rep Nomination Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Rep Nomination Form Template is a JSON Schema Document.\n\nRep Nomination entry *SHOULD* use the hints when collecting \ndata defined by the Rep Nomination Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Rep Nomination Presentation Template can be used to\nformat the Rep Nomination data for presentation.\n\nThe Rep Nomination Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Rep Nomination.\n\nThe payload of a Rep Nomination is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2828,9 +2848,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -2906,7 +2924,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nRep Nomination Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nRep Nomination Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -2948,6 +2967,7 @@
         "front_end": "* Display and allow editing of the Representative's core profile fields.\n* This profile serves as the central hub for a Representative's public identity."
       },
       "description": "A Rep Profile allows a representative voter to publish information\nabout themselves to help explain who they are and why someone should\nconsider delegating to them.\n\nIt is an extension of all other profiles attached to the same Catalyst ID.\n\nProfiles themselves are intentionally general, however they may be\nlinked to a brand via the template used by the profile.\n\nThe payload of a profile is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2961,9 +2981,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -3046,7 +3064,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Representative profile payload contains all Representative-specific fields.\nIts structure is defined by the referenced Rep Profile Template.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
+        "description": "The Representative profile payload contains all Representative-specific fields.\nIts structure is defined by the referenced Rep Profile Template.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
+        "required": "yes"
       },
       "signers": {
         "roles": {
@@ -3071,6 +3090,7 @@
     "Rep Profile Form Template": {
       "authors": {},
       "description": "A Rep Profile Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Rep Profile Form Template is a JSON Schema Document.\n\nRep Profile entry *SHOULD* use the hints when collecting \ndata defined by the Rep Profile Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Rep Profile Presentation Template can be used to\nformat the Rep Profile data for presentation.\n\nThe Rep Profile Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Rep Profile.\n\nThe payload of a Rep Profile is controlled by its template.",
+      "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -3084,9 +3104,7 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": [
-            "br"
-          ]
+          "value": "br"
         }
       },
       "metadata": {
@@ -3164,7 +3182,8 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nRep Profile Document."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nRep Profile Document.",
+        "required": "yes"
       },
       "signers": {
         "roles": {

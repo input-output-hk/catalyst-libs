@@ -4,6 +4,7 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Proposal Moderation Action": {
+		draft: true
 
 		description: """
 			A Moderation action performed on a Proposal.
@@ -14,6 +15,9 @@ docs: #DocumentDefinitions & {
 			required: "yes"
 			type:     "Proposal"
 		}
+		
+		// TODO add more detailed description
+		payload: description: "Comment moderation action payload"
 
 		versions: [
 			{

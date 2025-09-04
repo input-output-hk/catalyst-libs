@@ -5,7 +5,7 @@ package signed_docs
 
 import (
 	"list"
-	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
+	// "github.com/input-output-hk/catalyst-libs/specs/generic:optional"
 	"github.com/input-output-hk/catalyst-libs/specs/media_types"
 )
 
@@ -22,9 +22,7 @@ _coseHeaderNames: [
 	"counter signature",
 ]
 
-_allCoseHeaderNames: or([
-	for k in _coseHeaderNames {k},
-])
+_allCoseHeaderNames: or(_coseHeaderNames)
 
 cose: headerFormats: #metadataFormats & {
 	"Media Type": {
@@ -52,14 +50,17 @@ cose: headerFormats: #metadataFormats & {
 #coseField: {
 	coseLabel:   int | string
 	description: string
-	required:    optional.#field | *"yes"
 	format:      #coseHeaderTypesConstraint
-	if format == "Media Type" {
-		value: media_types.#contentType | [...media_types.#contentType]
-	}
+	required:    "yes" | "optional" | "excluded"
+	
+	if required != "excluded" {
+		if format == "Media Type" {
+			value: media_types.#contentType | [...media_types.#contentType]
+		}
 
-	if format == "HTTP Content Encoding" {
-		value: media_types.allContentEncoding
+		if format == "HTTP Content Encoding" {
+			value: media_types.#allContentEncodingConstraint
+		}
 	}
 }
 
@@ -72,13 +73,14 @@ _coseHeaders: #coseHeaders & {
 	"content type": #coseField & {
 		coseLabel:   3
 		format:      "Media Type"
+		required:    _ | *"yes"
 		description: "Media Type/s allowed in the Payload"
 	}
 	// Documents Used content encodings
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
-		required:  "optional"
+		required:    _ | *"optional"
 		description: """
 			Supported HTTP Encodings of the Payload.
 			If no compression or encoding is used, then this field must not be present.
@@ -91,6 +93,7 @@ _coseSignatureHeaders: #coseHeaders & {
 	kid: #coseField & {
 		coseLabel: 4
 		format:    "Catalyst ID"
+		required:    _ | *"yes"
 		description: """
 			Catalyst ID URI identifying the Public Key.
 
