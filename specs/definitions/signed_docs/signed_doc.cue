@@ -18,7 +18,7 @@ import (
 
 // Individual Signed Document Definition
 #signedDocument: {
-	// Is the document finilized or not.
+	// Is the document finalized or not.
 	// `false` if document fully defined, `true` otherwise.
 	draft: bool | *false
 
