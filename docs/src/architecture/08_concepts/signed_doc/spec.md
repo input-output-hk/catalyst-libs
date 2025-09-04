@@ -404,14 +404,6 @@ Supported HTTP Encodings of the Payload
     <td class="gt_row gt_left">HTTP Content Encoding</td>
     <td class="gt_row gt_left">Encoding, if any, of the payload.</td>
   </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">Supported Values</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub"></th>
-    <td class="gt_row gt_left gt_striped"><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br">br</a></td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc7932">BROTLI</a> Compression</td>
-  </tr>
 </tbody>
 
 
