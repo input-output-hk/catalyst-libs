@@ -5,14 +5,65 @@ pub(crate) mod doc_ref;
 
 use std::{collections::HashMap, ops::Deref};
 
+use inflector::cases::pascalcase::to_pascal_case;
 use proc_macro2::Ident;
 use quote::format_ident;
 
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub(crate) struct CatalystSignedDocSpec {
+    /// A collection of document's supported content types
+    #[serde(rename = "contentTypes")]
+    #[allow(dead_code)]
+    pub(crate) content_types: HashMap<ContentTypeTemplate, ContentTypeSpec>,
     /// A collection of document's specs
     pub(crate) docs: HashMap<DocumentName, DocSpec>,
+}
+
+// A thin wrapper over the RFC2046 content type strings.
+#[derive(serde::Deserialize, PartialEq, Eq, Hash)]
+pub(crate) struct ContentTypeTemplate(pub(crate) String);
+
+impl ContentTypeTemplate {
+    /// returns a document name as a `Ident` in the following form
+    ///
+    /// text/css; charset=utf-8; template=handlebars
+    /// => `CssHandlebars`
+    ///
+    /// text/css; charset=utf-8
+    /// => `Css`
+    pub(crate) fn ident(&self) -> Ident {
+        let raw = self.0.as_str();
+
+        // split into parts like "text/css; charset=utf-8; template=handlebars"
+        let mut parts = raw.split(';').map(str::trim);
+
+        // first part is "type/subtype"
+        let first = parts.next().unwrap_or_default(); // e.g. "text/css"
+        let subtype = first.split('/').nth(1).unwrap_or_default(); // "css"
+
+        // look for "template=..."
+        let template = parts
+            .find_map(|p| p.strip_prefix("template="))
+            .map(to_pascal_case);
+
+        // build PascalCase
+        let mut ident = String::new();
+        ident.push_str(&to_pascal_case(subtype));
+        if let Some(t) = template {
+            ident.push_str(&t);
+        }
+
+        format_ident!("{}", ident)
+    }
+}
+
+/// Catalyst Signed Document supported content type declaration struct
+#[derive(serde::Deserialize)]
+pub(crate) struct ContentTypeSpec {
+    /// CoAP Content-Formats
+    #[allow(dead_code)]
+    coap_type: Option<u32>,
 }
 
 // A thin wrapper over the string document name values
