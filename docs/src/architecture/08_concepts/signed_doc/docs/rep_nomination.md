@@ -88,7 +88,7 @@ to re-delegate to affirm the delegates latest nomination.
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
 * [content type](../spec.md#content-type) = `application/json`
-* [content-encoding](../spec.md#content-encoding) = `[br]`
+* [content-encoding](../spec.md#content-encoding) = `br`
 
 ## Metadata
 

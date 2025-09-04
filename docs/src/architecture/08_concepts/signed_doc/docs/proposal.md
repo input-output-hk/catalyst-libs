@@ -62,7 +62,7 @@ Before accepting a new proposal to be published, the backend will ensure:
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
 * [content type](../spec.md#content-type) = `application/json`
-* [content-encoding](../spec.md#content-encoding) = `[br]`
+* [content-encoding](../spec.md#content-encoding) = `br`
 
 ## Metadata
 

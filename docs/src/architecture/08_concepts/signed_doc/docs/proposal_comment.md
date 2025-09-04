@@ -46,7 +46,7 @@ and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.m
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
 * [content type](../spec.md#content-type) = `application/json`
-* [content-encoding](../spec.md#content-encoding) = `[br]`
+* [content-encoding](../spec.md#content-encoding) = `br`
 
 ## Metadata
 

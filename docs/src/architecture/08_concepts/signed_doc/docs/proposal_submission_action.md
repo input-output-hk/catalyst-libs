@@ -70,7 +70,7 @@ is not considered `final` and will not be considered in the category it was bein
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
 * [content type](../spec.md#content-type) = `application/json`
-* [content-encoding](../spec.md#content-encoding) = `[br]`
+* [content-encoding](../spec.md#content-encoding) = `br`
 
 ## Metadata
 
