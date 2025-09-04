@@ -22,7 +22,7 @@ impl ContentTypeRule {
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
         if let Self::NotSpecified = &self {
-            if let Ok(content_type) = doc.doc_content_type() {
+            if let Some(content_type) = doc.doc_content_type() {
                 doc.report().unknown_field(
                     "content-type",
                     content_type.to_string().as_str(),
@@ -32,7 +32,7 @@ impl ContentTypeRule {
             }
         }
         if let Self::Specified { exp } = &self {
-            let Ok(content_type) = doc.doc_content_type() else {
+            let Some(content_type) = doc.doc_content_type() else {
                 doc.report().missing_field(
                     "content-type",
                     "Cannot get a content type field during the field validation",

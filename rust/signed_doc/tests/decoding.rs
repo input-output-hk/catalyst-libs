@@ -158,10 +158,7 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
                 // protected headers (metadata fields)
                 e.bytes({
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(4)?;
-                    if field != "content-type" {
-                        p_headers.u8(3)?.encode(ContentType::Json)?;
-                    }
+                    p_headers.map(3)?;
                     if field != "type" {
                         p_headers.str("type")?.encode(&doc_type)?;
                     }
@@ -198,9 +195,6 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
         valid_doc: false,
         post_checks: Some(Box::new({
             move |doc| {
-                if field == "content-type" {
-                    anyhow::ensure!(doc.doc_meta().content_type().is_err());
-                }
                 if field == "type" {
                     anyhow::ensure!(doc.doc_meta().doc_type().is_err());
                 }
@@ -234,17 +228,10 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                     let mut rand_buf = [0u8; 128];
                     rng.try_fill(&mut rand_buf)?;
 
-                    let is_required_header = ["content-type", "type", "id", "ver"]
-                        .iter()
-                        .any(|v| v == &field);
+                    let is_required_header = ["type", "id", "ver"].iter().any(|v| v == &field);
 
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(if is_required_header { 4 } else { 5 })?;
-                    if field == "content-type" {
-                        p_headers.u8(3)?.encode_with(rand_buf, &mut ())?;
-                    } else {
-                        p_headers.u8(3)?.encode(ContentType::Json)?;
-                    }
+                    p_headers.map(if is_required_header { 3 } else { 4 })?;
                     if field == "type" {
                         p_headers.str("type")?.encode_with(rand_buf, &mut ())?;
                     } else {
@@ -287,6 +274,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
         valid_doc: false,
         post_checks: Some(Box::new({
             move |doc| {
+                anyhow::ensure!(doc.doc_meta().content_type().is_none());
                 anyhow::ensure!(doc.doc_meta().content_encoding().is_none());
                 anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
                 anyhow::ensure!(doc.doc_meta().template().is_none());
@@ -295,9 +283,6 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 anyhow::ensure!(doc.doc_meta().collaborators().is_empty());
 
-                if field == "content-type" {
-                    anyhow::ensure!(doc.doc_meta().content_type().is_err());
-                }
                 if field == "type" {
                     anyhow::ensure!(doc.doc_meta().doc_type().is_err());
                 }
@@ -594,7 +579,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
@@ -682,7 +667,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_meta().doc_ref() == Some(&refs));
                 anyhow::ensure!(doc.doc_meta().template() == Some(&refs));
                 anyhow::ensure!(doc.doc_meta().reply() == Some(&refs));
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
                 anyhow::ensure!(doc.kids().len() == 1);
                 anyhow::ensure!(!doc.is_deprecated()?);
@@ -735,7 +720,7 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
                 anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
@@ -791,7 +776,7 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
                 anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
@@ -1100,7 +1085,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
                 anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
@@ -1159,7 +1144,7 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
                 anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
@@ -1227,7 +1212,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
                 anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
@@ -1323,7 +1308,6 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_valid_alias_case("brand_id"),
         signed_doc_with_valid_alias_case("campaign_id"),
         signed_doc_with_valid_alias_case("parameters"),
-        signed_doc_with_missing_header_field_case("content-type"),
         signed_doc_with_missing_header_field_case("type"),
         signed_doc_with_missing_header_field_case("id"),
         signed_doc_with_missing_header_field_case("ver"),

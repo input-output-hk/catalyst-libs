@@ -67,15 +67,11 @@ impl Metadata {
     }
 
     /// Returns the Document Content Type, if any.
-    ///
-    /// # Errors
-    /// - Missing 'content-type' field.
-    pub fn content_type(&self) -> anyhow::Result<ContentType> {
+    pub fn content_type(&self) -> Option<ContentType> {
         self.0
             .get(&SupportedLabel::ContentType)
             .and_then(SupportedField::try_as_content_type_ref)
             .copied()
-            .ok_or(anyhow::anyhow!("Missing 'content-type' field"))
     }
 
     /// Returns the Document Content Encoding, if any.
@@ -180,9 +176,6 @@ impl Metadata {
         if metadata.doc_ver().is_err() {
             report.missing_field("ver", REPORT_CONTEXT);
         }
-        if metadata.content_type().is_err() {
-            report.missing_field("content-type", REPORT_CONTEXT);
-        }
 
         Ok(metadata)
     }
@@ -224,7 +217,7 @@ impl Display for Metadata {
         writeln!(f, "  type: {:?},", self.doc_type().ok())?;
         writeln!(f, "  id: {:?},", self.doc_id().ok())?;
         writeln!(f, "  ver: {:?},", self.doc_ver().ok())?;
-        writeln!(f, "  content_type: {:?},", self.content_type().ok())?;
+        writeln!(f, "  content_type: {:?},", self.content_type())?;
         writeln!(f, "  content_encoding: {:?},", self.content_encoding())?;
         writeln!(f, "  additional_fields: {{")?;
         writeln!(f, "    ref: {:?}", self.doc_ref())?;

@@ -62,7 +62,7 @@ impl ContentRule {
             };
 
             let template_validator = |template_doc: &CatalystSignedDocument| {
-                let Ok(template_content_type) = template_doc.doc_content_type() else {
+                let Some(template_content_type) = template_doc.doc_content_type() else {
                     doc.report().missing_field(
                         "content-type",
                         &format!("{context}, referenced document must have a content-type field"),
