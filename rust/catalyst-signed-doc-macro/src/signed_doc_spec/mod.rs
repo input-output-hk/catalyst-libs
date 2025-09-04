@@ -1,5 +1,7 @@
 //! Catalyst Signed Document spec type
 
+// cspell: words pascalcase
+
 pub(crate) mod content_type;
 pub(crate) mod doc_ref;
 
