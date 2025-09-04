@@ -1,7 +1,7 @@
 //! Catalyst Signed Document spec type
 
+pub(crate) mod content_type;
 pub(crate) mod doc_ref;
-pub(crate) mod field;
 
 use std::{collections::HashMap, ops::Deref};
 
@@ -46,7 +46,7 @@ pub(crate) struct DocSpec {
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
     /// `headers` field
-    pub(crate) headers: field::Headers,
+    pub(crate) headers: Headers,
     /// Document type metadata definitions
     pub(crate) metadata: Metadata,
 }
@@ -57,6 +57,14 @@ pub(crate) struct DocSpec {
 pub(crate) struct Metadata {
     #[serde(rename = "ref")]
     pub(crate) doc_ref: doc_ref::Ref,
+}
+
+/// Document's metadata fields definition
+#[derive(serde::Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
+pub(crate) struct Headers {
+    #[serde(rename = "content type")]
+    pub(crate) content_type: content_type::ContentType,
 }
 
 /// "required" field definition
