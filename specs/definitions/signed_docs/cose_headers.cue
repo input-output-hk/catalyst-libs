@@ -5,7 +5,7 @@ package signed_docs
 
 import (
 	"list"
-	// "github.com/input-output-hk/catalyst-libs/specs/generic:optional"
+	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
 	"github.com/input-output-hk/catalyst-libs/specs/media_types"
 )
 
@@ -51,8 +51,9 @@ cose: headerFormats: #metadataFormats & {
 	coseLabel:   int | string
 	description: string
 	format:      #coseHeaderTypesConstraint
-	required:    "yes" | "optional" | "excluded"
-	
+	//required:    "yes" | "optional" | "excluded"
+	required:    optional.#field_without_default
+
 	if required != "excluded" {
 		if format == "Media Type" {
 			value: media_types.#contentType | [...media_types.#contentType]
