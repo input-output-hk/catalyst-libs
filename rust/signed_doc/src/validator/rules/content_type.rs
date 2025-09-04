@@ -11,6 +11,7 @@ pub(crate) enum ContentTypeRule {
         exp: ContentType,
     },
     /// Content Type field must not be present in the document.
+    #[allow(dead_code)]
     NotSpecified,
 }
 
@@ -92,7 +93,7 @@ impl ContentTypeRule {
                     }
                 },
                 ContentType::Cddl
-                | ContentType::JsonSchema
+                | ContentType::SchemaJson
                 | ContentType::Css
                 | ContentType::CssHandlebars
                 | ContentType::Html

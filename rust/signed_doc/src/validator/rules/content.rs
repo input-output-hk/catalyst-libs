@@ -73,7 +73,7 @@ impl ContentRule {
                     ContentType::Json => templated_json_schema_check(doc, template_doc),
                     ContentType::Cddl
                     | ContentType::Cbor
-                    | ContentType::JsonSchema
+                    | ContentType::SchemaJson
                     | ContentType::Css
                     | ContentType::CssHandlebars
                     | ContentType::Html

@@ -16,9 +16,9 @@ pub enum ContentType {
     /// `application/json`
     #[strum(to_string = "application/json")]
     Json,
-    /// `application/json+schema`
-    #[strum(to_string = "application/json+schema")]
-    JsonSchema,
+    /// `application/schema+json`
+    #[strum(to_string = "application/schema+json")]
+    SchemaJson,
     /// `text/css; charset=utf-8`
     #[strum(to_string = "text/css; charset=utf-8")]
     Css,
@@ -53,7 +53,7 @@ impl FromStr for ContentType {
             "application/cbor" => Ok(Self::Cbor),
             "application/cddl" => Ok(Self::Cddl),
             "application/json" => Ok(Self::Json),
-            "application/json+schema" => Ok(Self::JsonSchema),
+            "application/schema+json" => Ok(Self::SchemaJson),
             "text/css; charset=utf-8" => Ok(Self::Css),
             "text/css; charset=utf-8; template=handlebars" => Ok(Self::CssHandlebars),
             "text/html; charset=utf-8" => Ok(Self::Html),
@@ -162,8 +162,8 @@ mod tests {
         "application/json"
     )]
     #[test_case(
-        ("application/json+schema", ContentType::JsonSchema);
-        "application/json+schema"
+        ("application/schema+json", ContentType::SchemaJson);
+        "application/schema+json"
     )]
     #[test_case(
         ("text/css; charset=utf-8", ContentType::Css);
