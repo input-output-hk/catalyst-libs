@@ -52,7 +52,7 @@ cose: headerFormats: #metadataFormats & {
 	description: string
 	format:      #coseHeaderTypesConstraint
 	//required:    "yes" | "optional" | "excluded"
-	required:    optional.#field_without_default
+	required: optional.#field_without_default
 
 	if required != "excluded" {
 		if format == "Media Type" {
@@ -81,7 +81,7 @@ _coseHeaders: #coseHeaders & {
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
-		required:    _ | *"optional"
+		required:  _ | *"optional"
 		description: """
 			Supported HTTP Encodings of the Payload.
 			If no compression or encoding is used, then this field must not be present.
@@ -94,7 +94,7 @@ _coseSignatureHeaders: #coseHeaders & {
 	kid: #coseField & {
 		coseLabel: 4
 		format:    "Catalyst ID"
-		required:    _ | *"yes"
+		required:  _ | *"yes"
 		description: """
 			Catalyst ID URI identifying the Public Key.
 

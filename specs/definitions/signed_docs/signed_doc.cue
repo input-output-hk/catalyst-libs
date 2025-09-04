@@ -40,10 +40,10 @@ import (
 	notes: [...string] | *[]
 
 	if payload.required == "excluded" {
-		headers: "content type": required: "excluded"
+		headers: "content type": required:     "excluded"
 		headers: "content-encoding": required: "excluded"
 	}
-	
+
 	headers: _coseHeaders
 
 	// The Metadata fields in this document (non cose standard)

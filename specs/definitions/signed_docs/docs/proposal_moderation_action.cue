@@ -15,7 +15,7 @@ docs: #DocumentDefinitions & {
 			required: "yes"
 			type:     "Proposal"
 		}
-		
+
 		// TODO add more detailed description
 		payload: description: "Comment moderation action payload"
 
