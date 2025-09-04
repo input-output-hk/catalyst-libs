@@ -1,12 +1,12 @@
-//! `RefRule` generation
+//! `ContentTypeRule` generation
 
 use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::signed_doc_spec::{self, IsRequired};
 
-/// Generating `RefRule` instantiation
-pub(crate) fn rule(
+/// Generating `ContentTypeRule` instantiation
+pub(crate) fn into_rule(
     content_type: &signed_doc_spec::content_type::ContentType
 ) -> anyhow::Result<TokenStream> {
     if matches!(content_type.required, IsRequired::Excluded) {
@@ -25,25 +25,25 @@ pub(crate) fn rule(
     }
 
     let exp = match content_type.value.as_str() {
-        "application/cbor" => quote! { ContentTypeRule::Cbor },
-        "application/cddl" => quote! { ContentTypeRule::Cddl },
-        "application/json" => quote! { ContentTypeRule::Json },
-        "application/json+schema" => quote! { ContentTypeRule::JsonSchema },
-        "text/css; charset=utf-8" => quote! { ContentTypeRule::Css },
+        "application/cbor" => quote! { ContentType::Cbor },
+        "application/cddl" => quote! { ContentType::Cddl },
+        "application/json" => quote! { ContentType::Json },
+        "application/json+schema" => quote! { ContentType::JsonSchema },
+        "text/css; charset=utf-8" => quote! { ContentType::Css },
         "text/css; charset=utf-8; template=handlebars" => {
-            quote! { ContentTypeRule::CssHandlebars }
+            quote! { ContentType::CssHandlebars }
         },
-        "text/html; charset=utf-8" => quote! { ContentTypeRule::Html },
+        "text/html; charset=utf-8" => quote! { ContentType::Html },
         "text/html; charset=utf-8; template=handlebars" => {
-            quote! { ContentTypeRule::HtmlHandlebars }
+            quote! { ContentType::HtmlHandlebars }
         },
-        "text/markdown; charset=utf-8" => quote! { ContentTypeRule::Markdown },
+        "text/markdown; charset=utf-8" => quote! { ContentType::Markdown },
         "text/markdown; charset=utf-8; template=handlebars" => {
-            quote! { ContentTypeRule::MarkdownHandlebars }
+            quote! { ContentType::MarkdownHandlebars }
         },
-        "text/plain; charset=utf-8" => quote! { ContentTypeRule::Plain },
+        "text/plain; charset=utf-8" => quote! { ContentType::Plain },
         "text/plain; charset=utf-8; template=handlebars" => {
-            quote! { ContentTypeRule::PlainHandlebars }
+            quote! { ContentType::PlainHandlebars }
         },
         _ => {
             return Err(anyhow::anyhow!(
@@ -55,7 +55,7 @@ pub(crate) fn rule(
 
     Ok(quote! {
         crate::validator::rules::ContentTypeRule::Specified {
-            exp: crate::validator::rules::#exp,
+            exp: #exp,
         }
     })
 }
