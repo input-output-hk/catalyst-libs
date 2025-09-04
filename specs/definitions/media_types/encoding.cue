@@ -16,4 +16,3 @@ encodingTypes: br: description: "BROTLI Compression"
 allContentEncoding: list.Sort([
 	for k, _ in encodingTypes {k},
 ], list.Ascending)
-#allContentEncodingConstraint: or(allContentEncoding)

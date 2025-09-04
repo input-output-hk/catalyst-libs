@@ -73,7 +73,7 @@ docs: "Contest Delegation": {
 			  There is no payload.
 			"""
 
-		required: "excluded"
+		nil: true
 	}
 
 	signers: roles: user: [

@@ -39,7 +39,7 @@ import (
 
 	notes: [...string] | *[]
 
-	if payload.required == "excluded" {
+	if payload.nil {
 		headers: "content type": required:     "excluded"
 		headers: "content-encoding": required: "excluded"
 	}

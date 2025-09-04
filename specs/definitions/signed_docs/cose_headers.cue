@@ -60,7 +60,7 @@ cose: headerFormats: #metadataFormats & {
 		}
 
 		if format == "HTTP Content Encoding" {
-			value: media_types.#allContentEncodingConstraint
+			value: media_types.allContentEncoding
 		}
 	}
 }

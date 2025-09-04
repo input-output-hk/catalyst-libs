@@ -56,7 +56,7 @@ This section will be included and updated in future iterations.
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
 * [content type](../spec.md#content-type) = `application/schema+json`
-* [content-encoding](../spec.md#content-encoding) = `br`
+* [content-encoding](../spec.md#content-encoding) = `[br]`
 
 ## Metadata
 

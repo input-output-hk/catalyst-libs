@@ -348,7 +348,9 @@
         "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
         "format": "HTTP Content Encoding",
         "required": "optional",
-        "value": "br"
+        "value": [
+          "br"
+        ]
       }
     },
     "headersOrder": [
@@ -394,7 +396,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -471,7 +475,7 @@
       "notes": [],
       "payload": {
         "description": "Brand Parameters Document controlling the Brand \nwithin a Brand.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -517,7 +521,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -591,7 +597,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nBrand Parameters Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -643,7 +649,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -723,7 +731,7 @@
       "notes": [],
       "payload": {
         "description": "Campaign Parameters Document controlling the Campaign \nwithin a Brand.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -769,7 +777,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -848,7 +858,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nCampaign Parameters Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -900,7 +910,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -980,7 +992,7 @@
       "notes": [],
       "payload": {
         "description": "Category Parameters Document controlling the Category \nwithin a Campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -1026,7 +1038,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1105,7 +1119,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nCategory Parameters Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -1154,7 +1168,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1233,7 +1249,7 @@
       "notes": [],
       "payload": {
         "description": "",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -1357,7 +1373,7 @@
       "notes": [],
       "payload": {
         "description": "  There is no payload.",
-        "required": "excluded"
+        "nil": true
       },
       "signers": {
         "roles": {
@@ -1399,7 +1415,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1483,7 +1501,7 @@
       "notes": [],
       "payload": {
         "description": "Contest Parameters Document controlling the Contest \nwithin a Brand/Campaign/Category.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -1529,7 +1547,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1610,7 +1630,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nContest Parameters Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -1659,7 +1679,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1740,7 +1762,7 @@
       "notes": [],
       "payload": {
         "description": "The Presentation Template is defined by its schema.\nSee `[presentation_templates.md](TODO)`",
-        "required": "yes",
+        "nil": false,
         "schema": {
           "$defs": {
             "cardDescription": {
@@ -1874,7 +1896,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1960,7 +1984,7 @@
       "notes": [],
       "payload": {
         "description": "Proposal Document drafted for submission to a category of a campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2009,7 +2033,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2102,7 +2128,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Document which must validate against the referenced template.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2146,7 +2172,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2227,7 +2255,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Comment Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2276,7 +2304,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2357,7 +2387,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2406,7 +2436,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2483,7 +2515,7 @@
       "notes": [],
       "payload": {
         "description": "",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2525,7 +2557,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2634,7 +2668,7 @@
             "title": "Hidden Proposal Submission"
           }
         ],
-        "required": "yes",
+        "nil": false,
         "schema": {
           "$defs": {
             "action": {
@@ -2724,7 +2758,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2809,7 +2845,7 @@
       "notes": [],
       "payload": {
         "description": "The Representative's profile data for a specific contest.\nIts structure is defined by the referenced template document.\n\nIn the case of Revoking a nomination the payload is `nil`.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2848,7 +2884,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -2925,7 +2963,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nRep Nomination Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -2981,7 +3019,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -3065,7 +3105,7 @@
       "notes": [],
       "payload": {
         "description": "The Representative profile payload contains all Representative-specific fields.\nIts structure is defined by the referenced Rep Profile Template.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
@@ -3104,7 +3144,9 @@
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
           "required": "optional",
-          "value": "br"
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -3183,7 +3225,7 @@
       "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nRep Profile Document.",
-        "required": "yes"
+        "nil": false
       },
       "signers": {
         "roles": {
