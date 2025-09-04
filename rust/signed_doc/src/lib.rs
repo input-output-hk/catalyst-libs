@@ -137,6 +137,7 @@ impl CatalystSignedDocument {
     }
 
     /// Return document `ContentType`.
+    #[must_use]
     pub fn doc_content_type(&self) -> Option<ContentType> {
         self.inner.metadata.content_type()
     }
