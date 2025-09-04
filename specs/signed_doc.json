@@ -1232,7 +1232,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "Comment moderation action payload",
+        "description": "",
         "required": "yes"
       },
       "signers": {
@@ -2482,7 +2482,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "Comment moderation action payload",
+        "description": "",
         "required": "yes"
       },
       "signers": {
