@@ -17,7 +17,7 @@ docs: #DocumentDefinitions & {
 		}
 
 		// TODO add more detailed description
-		payload: description: "Comment moderation action payload"
+		payload: description: ""
 
 		versions: [
 			{
