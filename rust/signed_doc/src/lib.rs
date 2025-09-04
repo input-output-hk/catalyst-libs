@@ -137,10 +137,8 @@ impl CatalystSignedDocument {
     }
 
     /// Return document `ContentType`.
-    ///
-    /// # Errors
-    /// - Missing 'content-type' field.
-    pub fn doc_content_type(&self) -> anyhow::Result<ContentType> {
+    #[must_use]
+    pub fn doc_content_type(&self) -> Option<ContentType> {
         self.inner.metadata.content_type()
     }
 
