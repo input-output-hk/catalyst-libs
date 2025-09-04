@@ -41,10 +41,10 @@ fn proposal_rule() -> Rules {
     Rules {
         id: IdRule,
         ver: VerRule,
-        content_type: ContentTypeRule {
+        content_type: ContentTypeRule::Specified {
             exp: ContentType::Json,
         },
-        content_encoding: ContentEncodingRule {
+        content_encoding: ContentEncodingRule::Specified {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
@@ -79,10 +79,10 @@ fn proposal_comment_rule() -> Rules {
     Rules {
         id: IdRule,
         ver: VerRule,
-        content_type: ContentTypeRule {
+        content_type: ContentTypeRule::Specified {
             exp: ContentType::Json,
         },
-        content_encoding: ContentEncodingRule {
+        content_encoding: ContentEncodingRule::Specified {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
@@ -135,10 +135,10 @@ fn proposal_submission_action_rule() -> Rules {
     Rules {
         id: IdRule,
         ver: VerRule,
-        content_type: ContentTypeRule {
+        content_type: ContentTypeRule::Specified {
             exp: ContentType::Json,
         },
-        content_encoding: ContentEncodingRule {
+        content_encoding: ContentEncodingRule::Specified {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
