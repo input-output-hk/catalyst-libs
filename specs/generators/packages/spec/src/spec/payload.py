@@ -10,6 +10,8 @@ import jsonschema
 import rich
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
+from spec.optional import OptionalField
+
 DRAFT7_SCHEMA = "https://json-schema.org/draft-07/schema"
 DRAFT202012_SCHEMA = "https://json-schema.org/draft/2020-12/schema"
 
@@ -56,7 +58,7 @@ class Payload(BaseModel):
     """Payload Deserialized Specification."""
 
     description: str
-    nil: bool = Field(default=False)
+    required: OptionalField
     doc_schema: HttpUrl | dict[str, Any] | None = Field(default=None, alias="schema")
     examples: list[PayloadExample] = Field(default_factory=PayloadExample.default)
 

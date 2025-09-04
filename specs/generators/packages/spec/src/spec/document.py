@@ -32,15 +32,16 @@ class Document(BaseModel):
     """Document Data Definition."""
 
     type: DocTypeId
+    draft: bool
     description: str | None = Field(default=None)
     validation: str | None = Field(default=None)
     business_logic: DocumentBusinessLogic = Field(
         default_factory=DocumentBusinessLogic,
     )
     notes: list[str]
-    headers: CoseHeaders | None = Field(default=None)
+    headers: CoseHeaders
     metadata: MetadataHeaders
-    payload: Payload | None = Field(default=None)
+    payload: Payload
     signers: Signers
     authors: Authors
     versions: list[ChangeLogEntry]

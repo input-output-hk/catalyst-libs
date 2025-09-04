@@ -7,6 +7,7 @@ from pydantic import HttpUrl
 
 from spec.payload import DRAFT7_SCHEMA, DRAFT202012_SCHEMA
 from spec.signed_doc import SignedDoc
+from spec.optional import OptionalField
 
 from .doc_generator import DocGenerator
 from .doc_relationship_diagrams import DocRelationshipFile
@@ -70,7 +71,7 @@ This section will be included and updated in future iterations.
 
         docs = self._doc.payload.description + "\n"
 
-        if self._doc.payload.nil:
+        if self._doc.payload.required == OptionalField.excluded:
             if self._doc.payload.doc_schema is None:
                 docs += """
 This document has no payload.
