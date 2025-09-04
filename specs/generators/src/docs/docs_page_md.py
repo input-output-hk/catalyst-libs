@@ -66,7 +66,7 @@ This section will be included and updated in future iterations.
 
     def document_payload(self) -> str:
         """Generate Payload Documentation."""
-        if self._doc.draft and  self._doc.payload.description == "":
+        if self._doc.draft and self._doc.payload.description == "":
             return self.TODO_MSG
 
         docs = self._doc.payload.description + "\n"
