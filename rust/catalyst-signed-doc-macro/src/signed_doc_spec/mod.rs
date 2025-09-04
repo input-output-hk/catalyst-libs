@@ -27,7 +27,7 @@ pub(crate) struct CatalystSignedDocSpec {
 pub(crate) struct ContentTypeTemplate(pub(crate) String);
 
 impl ContentTypeTemplate {
-    /// returns a content type template as a `Ident` in the following form
+    /// returns a content type template as a `Ident` in the following form.
     ///
     /// text/css; charset=utf-8; template=handlebars
     /// => `CssHandlebars`
