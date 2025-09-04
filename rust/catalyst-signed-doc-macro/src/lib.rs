@@ -2,7 +2,6 @@
 //! spec.
 
 mod error;
-mod field;
 mod rules;
 mod signed_doc_spec;
 mod types_consts;

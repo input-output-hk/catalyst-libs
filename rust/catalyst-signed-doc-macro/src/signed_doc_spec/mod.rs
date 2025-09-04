@@ -1,13 +1,12 @@
 //! Catalyst Signed Document spec type
 
 pub(crate) mod doc_ref;
+pub(crate) mod field;
 
 use std::{collections::HashMap, ops::Deref};
 
 use proc_macro2::Ident;
 use quote::format_ident;
-
-use crate::field;
 
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
@@ -46,7 +45,8 @@ pub(crate) struct DocSpec {
     /// Document type UUID v4 value
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
-
+    /// `headers` field
+    pub(crate) headers: field::Headers,
     /// Document type metadata definitions
     pub(crate) metadata: Metadata,
 }
@@ -105,7 +105,8 @@ impl CatalystSignedDocSpec {
     // #[allow(dependency_on_unit_never_type_fallback)]
     pub(crate) fn load_signed_doc_spec() -> anyhow::Result<CatalystSignedDocSpec> {
         let signed_doc_str = include_str!("../../../../specs/signed_doc.json");
-        let signed_doc_spec = serde_json::from_str(signed_doc_str)?;
+        let signed_doc_spec = serde_json::from_str(signed_doc_str)
+            .map_err(|e| anyhow::anyhow!("Invalid Catalyst Signed Documents JSON Spec: {e}"))?;
         Ok(signed_doc_spec)
     }
 }
