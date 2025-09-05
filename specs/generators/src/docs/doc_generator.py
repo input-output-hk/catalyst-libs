@@ -105,7 +105,7 @@ class DocGenerator:
         if self._document_name is None:
             return "Unnamed"
         return self._document_name
-    
+
     def draft(self) -> bool:
         """Return is the document 'draft' or not."""
         return self._doc.draft
