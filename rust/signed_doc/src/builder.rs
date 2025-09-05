@@ -246,11 +246,14 @@ pub(crate) mod tests {
             kid: super::CatalystId,
         ) -> anyhow::Result<Self> {
             let metadata = WithCborBytes::new(self.metadata, &mut ())?;
-            let content = WithCborBytes::new(self.content, &mut ())?;
-            self.signatures
-                .push(super::build_signature(sign_fn, kid, &metadata, &content)?);
+            self.signatures.push(super::build_signature(
+                sign_fn,
+                kid,
+                &metadata,
+                &self.content,
+            )?);
             self.metadata = metadata.inner();
-            self.content = content.inner();
+            self.content = self.content;
             Ok(self)
         }
 

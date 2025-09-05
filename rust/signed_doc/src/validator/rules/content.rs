@@ -134,6 +134,16 @@ mod tests {
     #[test_case(
         || {
             Builder::new()
+                .with_content(vec![])
+                .build()
+        }
+        => true
+        ;
+        "expected not nil empty content"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
                 .build()
         }
         => false
@@ -165,6 +175,16 @@ mod tests {
         => false
         ;
         "non expected not nil content"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .with_content(vec![])
+                .build()
+        }
+        => false
+        ;
+        "non expected not nil empty"
     )]
     #[tokio::test]
     async fn template_rule_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
