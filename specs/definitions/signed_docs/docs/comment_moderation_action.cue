@@ -4,6 +4,8 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Comment Moderation Action": {
+		draft: true
+
 		description: """
 			A Moderation Action performed on any Comment.
 			"""
@@ -13,6 +15,9 @@ docs: #DocumentDefinitions & {
 			required: "yes"
 			type: ["Proposal Comment"]
 		}
+
+		// TODO add more detailed description
+		payload: description: ""
 
 		versions: [
 			{

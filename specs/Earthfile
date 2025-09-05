@@ -64,7 +64,7 @@ regenerate-local:
 # Check the the generated signed docs documentation matches the generated signed docs data
 check:
     FROM +src
-    RUN cue fmt --check -s --files ./definitions
+    RUN cue fmt --check --diff -s --files ./definitions
     # RUN cd definitions; \
     #    cue vet ./cddl 
     RUN cd definitions; \

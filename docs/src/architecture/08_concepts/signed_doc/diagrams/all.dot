@@ -577,7 +577,17 @@ digraph "All" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Undefined</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
@@ -587,7 +597,7 @@ digraph "All" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">id</FONT></TD>
@@ -597,7 +607,7 @@ digraph "All" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ver</FONT></TD>
@@ -607,7 +617,7 @@ digraph "All" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="ref" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="ref" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ref</FONT></TD>
@@ -617,7 +627,7 @@ digraph "All" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">revocations</FONT></TD>
@@ -627,7 +637,7 @@ digraph "All" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>

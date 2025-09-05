@@ -19,10 +19,10 @@ _payload: {
 	// Description of the payload
 	description: string
 	// Is the Payload nil?
-	nil?: true
+	nil: bool | *false
 
 	// Only have these when the payload isn't nil.
-	if nil == _|_ {
+	if !nil {
 		// Optional fixed schema for the payload.
 		// A URI or inline JSON Schema that the payload must validate against.
 		schema?: _

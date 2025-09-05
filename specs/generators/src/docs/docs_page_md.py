@@ -51,21 +51,23 @@ This section will be included and updated in future iterations.
         """Generate concrete Cose header parameter settings for a specific document."""
         headers = self._doc.headers
 
-        if headers is None:
-            return "No Headers are defined for this document."
-
         header_docs = ""
         for header in headers.names:
             value = headers.get(header).value
+            if value is None:
+                continue
             if isinstance(value, list):
                 value = f"[{','.join(value)}]"
             link = f"../spec.md#{header.replace(' ', '-')}"
             header_docs += f"* [{header}]({link}) = `{value}`\n"
+        if not header_docs:
+            return "No Headers are defined for this document."
+
         return header_docs.strip()
 
     def document_payload(self) -> str:
         """Generate Payload Documentation."""
-        if self._doc.payload is None:
+        if self._doc.draft and self._doc.payload.description == "":
             return self.TODO_MSG
 
         docs = self._doc.payload.description + "\n"

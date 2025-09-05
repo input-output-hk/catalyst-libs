@@ -56,7 +56,7 @@ class Payload(BaseModel):
     """Payload Deserialized Specification."""
 
     description: str
-    nil: bool = Field(default=False)
+    nil: bool
     doc_schema: HttpUrl | dict[str, Any] | None = Field(default=None, alias="schema")
     examples: list[PayloadExample] = Field(default_factory=PayloadExample.default)
 

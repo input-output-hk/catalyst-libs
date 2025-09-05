@@ -18,6 +18,9 @@ import (
 
 // Individual Signed Document Definition
 #signedDocument: {
+	// If `true` the document not fully defined and still under the active development
+	draft: bool | *false
+
 	// The Document Type Identifier
 	type!: #docType
 
@@ -35,16 +38,18 @@ import (
 
 	notes: [...string] | *[]
 
-	if payload.nil == _|_ {
-		// Fixed headers in every document with a payload.
-		headers: _coseHeaders
+	if payload.nil {
+		headers: "content type": required:     "excluded"
+		headers: "content-encoding": required: "excluded"
 	}
+
+	headers: _coseHeaders
 
 	// The Metadata fields in this document (non cose standard)
 	metadata: #metadata
 
 	// Requirements for the document payload.
-	payload?: _payload
+	payload: _payload
 
 	// Required/Allowed Signers of a document
 	signers: _allowedSigners
