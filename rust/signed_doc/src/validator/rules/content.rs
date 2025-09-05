@@ -43,7 +43,7 @@ impl ContentRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        const CONTENXT: &str = "Content rule check";
+        const CONTEXT: &str = "Content rule check";
         if let Self::StaticSchema(content_schema) = self {
             match content_schema {
                 ContentSchema::Json(json_schema) => {
@@ -54,14 +54,14 @@ impl ContentRule {
         if let Self::NotNil = self {
             if doc.content().size() == 0 {
                 doc.report()
-                    .functional_validation("Document must have a NOT CBOR `nil` content", CONTENXT);
+                    .functional_validation("Document must have a NOT CBOR `nil` content", CONTEXT);
                 return Ok(false);
             }
         }
         if let Self::Nil = self {
             if doc.content().size() != 0 {
                 doc.report()
-                    .functional_validation("Document must have a CBOR `nil` content", CONTENXT);
+                    .functional_validation("Document must have a CBOR `nil` content", CONTEXT);
                 return Ok(false);
             }
         }
