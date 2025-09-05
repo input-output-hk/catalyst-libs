@@ -2,6 +2,8 @@
 
 use std::fmt::Debug;
 
+use minicbor::Encode;
+
 use crate::{
     validator::{json_schema, rules::utils::content_json_schema_check},
     CatalystSignedDocument,
@@ -33,7 +35,6 @@ pub(crate) enum ContentRule {
     /// Document's content must be present and not CBOR `nil`
     NotNil,
     /// Document's content must be a CBOR `nil`
-    #[allow(dead_code)]
     Nil,
 }
 
@@ -53,14 +54,14 @@ impl ContentRule {
             }
         }
         if let Self::NotNil = self {
-            if doc.content().size() == 0 {
+            if doc.content().is_nil() {
                 doc.report()
                     .functional_validation("Document must have a NOT CBOR `nil` content", CONTEXT);
                 return Ok(false);
             }
         }
         if let Self::Nil = self {
-            if doc.content().size() != 0 {
+            if !doc.content().is_nil() {
                 doc.report()
                     .functional_validation("Document must have a CBOR `nil` content", CONTEXT);
                 return Ok(false);
