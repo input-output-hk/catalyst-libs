@@ -17,7 +17,6 @@ pub(crate) enum TemplateRule {
         allowed_type: DocType,
     },
     /// 'template' field is not specified
-    #[allow(dead_code)]
     NotSpecified,
 }
 
