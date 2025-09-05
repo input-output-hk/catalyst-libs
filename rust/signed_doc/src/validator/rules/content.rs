@@ -39,6 +39,7 @@ pub(crate) enum ContentRule {
 
 impl ContentRule {
     /// Field validation rule
+    #[allow(clippy::unused_async)]
     pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,

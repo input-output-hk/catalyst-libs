@@ -12,6 +12,7 @@ use crate::{
 /// `reply` field validation rule
 #[derive(Debug)]
 pub(crate) enum TemplateRule {
+    /// Is 'template' specified
     Specified {
         /// allowed `type` field of the template
         allowed_type: DocType,
