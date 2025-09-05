@@ -72,7 +72,7 @@ impl Signatures {
 pub(crate) fn tbs_data(
     kid: &CatalystId,
     metadata: &WithCborBytes<Metadata>,
-    content: &WithCborBytes<Content>,
+    content: &Content,
 ) -> anyhow::Result<Vec<u8>> {
     let mut e = minicbor::Encoder::new(Vec::new());
 

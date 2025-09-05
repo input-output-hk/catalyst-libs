@@ -19,7 +19,7 @@ use crate::{
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
-    validator::rules::SignatureRule,
+    validator::rules::{SignatureRule, TemplateRule},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -48,8 +48,8 @@ fn proposal_rule() -> Rules {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        content: ContentRule::Templated {
-            exp_template_type: PROPOSAL_FORM_TEMPLATE.clone(),
+        template: TemplateRule::Specified {
+            allowed_type: PROPOSAL_FORM_TEMPLATE.clone(),
         },
         parameters: ParametersRule::Specified {
             exp_parameters_type: parameters.clone(),
@@ -58,6 +58,7 @@ fn proposal_rule() -> Rules {
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
+        content: ContentRule::NotNil,
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
@@ -86,8 +87,8 @@ fn proposal_comment_rule() -> Rules {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        content: ContentRule::Templated {
-            exp_template_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
+        template: TemplateRule::Specified {
+            allowed_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
         },
         doc_ref: RefRule::Specified {
             exp_ref_types: vec![PROPOSAL.clone()],
@@ -103,6 +104,7 @@ fn proposal_comment_rule() -> Rules {
             exp_parameters_type: parameters.clone(),
             optional: false,
         },
+        content: ContentRule::NotNil,
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
@@ -142,7 +144,7 @@ fn proposal_submission_action_rule() -> Rules {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
+        template: TemplateRule::NotSpecified,
         parameters: ParametersRule::Specified {
             exp_parameters_type: parameters,
             optional: false,
@@ -154,6 +156,7 @@ fn proposal_submission_action_rule() -> Rules {
         },
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
+        content: ContentRule::StaticSchema(ContentSchema::Json(proposal_action_json_schema)),
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
