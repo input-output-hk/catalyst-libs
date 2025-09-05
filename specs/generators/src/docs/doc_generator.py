@@ -105,6 +105,10 @@ class DocGenerator:
         if self._document_name is None:
             return "Unnamed"
         return self._document_name
+    
+    def draft(self) -> bool:
+        """Return is the document 'draft' or not."""
+        return self._doc.draft
 
     @staticmethod
     def doc_name_to_filename(doc_name: str, template: str, *, extension: str = "md") -> str:

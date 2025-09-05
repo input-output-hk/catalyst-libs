@@ -50,7 +50,7 @@ class Document(BaseModel):
     _all_refs: list[str] = PrivateAttr(default_factory=empty_string_list)
     _refed_by: list[str] = PrivateAttr(default_factory=empty_string_list)
 
-    doc_name: str | None = Field(default=None)  # Set when wwe get a document
+    doc_name: str | None = Field(default=None)  # Set when we get a document
 
     model_config = ConfigDict(extra="forbid")
 

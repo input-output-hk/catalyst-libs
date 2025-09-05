@@ -18,8 +18,7 @@ import (
 
 // Individual Signed Document Definition
 #signedDocument: {
-	// Is the document finalized or not.
-	// `false` if document fully defined, `true` otherwise.
+	// If `true` the document not fully defined and still under the active development
 	draft: bool | *false
 
 	// The Document Type Identifier
