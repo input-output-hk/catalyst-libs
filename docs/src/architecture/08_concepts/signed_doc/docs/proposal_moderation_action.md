@@ -1,5 +1,10 @@
 # Proposal Moderation Action
 
+> :warning: This section are still under development and may be updated or revised.
+> These details are not yet confirmed and should not be used as the basis for any implementation.
+> Proceeding with implementation based on this draft is at the implementer's own risk
+> and may lead to incompatibility with the completed version.
+
 ## Description
 
 A Moderation action performed on a Proposal.
