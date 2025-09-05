@@ -94,7 +94,7 @@ _coseSignatureHeaders: #coseHeaders & {
 	kid: #coseField & {
 		coseLabel: 4
 		format:    "Catalyst ID"
-		required:  _ | *"yes"
+		required:  "yes"
 		description: """
 			Catalyst ID URI identifying the Public Key.
 
