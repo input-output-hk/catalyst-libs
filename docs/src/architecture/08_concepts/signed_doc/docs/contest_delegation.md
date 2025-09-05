@@ -74,8 +74,7 @@ considered.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
-* [content type](../spec.md#content-type) = `None`
-* [content-encoding](../spec.md#content-encoding) = `None`
+No Headers are defined for this document.
 
 ## Metadata
 
