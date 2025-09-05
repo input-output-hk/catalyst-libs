@@ -404,7 +404,7 @@ mod tests {
         }
         => false
         ;
-        "referencing to uknown document"
+        "referencing to unknown document"
     )]
     #[tokio::test]
     async fn template_specified_test(
