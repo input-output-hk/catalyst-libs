@@ -602,7 +602,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Updated `payload` field, it become required.
 * Added new `draft` field for Signed Document with the default value `false`.
 * Made `payload.nil` non optional with the default value `false`.
-* If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding" fields to `"excluded"`.
+* If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding"` fields to `"excluded"`.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

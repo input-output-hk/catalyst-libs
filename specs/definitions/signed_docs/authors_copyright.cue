@@ -106,7 +106,7 @@ copyright: #copyrightNotice & {
 				* Updated `payload` field, it become required.
 				* Added new `draft` field for Signed Document with the default value `false`.
 				* Made `payload.nil` non optional with the default value `false`.
-				* If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding" fields to `"excluded"`.
+				* If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding"` fields to `"excluded"`.
 				"""
 		},
 	]
