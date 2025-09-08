@@ -19,7 +19,7 @@ pub(crate) fn into_rule(
         );
 
         return Ok(quote! {
-            crate::validator::rules::ContentTypeRule::Unspecified
+            crate::validator::rules::ContentTypeRule::NotSpecified
         });
     }
 

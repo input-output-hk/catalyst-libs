@@ -4,7 +4,6 @@
 #[derive(serde::Deserialize)]
 #[allow(clippy::missing_docs_in_private_items)]
 pub(crate) struct ContentType {
-    #[allow(dead_code)]
     pub(crate) required: super::IsRequired,
     pub(crate) value: String,
 }
