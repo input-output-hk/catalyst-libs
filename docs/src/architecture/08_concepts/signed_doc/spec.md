@@ -600,7 +600,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 #### 0.1.2 (2025-09-08)
 
 * Updated `payload` field, it become required.
-* Added new `draft` field for Signed Document with the default value `false`. This field would show that the document is not finalised yet.
+* Added new `draft` field for Signed Document with the default value `false`.
 * Made `payload.nil` non optional with the default value `false`.
 * If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding" fields to `"excluded"`.
 
