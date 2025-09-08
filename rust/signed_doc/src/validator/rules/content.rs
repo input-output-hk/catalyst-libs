@@ -1,12 +1,12 @@
-//! `template` rule type impl.
+//! `content` rule type impl.
 
-use std::fmt::{Debug, Write};
+use std::fmt::Debug;
+
+use minicbor::Encode;
 
 use crate::{
-    metadata::ContentType,
-    providers::CatalystSignedDocumentProvider,
-    validator::{json_schema, rules::doc_ref::doc_refs_check},
-    CatalystSignedDocument, DocType,
+    validator::{json_schema, rules::utils::content_json_schema_check},
+    CatalystSignedDocument,
 };
 
 /// Enum represents different content schemas, against which documents content would be
@@ -30,94 +30,40 @@ impl Debug for ContentSchema {
 /// Document's content validation rule
 #[derive(Debug)]
 pub(crate) enum ContentRule {
-    /// Based on the 'template' field and loaded corresponding template document
-    Templated {
-        /// expected `type` field of the template
-        exp_template_type: DocType,
-    },
     /// Statically defined document's content schema.
-    /// `template` field should not been specified
-    Static(ContentSchema),
-    /// 'template' field is not specified
-    #[allow(dead_code)]
-    NotSpecified,
+    StaticSchema(ContentSchema),
+    /// Document's content must be present and not CBOR `nil`
+    NotNil,
+    /// Document's content must be a CBOR `nil`
+    Nil,
 }
 
 impl ContentRule {
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    #[allow(clippy::unused_async)]
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
-        let context = "Content/Template rule check";
-        if let Self::Templated { exp_template_type } = self {
-            let Some(template_ref) = doc.doc_meta().template() else {
-                doc.report()
-                    .missing_field("template", &format!("{context}, doc"));
-                return Ok(false);
-            };
-
-            let template_validator = |template_doc: &CatalystSignedDocument| {
-                let Some(template_content_type) = template_doc.doc_content_type() else {
-                    doc.report().missing_field(
-                        "content-type",
-                        &format!("{context}, referenced document must have a content-type field"),
-                    );
-                    return false;
-                };
-                match template_content_type {
-                    ContentType::Json => templated_json_schema_check(doc, template_doc),
-                    ContentType::Cddl
-                    | ContentType::Cbor
-                    | ContentType::SchemaJson
-                    | ContentType::Css
-                    | ContentType::CssHandlebars
-                    | ContentType::Html
-                    | ContentType::HtmlHandlebars
-                    | ContentType::Markdown
-                    | ContentType::MarkdownHandlebars
-                    | ContentType::Plain
-                    | ContentType::PlainHandlebars => {
-                        // TODO: not implemented yet
-                        true
-                    },
-                }
-            };
-
-            return doc_refs_check(
-                template_ref,
-                std::slice::from_ref(exp_template_type),
-                false,
-                "template",
-                provider,
-                doc.report(),
-                template_validator,
-            )
-            .await;
+    ) -> anyhow::Result<bool> {
+        const CONTEXT: &str = "Content rule check";
+        if let Self::StaticSchema(content_schema) = self {
+            match content_schema {
+                ContentSchema::Json(json_schema) => {
+                    return Ok(content_json_schema_check(doc, json_schema))
+                },
+            }
         }
-        if let Self::Static(content_schema) = self {
-            if let Some(template) = doc.doc_meta().template() {
-                doc.report().unknown_field(
-                    "template",
-                    &template.to_string(),
-                    &format!("{context} Static, Document does not expect to have a template field",)
-                );
+        if let Self::NotNil = self {
+            if doc.content().is_nil() {
+                doc.report()
+                    .functional_validation("Document must have a NOT CBOR `nil` content", CONTEXT);
                 return Ok(false);
             }
-
-            return Ok(content_schema_check(doc, content_schema));
         }
-        if let Self::NotSpecified = self {
-            if let Some(template) = doc.doc_meta().template() {
-                doc.report().unknown_field(
-                    "template",
-                    &template.to_string(),
-                    &format!("{context} Not Specified, Document does not expect to have a template field",)
-                );
+        if let Self::Nil = self {
+            if !doc.content().is_nil() {
+                doc.report()
+                    .functional_validation("Document must have a CBOR `nil` content", CONTEXT);
                 return Ok(false);
             }
         }
@@ -126,364 +72,124 @@ impl ContentRule {
     }
 }
 
-/// Validate a provided `doc` against the `template` content's Json schema, assuming that
-/// the `doc` content is JSON.
-fn templated_json_schema_check(
-    doc: &CatalystSignedDocument,
-    template_doc: &CatalystSignedDocument,
-) -> bool {
-    let Ok(template_content) = template_doc.decoded_content() else {
-        doc.report().functional_validation(
-            "Invalid document content, cannot get decoded bytes",
-            "Cannot get a referenced template document content during the templated validation",
-        );
-        return false;
-    };
-    let Ok(template_json_schema) = serde_json::from_slice(&template_content) else {
-        doc.report().functional_validation(
-            "Template document content must be json encoded",
-            "Invalid referenced template document content",
-        );
-        return false;
-    };
-    let Ok(schema) = json_schema::JsonSchema::try_from(&template_json_schema) else {
-        doc.report().functional_validation(
-            "Template document content must be Draft 7 JSON schema",
-            "Invalid referenced template document content",
-        );
-        return false;
-    };
-
-    content_schema_check(doc, &ContentSchema::Json(schema))
-}
-
-/// Validating the document's content against the provided schema
-fn content_schema_check(
-    doc: &CatalystSignedDocument,
-    schema: &ContentSchema,
-) -> bool {
-    let Ok(doc_content) = doc.decoded_content() else {
-        doc.report().functional_validation(
-            "Invalid Document content, cannot get decoded bytes",
-            "Cannot get a document content during the templated validation",
-        );
-        return false;
-    };
-    if doc_content.is_empty() {
-        doc.report()
-            .missing_field("payload", "Document must have a content");
-        return false;
-    }
-    let Ok(doc_json) = serde_json::from_slice(&doc_content) else {
-        doc.report().functional_validation(
-            "Document content must be json encoded",
-            "Invalid referenced template document content",
-        );
-        return false;
-    };
-
-    match schema {
-        ContentSchema::Json(schema_validator) => {
-            let schema_validation_errors =
-                schema_validator
-                    .iter_errors(&doc_json)
-                    .fold(String::new(), |mut str, e| {
-                        let _ = write!(str, "{{ {e} }}, ");
-                        str
-                    });
-
-            if !schema_validation_errors.is_empty() {
-                doc.report().functional_validation(
-            &format!(
-                "Proposal document content does not compliant with the json schema. [{schema_validation_errors}]"
-            ),
-            "Invalid Proposal document content",
-        );
-                return false;
-            }
-        },
-    }
-    true
-}
-
 #[cfg(test)]
 mod tests {
-    use catalyst_types::uuid::{UuidV4, UuidV7};
+    use test_case::test_case;
 
     use super::*;
-    use crate::{
-        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-        DocLocator, DocumentRef,
-    };
+    use crate::builder::tests::Builder;
 
-    #[allow(clippy::too_many_lines)]
-    #[tokio::test]
-    async fn content_rule_templated_test() {
-        let mut provider = TestCatalystProvider::default();
-
-        let exp_template_type = UuidV4::new();
-        let content_type = ContentType::Json;
-        let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-
-        let valid_template_doc_id = UuidV7::new();
-        let another_type_template_doc_id = UuidV7::new();
-        let missing_type_template_doc_id = UuidV7::new();
-        let missing_content_type_template_doc_id = UuidV7::new();
-        let missing_content_template_doc_id = UuidV7::new();
-        let invalid_content_template_doc_id = UuidV7::new();
-
-        // Prepare provider documents
-        {
-            let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(valid_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(valid_template_doc_id))
-                .with_metadata_field(SupportedField::Type(exp_template_type.into()))
-                .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_content(json_schema.clone())
-                .build();
-            provider.add_document(None, &doc).unwrap();
-
-            // reply doc with other `type` field
-            let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(another_type_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(another_type_template_doc_id))
-                .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
-                .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_content(json_schema.clone())
-                .build();
-            provider.add_document(None, &ref_doc).unwrap();
-
-            // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(missing_type_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(missing_type_template_doc_id))
-                .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_content(json_schema.clone())
-                .build();
-            provider.add_document(None, &ref_doc).unwrap();
-
-            // missing `content-type` field in the referenced document
-            let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(missing_content_type_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(missing_content_type_template_doc_id))
-                .with_metadata_field(SupportedField::Type(exp_template_type.into()))
-                .with_content(json_schema.clone())
-                .build();
-            provider.add_document(None, &ref_doc).unwrap();
-
-            // missing content
-            let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(missing_content_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(missing_content_template_doc_id))
-                .with_metadata_field(SupportedField::Type(exp_template_type.into()))
-                .with_metadata_field(SupportedField::ContentType(content_type))
-                .build();
-            provider.add_document(None, &ref_doc).unwrap();
-
-            // invalid content, must be json encoded
-            let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(invalid_content_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(invalid_content_template_doc_id))
-                .with_metadata_field(SupportedField::Type(exp_template_type.into()))
-                .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_content(vec![])
-                .build();
-            provider.add_document(None, &ref_doc).unwrap();
+    #[test_case(
+        |valid_content| {
+            Builder::new()
+                .with_content(valid_content)
+                .build()
         }
-
-        // Create a document where `templates` field is required and referencing a valid document
-        // in provider. Using doc ref of new implementation.
-        let rule = ContentRule::Templated {
-            exp_template_type: exp_template_type.into(),
-        };
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    valid_template_doc_id,
-                    valid_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // missing `template` field, but its required
-        let doc = Builder::new().with_content(json_content.clone()).build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing content
-        let rule = ContentRule::Templated {
-            exp_template_type: exp_template_type.into(),
-        };
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    valid_template_doc_id,
-                    valid_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // content not a json encoded
-        let rule = ContentRule::Templated {
-            exp_template_type: exp_template_type.into(),
-        };
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    valid_template_doc_id,
-                    valid_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(vec![1, 2, 3])
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // reference to the document with another `type` field
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    another_type_template_doc_id,
-                    another_type_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing `type` field in the referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    missing_type_template_doc_id,
-                    missing_type_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing `content-type` field in the referenced doc
-        let rule = ContentRule::Templated {
-            exp_template_type: exp_template_type.into(),
-        };
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    missing_content_type_template_doc_id,
-                    missing_content_type_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing content in the referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    missing_content_template_doc_id,
-                    missing_content_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // content not a json encoded in the referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    invalid_content_template_doc_id,
-                    invalid_content_template_doc_id,
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // cannot find a referenced document
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into(),
-            ))
-            .with_content(json_content.clone())
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-    }
-
-    #[allow(clippy::too_many_lines)]
+        => true
+        ;
+        "valid content"
+    )]
+    #[test_case(
+        |_| {
+            Builder::new()
+                .with_content(vec![1, 2, 3])
+                .build()
+        }
+        => false
+        ;
+        "corrupted content"
+    )]
+    #[test_case(
+        |_| {
+            Builder::new()
+                .build()
+        }
+        => false
+        ;
+        "missing content"
+    )]
     #[tokio::test]
-    async fn content_rule_static_test() {
-        let provider = TestCatalystProvider::default();
+    async fn content_rule_specified_test(
+        doc_gen: impl FnOnce(Vec<u8>) -> CatalystSignedDocument
+    ) -> bool {
         let schema = json_schema::JsonSchema::try_from(&serde_json::json!({})).unwrap();
         let content_schema = ContentSchema::Json(schema);
-        let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
+        let valid_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
-        // all correct
-        let rule = ContentRule::Static(content_schema);
-        let doc = Builder::new().with_content(json_content.clone()).build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // missing content
-        let doc = Builder::new().build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // content not a json encoded
-        let doc = Builder::new().with_content(vec![1, 2, 3]).build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // defined `template` field which should be absent
-        let ref_id = UuidV7::new();
-        let ref_ver = UuidV7::new();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
-            ))
-            .with_content(json_content)
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
+        let rule = ContentRule::StaticSchema(content_schema);
+        let doc = doc_gen(valid_content);
+        rule.check(&doc).await.unwrap()
     }
 
+    #[test_case(
+        || {
+            Builder::new()
+                .with_content(vec![1, 2, 3])
+                .build()
+        }
+        => true
+        ;
+        "expected not nil content"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .with_content(vec![])
+                .build()
+        }
+        => true
+        ;
+        "expected not nil empty content"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .build()
+        }
+        => false
+        ;
+        "not expected nil content"
+    )]
     #[tokio::test]
-    async fn template_rule_not_specified_test() {
-        let rule = ContentRule::NotSpecified;
-        let provider = TestCatalystProvider::default();
+    async fn template_rule_not_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
+        let rule = ContentRule::NotNil;
+        let doc = doc_gen();
+        rule.check(&doc).await.unwrap()
+    }
 
-        let doc = Builder::new().build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
-
-        // defined `template` field which should be absent
-        let ref_id = UuidV7::new();
-        let ref_ver = UuidV7::new();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
-            ))
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
+    #[test_case(
+        || {
+            Builder::new()
+                .build()
+        }
+        => true
+        ;
+        "expected nil content"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .with_content(vec![1, 2, 3])
+                .build()
+        }
+        => false
+        ;
+        "non expected not nil content"
+    )]
+    #[test_case(
+        || {
+            Builder::new()
+                .with_content(vec![])
+                .build()
+        }
+        => false
+        ;
+        "non expected not nil empty"
+    )]
+    #[tokio::test]
+    async fn template_rule_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
+        let rule = ContentRule::Nil;
+        let doc = doc_gen();
+        rule.check(&doc).await.unwrap()
     }
 }

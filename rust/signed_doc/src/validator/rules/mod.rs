@@ -19,6 +19,8 @@ mod reply;
 mod section;
 mod signature;
 mod signature_kid;
+mod template;
+mod utils;
 mod ver;
 
 pub(crate) use content::{ContentRule, ContentSchema};
@@ -32,6 +34,7 @@ pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature::SignatureRule;
 pub(crate) use signature_kid::SignatureKidRule;
+pub(crate) use template::TemplateRule;
 pub(crate) use ver::VerRule;
 
 /// Struct represented a full collection of rules for all fields
@@ -45,16 +48,18 @@ pub(crate) struct Rules {
     pub(crate) content_type: ContentTypeRule,
     /// 'content-encoding' field validation rule
     pub(crate) content_encoding: ContentEncodingRule,
+    /// 'template' field validation rule
+    pub(crate) template: TemplateRule,
     /// 'ref' field validation rule
     pub(crate) doc_ref: RefRule,
-    /// document's content validation rule
-    pub(crate) content: ContentRule,
     /// 'reply' field validation rule
     pub(crate) reply: ReplyRule,
     /// 'section' field validation rule
     pub(crate) section: SectionRule,
     /// 'parameters' field validation rule
     pub(crate) parameters: ParametersRule,
+    /// document's content validation rule
+    pub(crate) content: ContentRule,
     /// `kid` field validation rule
     pub(crate) kid: SignatureKidRule,
     /// document's signatures validation rule
@@ -78,11 +83,12 @@ impl Rules {
             self.ver.check(doc, provider).boxed(),
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),
-            self.content.check(doc, provider).boxed(),
+            self.template.check(doc, provider).boxed(),
             self.doc_ref.check(doc, provider).boxed(),
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
+            self.content.check(doc).boxed(),
             self.kid.check(doc).boxed(),
             self.signature.check(doc, provider).boxed(),
             self.original_author.check(doc, provider).boxed(),
