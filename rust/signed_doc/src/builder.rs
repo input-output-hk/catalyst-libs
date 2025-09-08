@@ -253,7 +253,6 @@ pub(crate) mod tests {
                 &self.content,
             )?);
             self.metadata = metadata.inner();
-            self.content = self.content;
             Ok(self)
         }
 

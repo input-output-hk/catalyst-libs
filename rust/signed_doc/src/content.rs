@@ -8,7 +8,7 @@ impl Content {
     /// Return content bytes.
     #[must_use]
     pub fn bytes(&self) -> &[u8] {
-        self.0.as_ref().map(|v| v.as_slice()).unwrap_or(&[])
+        self.0.as_deref().unwrap_or(&[])
     }
 }
 
@@ -25,7 +25,7 @@ impl minicbor::Encode<()> for Content {
         _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match &self.0 {
-            Some(bytes) => e.bytes(&bytes)?,
+            Some(bytes) => e.bytes(bytes)?,
             None => e.null()?,
         };
         Ok(())
