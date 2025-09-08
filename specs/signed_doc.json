@@ -304,6 +304,11 @@
         "changes": "* Define an Optional Section in a Form Template, to enable partial form submission while in Draft.",
         "modified": "2025-08-19",
         "version": "0.1.1"
+      },
+      {
+        "changes": "* Updated `payload` field, it become required.\n* Added new `draft` field for Signed Document with the default value `false`. This field would show that the document is not finalised yet.\n* Made `payload.nil` non optional with the default value `false`.\n* If `payload.nil` is `true` automatically set `\"content type\"` and `\"content-encoding\" fields to `\"excluded\"`.",
+        "modified": "2025-09-08",
+        "version": "0.1.2"
       }
     ]
   },
