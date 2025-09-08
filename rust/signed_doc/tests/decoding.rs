@@ -863,7 +863,52 @@ fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
                 // empty unprotected headers
                 e.map(0)?;
                 // content
-                e.bytes("".as_bytes())?;
+                e.bytes(&[])?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        policy: CompatibilityPolicy::Accept,
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.encoded_content() == Vec::<u8>::new());
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_valid_nil_content() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let doc_type = DocType::from(UuidV4::new());
+    TestCase {
+        name: "Catalyst Signed Doc with CBOR nil 'content'.".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers.str("type")?.encode(&doc_type)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // nil content
+                e.null()?;
                 // signatures
                 // no signature
                 e.array(0)?;
@@ -1300,6 +1345,7 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_complete_metadata_fields_case(),
         signed_doc_valid_null_as_no_content(),
         signed_doc_valid_empty_bstr_as_no_content(),
+        signed_doc_valid_nil_content(),
         signed_doc_with_random_kid_case(),
         signed_doc_with_wrong_cose_tag_case(),
         signed_doc_with_content_encoding_case(true),
