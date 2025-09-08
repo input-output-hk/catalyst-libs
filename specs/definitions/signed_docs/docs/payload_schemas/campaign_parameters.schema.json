@@ -1,0 +1,335 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Campaign Parameters Payload Schema",
+    "description": "Structure of the payload of a Campaign Parameters document using project-defined form elements",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "url": "https://projectcatalyst.io/"
+        }
+    ],
+    "x-changelog": {
+        "2025-03-01": [
+            "First Version Created."
+        ],
+        "2025-01-15": [
+            "Updated to use project-defined form elements",
+            "Aligned with CUE form element structure",
+            "Simplified custom definitions"
+        ]
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "$defs": {
+        "campaignIdentity": {
+            "type": "object",
+            "description": "Campaign identity and branding elements",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Campaign name",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "pattern": "^[a-zA-Z0-9\\s\\-_]+$"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Campaign description",
+                    "maxLength": 2000
+                },
+                "theme": {
+                    "type": "string",
+                    "description": "Campaign theme or focus area",
+                    "maxLength": 200
+                },
+                "bannerImage": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL to campaign banner image"
+                }
+            },
+            "required": ["name", "description", "theme"]
+        },
+        "timelineConfiguration": {
+            "type": "object",
+            "description": "Campaign timeline and milestone settings",
+            "properties": {
+                "startDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Campaign start date"
+                },
+                "endDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Campaign end date"
+                },
+                "proposalSubmissionDeadline": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Deadline for proposal submissions"
+                },
+                "votingStartDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "When voting begins"
+                },
+                "votingEndDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "When voting ends"
+                },
+                "milestones": {
+                    "type": "array",
+                    "description": "Key campaign milestones",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Milestone name",
+                                "minLength": 1,
+                                "maxLength": 100
+                            },
+                            "date": {
+                                "type": "string",
+                                "format": "date",
+                                "description": "Milestone date"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Milestone description",
+                                "maxLength": 500
+                            }
+                        },
+                        "required": ["name", "date"]
+                    }
+                }
+            },
+            "required": ["startDate", "endDate", "proposalSubmissionDeadline", "votingStartDate", "votingEndDate"]
+        },
+        "fundingParameters": {
+            "type": "object",
+            "description": "Funding allocation and disbursement rules",
+            "properties": {
+                "totalBudget": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total budget available for this campaign"
+                },
+                "maxProposalAmount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Maximum amount for a single proposal in this campaign"
+                },
+                "minProposalAmount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Minimum amount for a single proposal in this campaign"
+                },
+                "disbursementRules": {
+                    "type": "object",
+                    "description": "Rules for fund disbursement",
+                    "properties": {
+                        "disbursementMethod": {
+                            "type": "string",
+                            "enum": ["immediate", "milestone-based", "project-completion"],
+                            "description": "Method for disbursing funds"
+                        },
+                        "milestoneThresholds": {
+                            "type": "array",
+                            "description": "Milestone-based disbursement thresholds",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "milestone": {
+                                        "type": "string",
+                                        "description": "Milestone name",
+                                        "minLength": 1,
+                                        "maxLength": 100
+                                    },
+                                    "percentage": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100,
+                                        "description": "Percentage of funds to disburse at this milestone"
+                                    }
+                                },
+                                "required": ["milestone", "percentage"]
+                            }
+                        }
+                    }
+                }
+            },
+            "required": ["totalBudget", "maxProposalAmount", "minProposalAmount"]
+        },
+        "votingConfiguration": {
+            "type": "object",
+            "description": "Voting mechanisms and eligibility criteria",
+            "properties": {
+                "votingMechanism": {
+                    "type": "string",
+                    "enum": ["simple-majority", "ranked-choice", "approval-voting"],
+                    "description": "Voting mechanism used in this campaign"
+                },
+                "eligibilityCriteria": {
+                    "type": "object",
+                    "description": "Criteria for voter eligibility",
+                    "properties": {
+                        "minStakeAmount": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Minimum stake amount required to vote"
+                        },
+                        "minHoldingPeriod": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Minimum holding period in days"
+                        },
+                        "excludeExchanges": {
+                            "type": "boolean",
+                            "description": "Whether to exclude exchange addresses"
+                        }
+                    }
+                },
+                "participationRules": {
+                    "type": "object",
+                    "description": "Rules for campaign participation",
+                    "properties": {
+                        "maxProposalsPerUser": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Maximum number of proposals a user can submit"
+                        },
+                        "requireKYC": {
+                            "type": "boolean",
+                            "description": "Whether KYC is required for participation"
+                        }
+                    }
+                }
+            },
+            "required": ["votingMechanism", "eligibilityCriteria"]
+        },
+        "categoryDefinitions": {
+            "type": "array",
+            "description": "Available proposal categories and their parameters",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique category identifier",
+                        "pattern": "^[a-zA-Z0-9\\-_]+$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Category name",
+                        "minLength": 1,
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Category description",
+                        "maxLength": 1000
+                    },
+                    "maxBudget": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Maximum budget allocated to this category"
+                    },
+                    "minProposalAmount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Minimum proposal amount for this category"
+                    },
+                    "maxProposalAmount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Maximum proposal amount for this category"
+                    },
+                    "evaluationCriteria": {
+                        "type": "array",
+                        "description": "Criteria for evaluating proposals in this category",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 200
+                        }
+                    }
+                },
+                "required": ["id", "name", "description", "maxBudget"]
+            }
+        },
+        "operationalSettings": {
+            "type": "object",
+            "description": "Technical configurations specific to campaign operations",
+            "properties": {
+                "proposalTemplate": {
+                    "type": "string",
+                    "description": "Template ID for proposals in this campaign",
+                    "pattern": "^[a-zA-Z0-9\\-_]+$"
+                },
+                "reviewProcess": {
+                    "type": "object",
+                    "description": "Proposal review process configuration",
+                    "properties": {
+                        "reviewStages": {
+                            "type": "array",
+                            "description": "Stages in the review process",
+                            "items": {
+                                "type": "string",
+                                "enum": ["initial-screening", "community-review", "expert-evaluation", "final-approval"]
+                            }
+                        },
+                        "reviewerCount": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Number of reviewers per proposal"
+                        }
+                    }
+                },
+                "notifications": {
+                    "type": "object",
+                    "description": "Campaign-specific notification settings",
+                    "properties": {
+                        "reminderFrequency": {
+                            "type": "string",
+                            "enum": ["daily", "weekly", "bi-weekly"],
+                            "description": "Frequency of voting reminders"
+                        },
+                        "milestoneAlerts": {
+                            "type": "boolean",
+                            "description": "Whether to send milestone alerts"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "properties": {
+        "campaignIdentity": {
+            "$ref": "#/$defs/campaignIdentity"
+        },
+        "timelineConfiguration": {
+            "$ref": "#/$defs/timelineConfiguration"
+        },
+        "fundingParameters": {
+            "$ref": "#/$defs/fundingParameters"
+        },
+        "votingConfiguration": {
+            "$ref": "#/$defs/votingConfiguration"
+        },
+        "categoryDefinitions": {
+            "$ref": "#/$defs/categoryDefinitions"
+        },
+        "operationalSettings": {
+            "$ref": "#/$defs/operationalSettings"
+        }
+    },
+    "required": [
+        "campaignIdentity",
+        "timelineConfiguration",
+        "fundingParameters",
+        "votingConfiguration",
+        "categoryDefinitions"
+    ]
+}

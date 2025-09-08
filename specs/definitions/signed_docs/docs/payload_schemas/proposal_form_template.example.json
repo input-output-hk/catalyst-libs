@@ -1,0 +1,309 @@
+{
+    "title": "Developer Tools Proposal Template",
+    "description": "Template for submitting proposals in the Developer Tools category",
+    "version": "1.0.0",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "email": "team@projectcatalyst.io"
+        }
+    ],
+    "sections": [
+        {
+            "title": "Project Overview",
+            "description": "Basic information about your proposed project",
+            "elements": [
+                {
+                    "type": "singleLineTextEntry",
+                    "name": "projectTitle",
+                    "label": "Project Title",
+                    "description": "A clear, concise title for your project",
+                    "required": true,
+                    "validation": {
+                        "minLength": 10,
+                        "maxLength": 100
+                    },
+                    "placeholder": "Enter your project title",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 1,
+                        "icon": "title"
+                    }
+                },
+                {
+                    "type": "multiLineTextEntryMarkdown",
+                    "name": "projectDescription",
+                    "label": "Project Description",
+                    "description": "Detailed description of what you plan to build and why it's important",
+                    "required": true,
+                    "validation": {
+                        "minLength": 200,
+                        "maxLength": 2000
+                    },
+                    "placeholder": "Describe your project in detail...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 2,
+                        "icon": "description"
+                    }
+                },
+                {
+                    "type": "singleLineTextEntryList",
+                    "name": "problemStatement",
+                    "label": "Problem Statement",
+                    "description": "What specific problem does your project solve?",
+                    "required": true,
+                    "validation": {
+                        "minLength": 50,
+                        "maxLength": 500
+                    },
+                    "placeholder": "Describe the problem your project addresses",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 3,
+                        "icon": "problem"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "Technical Details",
+            "description": "Technical specifications and implementation details",
+            "elements": [
+                {
+                    "type": "multiLineTextEntryMarkdown",
+                    "name": "technicalArchitecture",
+                    "label": "Technical Architecture",
+                    "description": "Describe the technical architecture and implementation approach",
+                    "required": true,
+                    "validation": {
+                        "minLength": 300,
+                        "maxLength": 1500
+                    },
+                    "placeholder": "Explain your technical approach...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 4,
+                        "icon": "architecture"
+                    }
+                },
+                {
+                    "type": "singleLineTextEntryList",
+                    "name": "technologies",
+                    "label": "Technologies Used",
+                    "description": "List the technologies, frameworks, and tools you plan to use",
+                    "required": true,
+                    "validation": {
+                        "minLength": 20,
+                        "maxLength": 200
+                    },
+                    "placeholder": "Haskell, Plutus, React, Node.js, etc.",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 5,
+                        "icon": "tech"
+                    }
+                },
+                {
+                    "type": "multiLineTextEntry",
+                    "name": "testingStrategy",
+                    "label": "Testing Strategy",
+                    "description": "How will you test your solution?",
+                    "required": true,
+                    "validation": {
+                        "minLength": 100,
+                        "maxLength": 800
+                    },
+                    "placeholder": "Describe your testing approach...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 6,
+                        "icon": "testing"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "Project Management",
+            "description": "Timeline, budget, and team information",
+            "elements": [
+                {
+                    "type": "singleLineTextEntry",
+                    "name": "projectDuration",
+                    "label": "Project Duration",
+                    "description": "How long will the project take to complete?",
+                    "required": true,
+                    "validation": {
+                        "pattern": "^\\d+\\s+(weeks|months)$"
+                    },
+                    "placeholder": "e.g., 6 months",
+                    "x-ui-hints": {
+                        "width": "half",
+                        "order": 7,
+                        "icon": "duration"
+                    }
+                },
+                {
+                    "type": "singleLineTextEntry",
+                    "name": "budget",
+                    "label": "Requested Budget",
+                    "description": "Total budget requested (in ADA)",
+                    "required": true,
+                    "validation": {
+                        "pattern": "^\\d+$",
+                        "min": 10000,
+                        "max": 100000
+                    },
+                    "placeholder": "50000",
+                    "x-ui-hints": {
+                        "width": "half",
+                        "order": 8,
+                        "icon": "budget"
+                    }
+                },
+                {
+                    "type": "multiLineTextEntry",
+                    "name": "teamMembers",
+                    "label": "Team Members",
+                    "description": "List team members and their roles",
+                    "required": true,
+                    "validation": {
+                        "minLength": 50,
+                        "maxLength": 500
+                    },
+                    "placeholder": "John Doe - Lead Developer\nJane Smith - UI/UX Designer\n...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 9,
+                        "icon": "team"
+                    }
+                },
+                {
+                    "type": "singleLineTextEntryList",
+                    "name": "milestones",
+                    "label": "Project Milestones",
+                    "description": "Key milestones and deliverables",
+                    "required": true,
+                    "validation": {
+                        "minLength": 100,
+                        "maxLength": 800
+                    },
+                    "placeholder": "Milestone 1: Project setup and initial development\nMilestone 2: Alpha release\n...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 10,
+                        "icon": "milestones"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "Impact and Success Metrics",
+            "description": "Expected impact and how success will be measured",
+            "elements": [
+                {
+                    "type": "multiLineTextEntry",
+                    "name": "expectedImpact",
+                    "label": "Expected Impact",
+                    "description": "What impact do you expect this project to have on the Cardano ecosystem?",
+                    "required": true,
+                    "validation": {
+                        "minLength": 200,
+                        "maxLength": 1000
+                    },
+                    "placeholder": "Describe the expected impact...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 11,
+                        "icon": "impact"
+                    }
+                },
+                {
+                    "type": "singleLineTextEntryList",
+                    "name": "successMetrics",
+                    "label": "Success Metrics",
+                    "description": "How will you measure the success of your project?",
+                    "required": true,
+                    "validation": {
+                        "minLength": 100,
+                        "maxLength": 500
+                    },
+                    "placeholder": "Number of downloads\nUser adoption rate\nCommunity feedback score\n...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 12,
+                        "icon": "metrics"
+                    }
+                },
+                {
+                    "type": "multiLineTextEntry",
+                    "name": "maintenancePlan",
+                    "label": "Maintenance Plan",
+                    "description": "How will you maintain and update the project after completion?",
+                    "required": true,
+                    "validation": {
+                        "minLength": 100,
+                        "maxLength": 600
+                    },
+                    "placeholder": "Describe your maintenance and update plans...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 13,
+                        "icon": "maintenance"
+                    }
+                }
+            ]
+        },
+        {
+            "title": "Additional Information",
+            "description": "Optional additional information and attachments",
+            "elements": [
+                {
+                    "type": "singleLineHttpsUrlEntryList",
+                    "name": "relevantLinks",
+                    "label": "Relevant Links",
+                    "description": "Links to related projects, documentation, or examples",
+                    "required": false,
+                    "validation": {
+                        "maxLength": 5
+                    },
+                    "placeholder": "https://github.com/your-username/your-project",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 14,
+                        "icon": "links"
+                    }
+                },
+                {
+                    "type": "multiLineTextEntry",
+                    "name": "additionalNotes",
+                    "label": "Additional Notes",
+                    "description": "Any additional information you'd like to share",
+                    "required": false,
+                    "validation": {
+                        "maxLength": 1000
+                    },
+                    "placeholder": "Any additional information...",
+                    "x-ui-hints": {
+                        "width": "full",
+                        "order": 15,
+                        "icon": "notes"
+                    }
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "category": "Developer Tools",
+        "tags": [
+            "development",
+            "tools",
+            "developer-experience",
+            "open-source"
+        ],
+        "compatibility": {
+            "minVersion": "1.0.0",
+            "maxVersion": "2.0.0"
+        }
+    }
+}

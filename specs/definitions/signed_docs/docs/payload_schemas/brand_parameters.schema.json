@@ -1,0 +1,215 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Brand Parameters Payload Schema",
+    "description": "Structure of the payload of a Brand Parameters document using project-defined form elements",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "url": "https://projectcatalyst.io/"
+        }
+    ],
+    "x-changelog": {
+        "2025-03-01": [
+            "First Version Created."
+        ],
+        "2025-01-15": [
+            "Updated to use project-defined form elements",
+            "Aligned with CUE form element structure",
+            "Simplified custom definitions"
+        ]
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "$defs": {
+        "brandIdentity": {
+            "type": "object",
+            "description": "Brand identity and visual elements",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Brand name",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "pattern": "^[a-zA-Z0-9\\s\\-_]+$"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Brand description",
+                    "maxLength": 1000
+                },
+                "logo": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL to brand logo"
+                },
+                "theme": {
+                    "type": "object",
+                    "description": "Brand theme colors and styling",
+                    "properties": {
+                        "primaryColor": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Primary brand color in hex format"
+                        },
+                        "secondaryColor": {
+                            "type": "string",
+                            "pattern": "^#[0-9A-Fa-f]{6}$",
+                            "description": "Secondary brand color in hex format"
+                        }
+                    }
+                }
+            },
+            "required": ["name", "description"]
+        },
+        "operationalParameters": {
+            "type": "object",
+            "description": "Operational parameters for the brand",
+            "properties": {
+                "fundingRules": {
+                    "type": "object",
+                    "description": "Funding rules and constraints",
+                    "properties": {
+                        "maxProposalAmount": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Maximum amount for a single proposal"
+                        },
+                        "minProposalAmount": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Minimum amount for a single proposal"
+                        },
+                        "totalBudget": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Total budget available for the brand"
+                        }
+                    }
+                },
+                "votingParameters": {
+                    "type": "object",
+                    "description": "Voting configuration",
+                    "properties": {
+                        "votingPowerCalculation": {
+                            "type": "string",
+                            "enum": ["linear", "quadratic", "logarithmic"],
+                            "description": "Method for calculating voting power"
+                        },
+                        "minVotingPower": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Minimum voting power required to participate"
+                        }
+                    }
+                },
+                "timelineConfiguration": {
+                    "type": "object",
+                    "description": "Timeline settings for campaigns",
+                    "properties": {
+                        "defaultCampaignDuration": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Default campaign duration in days"
+                        },
+                        "proposalSubmissionDeadline": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Days before campaign end when proposal submission closes"
+                        }
+                    }
+                }
+            }
+        },
+        "contentConfiguration": {
+            "type": "object",
+            "description": "Branded content and messaging",
+            "properties": {
+                "termsOfService": {
+                    "type": "string",
+                    "description": "Terms of service text",
+                    "maxLength": 10000
+                },
+                "privacyPolicy": {
+                    "type": "string",
+                    "description": "Privacy policy text",
+                    "maxLength": 10000
+                },
+                "welcomeMessage": {
+                    "type": "string",
+                    "description": "Welcome message for users",
+                    "maxLength": 1000
+                },
+                "brandedMessaging": {
+                    "type": "object",
+                    "description": "Brand-specific messaging templates",
+                    "properties": {
+                        "proposalSubmissionSuccess": {
+                            "type": "string",
+                            "description": "Message shown when proposal is successfully submitted",
+                            "maxLength": 500
+                        },
+                        "votingReminder": {
+                            "type": "string",
+                            "description": "Message sent as voting reminder",
+                            "maxLength": 500
+                        }
+                    }
+                }
+            }
+        },
+        "systemSettings": {
+            "type": "object",
+            "description": "Technical configurations and integration parameters",
+            "properties": {
+                "apiEndpoints": {
+                    "type": "object",
+                    "description": "API endpoint configurations",
+                    "properties": {
+                        "baseUrl": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Base URL for API endpoints"
+                        },
+                        "timeout": {
+                            "type": "integer",
+                            "minimum": 1000,
+                            "description": "API timeout in milliseconds"
+                        }
+                    }
+                },
+                "notifications": {
+                    "type": "object",
+                    "description": "Notification settings",
+                    "properties": {
+                        "emailEnabled": {
+                            "type": "boolean",
+                            "description": "Whether email notifications are enabled"
+                        },
+                        "pushEnabled": {
+                            "type": "boolean",
+                            "description": "Whether push notifications are enabled"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "properties": {
+        "brandIdentity": {
+            "$ref": "#/$defs/brandIdentity"
+        },
+        "operationalParameters": {
+            "$ref": "#/$defs/operationalParameters"
+        },
+        "contentConfiguration": {
+            "$ref": "#/$defs/contentConfiguration"
+        },
+        "systemSettings": {
+            "$ref": "#/$defs/systemSettings"
+        }
+    },
+    "required": [
+        "brandIdentity",
+        "operationalParameters"
+    ]
+}
