@@ -2,6 +2,7 @@
 
 #![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
+pub mod copyright;
 pub mod doc_types;
 pub mod headers;
 pub mod is_required;
@@ -9,17 +10,17 @@ pub mod metadata;
 
 use std::collections::HashMap;
 
-use build_info;
+use build_info as build_info_lib;
 
-use crate::{headers::Headers, metadata::Metadata};
+use crate::{copyright::Copyright, headers::Headers, metadata::Metadata};
 
-build_info::build_info!(pub(crate) fn build_info);
+build_info_lib::build_info!(pub(crate) fn build_info);
 
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub struct CatalystSignedDocSpec {
-    /// A collection of document's specs
     pub docs: HashMap<DocumentName, DocSpec>,
+    pub copyright: Copyright,
 }
 
 // A thin wrapper over the string document name values
@@ -58,11 +59,20 @@ pub struct DocSpec {
 impl CatalystSignedDocSpec {
     /// Loading a Catalyst Signed Documents spec from the `signed_doc.json`
     pub fn load_signed_doc_spec() -> anyhow::Result<CatalystSignedDocSpec> {
-        let crate_version = build_info().crate_info.version.to_string();
-
         let signed_doc_str = include_str!("../../../specs/signed_doc.json");
-        let signed_doc_spec = serde_json::from_str(signed_doc_str)
+        let signed_doc_spec: CatalystSignedDocSpec = serde_json::from_str(signed_doc_str)
             .map_err(|e| anyhow::anyhow!("Invalid Catalyst Signed Documents JSON Spec: {e}"))?;
+
+        let crate_version = build_info().crate_info.version.to_string();
+        let latest_version = signed_doc_spec
+            .copyright
+            .versions
+            .last()
+            .ok_or(anyhow::anyhow!(
+                "'versions' list must have at least one entry"
+            ))?;
+        anyhow::ensure!(latest_version.version == crate_version, "crate version should align with the latest version of the Catalyst Signed Documents specification");
+
         Ok(signed_doc_spec)
     }
 }
