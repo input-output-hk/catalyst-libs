@@ -12,7 +12,7 @@ pub(crate) fn content_rule(
     if spec.nil {
         anyhow::ensure!(
             spec.schema.is_none(),
-            "'schema' field could not been specified when 'nil' is 'true'"
+            "'schema' field could not been specified when 'nil' is 'true' for 'payload' definition"
         );
         return Ok(quote! {
             crate::validator::rules::ContentRule::Nil
