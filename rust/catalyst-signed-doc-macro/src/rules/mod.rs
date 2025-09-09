@@ -17,7 +17,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
         let const_type_name_ident = doc_name.ident();
 
         let ref_rule = doc_ref::ref_rule(&doc_spec.metadata.doc_ref)?;
-        let content_rule = content::content_rule(&doc_spec.payload, &doc_spec.metadata.template)?;
+        let content_rule = content::content_rule(&doc_spec.payload)?;
         // TODO: implement a proper initialization for all specific validation rules
         let rules = quote! {
             crate::validator::rules::Rules {
@@ -33,7 +33,7 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
                 doc_ref: #ref_rule,
                 reply: crate::validator::rules::ReplyRule::NotSpecified,
                 section: crate::validator::rules::SectionRule::NotSpecified,
-                content: crate::validator::rules::ContentRule::Nil,
+                content: #content_rule,
                 kid: crate::validator::rules::SignatureKidRule {
                     exp: &[],
                 },
@@ -54,6 +54,17 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
         /// Returns an iterator with all defined Catalyst Signed Documents validation rules per corresponding document type
         fn documents_rules() -> impl Iterator<Item = (crate::DocType, crate::validator::rules::Rules)> {
             [ #(#rules_definitions)* ].into_iter()
+        }
+
+        #[cfg(test)]
+        // DONT REMOVE THESE TESTS !!!
+        // These tests are important tests, which are should be executed to verify
+        // that `documents_rules` function will not generate any panicking
+        mod auto_generated_code_tests {
+            #[test]
+            fn documents_rules_test() {
+                let _ = super::documents_rules();
+            }
         }
     })
 }

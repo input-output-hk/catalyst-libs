@@ -56,6 +56,7 @@ pub(crate) struct DocSpec {
 pub(crate) struct Metadata {
     #[serde(rename = "ref")]
     pub(crate) doc_ref: doc_ref::Ref,
+    #[allow(dead_code)]
     pub(crate) template: template::Template,
 }
 
