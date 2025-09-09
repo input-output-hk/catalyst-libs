@@ -12,8 +12,11 @@ pub(crate) fn into_rule(
     content_types: &HashMap<ContentTypeTemplate, ContentTypeSpec>,
     field: &signed_doc_spec::content_type::ContentType,
 ) -> anyhow::Result<TokenStream> {
-    let is_field_empty =
-        field.value.is_none() || field.value.as_ref().is_some_and(std::string::String::is_empty);
+    let is_field_empty = field.value.is_none()
+        || field
+            .value
+            .as_ref()
+            .is_some_and(std::string::String::is_empty);
 
     if matches!(field.required, IsRequired::Excluded) {
         anyhow::ensure!(
