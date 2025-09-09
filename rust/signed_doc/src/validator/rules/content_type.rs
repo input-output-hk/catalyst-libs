@@ -29,7 +29,7 @@ impl ContentTypeRule {
         }
 
         anyhow::ensure!(
-            catalyst_signed_doc_spec::is_required::IsRequired::Optional == spec.required,
+            catalyst_signed_doc_spec::is_required::IsRequired::Optional != spec.required,
             "'content type' field cannot been optional"
         );
 
