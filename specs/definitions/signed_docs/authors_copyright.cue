@@ -109,5 +109,12 @@ copyright: #copyrightNotice & {
 				* If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding"` fields to `"excluded"`.
 				"""
 		},
+		{
+			version:  "0.1.3"
+			modified: "2025-09-09"
+			changes: """
+				* Fixed an invalid 'Presentation Template' JSON schema. 
+				"""
+		},
 	]
 }

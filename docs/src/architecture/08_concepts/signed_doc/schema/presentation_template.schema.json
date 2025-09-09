@@ -21,13 +21,18 @@
             ],
             "type": "string"
         },
-        "cardTitle": {
-            "description": "A title shown to the editor of the card.  Not used by the UI.",
+        "cardTemplate": {
+            "contentType": "text/html; charset=utf-8; template=handlebars",
+            "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
             "type": "string"
         },
-        "css": {
+        "cardTemplateCss": {
             "contentType": "text/css; charset=utf-8; template=handlebars",
             "description": "Optional styling that can be used by the HTML generated from the template for presentation.",
+            "type": "string"
+        },
+        "cardTitle": {
+            "description": "A title shown to the editor of the card.  Not used by the UI.",
             "type": "string"
         },
         "layoutParameters": {
@@ -42,11 +47,6 @@
             },
             "type": "array",
             "uniqueItems": true
-        },
-        "template": {
-            "contentType": "text/html; charset=utf-8; template=handlebars",
-            "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
-            "type": "string"
         }
     },
     "type": "object",
