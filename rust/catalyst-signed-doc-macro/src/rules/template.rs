@@ -37,8 +37,8 @@ pub(crate) fn template_rule(
         .ident();
 
     Ok(quote! {
-            crate::validator::rules::TemplateRule::Specified {
-                allowed_type: crate::doc_types::#const_type_name_ident,
-            }
+        crate::validator::rules::TemplateRule::Specified {
+            allowed_type: crate::doc_types::#const_type_name_ident,
+        }
     })
 }
