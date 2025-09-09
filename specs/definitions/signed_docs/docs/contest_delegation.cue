@@ -53,7 +53,6 @@ docs: "Contest Delegation": {
 			"""
 	}
 
-	//headers: "content type": value: "application/cbor"
 	metadata: {
 		ref: {
 			required: "yes"
