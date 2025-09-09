@@ -94,6 +94,18 @@
         "COSE_Generic_Headers"
       ]
     },
+    "aes-crt-encrypted-block": {
+      "def": "bytes .size 16",
+      "description": "AES-CTR encrypted data.\nThe Nonce/IV is the UUIDv7 `document_ver`.\nThis is the correct size, and has the necessary randomness properties.\nThe first block uses the `document_ver` the second `document_ver+1` and so on.\nThe document_ver is interpreted as a Big Endian 128bit integer for the purpose\nof the addition.\n\nAs the CTR is predictable, the blocks can be decrypted in parallel for maximum performance.",
+      "requires": []
+    },
+    "aes-crt-encrypted-choices": {
+      "def": "+/(requires[0])",
+      "description": "Choices are constructed as a CBOR multidimensional array of the form:\n`[ +[+choice] ]`\nreflecting the choices in the rows and columns as present 1:1 in the encrypted\nchoices.\n\nThis data is then compressed using `brotli` compression, and the result is encrypted \nusing AES-CTR and encoded as a sequence of blocks here.\n\nData needs to be pre-compressed before encryption as encryption will make the data\nincompressible.\n\nThe Encryption Key is to be derived from the Voters catalyst key-chain and not to be\npublished.\nDerivation *MUST* take include the contest Document ID and Version, so that the same\nencryption key is never used twice for different contests, but can still be re-derived\nby a voter that holds their catalyst key-chain recovery keys.",
+      "requires": [
+        "aes-crt-encrypted-block"
+      ]
+    },
     "blake2b_256": {
       "comment": "Blake2B-256",
       "def": "bytes .size 32",
@@ -113,11 +125,34 @@
         "document_ref"
       ]
     },
+    "choices": {
+      "comment": "Voters Choices.",
+      "def": "[ 0, clear-choices ] /\n[ 1, elgamal-ristretto255-encrypted-choices ]",
+      "description": "Choices are an array of encrypted  or unencrypted choices.",
+      "requires": [
+        "clear-choices",
+        "elgamal-ristretto255-encrypted-choices"
+      ]
+    },
     "cid": {
       "comment": "IPLD content identifier\nTODO: add size limits if possible",
       "def": "#6.42(bytes)",
       "description": "IPLD content identifier.\nAlso known as an IPFS CID\nSee: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid\n     https://github.com/ipld/cid-cbor/",
       "requires": []
+    },
+    "clear-choice": {
+      "comment": "Universal Unencrypted Choice",
+      "def": "int",
+      "description": "An Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
+      "requires": []
+    },
+    "clear-choices": {
+      "comment": "Universal Unencrypted Choice",
+      "def": "( +clear-choice )",
+      "description": "A Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
+      "requires": [
+        "clear-choice"
+      ]
     },
     "collaborators": {
       "comment": "Allowed Collaborators on the next subsequent version of a document.",
@@ -125,6 +160,11 @@
       "requires": [
         "catalyst_id_kid"
       ]
+    },
+    "column-proof": {
+      "def": "[ uint, [ +undefined ] ]",
+      "description": "Proof that values in a column have a required arrangement.\nThis is similar to the `row-proof` but for all values in a \nsingle column.\nIt is an array that matches the length of `choices`.\nIf it is a different length, then it is invalid.\n\nCurrently there are no `column-proof` defined, this value is\na placeholder for documentation purposes only.\n\nIt is NOT to be implemented.\n`column-proof` should be assumed to be missing until such time\nas a concrete `column-proof` is defined.\n\nSimilar to `row-proof` there can be multiple column-proofs defined which prove\ncertain characteristics of the encrypted column values.\nThey are identified by the unsigned integer starting the proof.",
+      "requires": []
     },
     "document_id": {
       "comment": "Document ID",
@@ -173,6 +213,29 @@
         "uuid_v7"
       ]
     },
+    "elgamal-ristretto255-encrypted-choice": {
+      "comment": "Elgamal encrypted ciphertext.",
+      "def": "[\n  c1: elgamal-ristretto255-group-element, \n  c2: elgamal-ristretto255-group-element,\n]",
+      "description": "The elgamal encrypted ciphertext `(c1, c2)`.",
+      "requires": [
+        "elgamal-ristretto255-group-element"
+      ]
+    },
+    "elgamal-ristretto255-encrypted-choices": {
+      "comment": "Universal Encrypted Choices",
+      "def": "( \n  [+ elgamal-ristretto255-encrypted-choice], \n  ? row-proof \n)",
+      "description": "Encrypted Choices are a Vector (list) of encrypted items.\nThe size of the vector will depend on the cryptography used, \nand the number of choices.\n\nTypically, (but optionally) it has a proof attached which proves something\nabout the encrypted choices, without disclosing their contents.\n\nFor example, a ZKProof that there is only a single `1` in the choices, \nand all the rest are `0`.\n\nThe size/contents of the proof depend on what is being proved, and the \ncryptography underlying the proof.",
+      "requires": [
+        "elgamal-ristretto255-encrypted-choice",
+        "row-proof"
+      ]
+    },
+    "elgamal-ristretto255-group-element": {
+      "comment": "Elgamal group element that composes the elgamal cipher text.",
+      "def": "bytes .size 32",
+      "description": "An individual elgamal ristretto255 group element.",
+      "requires": []
+    },
     "height": {
       "comment": "The consecutive sequence number of the current document \nin the chain.\nThe very first document in a sequence is numbered `0` and it\n*MUST ONLY* increment by one for each successive document in\nthe sequence.\n\nThe FINAL sequence number is encoded with the current height\nsequence value, negated. \n\nFor example the following values for height define a chain\nthat has 5 documents in the sequence 0-4, the final height \nis negated to indicate the end of the chain:\n`0, 1, 2, 3, -4`\n\nNo subsequent document can be chained to a sequence that has\na final chain height.",
       "def": "int",
@@ -184,8 +247,13 @@
       "requires": []
     },
     "json_pointer": {
-      "comment": "RFC6901 Standard JSON Pointer",
+      "comment": "RFC6901 Standard JSON Pointer\nSee: https://datatracker.ietf.org/doc/html/rfc6901",
       "def": "text",
+      "requires": []
+    },
+    "matrix-proof": {
+      "def": "[ uint, undefined ]",
+      "description": "Proof that values in the matrix of all columns and rows have a required arrangement.\nThis is similar to the `row-proof` and `column-proof` but for all values in a \nballot taken together.\n\nThere is a single `matrix-proof` but it may be chosen from a pre-defined\nknown set of valid proofs.\n\nCurrently there are no `matrix-proof` defined, this value is\na placeholder for documentation purposes only.\n\nIt is NOT to be implemented.\n`matrix-proof` should be assumed to be missing until such time\nas a concrete `matrix-proof` is defined.\n\nSimilar to `row-proof` and `column-proof` there can be multiple matrix-proofs defined \nwhich prove certain characteristics of the encrypted column values.\nThey are identified by the unsigned integer starting the proof.",
       "requires": []
     },
     "media_type": {
@@ -198,6 +266,14 @@
       "def": "[ * document_ver ] / true ",
       "requires": [
         "document_ver"
+      ]
+    },
+    "row-proof": {
+      "comment": "Universal Encrypted Row Proof",
+      "def": "[0, zkproof-elgamal-ristretto255-unit-vector-with-single-selection ]",
+      "description": "A proof that the choices conform to a required set of properties.\nIt is defined by the configured cryptography used for encrypted choices.\nThis format is universal over all encrypted choice encoding.",
+      "requires": [
+        "zkproof-elgamal-ristretto255-unit-vector-with-single-selection"
       ]
     },
     "section_ref": {
@@ -226,6 +302,66 @@
       "def": "#6.37(bytes .size 16)",
       "description": "Version 7 UUID\nSee: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7\n     https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
       "requires": []
+    },
+    "vote-payload-v2": {
+      "comment": "Catalyst Vote Payload data object.",
+      "def": "{\n\t+ \"document_ref\" => choices,\n\t? \"column-proof\" : column-proof,\n\t? \"matrix-proof\" : matrix-proof,\n\t? \"voter-choice\" : voter-choice,\n}",
+      "description": "Catalyst Vote Payload data object.\n\nA vote payload that can hold both encrypted or unencrypted votes.",
+      "requires": [
+        "document_ref",
+        "choices",
+        "column-proof",
+        "matrix-proof",
+        "voter-choice"
+      ]
+    },
+    "voter-choice": {
+      "def": "[ 0, /(requires[0]) ]",
+      "description": "This is an encrypted payload that a voter, and ONLY the voter can decrypt.\nIt allows the voter to recover their choices without needing to decrypt the\nencrypted votes used in the tally.\n\nThere is no way to associate this data with the encrypted choices directly, but\nit is created by the voter from the same data used to create the choices.",
+      "requires": [
+        "aes-crt-encrypted-choices"
+      ]
+    },
+    "zkproof-ed25519-r-response": {
+      "def": "( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )",
+      "description": "???",
+      "requires": [
+        "zkproof-ed25519-scalar"
+      ]
+    },
+    "zkproof-ed25519-scalar": {
+      "def": "bytes .size 32",
+      "description": "???",
+      "requires": []
+    },
+    "zkproof-elgamal-announcement": {
+      "def": "( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )",
+      "description": "???",
+      "requires": [
+        "zkproof-elgamal-group-element"
+      ]
+    },
+    "zkproof-elgamal-group-element": {
+      "def": "bytes .size 32",
+      "description": "???",
+      "requires": []
+    },
+    "zkproof-elgamal-ristretto255-unit-vector-with-single-selection": {
+      "def": "( [ [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item ], zkproof-ed25519-scalar )",
+      "description": "???",
+      "requires": [
+        "zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item",
+        "zkproof-ed25519-scalar"
+      ]
+    },
+    "zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item": {
+      "def": "( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )",
+      "description": "???",
+      "requires": [
+        "zkproof-elgamal-announcement",
+        "elgamal-ristretto255-encrypted-choice",
+        "zkproof-ed25519-r-response"
+      ]
     }
   },
   "contentTypes": {
@@ -1261,7 +1397,25 @@
         "back_end": "* Verifies that the voter and Representative are valid and registered for the category.\n* Records the delegation of voting power from the voter to the Representative.",
         "front_end": "* Allows a voter to select a Representative from a list of eligible candidates for a category.\n* The voter signs this document to confirm their delegation choice."
       },
-      "description": "Delegation by a Registered User to a Representative for\na contest.\n\nThis delegation allows votes cast by the Representative\nto use the voting power of the delegating User, in addition\nto their own personal voting power and that of all other Users \nwho delegate to the same Representative.\n\nDelegation is for a specific Contest.\nMultiple Delegations must be published if there are multiple\nContests within a Brand/Campaign or Category.\n\nThis is because different Contests may have different rules.\nAnd not all Representatives will choose to nominate\nfor every Contest.\n\nA Representative ***MAY NOT*** delegate to a different Representative\nfor any contest they have nominated for.\nThey ***MAY*** however nominate a Representative in any contest they\nhave not nominated for.",
+      "description": "Delegation by a Registered User to a Representative for\na contest.\n\nThis delegation allows votes cast by the Representative\nto use the voting power of the delegating User, in addition\nto their own personal voting power and that of all other Users \nwho delegate to the same Representative.\n\nDelegation is for a specific Contest.\nMultiple Delegations must be published if there are multiple\nContests within a Brand/Campaign or Category.\n\nThis is because different Contests may have different rules.\nAnd not all Representatives will choose to (or be able to) nominate\nfor every Contest.\n\nA Representative ***MAY NOT*** delegate to a different Representative\nfor any contest they have nominated for.\nThey ***MAY*** however nominate a Representative in any contest they\nhave not nominated for.\n\nA Representative is NOT required to delegate to themselves in a contest they are nominated for,\nand in fact, any self-delegation is invalid and ignored.\nA Representative has an implicit 100% voting power delegation to themselves in any contest \nthey are nominated.\nThe MAY not vote personally, and if they do, that vote will have Zero (0) voting power.\n100% of their voting power is assigned to their delegate vote and can not be split in any way.\n\nA voter MAY choose multiple delegates for a contest, in this case they are listed in priority \norder from highest priority to lowest.\nPriority only affects two aspects of the delegation.\n\n1. Any residual voting power after it is split among all delegates is given to the highest \n   priority delegate (first).\n2. If there is not enough voting power to distribute, then its distributed from highest \n   priority to lowest.  This may mean that low priority delegates get zero voting power.\n\nAn example:  If a Voter has 100 raw voting power, after quadratic scaling, they have 10.\nIf they delegated to 15 delegates equally, then only the first 10 would get 1 voting power\neach.  Voting power is not fractionally assigned.\n\nThe payload MAY contain a json document which consists of a single array which can adjust \nthe ratio of the delegation.  Voting power is divided based on the weight of a single \ndelegate over the sum of all weights of all delegates.  \nThis is performed with integer division.\nAs a special condition, 0 or any negative value is equivalent to a weight of 1.\nAs explained above, if there is not enough voting power to distribute, low priority reps \nwill receive 0 voting power from the delegation.  And if there is any residual after integer\ndivision its applied to the representative with the highest priority.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
       "metadata": {
         "chain": {
           "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
@@ -1296,7 +1450,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "linked_refs": null,
-          "multiple": false,
+          "multiple": true,
           "required": "yes",
           "type": "Rep Nomination",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
@@ -1340,8 +1494,52 @@
       },
       "notes": [],
       "payload": {
-        "description": "  There is no payload.",
-        "nil": true
+        "description": "The Payload is a JSON Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "examples": [
+          {
+            "description": "If there are only 1 delegation, then the weights do not matter.\nIf there are two, then the first delegate has a weight of 10/30, and the second has 20/30.\nIf there are 5, then the weights are: `[10,20,30,1,1]`",
+            "example": {
+              "weights": [
+                10,
+                20,
+                30
+              ]
+            },
+            "title": "Three Delegation Weights"
+          }
+        ],
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "description": "Structure of the payload of a Contest Delegation.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "weights": {
+              "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              "minItems": 0,
+              "type": "array"
+            }
+          },
+          "required": [
+            "weights"
+          ],
+          "title": "Contest Delegation Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-03-01": [
+              "First Version Created."
+            ]
+          }
+        }
       },
       "signers": {
         "roles": {
@@ -1354,12 +1552,17 @@
         }
       },
       "type": "764f17fb-cc50-4979-b14a-b213dbac5994",
-      "validation": "* The `parameters` metadata *MUST* point to the same Contest as the \n\tNomination of the Representative.\n* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.\n* The payload MUST be nil.\n\nA Representative *MUST* Delegate to their latest Nomination for a Category,\notherwise their Nomination is invalid.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.\n\nA Voter may withdraw their Delegation by revoking all delegation documents.\n`revocations` must be set to `true` to withdraw a delegation, OR\na later contest delegation may change the delegated representative without\nfirst revoking the prior delegation, as only the latest delegation is\nconsidered.",
+      "validation": "* The `parameters` metadata *MUST* point to the same Contest as the \n\tNomination of the Representative.\n* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.\n    * IF there are multiple representatives, then any which are not pointing\n\t  to a valid `Representative Nomination` are excluded.  \n\t  The nomination is only invalid if ALL references `Representative Nomination` \n\t  references are invalid.\n\t  This is to prevent a Representative changing their nomination invalidating a\n\t  delegation with multiple representatives.\n* The payload MUST be nil.\n\nA Representative *MUST* Delegate to their latest Nomination for a Category,\notherwise their Nomination is invalid.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.\n\nA Voter may withdraw their Delegation by revoking all delegation documents.\n`revocations` must be set to `true` to withdraw a delegation, OR\na later contest delegation may change the delegated representative without\nfirst revoking the prior delegation, as only the latest delegation is\nconsidered.",
       "versions": [
         {
           "changes": "* First Published Version",
           "modified": "2025-06-19",
           "version": "0.01"
+        },
+        {
+          "changes": "* Allow Multi Delegation",
+          "modified": "2025-09-04",
+          "version": "0.1.2"
         }
       ]
     },
@@ -3245,6 +3448,7 @@
       "Mustache": "https://mustache.github.io/mustache.5.html",
       "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
       "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
+      "RFC6901": "https://datatracker.ietf.org/doc/html/rfc6901",
       "RFC7932": "https://www.rfc-editor.org/rfc/rfc7932",
       "RFC8259": "https://www.rfc-editor.org/rfc/rfc8259.html",
       "RFC8610": "https://www.rfc-editor.org/rfc/rfc8610",

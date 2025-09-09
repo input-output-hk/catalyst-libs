@@ -1,20 +1,9 @@
 // Signed Document Definitions
 // 
 // COSE Signed Document CDDL Definitions
-package signed_docs
+package cddl
 
-import (
-	"strings"
-	"github.com/input-output-hk/catalyst-libs/specs/media_types"
-)
-
-// Formatted content strings to use in CDDL Definition.
-_cddlContentTypes: "\"\(strings.Join(cose.headers."content type".value, "\" /\n        \""))\""
-
-// Formatted CoAP content string to use in CDDL Definition.
-_cddlCoapTypes: "\(strings.Join(media_types.allCoapTypesStr, " / "))"
-
-cddlDefinitions: #cddlDefinitions & {
+cddlDefinitions: {
 	signed_document: {
 		requires: ["COSE_Sign"]
 		def:         "\(requires[0])"

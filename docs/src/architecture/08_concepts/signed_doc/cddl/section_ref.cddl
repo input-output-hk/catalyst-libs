@@ -5,4 +5,5 @@
 section_ref = json_pointer
 
 ; RFC6901 Standard JSON Pointer
+; See: https://datatracker.ietf.org/doc/html/rfc6901
 json_pointer = text

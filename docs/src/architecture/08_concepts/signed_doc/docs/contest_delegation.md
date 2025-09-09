@@ -15,13 +15,42 @@ Multiple Delegations must be published if there are multiple
 Contests within a Brand/Campaign or Category.
 
 This is because different Contests may have different rules.
-And not all Representatives will choose to nominate
+And not all Representatives will choose to (or be able to) nominate
 for every Contest.
 
 A Representative ***MAY NOT*** delegate to a different Representative
 for any contest they have nominated for.
 They ***MAY*** however nominate a Representative in any contest they
 have not nominated for.
+
+A Representative is NOT required to delegate to themselves in a contest they are nominated for,
+and in fact, any self-delegation is invalid and ignored.
+A Representative has an implicit 100% voting power delegation to themselves in any contest
+they are nominated.
+The MAY not vote personally, and if they do, that vote will have Zero (0) voting power.
+100% of their voting power is assigned to their delegate vote and can not be split in any way.
+
+A voter MAY choose multiple delegates for a contest, in this case they are listed in priority
+order from highest priority to lowest.
+Priority only affects two aspects of the delegation.
+
+1. Any residual voting power after it is split among all delegates is given to the highest
+   priority delegate (first).
+2. If there is not enough voting power to distribute, then its distributed from highest
+   priority to lowest.  This may mean that low priority delegates get zero voting power.
+
+An example:  If a Voter has 100 raw voting power, after quadratic scaling, they have 10.
+If they delegated to 15 delegates equally, then only the first 10 would get 1 voting power
+each.  Voting power is not fractionally assigned.
+
+The payload MAY contain a [json][RFC8259] document which consists of a single array which can adjust
+the ratio of the delegation.  Voting power is divided based on the weight of a single
+delegate over the sum of all weights of all delegates.
+This is performed with integer division.
+As a special condition, 0 or any negative value is equivalent to a weight of 1.
+As explained above, if there is not enough voting power to distribute, low priority reps
+will receive 0 voting power from the delegation.  And if there is any residual after integer
+division its applied to the representative with the highest priority.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -37,6 +66,12 @@ have not nominated for.
 * The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the same Contest as the
     Nomination of the Representative.
 * The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
+    * IF there are multiple representatives, then any which are not pointing
+      to a valid `Representative Nomination` are excluded.
+      The nomination is only invalid if ALL references `Representative Nomination`
+      references are invalid.
+      This is to prevent a Representative changing their nomination invalidating a
+      delegation with multiple representatives.
 * The payload MUST be nil.
 
 A Representative *MUST* Delegate to their latest Nomination for a Category,
@@ -74,7 +109,8 @@ considered.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
-No Headers are defined for this document.
+* [content type](../spec.md#content-type) = `application/json`
+* [content-encoding](../spec.md#content-encoding) = `[br]`
 
 ## Metadata
 
@@ -134,6 +170,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
+| Multiple References | True |
 | Valid References | [Rep Nomination](rep_nomination.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
@@ -231,10 +268,83 @@ hierarchy they are all valid.
 
 ## Payload
 
-There is no payload.
+The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
 
-This document has no payload.
-It must be encoded as a [CBOR][RFC8949] `null (0xf6)`.
+It consists of an array which defines the weights to be applied to the chosen delegations.
+
+Each valid delegate gets the matching weight from this array.
+The total voting power is split proportionally based on these weights over the
+valid drep nominations.
+
+### Schema
+
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? abstract "Schema: Payload [JSON][RFC8259] Schema"
+
+    The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
+
+    It consists of an array which defines the weights to be applied to the chosen delegations.
+
+    Each valid delegate gets the matching weight from this array.
+    The total voting power is split proportionally based on these weights over the
+    valid drep nominations.
+
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "maintainers": [
+        {
+          "name": "Catalyst Team",
+          "url": "https://projectcatalyst.io/"
+        }
+      ],
+      "title": "Contest Delegation Schema",
+      "description": "Structure of the payload of a Contest Delegation.",
+      "type": "object",
+      "properties": {
+        "weights": {
+          "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+          "items": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "minItems": 0,
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "weights"
+      ],
+      "x-changelog": {
+        "2025-03-01": [
+          "First Version Created."
+        ]
+      }
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+
+### Example
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: Three Delegation Weights"
+
+    If there are only 1 delegation, then the weights do not matter.
+    If there are two, then the first delegate has a weight of 10/30, and the second has 20/30.
+    If there are 5, then the weights are: `[10,20,30,1,1]`
+
+    ```json
+    {
+      "weights": [
+        10,
+        20,
+        30
+      ]
+    }
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 ## Signers
 
@@ -252,7 +362,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-08-19 |
+| Modified | 2025-09-04 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -264,9 +374,13 @@ New versions of this document may be published by:
 
 * First Published Version
 
+#### 0.1.2 (2025-09-04)
+
+* Allow Multi Delegation
+
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
+[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

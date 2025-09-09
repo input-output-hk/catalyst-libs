@@ -15,19 +15,31 @@ import (
 }
 
 // Payload definition
-_payload: {
+#payload: {
 	// Description of the payload
 	description: string
-	// Is the Payload nil?
-	nil?: true
 
-	// Only have these when the payload isn't nil.
-	if nil == _|_ {
-		// Optional fixed schema for the payload.
-		// A URI or inline JSON Schema that the payload must validate against.
-		schema?: _
-		// Examples of the schema.
-		examples?: list.UniqueItems
-		examples?: [...#payloadExample] | *[]
-	}
+	// Is the Payload allowed to be nil?
+	nil: true | *false
+}
+
+
+// Payload definition
+#payload_json: #payload & {
+	// Optional fixed schema for the payload.
+	// A URI or inline JSON Schema that the payload must validate against.
+	schema?: string
+	// Examples of the schema.
+	examples?: list.UniqueItems
+	examples?: [...#payloadExample] | *[]
+}
+
+// Payload definition for cbor payloads
+#payload_cbor: #payload & {
+	// CBOR payloads must have a CDDL Schema defined.
+	schema?: #cddlTypesConstraint
+	
+	// Examples of the schema.
+	examples?: list.UniqueItems
+	examples?: [...#payloadExample] | *[]
 }

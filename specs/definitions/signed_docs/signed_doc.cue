@@ -35,7 +35,7 @@ import (
 
 	notes: [...string] | *[]
 
-	if payload.nil == _|_ {
+	if !payload.nil {
 		// Fixed headers in every document with a payload.
 		headers: _coseHeaders
 	}
@@ -44,7 +44,7 @@ import (
 	metadata: #metadata
 
 	// Requirements for the document payload.
-	payload?: _payload
+	payload?: #payload
 
 	// Required/Allowed Signers of a document
 	signers: _allowedSigners

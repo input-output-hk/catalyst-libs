@@ -28,6 +28,7 @@ regenerate-json:
     FROM +src
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
     RUN cd definitions; \
+        cue vet -Evc -s ./signed_docs/docs:signed_docs && \
         cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
 
     SAVE ARTIFACT --keep-ts signed_doc.json
@@ -37,10 +38,6 @@ regenerate:
     FROM +src
 
     COPY +regenerate-json/signed_doc.json .
-
-    # Make sure keys are sorted so its both reproducible, AND diffs easily.
-    RUN cd definitions; \
-        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
 
     RUN cd generators; \
         uv run docs -g -o "../../gen" ../signed_doc.json 
