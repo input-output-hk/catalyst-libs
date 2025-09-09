@@ -549,7 +549,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-09-08 |
+| Modified | 2025-09-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -604,8 +604,13 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Made `payload.nil` non optional with the default value `false`.
 * If `payload.nil` is `true` automatically set `"content type"` and `"content-encoding"` fields to `"excluded"`.
 
+#### 0.1.3 (2025-09-09)
+
+* Fixed an invalid 'Presentation Template' [JSON schema][JSON Schema-2020-12].
+
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [CommonMark]: https://spec.commonmark.org/0.31.2/

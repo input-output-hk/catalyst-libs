@@ -177,13 +177,18 @@ See `[presentation_templates.md](TODO)`
           ],
           "type": "string"
         },
-        "cardTitle": {
-          "description": "A title shown to the editor of the card.  Not used by the UI.",
+        "cardTemplate": {
+          "contentType": "text/html; charset=utf-8; template=handlebars",
+          "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
           "type": "string"
         },
-        "css": {
+        "cardTemplateCss": {
           "contentType": "text/css; charset=utf-8; template=handlebars",
           "description": "Optional styling that can be used by the HTML generated from the template for presentation.",
+          "type": "string"
+        },
+        "cardTitle": {
+          "description": "A title shown to the editor of the card.  Not used by the UI.",
           "type": "string"
         },
         "layoutParameters": {
@@ -198,11 +203,6 @@ See `[presentation_templates.md](TODO)`
           },
           "type": "array",
           "uniqueItems": true
-        },
-        "template": {
-          "contentType": "text/html; charset=utf-8; template=handlebars",
-          "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
-          "type": "string"
         }
       },
       "type": "object",
@@ -257,7 +257,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-09-08 |
+| Modified | 2025-09-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
