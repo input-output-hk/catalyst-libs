@@ -117,7 +117,7 @@ impl Rules {
         let spec = catalyst_signed_doc_spec::CatalystSignedDocSpec::load_signed_doc_spec()?;
 
         let mut doc_rules = Vec::new();
-        for (_, doc_spec) in &spec.docs {
+        for doc_spec in spec.docs.values() {
             let rules = Self {
                 id: IdRule,
                 ver: VerRule,
