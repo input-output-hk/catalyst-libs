@@ -100,6 +100,7 @@ impl DocumentName {
 pub(crate) struct DocSpec {
     #[serde(rename = "type")]
     pub(crate) doc_type: String,
+    pub(crate) draft: bool,
     pub(crate) headers: Headers,
     pub(crate) metadata: Metadata,
     pub(crate) payload: payload::Payload,

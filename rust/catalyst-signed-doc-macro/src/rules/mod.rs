@@ -16,6 +16,9 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
 
     let mut rules_definitions = Vec::new();
     for (doc_name, doc_spec) in spec.docs {
+        if doc_spec.draft {
+            continue;
+        }
         let const_type_name_ident = doc_name.ident();
 
         let content_type_rule =
