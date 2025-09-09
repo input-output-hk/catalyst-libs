@@ -29,6 +29,7 @@ pub struct DocumentName(String);
 
 impl DocumentName {
     /// returns document name
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.0
     }
@@ -58,6 +59,11 @@ pub struct DocSpec {
 
 impl CatalystSignedDocSpec {
     /// Loading a Catalyst Signed Documents spec from the `signed_doc.json`
+    ///
+    /// # Errors
+    ///  - `signed_doc.json` filed loading and JSON parsing errors
+    ///  - `catalyst-signed-doc-spec` crate version doesn't  align with the latest version
+    ///    of the `signed_doc.json`
     pub fn load_signed_doc_spec() -> anyhow::Result<CatalystSignedDocSpec> {
         let signed_doc_str = include_str!("../../../specs/signed_doc.json");
         let signed_doc_spec: CatalystSignedDocSpec = serde_json::from_str(signed_doc_str)

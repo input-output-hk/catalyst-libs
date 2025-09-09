@@ -1,4 +1,4 @@
-//!
+//! 'type' array field definition
 
 use std::ops::Deref;
 
