@@ -249,10 +249,10 @@ impl RegistrationChain {
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 
-    /// Returns a set of role 0 stake addresses.
+    /// Returns all stake addresses associated to this registration.
     #[must_use]
-    pub fn role_0_stake_addresses(&self) -> HashSet<StakeAddress> {
-        self.inner.certificate_uris.stake_addresses(0)
+    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
+        self.inner.certificate_uris.stake_addresses()
     }
 }
 

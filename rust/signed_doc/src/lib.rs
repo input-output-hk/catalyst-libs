@@ -40,7 +40,7 @@ struct InnerCatalystSignedDocument {
     /// Document Metadata
     metadata: WithCborBytes<Metadata>,
     /// Document Content
-    content: WithCborBytes<Content>,
+    content: Content,
     /// Signatures
     signatures: Signatures,
     /// A comprehensive problem report, which could include a decoding errors along with
@@ -64,7 +64,6 @@ impl Display for CatalystSignedDocument {
         f: &mut Formatter<'_>,
     ) -> Result<(), std::fmt::Error> {
         self.inner.metadata.fmt(f)?;
-        writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
@@ -114,7 +113,7 @@ impl CatalystSignedDocument {
 
     /// Return document content object.
     #[must_use]
-    pub(crate) fn content(&self) -> &WithCborBytes<Content> {
+    pub(crate) fn content(&self) -> &Content {
         &self.inner.content
     }
 
@@ -137,10 +136,8 @@ impl CatalystSignedDocument {
     }
 
     /// Return document `ContentType`.
-    ///
-    /// # Errors
-    /// - Missing 'content-type' field.
-    pub fn doc_content_type(&self) -> anyhow::Result<ContentType> {
+    #[must_use]
+    pub fn doc_content_type(&self) -> Option<ContentType> {
         self.inner.metadata.content_type()
     }
 
@@ -288,7 +285,7 @@ impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
                     );
                 }
 
-                let content = WithCborBytes::<Content>::decode(
+                let content = Content::decode(
                     &mut minicbor::Decoder::new(content_bytes.as_slice()),
                     &mut (),
                 )?;

@@ -101,6 +101,7 @@ impl BabyStepGiantStep {
 }
 
 #[cfg(test)]
+#[allow(clippy::explicit_deref_methods)]
 mod tests {
     use std::ops::Mul;
 

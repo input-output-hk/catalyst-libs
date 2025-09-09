@@ -34,7 +34,7 @@ pub struct SignaturesBuilder {
     /// metadata
     metadata: WithCborBytes<Metadata>,
     /// content
-    content: WithCborBytes<Content>,
+    content: Content,
     /// signatures
     signatures: Signatures,
 }
@@ -71,7 +71,7 @@ impl ContentBuilder {
     fn into_signatures_builder(self) -> anyhow::Result<SignaturesBuilder> {
         Ok(SignaturesBuilder {
             metadata: WithCborBytes::new(self.metadata, &mut ())?,
-            content: WithCborBytes::new(self.content, &mut ())?,
+            content: self.content,
             signatures: Signatures::default(),
         })
     }
@@ -92,7 +92,7 @@ impl ContentBuilder {
         json: &serde_json::Value,
     ) -> anyhow::Result<SignaturesBuilder> {
         anyhow::ensure!(
-            self.metadata.content_type()? == ContentType::Json,
+            self.metadata.content_type() == Some(ContentType::Json),
             "Already set metadata field `content-type` is not JSON value"
         );
 
@@ -176,7 +176,7 @@ fn build_signature(
     sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>,
     kid: CatalystId,
     metadata: &WithCborBytes<Metadata>,
-    content: &WithCborBytes<Content>,
+    content: &Content,
 ) -> anyhow::Result<Signature> {
     let data_to_sign = tbs_data(&kid, metadata, content)?;
     let sign_bytes = sign_fn(data_to_sign);
@@ -246,11 +246,13 @@ pub(crate) mod tests {
             kid: super::CatalystId,
         ) -> anyhow::Result<Self> {
             let metadata = WithCborBytes::new(self.metadata, &mut ())?;
-            let content = WithCborBytes::new(self.content, &mut ())?;
-            self.signatures
-                .push(super::build_signature(sign_fn, kid, &metadata, &content)?);
+            self.signatures.push(super::build_signature(
+                sign_fn,
+                kid,
+                &metadata,
+                &self.content,
+            )?);
             self.metadata = metadata.inner();
-            self.content = content.inner();
             Ok(self)
         }
 

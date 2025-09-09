@@ -3,17 +3,19 @@
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
-    CatalystSignedDocument, DocType,
+    providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocType, DocumentRef,
+    DocumentRefs,
 };
 
 /// `ref` field validation rule
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub(crate) enum RefRule {
     /// Is 'ref' specified
     Specified {
         /// expected `type` field of the referenced doc
         exp_ref_types: Vec<DocType>,
+        /// allows multiple document references or only one
+        multiple: bool,
         /// optional flag for the `ref` field
         optional: bool,
     },
@@ -33,21 +35,28 @@ impl RefRule {
         let context: &str = "Ref rule check";
         if let Self::Specified {
             exp_ref_types,
+            multiple,
             optional,
         } = self
         {
-            if let Some(doc_ref) = doc.doc_meta().doc_ref() {
-                let ref_validator = |ref_doc: CatalystSignedDocument| {
-                    referenced_doc_check(&ref_doc, exp_ref_types, "ref", doc.report())
-                };
-                return validate_doc_refs(doc_ref, provider, doc.report(), ref_validator).await;
+            if let Some(doc_refs) = doc.doc_meta().doc_ref() {
+                return doc_refs_check(
+                    doc_refs,
+                    exp_ref_types,
+                    *multiple,
+                    "ref",
+                    provider,
+                    doc.report(),
+                    |_| true,
+                )
+                .await;
             } else if !optional {
                 doc.report()
                     .missing_field("ref", &format!("{context}, document must have ref field"));
                 return Ok(false);
             }
         }
-        if &Self::NotSpecified == self {
+        if let Self::NotSpecified = self {
             if let Some(doc_ref) = doc.doc_meta().doc_ref() {
                 doc.report().unknown_field(
                     "ref",
@@ -62,15 +71,111 @@ impl RefRule {
     }
 }
 
-/// A generic implementation of the referenced document validation.
-pub(crate) fn referenced_doc_check(
+/// Validate all the document references by the defined validation rules,
+/// plus conducting additional validations with the provided `validator`.
+/// Document all possible error in doc report (no fail fast)
+pub(crate) async fn doc_refs_check<Provider, Validator>(
+    doc_refs: &DocumentRefs,
+    exp_ref_types: &[DocType],
+    multiple: bool,
+    field_name: &str,
+    provider: &Provider,
+    report: &ProblemReport,
+    validator: Validator,
+) -> anyhow::Result<bool>
+where
+    Provider: CatalystSignedDocumentProvider,
+    Validator: Fn(&CatalystSignedDocument) -> bool,
+{
+    let mut all_valid = true;
+
+    if !multiple && doc_refs.len() > 1 {
+        report.other(
+            format!(
+                "Only ONE document reference is allowed, found {} document references",
+                doc_refs.len()
+            )
+            .as_str(),
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return Ok(false);
+    }
+
+    for dr in doc_refs.iter() {
+        if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
+            let is_valid = referenced_doc_type_check(ref_doc, exp_ref_types, field_name, report)
+                && referenced_doc_id_and_ver_check(ref_doc, dr, field_name, report)
+                && validator(ref_doc);
+
+            if !is_valid {
+                all_valid = false;
+            }
+        } else {
+            report.functional_validation(
+                &format!("Cannot retrieve a document {dr}"),
+                &format!("Referenced document validation for the `{field_name}` field"),
+            );
+            all_valid = false;
+        }
+    }
+    Ok(all_valid)
+}
+
+/// Validation check that the provided `ref_doc` is a correct referenced document found by
+/// `original_doc_ref`
+fn referenced_doc_id_and_ver_check(
+    ref_doc: &CatalystSignedDocument,
+    original_doc_ref: &DocumentRef,
+    field_name: &str,
+    report: &ProblemReport,
+) -> bool {
+    let Ok(id) = ref_doc.doc_id() else {
+        report.missing_field(
+            "id",
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return false;
+    };
+
+    let Ok(ver) = ref_doc.doc_ver() else {
+        report.missing_field(
+            "ver",
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return false;
+    };
+
+    // id and version must match the values in ref doc
+    if &id != original_doc_ref.id() && &ver != original_doc_ref.ver() {
+        report.invalid_value(
+            "id and version",
+            &format!("id: {id}, ver: {ver}"),
+            &format!(
+                "id: {}, ver: {}",
+                original_doc_ref.id(),
+                original_doc_ref.ver()
+            ),
+            &format!("Referenced document validation for the `{field_name}` field"),
+        );
+        return false;
+    }
+
+    true
+}
+
+/// Validation check that the provided `ref_doc` has an expected `type` field value from
+/// the allowed  `exp_ref_types` list
+fn referenced_doc_type_check(
     ref_doc: &CatalystSignedDocument,
     exp_ref_types: &[DocType],
     field_name: &str,
     report: &ProblemReport,
 ) -> bool {
     let Ok(ref_doc_type) = ref_doc.doc_type() else {
-        report.missing_field("type", "Referenced document must have type field");
+        report.missing_field(
+            "type",
+            &format!("Document reference validation for the `{field_name}` field"),
+        );
         return false;
     };
 
@@ -100,8 +205,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        DocLocator, DocumentRef,
     };
 
     #[test_case(
@@ -308,13 +413,10 @@ mod tests {
         "valid reference to the missing one document"
     )]
     #[tokio::test]
-    async fn ref_specified_test(
-        doc_gen: impl FnOnce(
-            &[DocType; 2],
-            &mut TestCatalystSignedDocumentProvider,
-        ) -> CatalystSignedDocument
+    async fn ref_multiple_specified_test(
+        doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
+        let mut provider = TestCatalystProvider::default();
 
         let exp_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
@@ -322,6 +424,7 @@ mod tests {
 
         let non_optional_res = RefRule::Specified {
             exp_ref_types: exp_types.to_vec(),
+            multiple: true,
             optional: false,
         }
         .check(&doc, &provider)
@@ -330,6 +433,109 @@ mod tests {
 
         let optional_res = RefRule::Specified {
             exp_ref_types: exp_types.to_vec(),
+            multiple: true,
+            optional: true,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        assert_eq!(non_optional_res, optional_res);
+        non_optional_res
+    }
+
+    #[test_case(
+        |exp_types, provider| {
+            let ref_doc = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc.doc_id().unwrap(),
+                        ref_doc.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => true
+        ;
+        "valid document with a single reference"
+    )]
+    #[test_case(
+        |exp_types, provider| {
+            let ref_doc_1 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_1).unwrap();
+            let ref_doc_2 = Builder::new()
+                .with_metadata_field(SupportedField::Id(UuidV7::new()))
+                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+                .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
+                .build();
+            provider.add_document(None, &ref_doc_2).unwrap();
+            let ref_doc_3 = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+            .build();
+            provider.add_document(None, &ref_doc_3).unwrap();
+
+            Builder::new()
+                .with_metadata_field(SupportedField::Ref(
+                    vec![DocumentRef::new(
+                        ref_doc_1.doc_id().unwrap(),
+                        ref_doc_1.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_2.doc_id().unwrap(),
+                        ref_doc_2.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    ),
+                    DocumentRef::new(
+                        ref_doc_3.doc_id().unwrap(),
+                        ref_doc_3.doc_ver().unwrap(),
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
+                .build()
+        }
+        => false
+        ;
+        "valid document with multiple references"
+    )]
+    #[tokio::test]
+    async fn ref_non_multiple_specified_test(
+        doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
+    ) -> bool {
+        let mut provider = TestCatalystProvider::default();
+
+        let exp_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
+
+        let doc = doc_gen(&exp_types, &mut provider);
+
+        let non_optional_res = RefRule::Specified {
+            exp_ref_types: exp_types.to_vec(),
+            multiple: false,
+            optional: false,
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
+
+        let optional_res = RefRule::Specified {
+            exp_ref_types: exp_types.to_vec(),
+            multiple: false,
             optional: true,
         }
         .check(&doc, &provider)
@@ -342,18 +548,20 @@ mod tests {
 
     #[tokio::test]
     async fn ref_specified_optional_test() {
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
             exp_ref_types: vec![UuidV4::new().into()],
+            multiple: true,
             optional: true,
         };
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
             exp_ref_types: vec![UuidV4::new().into()],
+            multiple: true,
             optional: false,
         };
 
@@ -364,7 +572,7 @@ mod tests {
     #[tokio::test]
     async fn ref_rule_not_specified_test() {
         let rule = RefRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());

@@ -4,13 +4,12 @@ use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider,
-    validator::{rules::doc_ref::referenced_doc_check, utils::validate_doc_refs},
+    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
     CatalystSignedDocument, DocType, DocumentRefs,
 };
 
 /// `parameters` field validation rule
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub(crate) enum ParametersRule {
     /// Is `parameters` specified
     Specified {
@@ -41,12 +40,16 @@ impl ParametersRule {
         } = self
         {
             if let Some(parameters_ref) = doc.doc_meta().parameters() {
-                let parameters_validator = |ref_doc: CatalystSignedDocument| {
-                    referenced_doc_check(&ref_doc, exp_parameters_type, "parameters", doc.report())
-                };
-                let parameters_check =
-                    validate_doc_refs(parameters_ref, provider, doc.report(), parameters_validator)
-                        .boxed();
+                let parameters_check = doc_refs_check(
+                    parameters_ref,
+                    exp_parameters_type,
+                    false,
+                    "parameters",
+                    provider,
+                    doc.report(),
+                    |_| true,
+                )
+                .boxed();
 
                 let template_link_check = link_check(
                     doc.doc_meta().template(),
@@ -125,32 +128,41 @@ where
         return Ok(true);
     };
 
-    let link_validator = |ref_doc: CatalystSignedDocument| {
-        let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
-            report.missing_field(
-                "parameters",
-                &format!(
-                    "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
-                ),
-            );
-            return false;
-        };
+    let mut all_valid = true;
 
-        if exp_parameters != ref_doc_parameters {
-            report.invalid_value(
-                "parameters",
-                &format!("Reference doc param: {ref_doc_parameters}",),
-                &format!("Doc param: {exp_parameters}"),
-                &format!(
-                    "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
-                ),
+    for dr in ref_field.iter() {
+        if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
+            let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
+                report.missing_field(
+                    "parameters",
+                    &format!(
+                        "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
+                    ),
+                );
+                all_valid = false;
+                continue;
+            };
+
+            if exp_parameters != ref_doc_parameters {
+                report.invalid_value(
+                    "parameters",
+                    &format!("Reference doc param: {ref_doc_parameters}",),
+                    &format!("Doc param: {exp_parameters}"),
+                    &format!(
+                        "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
+                    ),
+                );
+                all_valid = false;
+            }
+        } else {
+            report.functional_validation(
+                &format!("Cannot retrieve a document {dr}"),
+                &format!("Referenced document link validation for the `{field_name}` field"),
             );
-            return false;
+            all_valid = false;
         }
-        true
-    };
-
-    validate_doc_refs(ref_field, provider, report, link_validator).await
+    }
+    Ok(all_valid)
 }
 
 #[cfg(test)]
@@ -160,8 +172,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        DocLocator, DocumentRef,
     };
 
     #[test_case(
@@ -701,12 +713,9 @@ mod tests {
     )]
     #[tokio::test]
     async fn parameter_specified_test(
-        doc_gen: impl FnOnce(
-            &[DocType; 2],
-            &mut TestCatalystSignedDocumentProvider,
-        ) -> CatalystSignedDocument
+        doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
+        let mut provider = TestCatalystProvider::default();
 
         let exp_param_types: [DocType; 2] = [UuidV4::new().into(), UuidV4::new().into()];
 
@@ -734,7 +743,7 @@ mod tests {
 
     #[tokio::test]
     async fn ref_specified_optional_test() {
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = ParametersRule::Specified {
             exp_parameters_type: vec![UuidV4::new().into()],
             optional: true,
@@ -743,7 +752,7 @@ mod tests {
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = ParametersRule::Specified {
             exp_parameters_type: vec![UuidV4::new().into()],
             optional: false,
@@ -756,7 +765,7 @@ mod tests {
     #[tokio::test]
     async fn parameters_rule_not_specified_test() {
         let rule = ParametersRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());

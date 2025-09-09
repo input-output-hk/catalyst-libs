@@ -1,13 +1,12 @@
 //! `reply` rule type impl.
 
-use super::doc_ref::referenced_doc_check;
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
+    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
     CatalystSignedDocument, DocType,
 };
 
 /// `reply` field validation rule
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub(crate) enum ReplyRule {
     /// Is 'reply' specified
     Specified {
@@ -37,17 +36,7 @@ impl ReplyRule {
         } = self
         {
             if let Some(reply_ref) = doc.doc_meta().reply() {
-                let reply_validator = |ref_doc: CatalystSignedDocument| {
-                    // Validate type
-                    if !referenced_doc_check(
-                        &ref_doc,
-                        std::slice::from_ref(exp_reply_type),
-                        "reply",
-                        doc.report(),
-                    ) {
-                        return false;
-                    }
-
+                let reply_validator = |ref_doc: &CatalystSignedDocument| {
                     // Get `ref` from both the doc and the ref doc
                     let Some(ref_doc_dr) = ref_doc.doc_meta().doc_ref() else {
                         doc.report()
@@ -73,7 +62,17 @@ impl ReplyRule {
                     }
                     true
                 };
-                return validate_doc_refs(reply_ref, provider, doc.report(), reply_validator).await;
+
+                return doc_refs_check(
+                    reply_ref,
+                    std::slice::from_ref(exp_reply_type),
+                    false,
+                    "reply",
+                    provider,
+                    doc.report(),
+                    reply_validator,
+                )
+                .await;
             } else if !optional {
                 doc.report().missing_field(
                     "reply",
@@ -104,9 +103,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
-        DocumentRefs,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        DocLocator, DocumentRef, DocumentRefs,
     };
 
     #[test_case(
@@ -332,9 +330,9 @@ mod tests {
     )]
     #[tokio::test]
     async fn reply_specified_test(
-        doc_gen: impl FnOnce(DocType, &mut TestCatalystSignedDocumentProvider) -> CatalystSignedDocument
+        doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
     ) -> bool {
-        let mut provider = TestCatalystSignedDocumentProvider::default();
+        let mut provider = TestCatalystProvider::default();
 
         let exp_type: DocType = UuidV4::new().into();
 
@@ -362,7 +360,7 @@ mod tests {
 
     #[tokio::test]
     async fn reply_specified_optional_test() {
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = ReplyRule::Specified {
             exp_reply_type: UuidV4::new().into(),
             optional: true,
@@ -371,7 +369,7 @@ mod tests {
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
         let rule = ReplyRule::Specified {
             exp_reply_type: UuidV4::new().into(),
             optional: false,
@@ -384,7 +382,7 @@ mod tests {
     #[tokio::test]
     async fn reply_rule_not_specified_test() {
         let rule = ReplyRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider::default();
+        let provider = TestCatalystProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());

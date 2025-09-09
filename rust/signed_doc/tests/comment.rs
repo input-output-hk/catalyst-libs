@@ -4,10 +4,7 @@
 
 use std::sync::LazyLock;
 
-use catalyst_signed_doc::{
-    providers::tests::{TestCatalystSignedDocumentProvider, TestVerifyingKeyProvider},
-    *,
-};
+use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
@@ -121,18 +118,19 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[tokio::test]
 async fn test_valid_comment_doc() {
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
-    let mut key_provider = TestVerifyingKeyProvider::default();
-    key_provider.add_pk(kid.clone(), pk);
+    let mut provider = TestCatalystProvider::default();
+    provider.add_pk(kid.clone(), pk);
 
     // Create a main comment doc, contain all fields mention in the document (except
     // revocations and section)
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -158,7 +156,6 @@ async fn test_valid_comment_doc() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &COMMENT_REF_DOC).unwrap();
@@ -166,10 +163,6 @@ async fn test_valid_comment_doc() {
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid, "{:?}", doc.problem_report());
-
-    let is_valid = validator::validate_signatures(&doc, &key_provider)
-        .await
-        .unwrap();
     assert!(is_valid);
     assert!(!doc.problem_report().is_problematic());
 }
@@ -180,13 +173,14 @@ async fn test_invalid_comment_doc_wrong_role() {
 
     // Create a main comment doc, contain all fields mention in the document (except
     // revocations and section)
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -212,7 +206,7 @@ async fn test_invalid_comment_doc_wrong_role() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &COMMENT_REF_DOC).unwrap();
@@ -224,13 +218,14 @@ async fn test_invalid_comment_doc_wrong_role() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc_missing_parameters() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -254,7 +249,7 @@ async fn test_invalid_comment_doc_missing_parameters() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &COMMENT_REF_DOC).unwrap();
@@ -266,13 +261,14 @@ async fn test_invalid_comment_doc_missing_parameters() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc_missing_template() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             "ref": {
                 "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
                 "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -296,7 +292,7 @@ async fn test_invalid_comment_doc_missing_template() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &COMMENT_REF_DOC).unwrap();
@@ -308,13 +304,14 @@ async fn test_invalid_comment_doc_missing_template() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc_missing_ref() {
+    let id = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
+            "id": id,
+            "ver": id,
             // "ref": {
             //     "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
             //     "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
@@ -338,7 +335,7 @@ async fn test_invalid_comment_doc_missing_ref() {
         .build()
         .unwrap();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
     provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
     provider.add_document(None, &COMMENT_REF_DOC).unwrap();

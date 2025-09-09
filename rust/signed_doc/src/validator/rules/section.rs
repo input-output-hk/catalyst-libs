@@ -3,6 +3,7 @@
 use crate::CatalystSignedDocument;
 
 /// `section` field validation rule
+#[derive(Debug)]
 pub(crate) enum SectionRule {
     /// Is 'section' specified
     #[allow(dead_code)]

@@ -2,12 +2,19 @@
 
 use crate::{metadata::ContentEncoding, CatalystSignedDocument};
 
-/// `content-encoding` field validation rule
-pub(crate) struct ContentEncodingRule {
-    /// expected `content-encoding` field
-    pub(crate) exp: ContentEncoding,
-    /// optional flag for the `content-encoding` field
-    pub(crate) optional: bool,
+/// `content-encoding` field validation rule.
+#[derive(Debug)]
+pub(crate) enum ContentEncodingRule {
+    /// Content Encoding field is optionally present in the document.
+    Specified {
+        /// expected `content-encoding` field.
+        exp: ContentEncoding,
+        /// optional flag for the `content-encoding` field.
+        optional: bool,
+    },
+    /// Content Encoding field must not be present in the document.
+    #[allow(dead_code)]
+    NotSpecified,
 }
 
 impl ContentEncodingRule {
@@ -17,33 +24,50 @@ impl ContentEncodingRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        if let Some(content_encoding) = doc.doc_content_encoding() {
-            if content_encoding != self.exp {
-                doc.report().invalid_value(
-                    "content-encoding",
-                    content_encoding.to_string().as_str(),
-                    self.exp.to_string().as_str(),
-                    "Invalid Document content-encoding value",
-                );
-                return Ok(false);
-            }
-            if content_encoding.decode(doc.encoded_content()).is_err() {
-                doc.report().invalid_value(
-                    "payload",
-                    &hex::encode(doc.encoded_content()),
-                    &format!(
-                        "Document content (payload) must decodable by the set content encoding type: {content_encoding}"
-                    ),
-                    "Invalid Document content value",
-                );
-                return Ok(false);
-            }
-        } else if !self.optional {
-            doc.report().missing_field(
-                "content-encoding",
-                "Document must have a content-encoding field",
-            );
-            return Ok(false);
+        let context = "Content Encoding Rule check";
+        match self {
+            Self::NotSpecified => {
+                if let Some(content_encoding) = doc.doc_content_encoding() {
+                    doc.report().unknown_field(
+                        "content-encoding",
+                        &content_encoding.to_string(),
+                        &format!(
+                            "{context}, document does not expect to have a content-encoding field"
+                        ),
+                    );
+                    return Ok(false);
+                }
+            },
+            Self::Specified { exp, optional } => {
+                if let Some(content_encoding) = doc.doc_content_encoding() {
+                    if content_encoding != *exp {
+                        doc.report().invalid_value(
+                            "content-encoding",
+                            content_encoding.to_string().as_str(),
+                            exp.to_string().as_str(),
+                            "Invalid Document content-encoding value",
+                        );
+                        return Ok(false);
+                    }
+                    if content_encoding.decode(doc.encoded_content()).is_err() {
+                        doc.report().invalid_value(
+                            "payload",
+                            &hex::encode(doc.encoded_content()),
+                            &format!(
+                                "Document content (payload) must decodable by the set content encoding type: {content_encoding}"
+                            ),
+                            "Invalid Document content value",
+                        );
+                        return Ok(false);
+                    }
+                } else if !optional {
+                    doc.report().missing_field(
+                        "content-encoding",
+                        "Document must have a content-encoding field",
+                    );
+                    return Ok(false);
+                }
+            },
         }
         Ok(true)
     }
@@ -55,10 +79,10 @@ mod tests {
     use crate::{builder::tests::Builder, metadata::SupportedField};
 
     #[tokio::test]
-    async fn content_encoding_rule_test() {
+    async fn content_encoding_is_specified_rule_test() {
         let content_encoding = ContentEncoding::Brotli;
 
-        let mut rule = ContentEncodingRule {
+        let rule = ContentEncodingRule::Specified {
             exp: content_encoding,
             optional: true,
         };
@@ -78,7 +102,27 @@ mod tests {
         let doc = Builder::new().build();
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.optional = false;
+        let rule = ContentEncodingRule::Specified {
+            exp: content_encoding,
+            optional: false,
+        };
         assert!(!rule.check(&doc).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn content_encoding_is_not_specified_rule_test() {
+        let content_encoding = ContentEncoding::Brotli;
+
+        let rule = ContentEncodingRule::NotSpecified;
+
+        // With Brotli content encoding
+        let doc = Builder::new()
+            .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
+        // No content encoding
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc).await.unwrap());
     }
 }
