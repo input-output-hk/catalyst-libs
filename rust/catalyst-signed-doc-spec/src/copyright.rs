@@ -1,4 +1,4 @@
-//! 'copyright' field defition
+//! 'copyright' field definition
 
 #[derive(serde::Deserialize)]
 pub struct Copyright {
