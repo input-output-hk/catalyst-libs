@@ -33,21 +33,19 @@ pub(crate) fn into_rule(
         anyhow::ensure!(!is_field_empty, "'value' field must exist");
     }
 
-    if let Some(value) = &field.value {
-        let template = ContentTypeTemplate(value.clone());
-        let Some(_) = content_types.get(&template) else {
-            return Err(anyhow::anyhow!("Unsupported Content Type: {}", value));
-        };
-        let ident = template.ident();
+    let Some(value) = &field.value else {
+        anyhow::bail!("'value' field must exist");
+    };
 
-        Ok(quote! {
-            crate::validator::rules::ContentTypeRule::Specified {
-                exp: ContentType::#ident,
-            }
-        })
-    } else {
-        Ok(quote! {
-            crate::validator::rules::ContentTypeRule::NotSpecified
-        })
-    }
+    let template = ContentTypeTemplate(value.clone());
+    let Some(_) = content_types.get(&template) else {
+        return Err(anyhow::anyhow!("Unsupported Content Type: {}", value));
+    };
+    let ident = template.ident();
+
+    Ok(quote! {
+        crate::validator::rules::ContentTypeRule::Specified {
+            exp: ContentType::#ident,
+        }
+    })
 }
