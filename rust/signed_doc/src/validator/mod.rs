@@ -5,7 +5,6 @@ pub(crate) mod rules;
 
 use std::{collections::HashMap, sync::LazyLock};
 
-use catalyst_signed_doc_macro;
 use catalyst_types::catalyst_id::role_index::RoleId;
 use rules::{
     ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, IdRule, OriginalAuthorRule,
@@ -22,8 +21,6 @@ use crate::{
     validator::rules::{SignatureRule, TemplateRule},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
-
-catalyst_signed_doc_macro::catalyst_signed_documents_rules!();
 
 /// A table representing a full set or validation rules per document id.
 static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
@@ -166,8 +163,11 @@ fn proposal_submission_action_rule() -> Rules {
 }
 
 /// `DOCUMENT_RULES` initialization function
+#[allow(clippy::expect_used)]
 fn document_rules_init() -> HashMap<DocType, Rules> {
-    let mut document_rules_map: HashMap<DocType, Rules> = documents_rules().collect();
+    let mut document_rules_map: HashMap<DocType, Rules> = Rules::documents_rules()
+        .expect("cannot fail to initialize validation rules")
+        .collect();
 
     // TODO: remove this redefinitions of the validation rules after
     // `catalyst_signed_documents_rules!` macro would be fully finished

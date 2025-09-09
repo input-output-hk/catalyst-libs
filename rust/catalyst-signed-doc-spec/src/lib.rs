@@ -8,7 +8,7 @@ pub mod headers;
 pub mod is_required;
 pub mod metadata;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use build_info as build_info_lib;
 
@@ -26,6 +26,15 @@ pub struct CatalystSignedDocSpec {
 // A thin wrapper over the string document name values
 #[derive(serde::Deserialize, PartialEq, Eq, Hash)]
 pub struct DocumentName(String);
+
+impl Display for DocumentName {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl DocumentName {
     /// returns document name
