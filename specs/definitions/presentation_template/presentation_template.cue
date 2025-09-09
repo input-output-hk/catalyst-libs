@@ -65,7 +65,7 @@ presentationTemplate: {
 			type:        "object"
 			description: "Parameters which help the front end layout the provided template. To be defined."
 		}
-		template: {
+		cardTemplate: {
 			type:        "string"
 			contentType: "text/html; charset=utf-8; template=handlebars"
 			description: """
@@ -74,7 +74,7 @@ presentationTemplate: {
 				derived from the `requiredDocumentTypes` and available system wide dynamic data.
 				"""
 		}
-		css: {
+		cardTemplateCss: {
 			type:        "string"
 			contentType: "text/css; charset=utf-8; template=handlebars"
 			description: """
