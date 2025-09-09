@@ -1,6 +1,6 @@
 //! `signed_doc.json` "ref" field JSON definition
 
-use crate::{DocTypes, IsRequired};
+use crate::{doc_types::DocTypes, is_required::IsRequired};
 
 /// `signed_doc.json` "ref" field JSON object
 #[derive(serde::Deserialize)]
