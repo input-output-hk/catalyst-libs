@@ -1,0 +1,19 @@
+[package]
+name = "catalyst-signed-doc-spec"
+version = "0.0.1"
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde_json = "1.0.142"
+anyhow = "1.0.99"
+serde = { version = "1.0.219", features = ["derive"] }
+
+quote = "1.0"
+proc-macro2 = "1.0"
+
+[lints]
+workspace = true
