@@ -83,6 +83,6 @@ mod tests {
 
     #[test]
     fn load_signed_doc_spec_test() {
-        assert!(CatalystSignedDocSpec::load_signed_doc_spec().is_ok());
+        CatalystSignedDocSpec::load_signed_doc_spec().unwrap();
     }
 }
