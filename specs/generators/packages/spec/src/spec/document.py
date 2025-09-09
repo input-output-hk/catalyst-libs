@@ -32,15 +32,16 @@ class Document(BaseModel):
     """Document Data Definition."""
 
     type: DocTypeId
+    draft: bool
     description: str | None = Field(default=None)
     validation: str | None = Field(default=None)
     business_logic: DocumentBusinessLogic = Field(
         default_factory=DocumentBusinessLogic,
     )
     notes: list[str]
-    headers: CoseHeaders | None = Field(default=None)
+    headers: CoseHeaders
     metadata: MetadataHeaders
-    payload: Payload | None = Field(default=None)
+    payload: Payload
     signers: Signers
     authors: Authors
     versions: list[ChangeLogEntry]
@@ -49,7 +50,7 @@ class Document(BaseModel):
     _all_refs: list[str] = PrivateAttr(default_factory=empty_string_list)
     _refed_by: list[str] = PrivateAttr(default_factory=empty_string_list)
 
-    doc_name: str | None = Field(default=None)  # Set when wwe get a document
+    doc_name: str | None = Field(default=None)  # Set when we get a document
 
     model_config = ConfigDict(extra="forbid")
 

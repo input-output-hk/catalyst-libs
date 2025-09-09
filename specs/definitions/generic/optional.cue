@@ -1,7 +1,9 @@
 package optional
 
-// Is a field Required, Optional or Excluded/Unused
-#field:
+#field_without_default:
 	"yes" |
 	"optional" |
-	*"excluded"
+	"excluded"
+
+// Is a field Required, Optional or Excluded/Unused
+#field: #field_without_default | *"excluded"

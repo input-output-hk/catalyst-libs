@@ -680,56 +680,60 @@
 <!-- Contest Delegation -->
 <g id="Contest Delegation" class="node">
 <title>Contest Delegation</title>
-<ellipse fill="none" stroke="black" stroke-width="0" cx="656.2" cy="-3204.66" rx="656.2" ry="301.05"/>
+<ellipse fill="none" stroke="black" stroke-width="0" cx="656.2" cy="-3234.66" rx="656.2" ry="343.65"/>
 <g id="a_Contest Delegation_14"><a xlink:href="./docs/contest_delegation/" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#1d71b8" stroke="none" points="194.2,-3355.28 194.2,-3415.53 1118.2,-3415.53 1118.2,-3355.28 194.2,-3355.28"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-3355.28 194.2,-3415.53 1118.2,-3415.53 1118.2,-3355.28 194.2,-3355.28"/>
-<text xml:space="preserve" text-anchor="start" x="283.07" y="-3375.13" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text>
-<text xml:space="preserve" text-anchor="start" x="493.07" y="-3375.13" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="32.00" fill="#ffffff"> Contest Delegation </text>
-<text xml:space="preserve" text-anchor="start" x="861.32" y="-3375.13" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text>
+<polygon fill="#1d71b8" stroke="none" points="194.2,-3415.41 194.2,-3475.66 1118.2,-3475.66 1118.2,-3415.41 194.2,-3415.41"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3415.41 194.2,-3475.66 1118.2,-3475.66 1118.2,-3415.41 194.2,-3415.41"/>
+<text xml:space="preserve" text-anchor="start" x="283.07" y="-3435.26" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text>
+<text xml:space="preserve" text-anchor="start" x="493.07" y="-3435.26" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="32.00" fill="#ffffff"> Contest Delegation </text>
+<text xml:space="preserve" text-anchor="start" x="861.32" y="-3435.26" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#29235c"> &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text>
 </a>
 </g>
-<polygon fill="#e7e2dd" stroke="none" points="194.2,-3295.03 194.2,-3355.28 1118.2,-3355.28 1118.2,-3295.03 194.2,-3295.03"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-3295.03 194.2,-3355.28 1118.2,-3355.28 1118.2,-3295.03 194.2,-3295.03"/>
-<text xml:space="preserve" text-anchor="start" x="205.2" y="-3313.88" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">type</text>
-<text xml:space="preserve" text-anchor="start" x="405.2" y="-3314.88" font-family="Courier,monospace" font-weight="bold" font-style="italic" font-size="32.00" fill="#7706e5">764f17fb&#45;cc50&#45;4979&#45;b14a&#45;b213dbac5994</text>
-<polygon fill="#b8b5b0" stroke="none" points="194.2,-3234.78 194.2,-3295.03 1118.2,-3295.03 1118.2,-3234.78 194.2,-3234.78"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-3234.78 194.2,-3295.03 1118.2,-3295.03 1118.2,-3234.78 194.2,-3234.78"/>
-<text xml:space="preserve" text-anchor="start" x="205.2" y="-3253.63" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">id</text>
-<text xml:space="preserve" text-anchor="start" x="900.95" y="-3254.63" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Document Id</text>
-<polygon fill="#e7e2dd" stroke="none" points="194.2,-3174.53 194.2,-3234.78 1118.2,-3234.78 1118.2,-3174.53 194.2,-3174.53"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-3174.53 194.2,-3234.78 1118.2,-3234.78 1118.2,-3174.53 194.2,-3174.53"/>
-<text xml:space="preserve" text-anchor="start" x="205.2" y="-3193.38" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">ver</text>
-<text xml:space="preserve" text-anchor="start" x="878.45" y="-3194.38" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Document Ver</text>
-<polygon fill="#b8b5b0" stroke="none" points="194.2,-3114.28 194.2,-3174.53 1118.2,-3174.53 1118.2,-3114.28 194.2,-3114.28"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-3114.28 194.2,-3174.53 1118.2,-3174.53 1118.2,-3114.28 194.2,-3114.28"/>
-<text xml:space="preserve" text-anchor="start" x="205.2" y="-3133.13" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">ref</text>
-<text xml:space="preserve" text-anchor="start" x="850.7" y="-3134.13" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Rep Nomination</text>
-<polygon fill="#e7e2dd" stroke="none" points="194.2,-3054.03 194.2,-3114.28 1118.2,-3114.28 1118.2,-3054.03 194.2,-3054.03"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-3054.03 194.2,-3114.28 1118.2,-3114.28 1118.2,-3054.03 194.2,-3054.03"/>
-<text xml:space="preserve" text-anchor="start" x="205.2" y="-3072.88" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">revocations</text>
-<text xml:space="preserve" text-anchor="start" x="785.45" y="-3073.88" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Version Revocations</text>
-<polygon fill="#b8b5b0" stroke="none" points="194.2,-2993.78 194.2,-3054.03 1118.2,-3054.03 1118.2,-2993.78 194.2,-2993.78"/>
-<polygon fill="none" stroke="#29235c" points="194.2,-2993.78 194.2,-3054.03 1118.2,-3054.03 1118.2,-2993.78 194.2,-2993.78"/>
-<text xml:space="preserve" text-anchor="start" x="205.2" y="-3012.63" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">parameters</text>
-<text xml:space="preserve" text-anchor="start" x="789.2" y="-3013.63" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Contest Parameters</text>
-<polygon fill="none" stroke="#29235c" stroke-width="2" points="193.2,-2992.78 193.2,-3416.53 1119.2,-3416.53 1119.2,-2992.78 193.2,-2992.78"/>
+<polygon fill="#e7e2dd" stroke="none" points="194.2,-3355.16 194.2,-3415.41 1118.2,-3415.41 1118.2,-3355.16 194.2,-3355.16"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3355.16 194.2,-3415.41 1118.2,-3415.41 1118.2,-3355.16 194.2,-3355.16"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3374.01" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">content type</text>
+<text xml:space="preserve" text-anchor="start" x="943.7" y="-3375.01" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Undefined</text>
+<polygon fill="#b8b5b0" stroke="none" points="194.2,-3294.91 194.2,-3355.16 1118.2,-3355.16 1118.2,-3294.91 194.2,-3294.91"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3294.91 194.2,-3355.16 1118.2,-3355.16 1118.2,-3294.91 194.2,-3294.91"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3313.76" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">type</text>
+<text xml:space="preserve" text-anchor="start" x="405.2" y="-3314.76" font-family="Courier,monospace" font-weight="bold" font-style="italic" font-size="32.00" fill="#7706e5">764f17fb&#45;cc50&#45;4979&#45;b14a&#45;b213dbac5994</text>
+<polygon fill="#e7e2dd" stroke="none" points="194.2,-3234.66 194.2,-3294.91 1118.2,-3294.91 1118.2,-3234.66 194.2,-3234.66"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3234.66 194.2,-3294.91 1118.2,-3294.91 1118.2,-3234.66 194.2,-3234.66"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3253.51" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">id</text>
+<text xml:space="preserve" text-anchor="start" x="900.95" y="-3254.51" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Document Id</text>
+<polygon fill="#b8b5b0" stroke="none" points="194.2,-3174.41 194.2,-3234.66 1118.2,-3234.66 1118.2,-3174.41 194.2,-3174.41"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3174.41 194.2,-3234.66 1118.2,-3234.66 1118.2,-3174.41 194.2,-3174.41"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3193.26" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">ver</text>
+<text xml:space="preserve" text-anchor="start" x="878.45" y="-3194.26" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Document Ver</text>
+<polygon fill="#e7e2dd" stroke="none" points="194.2,-3114.16 194.2,-3174.41 1118.2,-3174.41 1118.2,-3114.16 194.2,-3114.16"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3114.16 194.2,-3174.41 1118.2,-3174.41 1118.2,-3114.16 194.2,-3114.16"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3133.01" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">ref</text>
+<text xml:space="preserve" text-anchor="start" x="850.7" y="-3134.01" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Rep Nomination</text>
+<polygon fill="#b8b5b0" stroke="none" points="194.2,-3053.91 194.2,-3114.16 1118.2,-3114.16 1118.2,-3053.91 194.2,-3053.91"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-3053.91 194.2,-3114.16 1118.2,-3114.16 1118.2,-3053.91 194.2,-3053.91"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3072.76" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">revocations</text>
+<text xml:space="preserve" text-anchor="start" x="785.45" y="-3073.76" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Version Revocations</text>
+<polygon fill="#e7e2dd" stroke="none" points="194.2,-2993.66 194.2,-3053.91 1118.2,-3053.91 1118.2,-2993.66 194.2,-2993.66"/>
+<polygon fill="none" stroke="#29235c" points="194.2,-2993.66 194.2,-3053.91 1118.2,-3053.91 1118.2,-2993.66 194.2,-2993.66"/>
+<text xml:space="preserve" text-anchor="start" x="205.2" y="-3012.51" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">parameters</text>
+<text xml:space="preserve" text-anchor="start" x="789.2" y="-3013.51" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Contest Parameters</text>
+<polygon fill="none" stroke="#29235c" stroke-width="2" points="193.2,-2992.66 193.2,-3476.66 1119.2,-3476.66 1119.2,-2992.66 193.2,-2992.66"/>
 </g>
 <!-- Contest Delegation&#45;&gt;Rep Nomination -->
 <g id="edge9" class="edge">
 <title>Contest Delegation:e&#45;&gt;Rep Nomination:w</title>
-<path fill="none" stroke="#29235c" stroke-width="6" d="M1119.2,-3144.41C1350.28,-3144.41 1314.93,-3443.15 1533.53,-3457.15"/>
+<path fill="none" stroke="#29235c" stroke-width="6" d="M1119.2,-3144.28C1350.31,-3144.28 1314.9,-3443.14 1533.53,-3457.15"/>
 <polygon fill="#29235c" stroke="#29235c" stroke-width="6" points="1533.11,-3462.39 1543.27,-3457.46 1533.44,-3451.9 1533.11,-3462.39"/>
 <text xml:space="preserve" text-anchor="middle" x="1539.59" y="-3427.26" font-family="Helvetica,sans-Serif" font-size="32.00" fill="red">1</text>
-<text xml:space="preserve" text-anchor="middle" x="1111.32" y="-3114.01" font-family="Helvetica,sans-Serif" font-size="32.00" fill="red">*</text>
+<text xml:space="preserve" text-anchor="middle" x="1111.32" y="-3113.88" font-family="Helvetica,sans-Serif" font-size="32.00" fill="red">*</text>
 </g>
 <!-- Contest Delegation&#45;&gt;Contest Parameters -->
 <g id="edge10" class="edge">
 <title>Contest Delegation:e&#45;&gt;Contest Parameters:w</title>
-<path fill="none" stroke="#29235c" stroke-width="6" d="M1119.2,-3023.91C1255.05,-3023.91 1223.01,-2873.96 1348.39,-2821.66 2574.09,-2310.41 3010.32,-2729.13 4331.19,-2732.51"/>
+<path fill="none" stroke="#29235c" stroke-width="6" d="M1119.2,-3023.78C1255.01,-3023.78 1223.03,-2873.93 1348.39,-2821.66 2574.17,-2310.59 3010.33,-2729.13 4331.19,-2732.51"/>
 <polygon fill="#29235c" stroke="#29235c" stroke-width="6" points="4330.8,-2737.76 4340.81,-2732.53 4330.81,-2727.26 4330.8,-2737.76"/>
 <text xml:space="preserve" text-anchor="middle" x="4337.14" y="-2702.13" font-family="Helvetica,sans-Serif" font-size="32.00" fill="red">1</text>
-<text xml:space="preserve" text-anchor="middle" x="1111.32" y="-2993.51" font-family="Helvetica,sans-Serif" font-size="32.00" fill="red">*</text>
+<text xml:space="preserve" text-anchor="middle" x="1111.32" y="-2993.38" font-family="Helvetica,sans-Serif" font-size="32.00" fill="red">*</text>
 </g>
 <!-- Contest Parameters Form Template&#45;&gt;Brand Parameters -->
 <g id="edge13" class="edge">
