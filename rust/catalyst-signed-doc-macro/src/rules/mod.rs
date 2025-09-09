@@ -28,11 +28,12 @@ pub(crate) fn catalyst_signed_documents_rules_impl() -> anyhow::Result<TokenStre
                     exp: ContentEncoding::Brotli,
                     optional: false,
                 },
-                content: #content_rule,
+                template: crate::validator::rules::TemplateRule::NotSpecified,
                 parameters: crate::validator::rules::ParametersRule::NotSpecified,
                 doc_ref: #ref_rule,
                 reply: crate::validator::rules::ReplyRule::NotSpecified,
                 section: crate::validator::rules::SectionRule::NotSpecified,
+                content: crate::validator::rules::ContentRule::Nil,
                 kid: crate::validator::rules::SignatureKidRule {
                     exp: &[],
                 },
