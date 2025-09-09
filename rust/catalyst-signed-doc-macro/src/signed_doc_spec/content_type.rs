@@ -5,5 +5,5 @@
 #[allow(clippy::missing_docs_in_private_items)]
 pub(crate) struct ContentType {
     pub(crate) required: super::IsRequired,
-    pub(crate) value: String,
+    pub(crate) value: Option<String>,
 }

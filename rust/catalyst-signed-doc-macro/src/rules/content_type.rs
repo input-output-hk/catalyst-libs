@@ -12,9 +12,12 @@ pub(crate) fn into_rule(
     content_types: &HashMap<ContentTypeTemplate, ContentTypeSpec>,
     field: &signed_doc_spec::content_type::ContentType,
 ) -> anyhow::Result<TokenStream> {
+    let is_field_empty =
+        field.value.is_none() || field.value.as_ref().is_some_and(std::string::String::is_empty);
+
     if matches!(field.required, IsRequired::Excluded) {
         anyhow::ensure!(
-            field.value.is_empty(),
+            is_field_empty,
             "'value' field must not exist when 'required' is 'excluded'"
         );
 
@@ -24,18 +27,24 @@ pub(crate) fn into_rule(
     }
 
     if matches!(field.required, IsRequired::Yes) {
-        anyhow::ensure!(!field.value.is_empty(), "'value' field must exist");
+        anyhow::ensure!(!is_field_empty, "'value' field must exist");
     }
 
-    let template = ContentTypeTemplate(field.value.clone());
-    let Some(_) = content_types.get(&template) else {
-        return Err(anyhow::anyhow!("Unsupported Content Type: {}", field.value));
-    };
-    let ident = template.ident();
+    if let Some(value) = &field.value {
+        let template = ContentTypeTemplate(value.clone());
+        let Some(_) = content_types.get(&template) else {
+            return Err(anyhow::anyhow!("Unsupported Content Type: {}", value));
+        };
+        let ident = template.ident();
 
-    Ok(quote! {
-        crate::validator::rules::ContentTypeRule::Specified {
-            exp: ContentType::#ident,
-        }
-    })
+        Ok(quote! {
+            crate::validator::rules::ContentTypeRule::Specified {
+                exp: ContentType::#ident,
+            }
+        })
+    } else {
+        Ok(quote! {
+            crate::validator::rules::ContentTypeRule::NotSpecified
+        })
+    }
 }
