@@ -49,7 +49,7 @@ impl TemplateRule {
                     return false;
                 };
                 match template_content_type {
-                    ContentType::Json | ContentType::JsonSchema => {
+                    ContentType::Json | ContentType::SchemaJson => {
                         templated_json_schema_check(doc, template_doc)
                     },
                     ContentType::Cddl
