@@ -122,7 +122,7 @@ impl Rules {
                 id: IdRule,
                 ver: VerRule,
                 content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
-                content_encoding: ContentEncodingRule::NotSpecified,
+                content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
                 template: TemplateRule::NotSpecified,
                 parameters: ParametersRule::NotSpecified,
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,

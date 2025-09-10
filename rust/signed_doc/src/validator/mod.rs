@@ -42,7 +42,7 @@ fn proposal_rule() -> Rules {
             exp: ContentType::Json,
         },
         content_encoding: ContentEncodingRule::Specified {
-            exp: ContentEncoding::Brotli,
+            exp: vec![ContentEncoding::Brotli],
             optional: false,
         },
         template: TemplateRule::Specified {
@@ -81,7 +81,7 @@ fn proposal_comment_rule() -> Rules {
             exp: ContentType::Json,
         },
         content_encoding: ContentEncodingRule::Specified {
-            exp: ContentEncoding::Brotli,
+            exp: vec![ContentEncoding::Brotli],
             optional: false,
         },
         template: TemplateRule::Specified {
@@ -138,7 +138,7 @@ fn proposal_submission_action_rule() -> Rules {
             exp: ContentType::Json,
         },
         content_encoding: ContentEncodingRule::Specified {
-            exp: ContentEncoding::Brotli,
+            exp: vec![ContentEncoding::Brotli],
             optional: false,
         },
         template: TemplateRule::NotSpecified,
