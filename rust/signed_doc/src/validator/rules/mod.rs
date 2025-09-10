@@ -129,7 +129,7 @@ impl Rules {
                 reply: ReplyRule::NotSpecified,
                 section: SectionRule::NotSpecified,
                 content: ContentRule::Nil,
-                kid: SignatureKidRule { exp: &[] },
+                kid: SignatureKidRule::new(&doc_spec.signers.roles),
                 signature: SignatureRule { mutlisig: false },
                 original_author: OriginalAuthorRule,
             };

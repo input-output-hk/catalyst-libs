@@ -13,7 +13,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use build_info as build_info_lib;
 
-use crate::{copyright::Copyright, headers::Headers, metadata::Metadata};
+use crate::{copyright::Copyright, headers::Headers, metadata::Metadata, signers::Signers};
 
 build_info_lib::build_info!(pub(crate) fn build_info);
 
@@ -65,6 +65,7 @@ pub struct DocSpec {
     pub doc_type: String,
     pub headers: Headers,
     pub metadata: Metadata,
+    pub signers: Signers,
 }
 
 impl CatalystSignedDocSpec {

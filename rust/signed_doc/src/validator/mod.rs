@@ -57,7 +57,7 @@ fn proposal_rule() -> Rules {
         section: SectionRule::NotSpecified,
         content: ContentRule::NotNil,
         kid: SignatureKidRule {
-            exp: &[RoleId::Proposer],
+            allowed_roles: vec![RoleId::Proposer],
         },
         signature: SignatureRule { mutlisig: false },
         original_author: OriginalAuthorRule,
@@ -103,7 +103,7 @@ fn proposal_comment_rule() -> Rules {
         },
         content: ContentRule::NotNil,
         kid: SignatureKidRule {
-            exp: &[RoleId::Role0],
+            allowed_roles: vec![RoleId::Role0],
         },
         signature: SignatureRule { mutlisig: false },
         original_author: OriginalAuthorRule,
@@ -155,7 +155,7 @@ fn proposal_submission_action_rule() -> Rules {
         section: SectionRule::NotSpecified,
         content: ContentRule::StaticSchema(ContentSchema::Json(proposal_action_json_schema)),
         kid: SignatureKidRule {
-            exp: &[RoleId::Proposer],
+            allowed_roles: vec![RoleId::Proposer],
         },
         signature: SignatureRule { mutlisig: false },
         original_author: OriginalAuthorRule,
