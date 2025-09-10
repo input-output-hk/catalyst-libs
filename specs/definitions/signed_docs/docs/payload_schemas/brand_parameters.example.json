@@ -1,45 +1,23 @@
 {
-    "brandIdentity": {
-        "name": "Catalyst Community",
-        "description": "A decentralized innovation fund for the Cardano ecosystem, supporting community-driven projects that advance the platform's capabilities and adoption.",
-        "logo": "https://catalyst-community.io/logo.png",
-        "theme": {
-            "primaryColor": "#1E40AF",
-            "secondaryColor": "#3B82F6"
-        }
-    },
-    "operationalParameters": {
-        "fundingRules": {
-            "maxProposalAmount": 500000,
-            "minProposalAmount": 1000,
-            "totalBudget": 5000000
-        },
-        "votingParameters": {
-            "votingPowerCalculation": "linear",
-            "minVotingPower": 1000
-        },
-        "timelineConfiguration": {
-            "defaultCampaignDuration": 90,
-            "proposalSubmissionDeadline": 7
-        }
-    },
-    "contentConfiguration": {
-        "termsOfService": "By participating in Catalyst, you agree to our terms of service...",
-        "privacyPolicy": "We are committed to protecting your privacy and personal data...",
-        "welcomeMessage": "Welcome to Catalyst! Help shape the future of Cardano by proposing and voting on innovative projects.",
-        "brandedMessaging": {
-            "proposalSubmissionSuccess": "Your proposal has been successfully submitted for review!",
-            "votingReminder": "Don't forget to vote on proposals in the current campaign!"
-        }
-    },
-    "systemSettings": {
-        "apiEndpoints": {
-            "baseUrl": "https://api.catalyst-community.io",
-            "timeout": 30000
-        },
-        "notifications": {
-            "emailEnabled": true,
-            "pushEnabled": true
-        }
-    }
+  "brandName": "Catalyst Community",
+  "brandDescription": "A decentralized governance platform for the Cardano ecosystem that enables community-driven decision making through transparent voting and proposal systems.",
+  "brandLogo": "https://catalyst-community.io/assets/logo.png",
+  "primaryColor": "#1E40AF",
+  "secondaryColor": "#3B82F6",
+  "maxProposalAmount": "500000",
+  "minProposalAmount": "10000",
+  "totalBudget": "2000000",
+  "votingPowerCalculation": "quadratic",
+  "minVotingPower": "1000",
+  "defaultCampaignDuration": "30",
+  "proposalSubmissionDeadline": "7",
+  "termsOfService": "By participating in Catalyst Community, you agree to follow our community guidelines and respect all participants. Proposals must align with Cardano's mission and values.",
+  "privacyPolicy": "We collect minimal data necessary for governance participation. Your voting preferences and proposal submissions are stored securely and used only for governance purposes.",
+  "welcomeMessage": "Welcome to Catalyst Community! Here you can submit proposals, vote on community initiatives, and help shape the future of Cardano.",
+  "proposalSubmissionSuccessMessage": "Your proposal has been successfully submitted and is now under review. You will be notified of its status.",
+  "votingReminderMessage": "Don't forget to vote on the current proposals! Your voice matters in shaping our community's future.",
+  "apiBaseUrl": "https://api.catalyst-community.io/v1",
+  "apiTimeout": "30000",
+  "emailNotificationsEnabled": "true",
+  "pushNotificationsEnabled": "true"
 }

@@ -1,397 +1,175 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "Category Parameters Payload Schema",
-    "description": "Structure of the payload of a Category Parameters document using project-defined form elements",
-    "maintainers": [
-        {
-            "name": "Catalyst Team",
-            "url": "https://projectcatalyst.io/"
-        }
-    ],
-    "x-changelog": {
-        "2025-03-01": [
-            "First Version Created."
-        ],
-        "2025-01-15": [
-            "Updated to use project-defined form elements",
-            "Aligned with CUE form element structure",
-            "Simplified custom definitions"
-        ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Category Parameters Form Template",
+  "description": "JSON Schema for Category Parameters using CUE form elements",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "categoryId": {
+      "type": "string",
+      "title": "Category ID",
+      "description": "Unique category identifier",
+      "pattern": "^[a-zA-Z0-9\\-_]+$",
+      "minLength": 1,
+      "maxLength": 300
     },
-    "type": "object",
-    "additionalProperties": false,
-    "$defs": {
-        "categoryIdentity": {
-            "type": "object",
-            "description": "Category identity and branding elements",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Category name",
-                    "minLength": 1,
-                    "maxLength": 100,
-                    "pattern": "^[a-zA-Z0-9\\s\\-_]+$"
-                },
-                "description": {
-                    "type": "string",
-                    "description": "Category description",
-                    "maxLength": 1000
-                },
-                "theme": {
-                    "type": "string",
-                    "description": "Category theme or focus area",
-                    "maxLength": 200
-                },
-                "icon": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "URL to category icon"
-                },
-                "color": {
-                    "type": "string",
-                    "pattern": "^#[0-9A-Fa-f]{6}$",
-                    "description": "Category color in hex format"
-                }
-            },
-            "required": ["name", "description", "theme"]
-        },
-        "eligibilityCriteria": {
-            "type": "object",
-            "description": "Rules defining who can submit proposals in this category",
-            "properties": {
-                "minStakeAmount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Minimum stake amount required to submit proposals"
-                },
-                "minHoldingPeriod": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Minimum holding period in days"
-                },
-                "requiredSkills": {
-                    "type": "array",
-                    "description": "Required skills or qualifications",
-                    "items": {
-                        "type": "string",
-                        "maxLength": 100
-                    }
-                },
-                "excludedAddresses": {
-                    "type": "array",
-                    "description": "Addresses excluded from submitting proposals",
-                    "items": {
-                        "type": "string",
-                        "pattern": "^addr1[a-z0-9]{98}$"
-                    }
-                },
-                "kycRequired": {
-                    "type": "boolean",
-                    "description": "Whether KYC verification is required"
-                },
-                "maxProposalsPerUser": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "description": "Maximum number of proposals per user in this category"
-                }
-            }
-        },
-        "fundingConfiguration": {
-            "type": "object",
-            "description": "Budget allocation and disbursement rules specific to the category",
-            "properties": {
-                "totalBudget": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Total budget allocated to this category"
-                },
-                "minProposalAmount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Minimum proposal amount for this category"
-                },
-                "maxProposalAmount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Maximum proposal amount for this category"
-                },
-                "disbursementSchedule": {
-                    "type": "object",
-                    "description": "Schedule for fund disbursement",
-                    "properties": {
-                        "method": {
-                            "type": "string",
-                            "enum": ["immediate", "milestone-based", "quarterly", "project-completion"],
-                            "description": "Disbursement method"
-                        },
-                        "milestones": {
-                            "type": "array",
-                            "description": "Milestone-based disbursement schedule",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "description": "Milestone name",
-                                        "minLength": 1,
-                                        "maxLength": 100
-                                    },
-                                    "percentage": {
-                                        "type": "number",
-                                        "minimum": 0,
-                                        "maximum": 100,
-                                        "description": "Percentage of funds to disburse"
-                                    },
-                                    "deliverables": {
-                                        "type": "array",
-                                        "description": "Required deliverables for this milestone",
-                                        "items": {
-                                            "type": "string",
-                                            "maxLength": 200
-                                        }
-                                    }
-                                },
-                                "required": ["name", "percentage"]
-                            }
-                        }
-                    }
-                }
-            },
-            "required": ["totalBudget", "minProposalAmount", "maxProposalAmount"]
-        },
-        "submissionRules": {
-            "type": "object",
-            "description": "Proposal submission guidelines, deadlines, and requirements",
-            "properties": {
-                "submissionDeadline": {
-                    "type": "string",
-                    "format": "date",
-                    "description": "Deadline for proposal submissions"
-                },
-                "requiredFields": {
-                    "type": "array",
-                    "description": "Required fields in proposal submissions",
-                    "items": {
-                        "type": "string",
-                        "enum": ["title", "description", "budget", "timeline", "team", "deliverables", "success-metrics"]
-                    }
-                },
-                "maxProposalLength": {
-                    "type": "integer",
-                    "minimum": 100,
-                    "description": "Maximum proposal length in words"
-                },
-                "minProposalLength": {
-                    "type": "integer",
-                    "minimum": 50,
-                    "description": "Minimum proposal length in words"
-                },
-                "allowedFileTypes": {
-                    "type": "array",
-                    "description": "Allowed file types for attachments",
-                    "items": {
-                        "type": "string",
-                        "enum": ["pdf", "doc", "docx", "txt", "md", "jpg", "png", "gif", "mp4", "zip"]
-                    }
-                },
-                "maxFileSize": {
-                    "type": "integer",
-                    "minimum": 1024,
-                    "description": "Maximum file size in bytes"
-                },
-                "proposalTemplate": {
-                    "type": "string",
-                    "description": "Required template for proposals in this category",
-                    "pattern": "^[a-zA-Z0-9\\-_]+$"
-                }
-            },
-            "required": ["submissionDeadline", "requiredFields"]
-        },
-        "reviewParameters": {
-            "type": "object",
-            "description": "Review processes, criteria, and scoring mechanisms",
-            "properties": {
-                "reviewProcess": {
-                    "type": "object",
-                    "description": "Review process configuration",
-                    "properties": {
-                        "stages": {
-                            "type": "array",
-                            "description": "Review stages",
-                            "items": {
-                                "type": "string",
-                                "enum": ["initial-screening", "technical-review", "community-review", "expert-evaluation", "final-approval"]
-                            }
-                        },
-                        "reviewerCount": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "description": "Number of reviewers per proposal"
-                        },
-                        "reviewDuration": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "description": "Review duration in days"
-                        }
-                    }
-                },
-                "evaluationCriteria": {
-                    "type": "array",
-                    "description": "Criteria for evaluating proposals",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "Criterion name",
-                                "minLength": 1,
-                                "maxLength": 100
-                            },
-                            "description": {
-                                "type": "string",
-                                "description": "Criterion description",
-                                "maxLength": 500
-                            },
-                            "weight": {
-                                "type": "number",
-                                "minimum": 0,
-                                "maximum": 100,
-                                "description": "Weight of this criterion in scoring"
-                            },
-                            "scale": {
-                                "type": "string",
-                                "enum": ["1-5", "1-10", "pass-fail"],
-                                "description": "Scoring scale"
-                            }
-                        },
-                        "required": ["name", "description", "weight", "scale"]
-                    }
-                },
-                "scoringMethod": {
-                    "type": "string",
-                    "enum": ["average", "weighted-average", "consensus", "majority-vote"],
-                    "description": "Method for calculating final scores"
-                },
-                "minScoreThreshold": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Minimum score required for approval"
-                }
-            },
-            "required": ["reviewProcess", "evaluationCriteria", "scoringMethod"]
-        },
-        "templateSpecifications": {
-            "type": "object",
-            "description": "Available proposal templates and their constraints",
-            "properties": {
-                "defaultTemplate": {
-                    "type": "string",
-                    "description": "Default template for this category",
-                    "pattern": "^[a-zA-Z0-9\\-_]+$"
-                },
-                "allowedTemplates": {
-                    "type": "array",
-                    "description": "Templates allowed for this category",
-                    "items": {
-                        "type": "string",
-                        "pattern": "^[a-zA-Z0-9\\-_]+$"
-                    }
-                },
-                "templateConstraints": {
-                    "type": "object",
-                    "description": "Constraints on template usage",
-                    "properties": {
-                        "requireCustomFields": {
-                            "type": "array",
-                            "description": "Custom fields required in templates",
-                            "items": {
-                                "type": "string",
-                                "maxLength": 100
-                            }
-                        },
-                        "forbiddenFields": {
-                            "type": "array",
-                            "description": "Fields not allowed in templates",
-                            "items": {
-                                "type": "string",
-                                "maxLength": 100
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "operationalSettings": {
-            "type": "object",
-            "description": "Technical configurations specific to category operations",
-            "properties": {
-                "notifications": {
-                    "type": "object",
-                    "description": "Category-specific notification settings",
-                    "properties": {
-                        "submissionReminders": {
-                            "type": "boolean",
-                            "description": "Whether to send submission reminders"
-                        },
-                        "reviewUpdates": {
-                            "type": "boolean",
-                            "description": "Whether to send review status updates"
-                        },
-                        "deadlineAlerts": {
-                            "type": "boolean",
-                            "description": "Whether to send deadline alerts"
-                        }
-                    }
-                },
-                "workflow": {
-                    "type": "object",
-                    "description": "Category workflow configuration",
-                    "properties": {
-                        "autoAdvance": {
-                            "type": "boolean",
-                            "description": "Whether to automatically advance proposals through stages"
-                        },
-                        "requireApproval": {
-                            "type": "boolean",
-                            "description": "Whether manual approval is required for advancement"
-                        },
-                        "parallelReview": {
-                            "type": "boolean",
-                            "description": "Whether reviews can be conducted in parallel"
-                        }
-                    }
-                }
-            }
-        }
+    "categoryName": {
+      "type": "string",
+      "title": "Category Name",
+      "description": "Category name",
+      "minLength": 1,
+      "maxLength": 300
     },
-    "properties": {
-        "categoryIdentity": {
-            "$ref": "#/$defs/categoryIdentity"
-        },
-        "eligibilityCriteria": {
-            "$ref": "#/$defs/eligibilityCriteria"
-        },
-        "fundingConfiguration": {
-            "$ref": "#/$defs/fundingConfiguration"
-        },
-        "submissionRules": {
-            "$ref": "#/$defs/submissionRules"
-        },
-        "reviewParameters": {
-            "$ref": "#/$defs/reviewParameters"
-        },
-        "templateSpecifications": {
-            "$ref": "#/$defs/templateSpecifications"
-        },
-        "operationalSettings": {
-            "$ref": "#/$defs/operationalSettings"
-        }
+    "categoryDescription": {
+      "type": "string",
+      "title": "Category Description",
+      "description": "Category description",
+      "minLength": 20,
+      "maxLength": 5000
     },
-    "required": [
-        "categoryIdentity",
-        "eligibilityCriteria",
-        "fundingConfiguration",
-        "submissionRules",
-        "reviewParameters"
-    ]
+    "maxBudget": {
+      "type": "string",
+      "title": "Maximum Budget",
+      "description": "Maximum budget allocated to this category",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "minProposalAmount": {
+      "type": "string",
+      "title": "Minimum Proposal Amount",
+      "description": "Minimum proposal amount for this category",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "maxProposalAmount": {
+      "type": "string",
+      "title": "Maximum Proposal Amount",
+      "description": "Maximum proposal amount for this category",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "evaluationCriteria": {
+      "type": "array",
+      "title": "Evaluation Criteria",
+      "description": "Criteria for evaluating proposals in this category",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      },
+      "uniqueItems": true,
+      "minItems": 0,
+      "maxItems": 17
+    },
+    "categoryIcon": {
+      "type": "string",
+      "title": "Category Icon",
+      "description": "Icon name for this category",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "categoryColor": {
+      "type": "string",
+      "title": "Category Color",
+      "description": "Category color in hex format",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "minLength": 7,
+      "maxLength": 7
+    },
+    "proposalTemplate": {
+      "type": "string",
+      "title": "Proposal Template ID",
+      "description": "Template ID for proposals in this category",
+      "pattern": "^[a-zA-Z0-9\\-_]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "reviewProcess": {
+      "type": "string",
+      "title": "Review Process",
+      "description": "Review process for this category",
+      "enum": ["community-only", "expert-only", "hybrid", "automated"]
+    },
+    "approvalThreshold": {
+      "type": "string",
+      "title": "Approval Threshold",
+      "description": "Minimum approval percentage required",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "maxProposalsPerCategory": {
+      "type": "string",
+      "title": "Maximum Proposals Per Category",
+      "description": "Maximum number of proposals allowed in this category",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "categoryWeight": {
+      "type": "string",
+      "title": "Category Weight",
+      "description": "Weight of this category in overall scoring",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "requiresApproval": {
+      "type": "string",
+      "title": "Requires Approval",
+      "description": "Whether proposals in this category require approval",
+      "enum": ["true", "false"]
+    },
+    "allowMultipleSubmissions": {
+      "type": "string",
+      "title": "Allow Multiple Submissions",
+      "description": "Whether users can submit multiple proposals in this category",
+      "enum": ["true", "false"]
+    },
+    "categoryTags": {
+      "type": "array",
+      "title": "Category Tags",
+      "description": "Tags associated with this category",
+      "items": {
+        "type": "string",
+        "enum": ["technology", "community", "education", "infrastructure", "governance", "sustainability"]
+      },
+      "uniqueItems": true,
+      "minItems": 0,
+      "maxItems": 10
+    },
+    "visibility": {
+      "type": "string",
+      "title": "Category Visibility",
+      "description": "Visibility level of this category",
+      "enum": ["public", "private", "restricted"]
+    },
+    "parentCategoryId": {
+      "type": "string",
+      "title": "Parent Category ID",
+      "description": "ID of parent category if this is a subcategory",
+      "pattern": "^[a-zA-Z0-9\\-_]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "sortOrder": {
+      "type": "string",
+      "title": "Sort Order",
+      "description": "Display order of this category",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    }
+  },
+  "required": [
+    "categoryId",
+    "categoryName",
+    "categoryDescription",
+    "maxBudget",
+    "minProposalAmount",
+    "maxProposalAmount"
+  ]
 }

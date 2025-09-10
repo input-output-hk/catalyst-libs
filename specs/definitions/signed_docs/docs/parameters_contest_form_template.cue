@@ -1,13 +1,198 @@
-// Contest Form Template Document Definition
+// Contest Parameters Form Template Document Definition
 package signed_docs
 
-import "text/template"
+import (
+	"text/template"
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+)
 
 docs: "Contest Parameters Form Template": #generic_form_template & {
 	_data: doc: "Contest Parameters"
 
 	description: template.Execute(_form_template_description, _data)
 	metadata: parameters: _metadataFieldSystemParameters
-	payload: description: template.Execute(_form_template_payload_description, _data)
+	payload: {
+		description: template.Execute(_form_template_payload_description, _data)
+		schema: {
+			$schema: "https://json-schema.org/draft/2020-12/schema"
+			title: "Contest Parameters Form Template"
+			description: "JSON Schema for Contest Parameters using CUE form elements"
+			type: "object"
+			additionalProperties: false
+			properties: {
+				contestName: {
+					type: "string"
+					title: "Contest Name"
+					description: "The name of the contest"
+					minLength: 1
+					maxLength: 100
+				}
+				contestDescription: {
+					type: "string"
+					title: "Contest Description"
+					description: "Description of the contest"
+					minLength: 1
+					maxLength: 2000
+				}
+				contestType: {
+					type: "string"
+					title: "Contest Type"
+					description: "Type of contest"
+					enum: ["hackathon", "design", "writing", "coding", "research", "other"]
+				}
+				startDate: {
+					type: "string"
+					title: "Contest Start Date"
+					description: "Contest start date (YYYY-MM-DD format)"
+					pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+					minLength: 10
+					maxLength: 10
+				}
+				endDate: {
+					type: "string"
+					title: "Contest End Date"
+					description: "Contest end date (YYYY-MM-DD format)"
+					pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+					minLength: 10
+					maxLength: 10
+				}
+				submissionDeadline: {
+					type: "string"
+					title: "Submission Deadline"
+					description: "Deadline for submissions (YYYY-MM-DD format)"
+					pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+					minLength: 10
+					maxLength: 10
+				}
+				prizePool: {
+					type: "string"
+					title: "Prize Pool"
+					description: "Total prize pool amount"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 20
+				}
+				firstPlacePrize: {
+					type: "string"
+					title: "First Place Prize"
+					description: "Prize amount for first place"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 20
+				}
+				secondPlacePrize: {
+					type: "string"
+					title: "Second Place Prize"
+					description: "Prize amount for second place"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 20
+				}
+				thirdPlacePrize: {
+					type: "string"
+					title: "Third Place Prize"
+					description: "Prize amount for third place"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 20
+				}
+				maxParticipants: {
+					type: "string"
+					title: "Maximum Participants"
+					description: "Maximum number of participants allowed"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 10
+				}
+				minParticipants: {
+					type: "string"
+					title: "Minimum Participants"
+					description: "Minimum number of participants required"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 10
+				}
+				judgingCriteria: {
+					type: "array"
+					title: "Judging Criteria"
+					description: "Criteria for judging submissions"
+					items: {
+						type: "string"
+						minLength: 1
+						maxLength: 500
+					}
+					uniqueItems: true
+					minItems: 1
+					maxItems: 10
+				}
+				submissionRequirements: {
+					type: "string"
+					title: "Submission Requirements"
+					description: "Requirements for submissions"
+					minLength: 1
+					maxLength: 5000
+				}
+				contestRules: {
+					type: "string"
+					title: "Contest Rules"
+					description: "Rules and regulations for the contest"
+					minLength: 1
+					maxLength: 10000
+				}
+				eligibilityRequirements: {
+					type: "string"
+					title: "Eligibility Requirements"
+					description: "Requirements for contest eligibility"
+					minLength: 1
+					maxLength: 2000
+				}
+				judgeCount: {
+					type: "string"
+					title: "Judge Count"
+					description: "Number of judges for the contest"
+					pattern: "^[0-9]+$"
+					minLength: 1
+					maxLength: 10
+				}
+				judgingMethod: {
+					type: "string"
+					title: "Judging Method"
+					description: "Method used for judging submissions"
+					enum: ["panel", "peer-review", "public-voting", "expert-only", "hybrid"]
+				}
+				announcementDate: {
+					type: "string"
+					title: "Announcement Date"
+					description: "Date when winners will be announced (YYYY-MM-DD format)"
+					pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+					minLength: 10
+					maxLength: 10
+				}
+				contestStatus: {
+					type: "string"
+					title: "Contest Status"
+					description: "Current status of the contest"
+					enum: ["upcoming", "active", "judging", "completed", "cancelled"]
+				}
+			}
+			required: [
+				"contestName",
+				"contestDescription",
+				"contestType",
+				"startDate",
+				"endDate",
+				"submissionDeadline",
+				"prizePool",
+				"judgingCriteria",
+				"submissionRequirements",
+				"contestRules",
+				"eligibilityRequirements",
+				"judgeCount",
+				"judgingMethod",
+				"announcementDate",
+				"contestStatus"
+			]
+		}
+	}
 	versions: _generic_form_template_versions
 }

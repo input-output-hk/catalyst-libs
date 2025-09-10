@@ -1,173 +1,28 @@
 {
-    "categoryIdentity": {
-        "name": "Developer Tools",
-        "description": "Tools and utilities that enhance the Cardano developer experience, including IDEs, debugging tools, testing frameworks, and development libraries.",
-        "theme": "Developer Experience Enhancement",
-        "icon": "https://catalyst-community.io/icons/dev-tools.png",
-        "color": "#10B981"
-    },
-    "eligibilityCriteria": {
-        "minStakeAmount": 1000,
-        "minHoldingPeriod": 30,
-        "requiredSkills": [
-            "Software Development",
-            "Cardano Ecosystem Knowledge",
-            "Open Source Experience"
-        ],
-        "excludedAddresses": [],
-        "kycRequired": false,
-        "maxProposalsPerUser": 2
-    },
-    "fundingConfiguration": {
-        "totalBudget": 500000,
-        "minProposalAmount": 10000,
-        "maxProposalAmount": 100000,
-        "disbursementSchedule": {
-            "method": "milestone-based",
-            "milestones": [
-                {
-                    "name": "Project Kickoff",
-                    "percentage": 25,
-                    "deliverables": [
-                        "Project setup and initial documentation",
-                        "Development environment configuration",
-                        "Initial code repository setup"
-                    ]
-                },
-                {
-                    "name": "Alpha Release",
-                    "percentage": 35,
-                    "deliverables": [
-                        "Working alpha version",
-                        "Basic documentation",
-                        "Initial testing results"
-                    ]
-                },
-                {
-                    "name": "Beta Release",
-                    "percentage": 25,
-                    "deliverables": [
-                        "Feature-complete beta version",
-                        "Comprehensive documentation",
-                        "Community feedback integration"
-                    ]
-                },
-                {
-                    "name": "Final Release",
-                    "percentage": 15,
-                    "deliverables": [
-                        "Production-ready release",
-                        "Complete documentation",
-                        "Maintenance plan"
-                    ]
-                }
-            ]
-        }
-    },
-    "submissionRules": {
-        "submissionDeadline": "2024-02-15",
-        "requiredFields": [
-            "title",
-            "description",
-            "budget",
-            "timeline",
-            "team",
-            "deliverables",
-            "success-metrics"
-        ],
-        "maxProposalLength": 5000,
-        "minProposalLength": 500,
-        "allowedFileTypes": [
-            "pdf",
-            "doc",
-            "docx",
-            "txt",
-            "md",
-            "jpg",
-            "png",
-            "gif",
-            "mp4",
-            "zip"
-        ],
-        "maxFileSize": 10485760,
-        "proposalTemplate": "dev-tools-template-v1"
-    },
-    "reviewParameters": {
-        "reviewProcess": {
-            "stages": [
-                "initial-screening",
-                "technical-review",
-                "community-review",
-                "expert-evaluation",
-                "final-approval"
-            ],
-            "reviewerCount": 3,
-            "reviewDuration": 14
-        },
-        "evaluationCriteria": [
-            {
-                "name": "Technical Feasibility",
-                "description": "How technically feasible is the proposed solution?",
-                "weight": 25,
-                "scale": "1-10"
-            },
-            {
-                "name": "Developer Impact",
-                "description": "How much will this tool improve the developer experience?",
-                "weight": 30,
-                "scale": "1-10"
-            },
-            {
-                "name": "Code Quality",
-                "description": "Quality of the proposed code architecture and implementation",
-                "weight": 20,
-                "scale": "1-10"
-            },
-            {
-                "name": "Documentation",
-                "description": "Completeness and quality of documentation plans",
-                "weight": 15,
-                "scale": "1-10"
-            },
-            {
-                "name": "Community Adoption",
-                "description": "Likelihood of community adoption and usage",
-                "weight": 10,
-                "scale": "1-10"
-            }
-        ],
-        "scoringMethod": "weighted-average",
-        "minScoreThreshold": 7.0
-    },
-    "templateSpecifications": {
-        "defaultTemplate": "dev-tools-template-v1",
-        "allowedTemplates": [
-            "dev-tools-template-v1",
-            "library-template-v1",
-            "infrastructure-template-v1"
-        ],
-        "templateConstraints": {
-            "requireCustomFields": [
-                "technical-architecture",
-                "testing-strategy",
-                "maintenance-plan"
-            ],
-            "forbiddenFields": [
-                "marketing-budget",
-                "hardware-costs"
-            ]
-        }
-    },
-    "operationalSettings": {
-        "notifications": {
-            "submissionReminders": true,
-            "reviewUpdates": true,
-            "deadlineAlerts": true
-        },
-        "workflow": {
-            "autoAdvance": false,
-            "requireApproval": true,
-            "parallelReview": true
-        }
-    }
+  "categoryId": "dev-tools-infrastructure",
+  "categoryName": "Developer Tools & Infrastructure",
+  "categoryDescription": "This category focuses on funding projects that build essential developer tools, APIs, SDKs, and infrastructure components that make it easier for developers to build on Cardano.",
+  "maxBudget": "300000",
+  "minProposalAmount": "10000",
+  "maxProposalAmount": "75000",
+  "evaluationCriteria": [
+    "Technical feasibility and innovation",
+    "Developer adoption potential",
+    "Documentation quality",
+    "Open source commitment",
+    "Community impact"
+  ],
+  "categoryIcon": "code-bracket",
+  "categoryColor": "#10B981",
+  "proposalTemplate": "dev-tools-template",
+  "reviewProcess": "hybrid",
+  "approvalThreshold": "60",
+  "maxProposalsPerCategory": "20",
+  "categoryWeight": "25",
+  "requiresApproval": "true",
+  "allowMultipleSubmissions": "false",
+  "categoryTags": ["technology", "infrastructure"],
+  "visibility": "public",
+  "parentCategoryId": "fund9-categories",
+  "sortOrder": "1"
 }

@@ -1,136 +1,26 @@
 {
-    "campaignIdentity": {
-        "name": "Fund 11: Developer Ecosystem",
-        "description": "Supporting the growth and development of the Cardano developer ecosystem through innovative tools, libraries, and infrastructure projects.",
-        "theme": "Developer Tools and Infrastructure",
-        "bannerImage": "https://catalyst-community.io/fund11-banner.png"
-    },
-    "timelineConfiguration": {
-        "startDate": "2024-01-15",
-        "endDate": "2024-04-15",
-        "proposalSubmissionDeadline": "2024-02-15",
-        "votingStartDate": "2024-03-01",
-        "votingEndDate": "2024-03-31",
-        "milestones": [
-            {
-                "name": "Proposal Submission Opens",
-                "date": "2024-01-15",
-                "description": "Community can start submitting proposals"
-            },
-            {
-                "name": "Proposal Submission Closes",
-                "date": "2024-02-15",
-                "description": "Last day to submit proposals"
-            },
-            {
-                "name": "Voting Begins",
-                "date": "2024-03-01",
-                "description": "Community voting period starts"
-            },
-            {
-                "name": "Voting Ends",
-                "date": "2024-03-31",
-                "description": "Voting period concludes"
-            }
-        ]
-    },
-    "fundingParameters": {
-        "totalBudget": 2000000,
-        "maxProposalAmount": 200000,
-        "minProposalAmount": 5000,
-        "disbursementRules": {
-            "disbursementMethod": "milestone-based",
-            "milestoneThresholds": [
-                {
-                    "milestone": "Project Kickoff",
-                    "percentage": 30
-                },
-                {
-                    "milestone": "Mid-term Review",
-                    "percentage": 40
-                },
-                {
-                    "milestone": "Project Completion",
-                    "percentage": 30
-                }
-            ]
-        }
-    },
-    "votingConfiguration": {
-        "votingMechanism": "ranked-choice",
-        "eligibilityCriteria": {
-            "minStakeAmount": 1000,
-            "minHoldingPeriod": 30,
-            "excludeExchanges": true
-        },
-        "participationRules": {
-            "maxProposalsPerUser": 3,
-            "requireKYC": false
-        }
-    },
-    "categoryDefinitions": [
-        {
-            "id": "dev-tools",
-            "name": "Developer Tools",
-            "description": "Tools and utilities for Cardano developers",
-            "maxBudget": 500000,
-            "minProposalAmount": 10000,
-            "maxProposalAmount": 100000,
-            "evaluationCriteria": [
-                "Technical feasibility",
-                "Developer adoption potential",
-                "Code quality and maintainability"
-            ]
-        },
-        {
-            "id": "infrastructure",
-            "name": "Infrastructure",
-            "description": "Core infrastructure components and services",
-            "maxBudget": 800000,
-            "minProposalAmount": 20000,
-            "maxProposalAmount": 200000,
-            "evaluationCriteria": [
-                "Scalability and performance",
-                "Security and reliability",
-                "Community impact"
-            ]
-        },
-        {
-            "id": "libraries",
-            "name": "Libraries and SDKs",
-            "description": "Software libraries and development kits",
-            "maxBudget": 300000,
-            "minProposalAmount": 5000,
-            "maxProposalAmount": 75000,
-            "evaluationCriteria": [
-                "API design quality",
-                "Documentation completeness",
-                "Cross-platform compatibility"
-            ]
-        },
-        {
-            "id": "education",
-            "name": "Developer Education",
-            "description": "Educational resources and training materials",
-            "maxBudget": 400000,
-            "minProposalAmount": 10000,
-            "maxProposalAmount": 100000,
-            "evaluationCriteria": [
-                "Educational value",
-                "Accessibility and inclusivity",
-                "Practical applicability"
-            ]
-        }
-    ],
-    "operationalSettings": {
-        "proposalTemplate": "fund11-developer-ecosystem-template",
-        "reviewProcess": {
-            "reviewStages": ["initial-screening", "community-review", "expert-evaluation", "final-approval"],
-            "reviewerCount": 3
-        },
-        "notifications": {
-            "reminderFrequency": "weekly",
-            "milestoneAlerts": true
-        }
-    }
+  "campaignName": "Cardano Developer Tools Fund 9",
+  "campaignDescription": "This campaign focuses on funding innovative developer tools and infrastructure projects that will enhance the Cardano ecosystem's development capabilities and developer experience.",
+  "campaignTheme": "Developer Experience & Tools",
+  "bannerImage": "https://catalyst-community.io/campaigns/fund9/banner.jpg",
+  "startDate": "2024-01-15",
+  "endDate": "2024-03-15",
+  "proposalSubmissionDeadline": "2024-02-28",
+  "votingStartDate": "2024-03-01",
+  "votingEndDate": "2024-03-14",
+  "totalBudget": "1000000",
+  "maxProposalAmount": "100000",
+  "minProposalAmount": "5000",
+  "disbursementMethod": "milestone-based",
+  "votingMechanism": "ranked-choice",
+  "minStakeAmount": "5000",
+  "minHoldingPeriod": "30",
+  "excludeExchanges": "true",
+  "maxProposalsPerUser": "3",
+  "requireKYC": "false",
+  "proposalTemplate": "developer-tools-template",
+  "reviewStages": ["initial-screening", "expert-evaluation", "community-review"],
+  "reviewerCount": "5",
+  "reminderFrequency": "weekly",
+  "milestoneAlerts": "true"
 }

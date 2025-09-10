@@ -19,6 +19,9 @@ docs: "Campaign Parameters": #generic_parameters & {
 			type:     "\(_data.doc_parent) Parameters"
 		}
 	}
-	payload: description: template.Execute(_parameters_payload_description, _data)
+	payload: {
+		description: template.Execute(_parameters_payload_description, _data)
+		schema: _ @embed(file="payload_schemas/campaign_parameters.schema.json")
+	}
 	versions: _generic_parameters_versions
 }

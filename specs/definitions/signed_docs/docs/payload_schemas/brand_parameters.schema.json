@@ -1,215 +1,179 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "Brand Parameters Payload Schema",
-    "description": "Structure of the payload of a Brand Parameters document using project-defined form elements",
-    "maintainers": [
-        {
-            "name": "Catalyst Team",
-            "url": "https://projectcatalyst.io/"
-        }
-    ],
-    "x-changelog": {
-        "2025-03-01": [
-            "First Version Created."
-        ],
-        "2025-01-15": [
-            "Updated to use project-defined form elements",
-            "Aligned with CUE form element structure",
-            "Simplified custom definitions"
-        ]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Brand Parameters Form Template",
+  "description": "JSON Schema for Brand Parameters using CUE form elements",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "brandName": {
+      "type": "string",
+      "title": "Brand Name",
+      "description": "The name of the brand",
+      "minLength": 1,
+      "maxLength": 300
     },
-    "type": "object",
-    "additionalProperties": false,
-    "$defs": {
-        "brandIdentity": {
-            "type": "object",
-            "description": "Brand identity and visual elements",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Brand name",
-                    "minLength": 1,
-                    "maxLength": 100,
-                    "pattern": "^[a-zA-Z0-9\\s\\-_]+$"
-                },
-                "description": {
-                    "type": "string",
-                    "description": "Brand description",
-                    "maxLength": 1000
-                },
-                "logo": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "URL to brand logo"
-                },
-                "theme": {
-                    "type": "object",
-                    "description": "Brand theme colors and styling",
-                    "properties": {
-                        "primaryColor": {
-                            "type": "string",
-                            "pattern": "^#[0-9A-Fa-f]{6}$",
-                            "description": "Primary brand color in hex format"
-                        },
-                        "secondaryColor": {
-                            "type": "string",
-                            "pattern": "^#[0-9A-Fa-f]{6}$",
-                            "description": "Secondary brand color in hex format"
-                        }
-                    }
-                }
-            },
-            "required": ["name", "description"]
-        },
-        "operationalParameters": {
-            "type": "object",
-            "description": "Operational parameters for the brand",
-            "properties": {
-                "fundingRules": {
-                    "type": "object",
-                    "description": "Funding rules and constraints",
-                    "properties": {
-                        "maxProposalAmount": {
-                            "type": "number",
-                            "minimum": 0,
-                            "description": "Maximum amount for a single proposal"
-                        },
-                        "minProposalAmount": {
-                            "type": "number",
-                            "minimum": 0,
-                            "description": "Minimum amount for a single proposal"
-                        },
-                        "totalBudget": {
-                            "type": "number",
-                            "minimum": 0,
-                            "description": "Total budget available for the brand"
-                        }
-                    }
-                },
-                "votingParameters": {
-                    "type": "object",
-                    "description": "Voting configuration",
-                    "properties": {
-                        "votingPowerCalculation": {
-                            "type": "string",
-                            "enum": ["linear", "quadratic", "logarithmic"],
-                            "description": "Method for calculating voting power"
-                        },
-                        "minVotingPower": {
-                            "type": "number",
-                            "minimum": 0,
-                            "description": "Minimum voting power required to participate"
-                        }
-                    }
-                },
-                "timelineConfiguration": {
-                    "type": "object",
-                    "description": "Timeline settings for campaigns",
-                    "properties": {
-                        "defaultCampaignDuration": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "description": "Default campaign duration in days"
-                        },
-                        "proposalSubmissionDeadline": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "description": "Days before campaign end when proposal submission closes"
-                        }
-                    }
-                }
-            }
-        },
-        "contentConfiguration": {
-            "type": "object",
-            "description": "Branded content and messaging",
-            "properties": {
-                "termsOfService": {
-                    "type": "string",
-                    "description": "Terms of service text",
-                    "maxLength": 10000
-                },
-                "privacyPolicy": {
-                    "type": "string",
-                    "description": "Privacy policy text",
-                    "maxLength": 10000
-                },
-                "welcomeMessage": {
-                    "type": "string",
-                    "description": "Welcome message for users",
-                    "maxLength": 1000
-                },
-                "brandedMessaging": {
-                    "type": "object",
-                    "description": "Brand-specific messaging templates",
-                    "properties": {
-                        "proposalSubmissionSuccess": {
-                            "type": "string",
-                            "description": "Message shown when proposal is successfully submitted",
-                            "maxLength": 500
-                        },
-                        "votingReminder": {
-                            "type": "string",
-                            "description": "Message sent as voting reminder",
-                            "maxLength": 500
-                        }
-                    }
-                }
-            }
-        },
-        "systemSettings": {
-            "type": "object",
-            "description": "Technical configurations and integration parameters",
-            "properties": {
-                "apiEndpoints": {
-                    "type": "object",
-                    "description": "API endpoint configurations",
-                    "properties": {
-                        "baseUrl": {
-                            "type": "string",
-                            "format": "uri",
-                            "description": "Base URL for API endpoints"
-                        },
-                        "timeout": {
-                            "type": "integer",
-                            "minimum": 1000,
-                            "description": "API timeout in milliseconds"
-                        }
-                    }
-                },
-                "notifications": {
-                    "type": "object",
-                    "description": "Notification settings",
-                    "properties": {
-                        "emailEnabled": {
-                            "type": "boolean",
-                            "description": "Whether email notifications are enabled"
-                        },
-                        "pushEnabled": {
-                            "type": "boolean",
-                            "description": "Whether push notifications are enabled"
-                        }
-                    }
-                }
-            }
-        }
+    "brandDescription": {
+      "type": "string",
+      "title": "Brand Description", 
+      "description": "Description of the brand",
+      "minLength": 20,
+      "maxLength": 5000
     },
-    "properties": {
-        "brandIdentity": {
-            "$ref": "#/$defs/brandIdentity"
-        },
-        "operationalParameters": {
-            "$ref": "#/$defs/operationalParameters"
-        },
-        "contentConfiguration": {
-            "$ref": "#/$defs/contentConfiguration"
-        },
-        "systemSettings": {
-            "$ref": "#/$defs/systemSettings"
-        }
+    "brandLogo": {
+      "type": "string",
+      "format": "uri",
+      "title": "Brand Logo URL",
+      "description": "URL to the brand logo image",
+      "minLength": 12,
+      "maxLength": 1024
     },
-    "required": [
-        "brandIdentity",
-        "operationalParameters"
-    ]
+    "primaryColor": {
+      "type": "string",
+      "title": "Primary Brand Color",
+      "description": "Primary brand color in hex format",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "minLength": 7,
+      "maxLength": 7
+    },
+    "secondaryColor": {
+      "type": "string", 
+      "title": "Secondary Brand Color",
+      "description": "Secondary brand color in hex format",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "minLength": 7,
+      "maxLength": 7
+    },
+    "maxProposalAmount": {
+      "type": "string",
+      "title": "Maximum Proposal Amount",
+      "description": "Maximum amount for a single proposal",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "minProposalAmount": {
+      "type": "string",
+      "title": "Minimum Proposal Amount", 
+      "description": "Minimum amount for a single proposal",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "totalBudget": {
+      "type": "string",
+      "title": "Total Budget",
+      "description": "Total budget available for the brand",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "votingPowerCalculation": {
+      "type": "string",
+      "title": "Voting Power Calculation Method",
+      "description": "Method for calculating voting power",
+      "enum": ["linear", "quadratic", "logarithmic"]
+    },
+    "minVotingPower": {
+      "type": "string",
+      "title": "Minimum Voting Power",
+      "description": "Minimum voting power required to participate",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "defaultCampaignDuration": {
+      "type": "string",
+      "title": "Default Campaign Duration",
+      "description": "Default campaign duration in days",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "proposalSubmissionDeadline": {
+      "type": "string",
+      "title": "Proposal Submission Deadline",
+      "description": "Days before campaign end when proposal submission closes",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "termsOfService": {
+      "type": "string",
+      "title": "Terms of Service",
+      "description": "Terms of service text",
+      "minLength": 20,
+      "maxLength": 10000
+    },
+    "privacyPolicy": {
+      "type": "string",
+      "title": "Privacy Policy",
+      "description": "Privacy policy text",
+      "minLength": 20,
+      "maxLength": 10000
+    },
+    "welcomeMessage": {
+      "type": "string",
+      "title": "Welcome Message",
+      "description": "Welcome message for users",
+      "minLength": 20,
+      "maxLength": 5000
+    },
+    "proposalSubmissionSuccessMessage": {
+      "type": "string",
+      "title": "Proposal Submission Success Message",
+      "description": "Message shown when proposal is successfully submitted",
+      "minLength": 20,
+      "maxLength": 5000
+    },
+    "votingReminderMessage": {
+      "type": "string",
+      "title": "Voting Reminder Message",
+      "description": "Message sent as voting reminder",
+      "minLength": 20,
+      "maxLength": 5000
+    },
+    "apiBaseUrl": {
+      "type": "string",
+      "format": "uri",
+      "title": "API Base URL",
+      "description": "Base URL for API endpoints",
+      "minLength": 12,
+      "maxLength": 1024
+    },
+    "apiTimeout": {
+      "type": "string",
+      "title": "API Timeout",
+      "description": "API timeout in milliseconds",
+      "pattern": "^[0-9]+$",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "emailNotificationsEnabled": {
+      "type": "string",
+      "title": "Email Notifications Enabled",
+      "description": "Whether email notifications are enabled",
+      "enum": ["true", "false"]
+    },
+    "pushNotificationsEnabled": {
+      "type": "string",
+      "title": "Push Notifications Enabled",
+      "description": "Whether push notifications are enabled",
+      "enum": ["true", "false"]
+    }
+  },
+  "required": [
+    "brandName",
+    "brandDescription",
+    "maxProposalAmount",
+    "minProposalAmount",
+    "totalBudget",
+    "votingPowerCalculation",
+    "minVotingPower",
+    "defaultCampaignDuration",
+    "proposalSubmissionDeadline",
+    "apiBaseUrl",
+    "apiTimeout",
+    "emailNotificationsEnabled",
+    "pushNotificationsEnabled"
+  ]
 }

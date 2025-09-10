@@ -16,6 +16,9 @@ docs: "Brand Parameters": #generic_parameters & {
 		template: type:       "\(_data.doc) Parameters Form Template"
 		parameters: required: "excluded"
 	}
-	payload: description: template.Execute(_parameters_payload_description, _data)
+	payload: {
+		description: template.Execute(_parameters_payload_description, _data)
+		schema: _ @embed(file="payload_schemas/brand_parameters.schema.json")
+	}
 	versions: _generic_parameters_versions
 }

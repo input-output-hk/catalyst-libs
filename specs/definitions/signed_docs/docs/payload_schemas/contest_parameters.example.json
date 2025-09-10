@@ -1,0 +1,28 @@
+{
+  "contestName": "Cardano Hackathon 2024",
+  "contestDescription": "A 48-hour hackathon focused on building innovative dApps and tools for the Cardano ecosystem. Participants will compete for prizes while showcasing their development skills and creativity.",
+  "contestType": "hackathon",
+  "startDate": "2024-06-15",
+  "endDate": "2024-06-17",
+  "submissionDeadline": "2024-06-17",
+  "prizePool": "50000",
+  "firstPlacePrize": "25000",
+  "secondPlacePrize": "15000",
+  "thirdPlacePrize": "10000",
+  "maxParticipants": "100",
+  "minParticipants": "20",
+  "judgingCriteria": [
+    "Technical innovation and creativity",
+    "User experience and design quality",
+    "Cardano ecosystem integration",
+    "Code quality and documentation",
+    "Potential for real-world impact"
+  ],
+  "submissionRequirements": "Projects must be built during the hackathon period, use Cardano blockchain technology, and include a working demo. Source code must be open source and submitted to GitHub.",
+  "contestRules": "All participants must register before the start date. Teams can have up to 4 members. Projects must be original work created during the hackathon. No use of pre-existing codebases beyond standard libraries.",
+  "eligibilityRequirements": "Open to developers worldwide. Participants must be 18+ years old. Previous hackathon experience is welcome but not required.",
+  "judgeCount": "5",
+  "judgingMethod": "panel",
+  "announcementDate": "2024-06-20",
+  "contestStatus": "upcoming"
+}
