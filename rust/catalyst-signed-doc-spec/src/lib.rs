@@ -7,6 +7,7 @@ pub mod doc_types;
 pub mod headers;
 pub mod is_required;
 pub mod metadata;
+pub mod signers;
 
 use std::{collections::HashMap, fmt::Display};
 
