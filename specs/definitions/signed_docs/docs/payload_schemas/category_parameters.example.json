@@ -1,7 +1,7 @@
 {
   "categoryId": "dev-tools-infrastructure",
   "categoryName": "Developer Tools & Infrastructure",
-  "categoryDescription": "This category focuses on funding projects that build essential developer tools, APIs, SDKs, and infrastructure components that make it easier for developers to build on Cardano.",
+  "categoryDescription": "This category focuses on funding projects that build essential developer tools, APIs, SDKs, and infrastructure components that make it easier for developers to build on Cardano. We prioritize projects that improve the developer experience and reduce barriers to entry for new developers joining the ecosystem.",
   "maxBudget": "300000",
   "minProposalAmount": "10000",
   "maxProposalAmount": "75000",

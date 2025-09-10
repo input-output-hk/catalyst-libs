@@ -7,6 +7,7 @@
   "properties": {
     "categoryId": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category ID",
       "description": "Unique category identifier",
       "pattern": "^[a-zA-Z0-9\\-_]+$",
@@ -15,6 +16,7 @@
     },
     "categoryName": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category Name",
       "description": "Category name",
       "minLength": 1,
@@ -22,6 +24,7 @@
     },
     "categoryDescription": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category Description",
       "description": "Category description",
       "minLength": 20,
@@ -29,6 +32,7 @@
     },
     "maxBudget": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Maximum Budget",
       "description": "Maximum budget allocated to this category",
       "pattern": "^[0-9]+$",
@@ -37,6 +41,7 @@
     },
     "minProposalAmount": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Minimum Proposal Amount",
       "description": "Minimum proposal amount for this category",
       "pattern": "^[0-9]+$",
@@ -45,6 +50,7 @@
     },
     "maxProposalAmount": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Maximum Proposal Amount",
       "description": "Maximum proposal amount for this category",
       "pattern": "^[0-9]+$",
@@ -57,6 +63,7 @@
       "description": "Criteria for evaluating proposals in this category",
       "items": {
         "type": "string",
+        "contentMediaType": "text/plain",
         "minLength": 1,
         "maxLength": 300
       },
@@ -66,6 +73,7 @@
     },
     "categoryIcon": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category Icon",
       "description": "Icon name for this category",
       "minLength": 1,
@@ -73,6 +81,7 @@
     },
     "categoryColor": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category Color",
       "description": "Category color in hex format",
       "pattern": "^#[0-9A-Fa-f]{6}$",
@@ -81,6 +90,7 @@
     },
     "proposalTemplate": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Proposal Template ID",
       "description": "Template ID for proposals in this category",
       "pattern": "^[a-zA-Z0-9\\-_]+$",
@@ -89,12 +99,14 @@
     },
     "reviewProcess": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Review Process",
       "description": "Review process for this category",
       "enum": ["community-only", "expert-only", "hybrid", "automated"]
     },
     "approvalThreshold": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Approval Threshold",
       "description": "Minimum approval percentage required",
       "pattern": "^[0-9]+$",
@@ -103,6 +115,7 @@
     },
     "maxProposalsPerCategory": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Maximum Proposals Per Category",
       "description": "Maximum number of proposals allowed in this category",
       "pattern": "^[0-9]+$",
@@ -111,6 +124,7 @@
     },
     "categoryWeight": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category Weight",
       "description": "Weight of this category in overall scoring",
       "pattern": "^[0-9]+$",
@@ -119,12 +133,14 @@
     },
     "requiresApproval": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Requires Approval",
       "description": "Whether proposals in this category require approval",
       "enum": ["true", "false"]
     },
     "allowMultipleSubmissions": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Allow Multiple Submissions",
       "description": "Whether users can submit multiple proposals in this category",
       "enum": ["true", "false"]
@@ -135,6 +151,7 @@
       "description": "Tags associated with this category",
       "items": {
         "type": "string",
+        "contentMediaType": "text/plain",
         "enum": ["technology", "community", "education", "infrastructure", "governance", "sustainability"]
       },
       "uniqueItems": true,
@@ -143,12 +160,14 @@
     },
     "visibility": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Category Visibility",
       "description": "Visibility level of this category",
       "enum": ["public", "private", "restricted"]
     },
     "parentCategoryId": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Parent Category ID",
       "description": "ID of parent category if this is a subcategory",
       "pattern": "^[a-zA-Z0-9\\-_]+$",
@@ -157,6 +176,7 @@
     },
     "sortOrder": {
       "type": "string",
+      "contentMediaType": "text/plain",
       "title": "Sort Order",
       "description": "Display order of this category",
       "pattern": "^[0-9]+$",
