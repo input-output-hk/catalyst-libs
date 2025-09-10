@@ -1,5 +1,7 @@
 //! `ref` rule type impl.
 
+use std::collections::HashMap;
+
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
@@ -23,6 +25,43 @@ pub(crate) enum RefRule {
     NotSpecified,
 }
 impl RefRule {
+    /// Generating `RefRule` from specs
+    pub(crate) fn new(
+        docs: &HashMap<catalyst_signed_doc_spec::DocumentName, catalyst_signed_doc_spec::DocSpec>,
+        ref_spec: &catalyst_signed_doc_spec::metadata::doc_ref::Ref,
+    ) -> anyhow::Result<Self> {
+        let optional = match ref_spec.required {
+            catalyst_signed_doc_spec::is_required::IsRequired::Yes => false,
+            catalyst_signed_doc_spec::is_required::IsRequired::Optional => true,
+            catalyst_signed_doc_spec::is_required::IsRequired::Excluded => {
+                return Ok(Self::NotSpecified);
+            },
+        };
+
+        anyhow::ensure!(!ref_spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
+
+        let exp_ref_types = ref_spec.doc_type.iter().try_fold(
+            Vec::new(),
+            |mut res, doc_name| -> anyhow::Result<_> {
+                let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
+                    "cannot find a document definition {doc_name}"
+                ))?;
+                res.push(docs_spec.doc_type.as_str().parse()?);
+                Ok(res)
+            },
+        )?;
+
+        let multiple = ref_spec.multiple.ok_or(anyhow::anyhow!(
+            "'multiple' field should exists for the required 'ref' metadata definition"
+        ))?;
+
+        Ok(Self::Specified {
+            exp_ref_types,
+            multiple,
+            optional,
+        })
+    }
+
     /// Field validation rule
     pub(crate) async fn check<Provider>(
         &self,

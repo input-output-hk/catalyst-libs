@@ -18,6 +18,7 @@ COPY_SRC:
         hermes-ipfs \
         signed_doc \
         catalyst-signed-doc-macro \
+        catalyst-signed-doc-spec \
         rbac-registration \
         immutable-ledger .
 
@@ -73,6 +74,7 @@ build:
         --libs=rbac-registration \
         --libs=catalyst-signed-doc \
         --libs=catalyst-signed-doc-macro \
+        --libs=catalyst-signed-doc-spec \
         --bins=cbork/cbork
 
     LET ARCH=$(uname -m)

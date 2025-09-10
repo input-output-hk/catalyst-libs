@@ -103,4 +103,51 @@ impl Rules {
 
         Ok(res)
     }
+
+    /// Returns an iterator with all defined Catalyst Signed Documents validation rules
+    /// per corresponding document type based on the `signed_doc.json` file
+    ///
+    /// # Errors:
+    ///  - `signed_doc.json` filed loading and JSON parsing errors.
+    ///  - `catalyst-signed-doc-spec` crate version doesn't  align with the latest version
+    ///    of the `signed_doc.json`.
+    pub(crate) fn documents_rules(
+    ) -> anyhow::Result<impl Iterator<Item = (crate::DocType, crate::validator::rules::Rules)>>
+    {
+        let spec = catalyst_signed_doc_spec::CatalystSignedDocSpec::load_signed_doc_spec()?;
+
+        let mut doc_rules = Vec::new();
+        for doc_spec in spec.docs.values() {
+            let rules = Self {
+                id: IdRule,
+                ver: VerRule,
+                content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
+                content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
+                template: TemplateRule::NotSpecified,
+                parameters: ParametersRule::NotSpecified,
+                doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
+                reply: ReplyRule::NotSpecified,
+                section: SectionRule::NotSpecified,
+                content: ContentRule::Nil,
+                kid: SignatureKidRule { exp: &[] },
+                signature: SignatureRule { mutlisig: false },
+                original_author: OriginalAuthorRule,
+            };
+            let doc_type = doc_spec.doc_type.parse()?;
+
+            doc_rules.push((doc_type, rules));
+        }
+
+        Ok(doc_rules.into_iter())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rules_documents_rules_test() {
+        let _unused = Rules::documents_rules().unwrap();
+    }
 }

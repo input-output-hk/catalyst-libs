@@ -1,9 +1,8 @@
 //! `catalyst_signed_documents_types_consts!` macro implementation
 
+use catalyst_signed_doc_spec::CatalystSignedDocSpec;
 use proc_macro2::TokenStream;
 use quote::quote;
-
-use crate::signed_doc_spec::CatalystSignedDocSpec;
 
 /// `catalyst_signed_documents_types_consts` macro implementation
 pub(crate) fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> {
