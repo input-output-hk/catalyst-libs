@@ -2,6 +2,7 @@
 
 use std::fmt::Debug;
 
+use catalyst_signed_doc_spec::payload::Payload;
 use minicbor::Encode;
 
 use crate::{
@@ -39,6 +40,26 @@ pub(crate) enum ContentRule {
 }
 
 impl ContentRule {
+    /// Generating `ContentRule` from specs
+    pub(crate) fn new(spec: &Payload) -> anyhow::Result<Self> {
+        if spec.nil {
+            anyhow::ensure!(
+            spec.schema.is_none(),
+            "'schema' field could not been specified when 'nil' is 'true' for 'payload' definition"
+        );
+            return Ok(Self::Nil);
+        }
+
+        if let Some(schema) = &spec.schema {
+            let schema_str = schema.to_string();
+            Ok(Self::StaticSchema(ContentSchema::Json(
+                json_schema::JsonSchema::try_from(&serde_json::from_str(&schema_str)?)?,
+            )))
+        } else {
+            Ok(Self::NotNil)
+        }
+    }
+
     /// Field validation rule
     #[allow(clippy::unused_async)]
     pub(crate) async fn check(
