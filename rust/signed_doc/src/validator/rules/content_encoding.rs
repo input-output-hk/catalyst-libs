@@ -33,13 +33,6 @@ impl ContentEncodingRule {
             return Ok(Self::NotSpecified);
         }
 
-        if let IsRequired::Yes = spec.required {
-            anyhow::ensure!(
-                spec.value.is_some(),
-                "'content-encoding' field must have value when 'required' is 'yes'"
-            );
-        }
-
         let optional = IsRequired::Optional == spec.required;
 
         let exp = spec
