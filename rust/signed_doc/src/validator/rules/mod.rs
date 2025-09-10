@@ -127,7 +127,7 @@ impl Rules {
                 ver: VerRule,
                 content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
                 content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
-                template: TemplateRule::NotSpecified,
+                template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
                 parameters: ParametersRule::NotSpecified,
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
                 reply: ReplyRule::NotSpecified,
