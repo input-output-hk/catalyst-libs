@@ -93,7 +93,7 @@ fn proposal_comment_rule() -> Rules {
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: PROPOSAL_COMMENT.clone(),
+            allowed_type: PROPOSAL_COMMENT.clone(),
             optional: true,
         },
         section: SectionRule::NotSpecified,

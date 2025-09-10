@@ -130,7 +130,7 @@ impl Rules {
                 template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
                 parameters: ParametersRule::NotSpecified,
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
-                reply: ReplyRule::NotSpecified,
+                reply: ReplyRule::new(&spec.docs, &doc_spec.metadata.reply)?,
                 section: SectionRule::NotSpecified,
                 content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule::new(&doc_spec.signers.roles),
