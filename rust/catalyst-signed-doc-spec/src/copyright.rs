@@ -1,11 +1,11 @@
 //! 'copyright' field definition
 
 #[derive(serde::Deserialize)]
-pub struct Copyright {
-    pub versions: Vec<Version>,
+pub(crate) struct Copyright {
+    pub(crate) versions: Vec<Version>,
 }
 
 #[derive(serde::Deserialize)]
-pub struct Version {
-    pub version: String,
+pub(crate) struct Version {
+    pub(crate) version: String,
 }

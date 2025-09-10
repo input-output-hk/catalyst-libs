@@ -118,17 +118,21 @@ impl Rules {
 
         let mut doc_rules = Vec::new();
         for doc_spec in spec.docs.values() {
+            if doc_spec.draft {
+                continue;
+            }
+
             let rules = Self {
                 id: IdRule,
                 ver: VerRule,
                 content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
                 content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
-                template: TemplateRule::NotSpecified,
+                template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
                 parameters: ParametersRule::NotSpecified,
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
                 reply: ReplyRule::NotSpecified,
                 section: SectionRule::NotSpecified,
-                content: ContentRule::Nil,
+                content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule { exp: &[] },
                 signature: SignatureRule { mutlisig: false },
                 original_author: OriginalAuthorRule,
