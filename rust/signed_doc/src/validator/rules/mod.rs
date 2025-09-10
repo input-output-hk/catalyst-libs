@@ -132,7 +132,7 @@ impl Rules {
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
                 reply: ReplyRule::NotSpecified,
                 section: SectionRule::NotSpecified,
-                content: ContentRule::Nil,
+                content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule { exp: &[] },
                 signature: SignatureRule { mutlisig: false },
                 original_author: OriginalAuthorRule,
