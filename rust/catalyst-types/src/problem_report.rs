@@ -81,11 +81,13 @@ pub struct Entry {
 
 impl Entry {
     /// Gets the kind of the problem of the entry.
+    #[must_use]
     pub fn kind(&self) -> &Kind {
         &self.kind
     }
 
     /// Gets extra information of the entry.
+    #[must_use]
     pub fn context(&self) -> &String {
         &self.context
     }
@@ -158,11 +160,13 @@ impl ProblemReport {
     }
 
     /// Gets entries from the report.
+    #[must_use]
     pub fn entries(&self) -> &ConcurrentVec<Entry> {
         &self.0.report.0
     }
 
     /// Gets context from the report.
+    #[must_use]
     pub fn context(&self) -> &String {
         &self.0.context
     }
