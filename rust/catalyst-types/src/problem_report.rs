@@ -160,7 +160,6 @@ impl ProblemReport {
     }
 
     /// Gets entries from the report.
-    #[must_use]
     pub fn entries(&self) -> impl Iterator<Item = &ConcurrentElement<Entry>> {
         self.0.report.0.iter()
     }
