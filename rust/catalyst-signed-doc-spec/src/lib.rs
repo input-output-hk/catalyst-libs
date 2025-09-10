@@ -20,7 +20,7 @@ build_info_lib::build_info!(pub(crate) fn build_info);
 #[derive(serde::Deserialize)]
 pub struct CatalystSignedDocSpec {
     pub docs: HashMap<DocumentName, DocSpec>,
-    pub copyright: Copyright,
+    copyright: Copyright,
 }
 
 // A thin wrapper over the string document name values
@@ -60,6 +60,7 @@ impl DocumentName {
 /// Specific document type definition
 #[derive(serde::Deserialize)]
 pub struct DocSpec {
+    pub draft: bool,
     #[serde(rename = "type")]
     pub doc_type: String,
     pub headers: Headers,

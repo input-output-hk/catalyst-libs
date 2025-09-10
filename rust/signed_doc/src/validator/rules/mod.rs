@@ -118,6 +118,10 @@ impl Rules {
 
         let mut doc_rules = Vec::new();
         for doc_spec in spec.docs.values() {
+            if doc_spec.draft {
+                continue;
+            }
+
             let rules = Self {
                 id: IdRule,
                 ver: VerRule,
