@@ -7,12 +7,10 @@
 use std::sync::Arc;
 
 use orx_concurrent_vec::ConcurrentVec;
-use serde::Serialize;
 
 /// The kind of problem being reported
-#[derive(Debug, Serialize, Clone)]
-#[serde(tag = "type")]
-enum Kind {
+#[derive(Debug, Clone)]
+pub enum Kind {
     /// Expected and Required field is missing
     MissingField {
         /// Name of the missing field
@@ -73,21 +71,33 @@ enum Kind {
 }
 
 /// Problem Report Entry
-#[derive(Debug, Serialize, Clone)]
-struct Entry {
+#[derive(Debug, Clone)]
+pub struct Entry {
     /// The kind of problem we are recording.
     kind: Kind,
     /// Any extra context information we want to add.
     context: String,
 }
 
+impl Entry {
+    /// Gets the kind of the problem of the entry.
+    pub fn kind(&self) -> &Kind {
+        &self.kind
+    }
+
+    /// Gets extra information of the entry.
+    pub fn context(&self) -> &String {
+        &self.context
+    }
+}
+
 /// The Problem Report list
-#[derive(Debug, Clone, Serialize)]
-struct Report(ConcurrentVec<Entry>);
+#[derive(Debug, Clone)]
+pub struct Report(ConcurrentVec<Entry>);
 
 /// An inner state of the report.
-#[derive(Debug, Serialize)]
-struct State {
+#[derive(Debug)]
+pub struct State {
     /// What context does the whole report have
     context: String,
     /// The report itself
@@ -97,7 +107,7 @@ struct State {
 /// Problem Report.
 ///
 /// This structure allows making a cheap copies that share the same state.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone)]
 pub struct ProblemReport(Arc<State>);
 
 impl ProblemReport {
@@ -145,6 +155,16 @@ impl ProblemReport {
     #[must_use]
     pub fn is_problematic(&self) -> bool {
         !self.0.report.0.is_empty()
+    }
+
+    /// Gets entries from the report.
+    pub fn entries(&self) -> &ConcurrentVec<Entry> {
+        &self.0.report.0
+    }
+
+    /// Gets context from the report.
+    pub fn context(&self) -> &String {
+        &self.0.context
     }
 
     /// Add an entry to the report
@@ -499,15 +519,5 @@ mod tests {
 
         // The original report must have the same (problematic) state.
         assert!(original.is_problematic());
-    }
-
-    #[test]
-    fn serialize() {
-        let report = ProblemReport::new("top level context");
-        report.invalid_value("field name", "found", "constraint", "context");
-
-        let serialized = serde_json::to_string(&report).unwrap();
-        let expected = r#"{"context":"top level context","report":[{"kind":{"type":"InvalidValue","field":"field name","value":"found","constraint":"constraint"},"context":"context"}]}"#;
-        assert_eq!(serialized, expected);
     }
 }
