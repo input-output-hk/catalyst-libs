@@ -13,4 +13,5 @@ pub struct Metadata {
     #[serde(rename = "ref")]
     pub doc_ref: doc_ref::Ref,
     pub reply: reply::Reply,
+    pub parameters: parameters::Parameters,
 }

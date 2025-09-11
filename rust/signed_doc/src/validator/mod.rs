@@ -49,7 +49,7 @@ fn proposal_rule() -> Rules {
             allowed_type: PROPOSAL_FORM_TEMPLATE.clone(),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: parameters.clone(),
+            allowed_type: parameters.clone(),
             optional: false,
         },
         doc_ref: RefRule::NotSpecified,
@@ -88,7 +88,7 @@ fn proposal_comment_rule() -> Rules {
             allowed_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_types: vec![PROPOSAL.clone()],
+            allowed_type: vec![PROPOSAL.clone()],
             multiple: false,
             optional: false,
         },
@@ -98,7 +98,7 @@ fn proposal_comment_rule() -> Rules {
         },
         section: SectionRule::NotSpecified,
         parameters: ParametersRule::Specified {
-            exp_parameters_type: parameters.clone(),
+            allowed_type: parameters.clone(),
             optional: false,
         },
         content: ContentRule::NotNil,
@@ -143,11 +143,11 @@ fn proposal_submission_action_rule() -> Rules {
         },
         template: TemplateRule::NotSpecified,
         parameters: ParametersRule::Specified {
-            exp_parameters_type: parameters,
+            allowed_type: parameters,
             optional: false,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_types: vec![PROPOSAL.clone()],
+            allowed_type: vec![PROPOSAL.clone()],
             multiple: false,
             optional: false,
         },

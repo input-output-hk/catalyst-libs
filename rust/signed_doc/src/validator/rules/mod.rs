@@ -128,7 +128,7 @@ impl Rules {
                 content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
                 content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
                 template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
-                parameters: ParametersRule::NotSpecified,
+                parameters: ParametersRule::new(&spec.docs, &doc_spec.metadata.parameters)?,
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
                 reply: ReplyRule::new(&spec.docs, &doc_spec.metadata.reply)?,
                 section: SectionRule::NotSpecified,

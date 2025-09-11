@@ -26,7 +26,7 @@ pub(crate) enum ReplyRule {
 }
 
 impl ReplyRule {
-    /// Generating `RefRule` from specs
+    /// Generating `ReplyRule` from specs
     pub(crate) fn new(
         docs: &HashMap<DocumentName, DocSpec>,
         spec: &Reply,

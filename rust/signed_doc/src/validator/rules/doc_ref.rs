@@ -14,8 +14,8 @@ use crate::{
 pub(crate) enum RefRule {
     /// Is 'ref' specified
     Specified {
-        /// expected `type` field of the referenced doc
-        exp_ref_types: Vec<DocType>,
+        /// allowed `type` field of the referenced doc
+        allowed_type: Vec<DocType>,
         /// allows multiple document references or only one
         multiple: bool,
         /// optional flag for the `ref` field
@@ -60,7 +60,7 @@ impl RefRule {
         ))?;
 
         Ok(Self::Specified {
-            exp_ref_types,
+            allowed_type: exp_ref_types,
             multiple,
             optional,
         })
@@ -77,7 +77,7 @@ impl RefRule {
     {
         let context: &str = "Ref rule check";
         if let Self::Specified {
-            exp_ref_types,
+            allowed_type: exp_ref_types,
             multiple,
             optional,
         } = self
@@ -466,7 +466,7 @@ mod tests {
         let doc = doc_gen(&exp_types, &mut provider);
 
         let non_optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: true,
             optional: false,
         }
@@ -475,7 +475,7 @@ mod tests {
         .unwrap();
 
         let optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: true,
             optional: true,
         }
@@ -568,7 +568,7 @@ mod tests {
         let doc = doc_gen(&exp_types, &mut provider);
 
         let non_optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: false,
             optional: false,
         }
@@ -577,7 +577,7 @@ mod tests {
         .unwrap();
 
         let optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: false,
             optional: true,
         }
@@ -593,7 +593,7 @@ mod tests {
     async fn ref_specified_optional_test() {
         let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
-            exp_ref_types: vec![UuidV4::new().into()],
+            allowed_type: vec![UuidV4::new().into()],
             multiple: true,
             optional: true,
         };
@@ -603,7 +603,7 @@ mod tests {
 
         let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
-            exp_ref_types: vec![UuidV4::new().into()],
+            allowed_type: vec![UuidV4::new().into()],
             multiple: true,
             optional: false,
         };
