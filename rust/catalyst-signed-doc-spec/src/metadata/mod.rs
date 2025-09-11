@@ -1,6 +1,7 @@
 //! `metadata` field definition
 
 pub mod doc_ref;
+pub mod parameters;
 pub mod reply;
 pub mod template;
 

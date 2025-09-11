@@ -28,19 +28,23 @@ impl RefRule {
     /// Generating `RefRule` from specs
     pub(crate) fn new(
         docs: &HashMap<catalyst_signed_doc_spec::DocumentName, catalyst_signed_doc_spec::DocSpec>,
-        ref_spec: &catalyst_signed_doc_spec::metadata::doc_ref::Ref,
+        spec: &catalyst_signed_doc_spec::metadata::doc_ref::Ref,
     ) -> anyhow::Result<Self> {
-        let optional = match ref_spec.required {
+        let optional = match spec.required {
             catalyst_signed_doc_spec::is_required::IsRequired::Yes => false,
             catalyst_signed_doc_spec::is_required::IsRequired::Optional => true,
             catalyst_signed_doc_spec::is_required::IsRequired::Excluded => {
+                anyhow::ensure!(
+                    spec.doc_type.is_empty() && spec.multiple.is_none(),
+                     "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
+                );
                 return Ok(Self::NotSpecified);
             },
         };
 
-        anyhow::ensure!(!ref_spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
+        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
 
-        let exp_ref_types = ref_spec.doc_type.iter().try_fold(
+        let exp_ref_types = spec.doc_type.iter().try_fold(
             Vec::new(),
             |mut res, doc_name| -> anyhow::Result<_> {
                 let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
@@ -51,7 +55,7 @@ impl RefRule {
             },
         )?;
 
-        let multiple = ref_spec.multiple.ok_or(anyhow::anyhow!(
+        let multiple = spec.multiple.ok_or(anyhow::anyhow!(
             "'multiple' field should exists for the required 'ref' metadata definition"
         ))?;
 

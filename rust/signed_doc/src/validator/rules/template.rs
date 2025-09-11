@@ -35,25 +35,23 @@ impl TemplateRule {
     ) -> anyhow::Result<Self> {
         if let IsRequired::Excluded = spec.required {
             anyhow::ensure!(
-            spec.doc_type.is_none() && spec.multiple.is_none(),
-            "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'template'  metadata definition"
-        );
+                spec.doc_type.is_empty() && spec.multiple.is_none(),
+                "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'template'  metadata definition"
+            );
             return Ok(Self::NotSpecified);
         }
 
         anyhow::ensure!(
             spec.multiple.is_some_and(|v| !v),
-            "'multiple' must be `false` for 'template' metadata definition"
+            "'multiple' field should be only set to false for the required 'reply' metadata definition"
         );
         anyhow::ensure!(
             spec.required != IsRequired::Optional,
-            "'required' field cannot been 'optional' for 'template'  metadata definition"
+            "'required' field cannot been 'optional' for 'template' metadata definition"
         );
 
-        let doc_name = spec.doc_type.as_ref().ok_or(anyhow::anyhow!(
-            "'type' field should exists for the required 'template' metadata definition"
-        ))?;
-        let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
+        let doc_name = &<&[DocumentName; 1]>::try_from(spec.doc_type.as_slice()).map_err(|_| anyhow::anyhow!("'type' field should exists and has only one entry for the required 'reply' metadata definition"))?[0];
+        let docs_spec = docs.get(&doc_name).ok_or(anyhow::anyhow!(
             "cannot find a document definition {doc_name}"
         ))?;
         let allowed_type = docs_spec.doc_type.as_str().parse()?;
