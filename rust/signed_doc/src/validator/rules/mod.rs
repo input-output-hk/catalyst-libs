@@ -152,6 +152,8 @@ mod tests {
 
     #[test]
     fn rules_documents_rules_test() {
-        let _unused = Rules::documents_rules().unwrap();
+        for (doc_type, rules) in Rules::documents_rules().unwrap() {
+            println!("{doc_type}: {rules:?}");
+        }
     }
 }

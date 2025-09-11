@@ -1,9 +1,7 @@
 //! `parameters` rule type impl.
 
-use std::collections::HashMap;
-
 use catalyst_signed_doc_spec::{
-    is_required::IsRequired, metadata::parameters::Parameters, DocSpec, DocumentName,
+    is_required::IsRequired, metadata::parameters::Parameters, DocSpecs,
 };
 use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
@@ -24,14 +22,13 @@ pub(crate) enum ParametersRule {
         optional: bool,
     },
     /// `parameters` is not specified
-    #[allow(unused)]
     NotSpecified,
 }
 
 impl ParametersRule {
     /// Generating `ParametersRule` from specs
     pub(crate) fn new(
-        docs: &HashMap<DocumentName, DocSpec>,
+        docs: &DocSpecs,
         spec: &Parameters,
     ) -> anyhow::Result<Self> {
         let optional = match spec.required {

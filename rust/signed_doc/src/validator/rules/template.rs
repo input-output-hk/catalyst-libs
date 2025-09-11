@@ -1,9 +1,7 @@
 //! `template` rule type impl.
 
-use std::collections::HashMap;
-
 use catalyst_signed_doc_spec::{
-    is_required::IsRequired, metadata::template::Template, DocSpec, DocumentName,
+    is_required::IsRequired, metadata::template::Template, DocSpecs, DocumentName,
 };
 
 use crate::{
@@ -30,7 +28,7 @@ pub(crate) enum TemplateRule {
 impl TemplateRule {
     /// Generating `TemplateRule` from specs
     pub(crate) fn new(
-        docs: &HashMap<DocumentName, DocSpec>,
+        docs: &DocSpecs,
         spec: &Template,
     ) -> anyhow::Result<Self> {
         if let IsRequired::Excluded = spec.required {

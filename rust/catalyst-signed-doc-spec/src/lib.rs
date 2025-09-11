@@ -10,7 +10,7 @@ pub mod metadata;
 pub mod payload;
 pub mod signers;
 
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display, ops::Deref};
 
 use build_info as build_info_lib;
 
@@ -23,8 +23,19 @@ build_info_lib::build_info!(pub(crate) fn build_info);
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub struct CatalystSignedDocSpec {
-    pub docs: HashMap<DocumentName, DocSpec>,
+    pub docs: DocSpecs,
     copyright: Copyright,
+}
+
+#[derive(serde::Deserialize)]
+pub struct DocSpecs(HashMap<DocumentName, DocSpec>);
+
+impl Deref for DocSpecs {
+    type Target = HashMap<DocumentName, DocSpec>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 // A thin wrapper over the string document name values

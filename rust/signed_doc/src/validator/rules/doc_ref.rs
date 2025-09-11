@@ -1,7 +1,6 @@
 //! `ref` rule type impl.
 
-use std::collections::HashMap;
-
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::doc_ref::Ref, DocSpecs};
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
@@ -27,13 +26,13 @@ pub(crate) enum RefRule {
 impl RefRule {
     /// Generating `RefRule` from specs
     pub(crate) fn new(
-        docs: &HashMap<catalyst_signed_doc_spec::DocumentName, catalyst_signed_doc_spec::DocSpec>,
-        spec: &catalyst_signed_doc_spec::metadata::doc_ref::Ref,
+        docs: &DocSpecs,
+        spec: &Ref,
     ) -> anyhow::Result<Self> {
         let optional = match spec.required {
-            catalyst_signed_doc_spec::is_required::IsRequired::Yes => false,
-            catalyst_signed_doc_spec::is_required::IsRequired::Optional => true,
-            catalyst_signed_doc_spec::is_required::IsRequired::Excluded => {
+            IsRequired::Yes => false,
+            IsRequired::Optional => true,
+            IsRequired::Excluded => {
                 anyhow::ensure!(
                     spec.doc_type.is_empty() && spec.multiple.is_none(),
                      "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
