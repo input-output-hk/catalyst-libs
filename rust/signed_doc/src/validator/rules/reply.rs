@@ -47,7 +47,7 @@ impl ReplyRule {
         );
 
         let doc_name = &<&[DocumentName; 1]>::try_from(spec.doc_type.as_slice()).map_err(|_| anyhow::anyhow!("'type' field should exists and has only one entry for the required 'reply' metadata definition"))?[0];
-        let docs_spec = docs.get(&doc_name).ok_or(anyhow::anyhow!(
+        let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
             "cannot find a document definition {doc_name}"
         ))?;
         let allowed_type = docs_spec.doc_type.as_str().parse()?;
