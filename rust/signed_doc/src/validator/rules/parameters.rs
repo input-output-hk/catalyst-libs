@@ -40,16 +40,16 @@ impl ParametersRule {
             IsRequired::Excluded => {
                 anyhow::ensure!(
                     spec.doc_type.is_empty() && spec.multiple.is_none(),
-                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'template'  metadata definition"
+                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'parameters'  metadata definition"
                 );
                 return Ok(Self::NotSpecified);
             },
         };
 
-        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
+        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'parameters' metadata definition");
         anyhow::ensure!(
             spec.multiple.is_some_and(|v| !v),
-            "'multiple' field should be only set to false for the required 'reply' metadata definition"
+            "'multiple' field should be only set to false for the required 'parameters' metadata definition"
         );
 
         let allowed_type = spec.doc_type.iter().try_fold(

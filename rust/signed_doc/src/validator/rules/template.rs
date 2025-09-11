@@ -43,14 +43,14 @@ impl TemplateRule {
 
         anyhow::ensure!(
             spec.multiple.is_some_and(|v| !v),
-            "'multiple' field should be only set to false for the required 'reply' metadata definition"
+            "'multiple' field should be only set to false for the required 'template' metadata definition"
         );
         anyhow::ensure!(
             spec.required != IsRequired::Optional,
             "'required' field cannot been 'optional' for 'template' metadata definition"
         );
 
-        let doc_name = &<&[DocumentName; 1]>::try_from(spec.doc_type.as_slice()).map_err(|_| anyhow::anyhow!("'type' field should exists and has only one entry for the required 'reply' metadata definition"))?[0];
+        let doc_name = &<&[DocumentName; 1]>::try_from(spec.doc_type.as_slice()).map_err(|_| anyhow::anyhow!("'type' field should exists and has only one entry for the required 'template' metadata definition"))?[0];
         let docs_spec = docs.get(&doc_name).ok_or(anyhow::anyhow!(
             "cannot find a document definition {doc_name}"
         ))?;

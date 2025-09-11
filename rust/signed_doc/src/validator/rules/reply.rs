@@ -37,7 +37,7 @@ impl ReplyRule {
             IsRequired::Excluded => {
                 anyhow::ensure!(
                     spec.doc_type.is_empty() && spec.multiple.is_none(),
-                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'template'  metadata definition"
+                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'reply'  metadata definition"
                 );
                 return Ok(Self::NotSpecified);
             },
