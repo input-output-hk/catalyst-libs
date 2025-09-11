@@ -457,6 +457,11 @@
         "changes": "* Updated `payload` field, it become required.\n* Added new `draft` field for Signed Document with the default value `false`.\n* Made `payload.nil` non optional with the default value `false`.\n* If `payload.nil` is `true` automatically set `\"content type\"` and `\"content-encoding\"` fields to `\"excluded\"`.",
         "modified": "2025-09-08",
         "version": "0.1.2"
+      },
+      {
+        "changes": "* Fixed an invalid 'Presentation Template' JSON schema. ",
+        "modified": "2025-09-09",
+        "version": "0.1.3"
       }
     ]
   },
@@ -1984,13 +1989,18 @@
               ],
               "type": "string"
             },
-            "cardTitle": {
-              "description": "A title shown to the editor of the card.  Not used by the UI.",
+            "cardTemplate": {
+              "contentType": "text/html; charset=utf-8; template=handlebars",
+              "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
               "type": "string"
             },
-            "css": {
+            "cardTemplateCss": {
               "contentType": "text/css; charset=utf-8; template=handlebars",
               "description": "Optional styling that can be used by the HTML generated from the template for presentation.",
+              "type": "string"
+            },
+            "cardTitle": {
+              "description": "A title shown to the editor of the card.  Not used by the UI.",
               "type": "string"
             },
             "layoutParameters": {
@@ -2005,11 +2015,6 @@
               },
               "type": "array",
               "uniqueItems": true
-            },
-            "template": {
-              "contentType": "text/html; charset=utf-8; template=handlebars",
-              "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
-              "type": "string"
             }
           },
           "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -9082,13 +9087,18 @@
           ],
           "type": "string"
         },
-        "cardTitle": {
-          "description": "A title shown to the editor of the card.  Not used by the UI.",
+        "cardTemplate": {
+          "contentType": "text/html; charset=utf-8; template=handlebars",
+          "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
           "type": "string"
         },
-        "css": {
+        "cardTemplateCss": {
           "contentType": "text/css; charset=utf-8; template=handlebars",
           "description": "Optional styling that can be used by the HTML generated from the template for presentation.",
+          "type": "string"
+        },
+        "cardTitle": {
+          "description": "A title shown to the editor of the card.  Not used by the UI.",
           "type": "string"
         },
         "layoutParameters": {
@@ -9103,11 +9113,6 @@
           },
           "type": "array",
           "uniqueItems": true
-        },
-        "template": {
-          "contentType": "text/html; charset=utf-8; template=handlebars",
-          "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
-          "type": "string"
         }
       },
       "$schema": "https://json-schema.org/draft/2020-12/schema",

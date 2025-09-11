@@ -1,5 +1,9 @@
 //! `content-encoding` rule type impl.
 
+use std::string::ToString;
+
+use catalyst_signed_doc_spec::is_required::IsRequired;
+
 use crate::{metadata::ContentEncoding, CatalystSignedDocument};
 
 /// `content-encoding` field validation rule.
@@ -8,16 +12,40 @@ pub(crate) enum ContentEncodingRule {
     /// Content Encoding field is optionally present in the document.
     Specified {
         /// expected `content-encoding` field.
-        exp: ContentEncoding,
+        exp: Vec<ContentEncoding>,
         /// optional flag for the `content-encoding` field.
         optional: bool,
     },
     /// Content Encoding field must not be present in the document.
-    #[allow(dead_code)]
     NotSpecified,
 }
 
 impl ContentEncodingRule {
+    /// Create a new rule from specs.
+    pub(crate) fn new(
+        spec: &catalyst_signed_doc_spec::headers::content_encoding::ContentEncoding
+    ) -> anyhow::Result<Self> {
+        if let IsRequired::Excluded = spec.required {
+            anyhow::ensure!(
+                spec.value.is_none(),
+                "'content type' field must not exist when 'required' is 'excluded'"
+            );
+            return Ok(Self::NotSpecified);
+        }
+
+        let optional = IsRequired::Optional == spec.required;
+
+        let exp = spec
+            .value
+            .as_ref()
+            .ok_or(anyhow::anyhow!("'content-encoding' field must have value "))?
+            .iter()
+            .flat_map(|encoding| encoding.parse())
+            .collect();
+
+        Ok(Self::Specified { exp, optional })
+    }
+
     /// Field validation rule
     #[allow(clippy::unused_async)]
     pub(crate) async fn check(
@@ -40,12 +68,15 @@ impl ContentEncodingRule {
             },
             Self::Specified { exp, optional } => {
                 if let Some(content_encoding) = doc.doc_content_encoding() {
-                    if content_encoding != *exp {
+                    if !exp.contains(&content_encoding) {
                         doc.report().invalid_value(
                             "content-encoding",
                             content_encoding.to_string().as_str(),
-                            exp.to_string().as_str(),
-                            "Invalid Document content-encoding value",
+                            &exp.iter()
+                                .map(ToString::to_string)
+                                .collect::<Vec<_>>()
+                                .join(", "),
+                            "Invalid document content-encoding value",
                         );
                         return Ok(false);
                     }
@@ -53,10 +84,8 @@ impl ContentEncodingRule {
                         doc.report().invalid_value(
                             "payload",
                             &hex::encode(doc.encoded_content()),
-                            &format!(
-                                "Document content (payload) must decodable by the set content encoding type: {content_encoding}"
-                            ),
-                            "Invalid Document content value",
+                            content_encoding.to_string().as_str(),
+                            "Document content is not decodable with the expected content-encoding",
                         );
                         return Ok(false);
                     }
@@ -83,7 +112,7 @@ mod tests {
         let content_encoding = ContentEncoding::Brotli;
 
         let rule = ContentEncodingRule::Specified {
-            exp: content_encoding,
+            exp: vec![content_encoding],
             optional: true,
         };
 
@@ -103,7 +132,7 @@ mod tests {
         assert!(rule.check(&doc).await.unwrap());
 
         let rule = ContentEncodingRule::Specified {
-            exp: content_encoding,
+            exp: vec![content_encoding],
             optional: false,
         };
         assert!(!rule.check(&doc).await.unwrap());

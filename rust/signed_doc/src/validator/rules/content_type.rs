@@ -15,6 +15,33 @@ pub(crate) enum ContentTypeRule {
 }
 
 impl ContentTypeRule {
+    /// Generating `ContentTypeRule` from specs
+    pub(crate) fn new(
+        spec: &catalyst_signed_doc_spec::headers::content_type::ContentType
+    ) -> anyhow::Result<Self> {
+        if let catalyst_signed_doc_spec::is_required::IsRequired::Excluded = spec.required {
+            anyhow::ensure!(
+                spec.value.is_none(),
+                "'value' field must not exist when 'required' is 'excluded'"
+            );
+            return Ok(Self::NotSpecified);
+        }
+
+        anyhow::ensure!(
+            catalyst_signed_doc_spec::is_required::IsRequired::Optional != spec.required,
+            "'content type' field cannot been optional"
+        );
+
+        let value = spec
+            .value
+            .as_ref()
+            .ok_or(anyhow::anyhow!("'content type' 'value' field must exist"))?;
+
+        Ok(Self::Specified {
+            exp: value.parse()?,
+        })
+    }
+
     /// Field validation rule
     #[allow(clippy::unused_async)]
     pub(crate) async fn check(
@@ -92,7 +119,7 @@ impl ContentTypeRule {
                     }
                 },
                 ContentType::Cddl
-                | ContentType::JsonSchema
+                | ContentType::SchemaJson
                 | ContentType::Css
                 | ContentType::CssHandlebars
                 | ContentType::Html
