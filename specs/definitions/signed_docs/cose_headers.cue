@@ -51,7 +51,7 @@ cose: headerFormats: #metadataFormats & {
 	coseLabel:   int | string
 	description: string
 	format:      #coseHeaderTypesConstraint
-	required: optional.#field_default_yes
+	required:    optional.#field_default_yes
 
 	if required != "excluded" {
 		if format == "Media Type" {

@@ -107,27 +107,27 @@ docs: "Contest Delegation": {
 	headers: "content type": value: "application/json"
 
 	payload: {
-			description: """
-				The Payload is a JSON Document, and must conform to this schema.
+		description: """
+			The Payload is a JSON Document, and must conform to this schema.
 
-				It consists of an array which defines the weights to be applied to the chosen delegations.
+			It consists of an array which defines the weights to be applied to the chosen delegations.
 
-				Each valid delegate gets the matching weight from this array.
-				The total voting power is split proportionally based on these weights over the
-				valid drep nominations.
-				"""
-			schema: _ @embed(file="payload_schemas/contest_delegation.schema.json")
-			examples: [
-				{
-					title: "Three Delegation Weights"
-					description: """
-						If there are only 1 delegation, then the weights do not matter.
-						If there are two, then the first delegate has a weight of 10/30, and the second has 20/30.
-						If there are 5, then the weights are: `[10,20,30,1,1]`
-						"""
-					example: _ @embed(file="payload_schemas/contest_delegation.example.json")
-				}
-			]
+			Each valid delegate gets the matching weight from this array.
+			The total voting power is split proportionally based on these weights over the
+			valid drep nominations.
+			"""
+		schema: _ @embed(file="payload_schemas/contest_delegation.schema.json")
+		examples: [
+			{
+				title: "Three Delegation Weights"
+				description: """
+					If there are only 1 delegation, then the weights do not matter.
+					If there are two, then the first delegate has a weight of 10/30, and the second has 20/30.
+					If there are 5, then the weights are: `[10,20,30,1,1]`
+					"""
+				example: _ @embed(file="payload_schemas/contest_delegation.example.json")
+			},
+		]
 	}
 
 	signers: roles: user: [

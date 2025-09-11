@@ -12,7 +12,7 @@ cddlDefinitions: {
 			"choices",
 			"column-proof",
 			"matrix-proof",
-			"voter-choice"
+			"voter-choice",
 		]
 		def: """
 			{
@@ -56,14 +56,14 @@ cddlDefinitions: {
 					* Two Choices
 					"""
 				example: _ @embed(file=examples/contest_ballot_payload_clear.cbor,type=binary)
-			}
+			},
 		]
 	}
 
 	choices: {
 		requires: [
 			"clear-choices",
-			"elgamal-ristretto255-encrypted-choices"
+			"elgamal-ristretto255-encrypted-choices",
 		]
 		def: """
 			[ 0, \(requires[0]) ] /
@@ -79,7 +79,7 @@ cddlDefinitions: {
 
 	"clear-choices": {
 		requires: [
-			"clear-choice"
+			"clear-choice",
 		]
 		def: """
 			( +clear-choice )
@@ -94,7 +94,6 @@ cddlDefinitions: {
 			Universal Unencrypted Choice
 			"""
 	}
-
 
 	"clear-choice": {
 		requires: []
@@ -115,7 +114,7 @@ cddlDefinitions: {
 	"elgamal-ristretto255-encrypted-choices": {
 		requires: [
 			"elgamal-ristretto255-encrypted-choice",
-			"row-proof"
+			"row-proof",
 		]
 		def: """
 			( 
@@ -142,10 +141,9 @@ cddlDefinitions: {
 			"""
 	}
 
-
 	"elgamal-ristretto255-encrypted-choice": {
 		requires: [
-			"elgamal-ristretto255-group-element"
+			"elgamal-ristretto255-group-element",
 		]
 		def: """
 			[
@@ -174,10 +172,9 @@ cddlDefinitions: {
 			"""
 	}
 
-
 	"row-proof": {
 		requires: [
-			"zkproof-elgamal-ristretto255-unit-vector-with-single-selection"
+			"zkproof-elgamal-ristretto255-unit-vector-with-single-selection",
 		]
 		def: """
 			[0, \(requires[0]) ]
@@ -195,7 +192,7 @@ cddlDefinitions: {
 	"zkproof-elgamal-ristretto255-unit-vector-with-single-selection": {
 		requires: [
 			"zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item",
-			"zkproof-ed25519-scalar"
+			"zkproof-ed25519-scalar",
 		]
 		def: """
 			( [ [ +\(requires[0]) ], \(requires[1]) )
@@ -209,7 +206,7 @@ cddlDefinitions: {
 		requires: [
 			"zkproof-elgamal-announcement",
 			"elgamal-ristretto255-encrypted-choice",
-			"zkproof-ed25519-r-response"
+			"zkproof-ed25519-r-response",
 		]
 		def: """
 			( \(requires[0]), ~\(requires[1]), \(requires[2]) )
@@ -218,7 +215,6 @@ cddlDefinitions: {
 			???
 			"""
 	}
-
 
 	"zkproof-elgamal-announcement": {
 		requires: ["zkproof-elgamal-group-element"]
@@ -229,7 +225,6 @@ cddlDefinitions: {
 			???
 			"""
 	}
-
 
 	"zkproof-elgamal-group-element": {
 		requires: []
@@ -368,6 +363,5 @@ cddlDefinitions: {
 			As the CTR is predictable, the blocks can be decrypted in parallel for maximum performance.
 			"""
 	}
-
 
 }

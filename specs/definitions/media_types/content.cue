@@ -128,7 +128,6 @@ allCoapTypes: list.Sort([
 allCoapTypesStr: [...string]
 allCoapTypesStr: [for v in allCoapTypes {"\(v)"}]
 
-
 jsonContentTypes: list.UniqueItems
 jsonContentTypes: list.Sort([
 	for k, _ in contentTypes if k =~ regex.def.jsonContentType.pattern {k},

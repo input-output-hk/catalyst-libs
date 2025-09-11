@@ -17,27 +17,28 @@ import (
 	nil: true | *false
 }
 
-
 // Payload definition
 #payload_json: {
 	// Extends #payload
 	#payload
+
 	// Optional fixed schema for the payload.
 	// A URI or inline JSON Schema that the payload must validate against.
 	// Can't work out a way to validated json schema constraint here,
 	// but is validated by the documentation generator.
-	schema?: _ | =~ regex.def.httpsUrl.pattern
+	schema?: _ | =~regex.def.httpsUrl.pattern
 	// Examples of the schema.
 	examples?: Eg.#list
 }
 
 // Payload definition for cbor payloads
-#payload_cbor: { 
+#payload_cbor: {
 	// Extends #payload
 	#payload
+
 	// CBOR payloads must have a CDDL Schema defined.
 	schema?: cddl.#cddlTypesConstraint
-	
+
 	// Examples of the schema.
 	examples?: Eg.#list
 }

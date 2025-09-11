@@ -115,7 +115,6 @@ positive_match: "application/ce+cbor; foo=bar" =~ def.cborContentType.pattern
 positive_match: "application/cddl" =~ def.cddlContentType.pattern
 positive_match: "application/schema+cddl; charset=utf-8" =~ def.cddlContentType.pattern
 
-
 // Negative match (where possible to test)
 negative_match: false
 
