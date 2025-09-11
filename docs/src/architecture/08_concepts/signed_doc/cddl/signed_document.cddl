@@ -33,7 +33,7 @@ COSE_Document_Header_Map = {
 ; COSE Standard headers used by a Document
 COSE_Document_Standard_Headers = (
   3 => media_type
-  ?"content-encoding" => http_content_encoding
+  "content-encoding" => http_content_encoding
 )
 
 ; Supported Content Media Types.

@@ -1,6 +1,8 @@
 // CDDL Definitions
 // 
 // Contest Choice Payload V2 CDDL Specification
+@extern(embed)
+
 package cddl
 
 cddlDefinitions: {
@@ -28,6 +30,34 @@ cddlDefinitions: {
 		comment: """
 			Catalyst Vote Payload data object.
 			"""
+		examples: [
+			{
+				title: "Example Encrypted Contest Ballot Payload."
+				description: """
+					Example Shows:
+					
+					* Three Proposals
+					* Two Encrypted Choices
+					* Row Proofs for each proposal.
+					* `aes-crt-encrypted-choices` which reflects the choices.
+
+					The Contest Private Key was: 0x1234562343....
+					The Contest Public Key was: 0x1324354235...
+					The AES encryption key for the `aes-crt-encrypted-choices` is 0x123456789...
+					"""
+				example: _ @embed(file=examples/contest_ballot_payload_encrypted.cbor,type=binary)
+			},
+			{
+				title: "Example Clear Ballot Payload."
+				description: """
+					Example Shows:
+					
+					* Three Proposals
+					* Two Choices
+					"""
+				example: _ @embed(file=examples/contest_ballot_payload_clear.cbor,type=binary)
+			}
+		]
 	}
 
 	choices: {

@@ -6,7 +6,9 @@ import datetime
 import typing
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError
+from rich.console import Console
+from rich.table import Table
 
 from spec.authors import Authors
 from spec.cddl.cose import CoseDefinitions
@@ -42,6 +44,46 @@ class SignedDoc(BaseModel):
     _file: str = PrivateAttr(default="Uninitialized")
 
     model_config = ConfigDict(extra="forbid")
+
+    @staticmethod
+    def validation_error(err: ValidationError) -> None:
+        """Print validation errors nicely when they occur (helper)."""
+        table = Table(
+            title=f"{err.error_count()} Locations where Schema Data does not match the {err.title} Model.",
+            caption="Model does not match Schema and needs updating.",
+            min_width=120,
+            expand=True,
+        )
+        table.add_column("Key", style="yellow", overflow="fold")
+        table.add_column("Error", style="red")
+        table.add_column("Input", no_wrap=True, max_width=30, style="grey37")
+        table.add_column("Context", style="green")
+
+        error_links: dict[str, str] = {}
+        errors = err.errors()
+        errors.sort(key=lambda x: [x["loc"], x["type"]])
+        for error in errors:
+            error_links[error["msg"]] = error["url"]  # type: ignore  # noqa: PGH003
+
+            loc: list[str] = []
+            for x in error["loc"]:
+                if isinstance(x, int):
+                    loc.append(f"[{x}]")
+                else:
+                    loc.append(f"{x}")
+
+            table.add_row(
+                ".".join(loc),
+                f"{error['type']}: {error['msg']}",
+                str(error["input"]).splitlines()[0],
+                ", ".join(f"{k}={v}" for k, v in (error.get("ctx") or {}).items()),
+            )
+
+        console = Console(width=120, force_terminal=True)
+        console.print(table)
+
+        for msg, url in error_links.items():
+            console.print(f"* {msg} : {url}")
 
     @classmethod
     def load(cls, spec_file: str) -> typing.Self:

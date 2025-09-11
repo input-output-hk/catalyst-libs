@@ -5,6 +5,8 @@ import typing
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel
 
+from spec.example import CborExample
+
 
 class CDDLDefinition(BaseModel):
     """CDDL Definition Deserialized Specification."""
@@ -13,6 +15,7 @@ class CDDLDefinition(BaseModel):
     requires: list[str]
     description: str | None = Field(default=None)
     comment: str = Field(default_factory=str)
+    examples: list[CborExample] = Field(default_factory=CborExample.default)
 
     _name: str = PrivateAttr(default="Unknown")
 

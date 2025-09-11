@@ -3,6 +3,10 @@
 // CDDL Definitions
 package cddl
 
+import (
+	Eg "github.com/input-output-hk/catalyst-libs/specs/generic:examples"
+)	
+
 // List of cddl definitions, cddl_type_name: cddl_definition
 #cddlDefinitions: {
 	[string]: {
@@ -10,6 +14,7 @@ package cddl
 		requires: [...#cddlTypesConstraint] | *[]
 		description?: string // Description - multiline
 		comment?:     string // Single line comments are displayed after a definition. Multiline comments, before.
+		examples?: 	  Eg.#list
 	}
 }
 

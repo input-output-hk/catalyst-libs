@@ -8,6 +8,9 @@ import (
 	"github.com/input-output-hk/catalyst-libs/specs/form_template/elements:form_template"
 	"github.com/input-output-hk/catalyst-libs/specs/presentation_template/definedCards:presentation_template"
 	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+	"github.com/input-output-hk/catalyst-libs/specs/media_types"
+	"github.com/input-output-hk/catalyst-libs/specs/cddl"
+	"list"
 )
 
 // Document Type must be a valid UUIDv4
@@ -38,18 +41,28 @@ import (
 
 	notes: [...string] | *[]
 
-	if payload.nil {
-		headers: "content type": required:     "excluded"
-		headers: "content-encoding": required: "excluded"
-	}
-
 	headers: _coseHeaders
 
 	// The Metadata fields in this document (non cose standard)
 	metadata: #metadata
 
 	// Requirements for the document payload.
-	payload?: #payload
+	//payload: #payload
+
+	// IF there is no defined content, then the payload MUST allow `nil`
+	if headers."content type".required == "excluded" {
+		payload: #payload
+		payload: nil: true
+	} // Would be nice if `cuelang` had `else`
+	if headers."content type".required != "excluded" {
+		//payload: #payload_json
+		if list.Contains( media_types.jsonContentTypes, headers."content type".value) {
+			payload: #payload_json
+		}
+		//if list.Contains( media_types.cborContentTypes, headers."content type".value) {
+		//	payload: #payload_cbor
+		//}
+	}
 
 	// Required/Allowed Signers of a document
 	signers: _allowedSigners
@@ -89,3 +102,5 @@ presentationTemplate: {
 	cards:  presentation_template.allCards
 	schema: presentation_template.presentationTemplate
 }
+
+cddlDefinitions: cddl.cddlDefinitions

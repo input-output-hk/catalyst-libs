@@ -10,8 +10,8 @@ IMPORT ../docs AS docs
 builder:
     FROM python-ci+python-base
 
-    # Eval V3 currently broken with our specifications.
-    ENV CUE_EXPERIMENT=evalv3=0
+    # Always use Eval V3, as early evaluators have bugs that mask specifications issues.
+    ENV CUE_EXPERIMENT=evalv3=1
     DO cue+INSTALL
 
 # Copy all the source we need to build the docs

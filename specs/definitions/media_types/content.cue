@@ -3,6 +3,7 @@ package media_types
 
 import (
 	"list"
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
 )
 
 // Content Type name : Description
@@ -126,3 +127,19 @@ allCoapTypes: list.Sort([
 
 allCoapTypesStr: [...string]
 allCoapTypesStr: [for v in allCoapTypes {"\(v)"}]
+
+
+jsonContentTypes: list.UniqueItems
+jsonContentTypes: list.Sort([
+	for k, _ in contentTypes if k =~ regex.def.jsonContentType.pattern {k},
+], list.Ascending)
+
+cborContentTypes: list.UniqueItems
+cborContentTypes: list.Sort([
+	for k, _ in contentTypes if k =~ regex.def.cborContentType.pattern {k},
+], list.Ascending)
+
+cddlContentTypes: list.UniqueItems
+cddlContentTypes: list.Sort([
+	for k, _ in contentTypes if k =~ regex.def.cddlContentType.pattern {k},
+], list.Ascending)
