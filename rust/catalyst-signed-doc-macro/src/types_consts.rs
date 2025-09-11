@@ -1,9 +1,8 @@
 //! `catalyst_signed_documents_types_consts!` macro implementation
 
+use catalyst_signed_doc_spec::CatalystSignedDocSpec;
 use proc_macro2::TokenStream;
 use quote::quote;
-
-use crate::signed_doc_spec::CatalystSignedDocSpec;
 
 /// `catalyst_signed_documents_types_consts` macro implementation
 pub(crate) fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<TokenStream> {
@@ -11,6 +10,9 @@ pub(crate) fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<To
 
     let mut consts_definitions = Vec::new();
     for (doc_name, doc_spec) in spec.docs {
+        if doc_spec.draft {
+            continue;
+        }
         let const_type_name_ident = doc_name.ident();
         let doc_name = doc_name.name();
         let type_uuid = doc_spec.doc_type;
