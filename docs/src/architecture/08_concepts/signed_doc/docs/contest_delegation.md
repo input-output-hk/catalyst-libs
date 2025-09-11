@@ -37,20 +37,24 @@ Priority only affects two aspects of the delegation.
 1. Any residual voting power after it is split among all delegates is given to the highest
    priority delegate (first).
 2. If there is not enough voting power to distribute, then its distributed from highest
-   priority to lowest.  This may mean that low priority delegates get zero voting power.
+   priority to lowest.
+   This may mean that low priority delegates get zero voting power.
 
 An example:  If a Voter has 100 raw voting power, after quadratic scaling, they have 10.
 If they delegated to 15 delegates equally, then only the first 10 would get 1 voting power
-each.  Voting power is not fractionally assigned.
+each.
+Voting power is not fractionally assigned.
 
 The payload MAY contain a [json][RFC8259] document which consists of a single array which can adjust
-the ratio of the delegation.  Voting power is divided based on the weight of a single
-delegate over the sum of all weights of all delegates.
+the ratio of the delegation.
+Voting power is divided based on the weight of a single delegate over the sum of all
+weights of all delegates.
 This is performed with integer division.
 As a special condition, 0 or any negative value is equivalent to a weight of 1.
 As explained above, if there is not enough voting power to distribute, low priority reps
-will receive 0 voting power from the delegation.  And if there is any residual after integer
-division its applied to the representative with the highest priority.
+will receive 0 voting power from the delegation.
+And if there is any residual after integer division its applied to the representative
+with the highest priority.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -66,7 +70,7 @@ division its applied to the representative with the highest priority.
 * The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the same Contest as the
     Nomination of the Representative.
 * The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
-    * IF there are multiple representatives, then any which are not pointing
+  * IF there are multiple representatives, then any which are not pointing
       to a valid `Representative Nomination` are excluded.
       The nomination is only invalid if ALL references `Representative Nomination`
       references are invalid.
