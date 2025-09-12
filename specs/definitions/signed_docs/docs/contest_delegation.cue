@@ -62,12 +62,12 @@ docs: "Contest Delegation": {
 			* The `parameters` metadata *MUST* point to the same Contest as the 
 				Nomination of the Representative.
 			* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
-			    * IF there are multiple representatives, then any which are not pointing
-				  to a valid `Representative Nomination` are excluded.  
-				  The nomination is only invalid if ALL references `Representative Nomination` 
-				  references are invalid.
-				  This is to prevent a Representative changing their nomination invalidating a
-				  delegation with multiple representatives.
+			    IF there are multiple representatives, then any which are not pointing
+			    to a valid `Representative Nomination` are excluded.  
+			    The nomination is only invalid if ALL references `Representative Nomination` 
+			    references are invalid.
+			    This is to prevent a Representative changing their nomination invalidating a
+			    delegation with multiple representatives.
 			* The payload MUST be nil.
 
 			A Representative *MUST* Delegate to their latest Nomination for a Category,
