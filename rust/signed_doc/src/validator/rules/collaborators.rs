@@ -59,13 +59,13 @@ mod tests {
     use test_case::test_case;
 
     use super::*;
-    use crate::builder::tests::Builder;
-    use crate::metadata::SupportedField;
-    use crate::validator::rules::utils::create_dummy_key_pair;
-
+    use crate::{
+        builder::tests::Builder, metadata::SupportedField,
+        validator::rules::utils::create_dummy_key_pair,
+    };
 
     #[test_case(
-        || {           
+        || {
             Builder::new()
                 .with_metadata_field(SupportedField::Collaborators(
                         vec![create_dummy_key_pair(RoleId::Role0).2].into()
@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[test_case(
-        || {           
+        || {
             Builder::new()
                 .with_metadata_field(SupportedField::Collaborators(
                         vec![create_dummy_key_pair(RoleId::Role0).2].into()
@@ -133,7 +133,7 @@ mod tests {
         "missing 'collaborators' field"
     )]
     #[test_case(
-        || {           
+        || {
             Builder::new()
                 .with_metadata_field(SupportedField::Collaborators(
                         vec![create_dummy_key_pair(RoleId::Role0).2].into()
