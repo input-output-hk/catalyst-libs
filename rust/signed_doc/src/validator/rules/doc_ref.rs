@@ -1,7 +1,6 @@
 //! `ref` rule type impl.
 
-use std::collections::HashMap;
-
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::doc_ref::Ref, DocSpecs};
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
@@ -14,8 +13,8 @@ use crate::{
 pub(crate) enum RefRule {
     /// Is 'ref' specified
     Specified {
-        /// expected `type` field of the referenced doc
-        exp_ref_types: Vec<DocType>,
+        /// allowed `type` field of the referenced doc
+        allowed_type: Vec<DocType>,
         /// allows multiple document references or only one
         multiple: bool,
         /// optional flag for the `ref` field
@@ -27,20 +26,24 @@ pub(crate) enum RefRule {
 impl RefRule {
     /// Generating `RefRule` from specs
     pub(crate) fn new(
-        docs: &HashMap<catalyst_signed_doc_spec::DocumentName, catalyst_signed_doc_spec::DocSpec>,
-        ref_spec: &catalyst_signed_doc_spec::metadata::doc_ref::Ref,
+        docs: &DocSpecs,
+        spec: &Ref,
     ) -> anyhow::Result<Self> {
-        let optional = match ref_spec.required {
-            catalyst_signed_doc_spec::is_required::IsRequired::Yes => false,
-            catalyst_signed_doc_spec::is_required::IsRequired::Optional => true,
-            catalyst_signed_doc_spec::is_required::IsRequired::Excluded => {
+        let optional = match spec.required {
+            IsRequired::Yes => false,
+            IsRequired::Optional => true,
+            IsRequired::Excluded => {
+                anyhow::ensure!(
+                    spec.doc_type.is_empty() && spec.multiple.is_none(),
+                     "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
+                );
                 return Ok(Self::NotSpecified);
             },
         };
 
-        anyhow::ensure!(!ref_spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
+        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
 
-        let exp_ref_types = ref_spec.doc_type.iter().try_fold(
+        let exp_ref_types = spec.doc_type.iter().try_fold(
             Vec::new(),
             |mut res, doc_name| -> anyhow::Result<_> {
                 let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
@@ -51,12 +54,12 @@ impl RefRule {
             },
         )?;
 
-        let multiple = ref_spec.multiple.ok_or(anyhow::anyhow!(
+        let multiple = spec.multiple.ok_or(anyhow::anyhow!(
             "'multiple' field should exists for the required 'ref' metadata definition"
         ))?;
 
         Ok(Self::Specified {
-            exp_ref_types,
+            allowed_type: exp_ref_types,
             multiple,
             optional,
         })
@@ -73,7 +76,7 @@ impl RefRule {
     {
         let context: &str = "Ref rule check";
         if let Self::Specified {
-            exp_ref_types,
+            allowed_type: exp_ref_types,
             multiple,
             optional,
         } = self
@@ -462,7 +465,7 @@ mod tests {
         let doc = doc_gen(&exp_types, &mut provider);
 
         let non_optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: true,
             optional: false,
         }
@@ -471,7 +474,7 @@ mod tests {
         .unwrap();
 
         let optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: true,
             optional: true,
         }
@@ -564,7 +567,7 @@ mod tests {
         let doc = doc_gen(&exp_types, &mut provider);
 
         let non_optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: false,
             optional: false,
         }
@@ -573,7 +576,7 @@ mod tests {
         .unwrap();
 
         let optional_res = RefRule::Specified {
-            exp_ref_types: exp_types.to_vec(),
+            allowed_type: exp_types.to_vec(),
             multiple: false,
             optional: true,
         }
@@ -589,7 +592,7 @@ mod tests {
     async fn ref_specified_optional_test() {
         let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
-            exp_ref_types: vec![UuidV4::new().into()],
+            allowed_type: vec![UuidV4::new().into()],
             multiple: true,
             optional: true,
         };
@@ -599,7 +602,7 @@ mod tests {
 
         let provider = TestCatalystProvider::default();
         let rule = RefRule::Specified {
-            exp_ref_types: vec![UuidV4::new().into()],
+            allowed_type: vec![UuidV4::new().into()],
             multiple: true,
             optional: false,
         };

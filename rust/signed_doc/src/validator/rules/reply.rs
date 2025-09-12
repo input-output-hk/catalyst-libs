@@ -1,5 +1,9 @@
 //! `reply` rule type impl.
 
+use catalyst_signed_doc_spec::{
+    is_required::IsRequired, metadata::reply::Reply, DocSpecs, DocumentName,
+};
+
 use crate::{
     providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
     CatalystSignedDocument, DocType,
@@ -10,8 +14,8 @@ use crate::{
 pub(crate) enum ReplyRule {
     /// Is 'reply' specified
     Specified {
-        /// expected `type` field of the replied doc
-        exp_reply_type: DocType,
+        /// allowed `type` field of the replied doc
+        allowed_type: DocType,
         /// optional flag for the `ref` field
         optional: bool,
     },
@@ -20,6 +24,40 @@ pub(crate) enum ReplyRule {
 }
 
 impl ReplyRule {
+    /// Generating `ReplyRule` from specs
+    pub(crate) fn new(
+        docs: &DocSpecs,
+        spec: &Reply,
+    ) -> anyhow::Result<Self> {
+        let optional = match spec.required {
+            IsRequired::Yes => false,
+            IsRequired::Optional => true,
+            IsRequired::Excluded => {
+                anyhow::ensure!(
+                    spec.doc_type.is_empty() && spec.multiple.is_none(),
+                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'reply'  metadata definition"
+                );
+                return Ok(Self::NotSpecified);
+            },
+        };
+
+        anyhow::ensure!(
+            spec.multiple.is_some_and(|v| !v),
+            "'multiple' field should be only set to false for the required 'reply' metadata definition"
+        );
+
+        let doc_name = &<&[DocumentName; 1]>::try_from(spec.doc_type.as_slice()).map_err(|_| anyhow::anyhow!("'type' field should exists and has only one entry for the required 'reply' metadata definition"))?[0];
+        let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
+            "cannot find a document definition {doc_name}"
+        ))?;
+        let allowed_type = docs_spec.doc_type.as_str().parse()?;
+
+        Ok(Self::Specified {
+            allowed_type,
+            optional,
+        })
+    }
+
     /// Field validation rule
     pub(crate) async fn check<Provider>(
         &self,
@@ -31,7 +69,7 @@ impl ReplyRule {
     {
         let context: &str = "Reply rule check";
         if let Self::Specified {
-            exp_reply_type,
+            allowed_type: exp_reply_type,
             optional,
         } = self
         {
@@ -339,7 +377,7 @@ mod tests {
         let doc = doc_gen(exp_type.clone(), &mut provider);
 
         let non_optional_res = ReplyRule::Specified {
-            exp_reply_type: exp_type.clone(),
+            allowed_type: exp_type.clone(),
             optional: false,
         }
         .check(&doc, &provider)
@@ -347,7 +385,7 @@ mod tests {
         .unwrap();
 
         let optional_res = ReplyRule::Specified {
-            exp_reply_type: exp_type.clone(),
+            allowed_type: exp_type.clone(),
             optional: true,
         }
         .check(&doc, &provider)
@@ -362,7 +400,7 @@ mod tests {
     async fn reply_specified_optional_test() {
         let provider = TestCatalystProvider::default();
         let rule = ReplyRule::Specified {
-            exp_reply_type: UuidV4::new().into(),
+            allowed_type: UuidV4::new().into(),
             optional: true,
         };
 
@@ -371,7 +409,7 @@ mod tests {
 
         let provider = TestCatalystProvider::default();
         let rule = ReplyRule::Specified {
-            exp_reply_type: UuidV4::new().into(),
+            allowed_type: UuidV4::new().into(),
             optional: false,
         };
 

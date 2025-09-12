@@ -128,12 +128,12 @@ impl Rules {
                 content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
                 content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
                 template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
-                parameters: ParametersRule::NotSpecified,
+                parameters: ParametersRule::new(&spec.docs, &doc_spec.metadata.parameters)?,
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
-                reply: ReplyRule::NotSpecified,
+                reply: ReplyRule::new(&spec.docs, &doc_spec.metadata.reply)?,
                 section: SectionRule::NotSpecified,
                 content: ContentRule::new(&doc_spec.payload)?,
-                kid: SignatureKidRule { exp: &[] },
+                kid: SignatureKidRule::new(&doc_spec.signers.roles),
                 signature: SignatureRule { mutlisig: false },
                 original_author: OriginalAuthorRule,
             };
@@ -152,6 +152,8 @@ mod tests {
 
     #[test]
     fn rules_documents_rules_test() {
-        let _unused = Rules::documents_rules().unwrap();
+        for (doc_type, rules) in Rules::documents_rules().unwrap() {
+            println!("{doc_type}: {rules:?}");
+        }
     }
 }

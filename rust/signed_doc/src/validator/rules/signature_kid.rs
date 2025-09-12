@@ -1,5 +1,6 @@
 //! Catalyst Signed Document COSE signature `kid` (Catalyst Id) role validation
 
+use catalyst_signed_doc_spec::signers::roles::{Role, Roles};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
 use crate::CatalystSignedDocument;
@@ -8,10 +9,26 @@ use crate::CatalystSignedDocument;
 #[derive(Debug)]
 pub(crate) struct SignatureKidRule {
     /// expected `RoleId` values for the `kid` field
-    pub(crate) exp: &'static [RoleId],
+    pub(crate) allowed_roles: Vec<RoleId>,
 }
 
 impl SignatureKidRule {
+    /// Generating `SignatureKidRule` from specs
+    pub(crate) fn new(spec: &Roles) -> Self {
+        let allowed_roles = spec
+            .user
+            .iter()
+            .map(|v| {
+                match v {
+                    Role::Registered => RoleId::Role0,
+                    Role::Proposer => RoleId::Proposer,
+                    Role::Representative => RoleId::DelegatedRepresentative,
+                }
+            })
+            .collect();
+        Self { allowed_roles }
+    }
+
     /// Field validation rule
     #[allow(clippy::unused_async)]
     pub(crate) async fn check(
@@ -20,12 +37,12 @@ impl SignatureKidRule {
     ) -> anyhow::Result<bool> {
         let contains_exp_role = doc.kids().iter().enumerate().all(|(i, kid)| {
             let (role_index, _) = kid.role_and_rotation();
-            let res = self.exp.contains(&role_index);
+            let res = self.allowed_roles.contains(&role_index);
             if !res {
                 doc.report().invalid_value(
                     "kid",
                     role_index.to_string().as_str(),
-                    format!("{:?}", self.exp).as_str(),
+                    format!("{:?}", self.allowed_roles).as_str(),
                     format!(
                         "Invalid Catalyst Signed Document signature at position [{i}] `kid` Catalyst Role value"
                     )
@@ -56,7 +73,7 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            exp: &[RoleId::Role0, RoleId::DelegatedRepresentative],
+            allowed_roles: vec![RoleId::Role0, RoleId::DelegatedRepresentative],
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
@@ -75,7 +92,7 @@ mod tests {
 
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.exp = &[RoleId::Proposer];
+        rule.allowed_roles = vec![RoleId::Proposer];
         assert!(!rule.check(&doc).await.unwrap());
     }
 }
