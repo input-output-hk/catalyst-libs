@@ -391,7 +391,7 @@ Supported HTTP Encodings of the Payload
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left">yes</td>
     <td class="gt_row gt_left">Is the field required?</td>
   </tr>
   <tr>

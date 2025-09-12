@@ -167,69 +167,65 @@ Each item in the array <strong>MUST</strong> be  unique.</th>
     <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
-    <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
-  </tr>
-  <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>enum: [&quot;Hot FM&quot;, &quot;AM Stereo (but not really)&quot;, &quot;Silence&quot;]</code></td>
+    <td class="gt_row gt_left gt_striped"><code>enum: [&quot;Hot FM&quot;, &quot;AM Stereo (but not really)&quot;, &quot;Silence&quot;]</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">yes</td>
+    <td class="gt_row gt_left">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>title: &quot;Radio Selector&quot;</code></td>
+    <td class="gt_row gt_left gt_striped"><code>title: &quot;Radio Selector&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>x-guidance: &quot;Video killed the radio star.&quot;</code></td>
+    <td class="gt_row gt_left gt_striped"><code>x-guidance: &quot;Video killed the radio star.&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Choices</th>
-    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>x-icon: &quot;bottom-rail-toggle&quot;</code></td>
+    <td class="gt_row gt_left gt_striped"><code>x-icon: &quot;bottom-rail-toggle&quot;</code></td>
   </tr>
 </tbody>
 

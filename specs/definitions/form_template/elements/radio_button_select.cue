@@ -38,7 +38,7 @@ dictionary: radioButtonSelect: {
 				No value that is not in the array may be listed or presented.
 				Each item in the array **MUST** be  unique.
 				"""
-			contentMediaType: definition.contentMediaType
+			items: contentMediaType: definition.contentMediaType
 			example: [
 				"Hot FM",
 				"AM Stereo (but not really)",
