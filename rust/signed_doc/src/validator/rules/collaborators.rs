@@ -40,7 +40,7 @@ impl CollaboratorsRule {
                         doc.doc_meta()
                             .collaborators()
                             .iter()
-                            .map(|v| v.to_string())
+                            .map(ToString::to_string)
                             .reduce(|a, b| format!("{a}, {b}"))
                     ),
                     "Document does not expect to have a 'collaborators' field",
