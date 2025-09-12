@@ -1,5 +1,8 @@
 //! `parameters` rule type impl.
 
+use catalyst_signed_doc_spec::{
+    is_required::IsRequired, metadata::parameters::Parameters, DocSpecs,
+};
 use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
@@ -14,16 +17,55 @@ pub(crate) enum ParametersRule {
     /// Is `parameters` specified
     Specified {
         /// expected `type` field of the parameter doc
-        exp_parameters_type: Vec<DocType>,
+        allowed_type: Vec<DocType>,
         /// optional flag for the `parameters` field
         optional: bool,
     },
     /// `parameters` is not specified
-    #[allow(unused)]
     NotSpecified,
 }
 
 impl ParametersRule {
+    /// Generating `ParametersRule` from specs
+    pub(crate) fn new(
+        docs: &DocSpecs,
+        spec: &Parameters,
+    ) -> anyhow::Result<Self> {
+        let optional = match spec.required {
+            IsRequired::Yes => false,
+            IsRequired::Optional => true,
+            IsRequired::Excluded => {
+                anyhow::ensure!(
+                    spec.doc_type.is_empty() && spec.multiple.is_none(),
+                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'parameters'  metadata definition"
+                );
+                return Ok(Self::NotSpecified);
+            },
+        };
+
+        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'parameters' metadata definition");
+        anyhow::ensure!(
+            spec.multiple.is_some_and(|v| !v),
+            "'multiple' field should be only set to false for the required 'parameters' metadata definition"
+        );
+
+        let allowed_type = spec.doc_type.iter().try_fold(
+            Vec::new(),
+            |mut res, doc_name| -> anyhow::Result<_> {
+                let docs_spec = docs.get(doc_name).ok_or(anyhow::anyhow!(
+                    "cannot find a document definition {doc_name}"
+                ))?;
+                res.push(docs_spec.doc_type.as_str().parse()?);
+                Ok(res)
+            },
+        )?;
+
+        Ok(Self::Specified {
+            allowed_type,
+            optional,
+        })
+    }
+
     /// Field validation rule
     pub(crate) async fn check<Provider>(
         &self,
@@ -35,7 +77,7 @@ impl ParametersRule {
     {
         let context: &str = "Parameter rule check";
         if let Self::Specified {
-            exp_parameters_type,
+            allowed_type: exp_parameters_type,
             optional,
         } = self
         {
@@ -722,7 +764,7 @@ mod tests {
         let doc = doc_gen(&exp_param_types, &mut provider);
 
         let non_optional_res = ParametersRule::Specified {
-            exp_parameters_type: exp_param_types.to_vec(),
+            allowed_type: exp_param_types.to_vec(),
             optional: false,
         }
         .check(&doc, &provider)
@@ -730,7 +772,7 @@ mod tests {
         .unwrap();
 
         let optional_res = ParametersRule::Specified {
-            exp_parameters_type: exp_param_types.to_vec(),
+            allowed_type: exp_param_types.to_vec(),
             optional: true,
         }
         .check(&doc, &provider)
@@ -745,7 +787,7 @@ mod tests {
     async fn ref_specified_optional_test() {
         let provider = TestCatalystProvider::default();
         let rule = ParametersRule::Specified {
-            exp_parameters_type: vec![UuidV4::new().into()],
+            allowed_type: vec![UuidV4::new().into()],
             optional: true,
         };
 
@@ -754,7 +796,7 @@ mod tests {
 
         let provider = TestCatalystProvider::default();
         let rule = ParametersRule::Specified {
-            exp_parameters_type: vec![UuidV4::new().into()],
+            allowed_type: vec![UuidV4::new().into()],
             optional: false,
         };
 

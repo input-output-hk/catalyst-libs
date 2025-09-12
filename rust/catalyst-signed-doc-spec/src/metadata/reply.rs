@@ -1,14 +1,14 @@
-//! `signed_doc.json` "template" field JSON definition
+//! `signed_doc.json` "reply" field JSON definition
 
 use std::ops::Deref;
 
 use crate::metadata::doc_ref::Ref;
 
-/// `signed_doc.json` "template" field JSON object
+/// `signed_doc.json` "reply" field JSON object
 #[derive(serde::Deserialize)]
-pub struct Template(pub Ref);
+pub struct Reply(pub Ref);
 
-impl Deref for Template {
+impl Deref for Reply {
     type Target = Ref;
 
     fn deref(&self) -> &Self::Target {
