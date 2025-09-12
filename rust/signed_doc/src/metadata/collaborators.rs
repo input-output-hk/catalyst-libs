@@ -17,6 +17,12 @@ impl Deref for Collaborators {
     }
 }
 
+impl From<Vec<CatalystId>> for Collaborators {
+    fn from(value: Vec<CatalystId>) -> Self {
+        Self(value)
+    }
+}
+
 impl minicbor::Encode<()> for Collaborators {
     fn encode<W: minicbor::encode::Write>(
         &self,
