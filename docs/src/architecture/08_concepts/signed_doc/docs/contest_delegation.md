@@ -70,7 +70,7 @@ with the highest priority.
 * The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the same Contest as the
     Nomination of the Representative.
 * The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
-    * IF there are multiple representatives, then any which are not pointing
+  * IF there are multiple representatives, then any which are not pointing
       to a valid `Representative Nomination` are excluded.
       The nomination is only invalid if ALL references `Representative Nomination`
       references are invalid.
