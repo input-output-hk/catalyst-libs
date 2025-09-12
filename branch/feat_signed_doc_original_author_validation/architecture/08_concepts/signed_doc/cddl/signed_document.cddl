@@ -1,0 +1,180 @@
+; Catalyst Signed Document.
+;
+; A specific implementation of a COSE-SIGN data objects
+; used by the Catalyst project to encapsulate and authenticate
+; documents used within the system.
+;
+; See: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
+
+
+; Catalyst Signed Document data object.
+signed_document = COSE_Sign
+
+; COSE-SIGN data object
+COSE_Sign = [
+  COSE_Document_Headers,
+  payload : bstr / nil,
+  signatures : [+ COSE_Signature]
+]
+
+; COSE Document headers (only protected headers are used)
+COSE_Document_Headers = (
+  protected   : bstr .cbor COSE_Document_Header_Map,
+  unprotected : { COSE_Generic_Headers } ; Unused and ignored
+)
+
+; COSE Document Header Map
+COSE_Document_Header_Map = {
+  COSE_Document_Standard_Headers,
+  Signed_Document_Metadata_Headers,
+  COSE_Generic_Headers
+}
+
+; COSE Standard headers used by a Document
+COSE_Document_Standard_Headers = (
+  3 => media_type
+  ?"content-encoding" => http_content_encoding
+)
+
+; Supported Content Media Types.
+; If the Media Type is supported by COAP, then the `uint` CoAP encoded
+; version of the media type must be used, in preference to the string.
+media_type = (
+    (uint .eq (0 / 50 / 60 / 20000)) /
+    (tstr .eq (
+        "application/cbor" /
+        "application/cddl" /
+        "application/json" /
+        "application/schema+json" /
+        "text/css; charset=utf-8" /
+        "text/css; charset=utf-8; template=handlebars" /
+        "text/html; charset=utf-8" /
+        "text/html; charset=utf-8; template=handlebars" /
+        "text/markdown; charset=utf-8" /
+        "text/markdown; charset=utf-8; template=handlebars" /
+        "text/plain; charset=utf-8" /
+        "text/plain; charset=utf-8; template=handlebars"
+    ))
+)
+
+; Supported Content Encoding Types
+http_content_encoding = tstr .eq "br"
+
+; Generic definition (does not include metadata constraints)
+Signed_Document_Metadata_Headers = (
+  "type" => document_type
+  "id" => document_id
+  "ver" => document_ver
+  ?"ref" => document_refs
+  ?"template" => document_refs
+  ?"reply" => document_refs
+  ?"section" => section_ref
+  ?"collaborators" => collaborators
+  ?"revocations" => revocations
+  ?"parameters" => document_refs
+  ?"chain" => chain
+)
+
+; Document Type
+document_type = [ 1* uuid_v4 ]
+
+; UUIDv4
+uuid_v4 = #6.37(bytes .size 16)
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)
+
+; Document Version
+document_ver = uuid_v7
+
+; Reference to one or more Signed Documents
+document_refs = [ 1* document_ref ]
+
+; Reference to a single Signed Document
+document_ref = [
+  document_id,
+  document_ver,
+  document_locator
+]
+
+; Where a document can be located, must be a unique identifier.
+document_locator = {
+  "cid" => cid
+}
+
+; IPLD content identifier
+; TODO: add size limits if possible
+cid = #6.42(bytes)
+
+; Reference to a section in a referenced document.
+section_ref = json_pointer
+
+; RFC6901 Standard JSON Pointer
+json_pointer = text
+
+; Allowed Collaborators on the next subsequent version of a document.
+collaborators = [ * catalyst_id_kid ]
+
+; UTF8 Catalyst ID URI encoded as a bytes string.
+catalyst_id_kid = bytes
+
+; List of revoked versions of this document.
+revocations = [ * document_ver ] / true
+
+; Reference to the previous Signed Document in a sequence.
+; * `height` is of the CURRENT block.
+; * `document_ref` is *ONLY* omitted in the very first document in a sequence.
+chain = [height, ? document_ref]
+
+; The consecutive sequence number of the current document
+; in the chain.
+; The very first document in a sequence is numbered `0` and it
+; *MUST ONLY* increment by one for each successive document in
+; the sequence.
+;
+; The FINAL sequence number is encoded with the current height
+; sequence value, negated.
+;
+; For example the following values for height define a chain
+; that has 5 documents in the sequence 0-4, the final height
+; is negated to indicate the end of the chain:
+; `0, 1, 2, 3, -4`
+;
+; No subsequent document can be chained to a sequence that has
+; a final chain height.
+height = int
+
+; Generic Header definition
+COSE_Generic_Headers = ( * COSE_label => COSE_values )
+
+; COSE Map Generic Label
+COSE_label = int / tstr
+
+; COSE Map Generic Value
+COSE_values = any
+
+; An Individual Document Signature
+COSE_Signature = [
+  COSE_Signature_Headers,
+  signature : bstr
+]
+
+; COSE Signature headers (only protected headers are used)
+COSE_Signature_Headers = (
+  protected   : bstr .cbor COSE_Signature_Header_Map,
+  unprotected : { COSE_Generic_Headers } ; Unused and ignored
+)
+
+; COSE Signature Header Map
+COSE_Signature_Header_Map = {
+  COSE_Signature_Standard_Headers,
+  COSE_Generic_Headers
+}
+
+; COSE Signature headers
+COSE_Signature_Standard_Headers = (
+  4 => catalyst_id_kid
+)
