@@ -23,13 +23,20 @@ src:
 
     SAVE ARTIFACT signed_doc.json
 
+GEN_JSON:
+    FUNCTION
+    ARG output=../signed_doc.json
+    RUN cd definitions; \
+        cue vet -Evc -s ./signed_docs/docs:signed_docs && \
+        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > $output
+
+
 # Regenerate the json spec file.
 regenerate-json:
     FROM +src
+
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
-    RUN cd definitions; \
-        cue vet -Evc -s ./signed_docs/docs:signed_docs && \
-        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
+    DO +GEN_JSON
 
     SAVE ARTIFACT --keep-ts signed_doc.json
 
@@ -64,8 +71,13 @@ check:
     RUN cue fmt --check -s --files ./definitions
     # RUN cd definitions; \
     #    cue vet ./cddl 
-    RUN cd definitions; \
-        cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+
+    # This does not work anymore.  Looks like a bug in the validator.
+    # so regenerate and compare the output.
+    #RUN cd definitions; \
+    #    cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+    DO +GEN_JSON --output=../signed_doc.check.json
+    RUN diff signed_doc.json signed_doc.check.json
 
     # Get the current docs
     COPY --keep-ts docs+generated-pages/signed_doc /docs
