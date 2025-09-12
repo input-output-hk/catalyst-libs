@@ -1,6 +1,6 @@
 [package]
 name = "catalyst-signed-doc"
-version = "0.0.6"
+version = "0.0.7"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.6", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.6" }
+catalyst-types = { version = "0.0.7", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.7" }
 cbork-utils = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils-v0.0.2" }
 
 catalyst-signed-doc-macro = { version = "0.0.1", path = "../catalyst-signed-doc-macro" }

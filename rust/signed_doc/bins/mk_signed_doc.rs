@@ -68,10 +68,7 @@ impl Cli {
                     .with_json_metadata(metadata)?
                     .with_json_content(&json_doc)?
                     .build()?;
-                println!(
-                    "report {}",
-                    serde_json::to_string(&signed_doc.problem_report())?
-                );
+                println!("report {:?}", &signed_doc.problem_report());
                 save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { doc, sk_hex, kid } => {
