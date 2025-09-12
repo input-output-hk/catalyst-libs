@@ -18,7 +18,7 @@ use crate::{
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
-    validator::rules::{SignatureRule, TemplateRule},
+    validator::rules::{CollaboratorsRule, SignatureRule, TemplateRule},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -55,6 +55,7 @@ fn proposal_rule() -> Rules {
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
+        collaborators: CollaboratorsRule::NotSpecified,
         content: ContentRule::NotNil,
         kid: SignatureKidRule {
             allowed_roles: vec![RoleId::Proposer],
@@ -101,6 +102,7 @@ fn proposal_comment_rule() -> Rules {
             allowed_type: parameters.clone(),
             optional: false,
         },
+        collaborators: CollaboratorsRule::NotSpecified,
         content: ContentRule::NotNil,
         kid: SignatureKidRule {
             allowed_roles: vec![RoleId::Role0],
@@ -153,6 +155,7 @@ fn proposal_submission_action_rule() -> Rules {
         },
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
+        collaborators: CollaboratorsRule::NotSpecified,
         content: ContentRule::StaticSchema(ContentSchema::Json(proposal_action_json_schema)),
         kid: SignatureKidRule {
             allowed_roles: vec![RoleId::Proposer],

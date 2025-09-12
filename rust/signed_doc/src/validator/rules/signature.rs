@@ -118,37 +118,7 @@ mod tests {
     use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
-    use crate::{providers::tests::*, *};
-
-    mod helper {
-        use std::str::FromStr;
-
-        use catalyst_types::catalyst_id::role_index::RoleId;
-
-        use crate::*;
-
-        pub(super) fn create_dummy_key_pair(
-            role_index: RoleId
-        ) -> anyhow::Result<(
-            ed25519_dalek::SigningKey,
-            ed25519_dalek::VerifyingKey,
-            CatalystId,
-        )> {
-            let sk = create_signing_key();
-            let pk = sk.verifying_key();
-            let kid = CatalystId::from_str(&format!(
-                "id.catalyst://cardano/{}/{role_index}/0",
-                base64_url::encode(pk.as_bytes())
-            ))?;
-
-            Ok((sk, pk, kid))
-        }
-
-        pub(super) fn create_signing_key() -> ed25519_dalek::SigningKey {
-            let mut csprng = rand::rngs::OsRng;
-            ed25519_dalek::SigningKey::generate(&mut csprng)
-        }
-    }
+    use crate::{providers::tests::*, validator::rules::utils::create_dummy_key_pair, *};
 
     fn metadata() -> serde_json::Value {
         serde_json::json!({
@@ -177,7 +147,7 @@ mod tests {
 
     #[tokio::test]
     async fn single_signature_validation_test() {
-        let (sk, pk, kid) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0);
 
         let signed_doc = Builder::new()
             .with_json_metadata(metadata())
@@ -207,7 +177,7 @@ mod tests {
             .unwrap());
 
         // case: signed with different key
-        let (another_sk, ..) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (another_sk, ..) = create_dummy_key_pair(RoleId::Role0);
         let invalid_doc = signed_doc
             .into_builder()
             .unwrap()
@@ -235,10 +205,10 @@ mod tests {
 
     #[tokio::test]
     async fn multiple_signatures_validation_test() {
-        let (sk1, pk1, kid1) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
-        let (sk2, pk2, kid2) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
-        let (sk3, pk3, kid3) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
-        let (_, pk_n, kid_n) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk1, pk1, kid1) = create_dummy_key_pair(RoleId::Role0);
+        let (sk2, pk2, kid2) = create_dummy_key_pair(RoleId::Role0);
+        let (sk3, pk3, kid3) = create_dummy_key_pair(RoleId::Role0);
+        let (_, pk_n, kid_n) = create_dummy_key_pair(RoleId::Role0);
 
         let signed_doc = Builder::new()
             .with_json_metadata(metadata())
@@ -391,7 +361,7 @@ mod tests {
 
     #[tokio::test]
     async fn special_cbor_cases() {
-        let (sk, pk, kid) = helper::create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0);
         let mut provider = TestCatalystProvider::default();
         provider.add_pk(kid.clone(), pk);
 
