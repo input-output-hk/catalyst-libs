@@ -9,13 +9,13 @@ pub(crate) fn catalyst_signed_documents_types_consts_impl() -> anyhow::Result<To
     let spec = CatalystSignedDocSpec::load_signed_doc_spec()?;
 
     let mut consts_definitions = Vec::new();
-    for (doc_name, doc_spec) in spec.docs {
+    for (doc_name, doc_spec) in spec.docs.iter() {
         if doc_spec.draft {
             continue;
         }
         let const_type_name_ident = doc_name.ident();
         let doc_name = doc_name.name();
-        let type_uuid = doc_spec.doc_type;
+        let type_uuid = &doc_spec.doc_type;
 
         let const_definition = quote! {
             #[doc = #doc_name ]
