@@ -2,141 +2,21 @@
 //! Require fields: type, id, ver, template, parameters
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal>
 
-use std::sync::LazyLock;
-
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
-use crate::common::create_dummy_key_pair;
+use crate::common::{
+    create_dummy_key_pair,
+    dummies::{
+        BRAND_PARAMETERS_DOC, CAMPAIGN_PARAMETERS_DOC, CATEGORY_PARAMETERS_DOC,
+        PROPOSAL_TEMPLATE_FOR_BRAND_DOC, PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC,
+        PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC,
+    },
+};
 
 mod common;
-
-#[allow(clippy::unwrap_used)]
-static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": doc_types::BRAND_PARAMETERS.clone(),
-        }))
-        .unwrap()
-        .empty_content()
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-static DUMMY_CAMPAIGN_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": doc_types::CAMPAIGN_PARAMETERS.clone(),
-        }))
-        .unwrap()
-        .empty_content()
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-static DUMMY_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": doc_types::CATEGORY_PARAMETERS.clone(),
-        }))
-        .unwrap()
-        .empty_content()
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-#[allow(clippy::unwrap_used)]
-static PROPOSAL_TEMPLATE_FOR_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-                },
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "additionalProperties": false
-        }))
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-static PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "parameters": {
-                    "id": DUMMY_CAMPAIGN_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_CAMPAIGN_DOC.doc_ver().unwrap(),
-                },
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "additionalProperties": false
-        }))
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "parameters": {
-                    "id": DUMMY_CATEGORY_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_CATEGORY_DOC.doc_ver().unwrap(),
-                },
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "additionalProperties": false
-        }))
-        .unwrap()
-        .build()
-        .unwrap()
-});
 
 #[test_case(
     |provider| {
@@ -157,8 +37,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                     "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -189,8 +69,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                     "ver": PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_CAMPAIGN_DOC.doc_id()?,
-                    "ver": DUMMY_CAMPAIGN_DOC.doc_ver()?,
+                    "id": CAMPAIGN_PARAMETERS_DOC.doc_id()?,
+                    "ver": CAMPAIGN_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -221,8 +101,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                     "ver": PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_CATEGORY_DOC.doc_id()?,
-                    "ver": DUMMY_CATEGORY_DOC.doc_ver()?,
+                    "id": CATEGORY_PARAMETERS_DOC.doc_id()?,
+                    "ver": CATEGORY_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -251,8 +131,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                     "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -281,8 +161,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                     "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .empty_content()?
@@ -310,8 +190,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                     "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -336,8 +216,8 @@ static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = La
                 "id": id,
                 "ver": id,
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -392,9 +272,13 @@ async fn test_proposal_doc(
     provider
         .add_document(None, &PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC)
         .unwrap();
-    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
-    provider.add_document(None, &DUMMY_CAMPAIGN_DOC).unwrap();
-    provider.add_document(None, &DUMMY_CATEGORY_DOC).unwrap();
+    provider.add_document(None, &BRAND_PARAMETERS_DOC).unwrap();
+    provider
+        .add_document(None, &CAMPAIGN_PARAMETERS_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &CATEGORY_PARAMETERS_DOC)
+        .unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert_eq!(is_valid, !doc.problem_report().is_problematic());

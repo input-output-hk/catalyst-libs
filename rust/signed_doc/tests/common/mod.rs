@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+pub mod dummies;
+
 use std::str::FromStr;
 
 use catalyst_signed_doc::*;
