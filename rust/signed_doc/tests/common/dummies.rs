@@ -129,3 +129,60 @@ pub static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> 
             .build()
             .unwrap()
     });
+
+pub static PROPOSAL_FOR_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::PROPOSAL.clone(),
+            "parameters": {
+                "id": BRAND_PARAMETERS_DOC.doc_id().unwrap(),
+                "ver": BRAND_PARAMETERS_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .empty_content()
+        .unwrap()
+        .build()
+        .unwrap()
+});
+
+pub static PROPOSAL_FOR_CAMPAIGN_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::PROPOSAL.clone(),
+            "parameters": {
+                "id": CAMPAIGN_PARAMETERS_DOC.doc_id().unwrap(),
+                "ver": CAMPAIGN_PARAMETERS_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .empty_content()
+        .unwrap()
+        .build()
+        .unwrap()
+});
+
+pub static PROPOSAL_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::PROPOSAL.clone(),
+            "parameters": {
+                "id": CATEGORY_PARAMETERS_DOC.doc_id().unwrap(),
+                "ver": CATEGORY_PARAMETERS_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .empty_content()
+        .unwrap()
+        .build()
+        .unwrap()
+});
