@@ -108,7 +108,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -119,20 +119,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -147,7 +147,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
         provider.add_pk(kid.clone(), pk);
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -157,20 +157,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -185,7 +185,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -196,20 +196,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .empty_content()?
@@ -224,7 +224,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -234,20 +234,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -262,7 +262,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -273,16 +273,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -297,7 +297,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -308,16 +308,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -332,7 +332,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -343,16 +343,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_REF_DOC.doc_ver().unwrap()
+                    "id": COMMENT_REF_DOC.doc_id()?,
+                    "ver": COMMENT_REF_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -367,7 +367,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main comment doc, contain all fields mention in the document (except revocations)
         let doc = Builder::new()
@@ -378,16 +378,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
+                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -400,7 +400,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
     "missing reply (optional)"
 )]
 #[tokio::test]
-async fn test_comment_doc(
+async fn test_proposal_comment_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();

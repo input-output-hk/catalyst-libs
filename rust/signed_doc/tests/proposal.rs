@@ -1,6 +1,6 @@
 //! Integration test for proposal document validation part.
 //! Require fields: type, id, ver, template, parameters
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal/#front-end>
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal>
 
 use std::sync::LazyLock;
 
@@ -59,7 +59,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
         provider.add_pk(kid.clone(), pk);
         // Create a main proposal doc, contain all fields mention in the document (except
         // 'collaborators' and 'revocations')
@@ -71,12 +71,12 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -91,7 +91,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
         provider.add_pk(kid.clone(), pk);
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -101,12 +101,12 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -121,7 +121,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
         provider.add_pk(kid.clone(), pk);
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -131,12 +131,12 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .empty_content()?
@@ -151,7 +151,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
         provider.add_pk(kid.clone(), pk);
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -160,12 +160,12 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -180,7 +180,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
         provider.add_pk(kid.clone(), pk);
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -190,8 +190,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                    "id": DUMMY_BRAND_DOC.doc_id()?,
+                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -206,7 +206,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
         provider.add_pk(kid.clone(), pk);
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -216,8 +216,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
                 },
             }))?
             .with_json_content(&serde_json::json!({}))?
