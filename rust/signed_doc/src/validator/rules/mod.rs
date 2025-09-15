@@ -8,6 +8,7 @@ use crate::{
     CatalystSignedDocument,
 };
 
+mod collaborators;
 mod content;
 mod content_encoding;
 mod content_type;
@@ -23,6 +24,7 @@ mod template;
 mod utils;
 mod ver;
 
+pub(crate) use collaborators::CollaboratorsRule;
 pub(crate) use content::{ContentRule, ContentSchema};
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
@@ -58,6 +60,8 @@ pub(crate) struct Rules {
     pub(crate) section: SectionRule,
     /// 'parameters' field validation rule
     pub(crate) parameters: ParametersRule,
+    /// 'collaborators' field validation rule
+    pub(crate) collaborators: CollaboratorsRule,
     /// document's content validation rule
     pub(crate) content: ContentRule,
     /// `kid` field validation rule
@@ -88,6 +92,7 @@ impl Rules {
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
+            self.collaborators.check(doc).boxed(),
             self.content.check(doc).boxed(),
             self.kid.check(doc).boxed(),
             self.signature.check(doc, provider).boxed(),
@@ -132,6 +137,7 @@ impl Rules {
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
                 reply: ReplyRule::new(&spec.docs, &doc_spec.metadata.reply)?,
                 section: SectionRule::NotSpecified,
+                collaborators: CollaboratorsRule::NotSpecified,
                 content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule::new(&doc_spec.signers.roles),
                 signature: SignatureRule { mutlisig: false },
