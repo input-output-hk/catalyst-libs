@@ -2,108 +2,23 @@
 //! Require fields: type, id, ver, ref, template, parameters
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment/>
 
-use std::sync::LazyLock;
-
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
-use crate::common::create_dummy_key_pair;
+use crate::common::{
+    create_dummy_key_pair,
+    dummies::{
+        BRAND_PARAMETERS_DOC, CAMPAIGN_PARAMETERS_DOC, CATEGORY_PARAMETERS_DOC,
+        COMMENT_TEMPLATE_FOR_BRAND_DOC, COMMENT_TEMPLATE_FOR_CAMPAIGN_DOC,
+        COMMENT_TEMPLATE_FOR_CATEGORY_DOC, PROPOSAL_COMMENT_FOR_BRAND_DOC,
+        PROPOSAL_COMMENT_FOR_CAMPAIGN_DOC, PROPOSAL_COMMENT_FOR_CATEGORY_DOC,
+        PROPOSAL_FOR_BRAND_DOC, PROPOSAL_FOR_CAMPAIGN_DOC, PROPOSAL_FOR_CATEGORY_DOC,
+    },
+};
 
 mod common;
-
-#[allow(clippy::unwrap_used)]
-static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": doc_types::PROPOSAL.clone(),
-            "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-                }
-        }))
-        .unwrap()
-        .empty_content()
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-#[allow(clippy::unwrap_used)]
-static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": doc_types::BRAND_PARAMETERS.clone(),
-        }))
-        .unwrap()
-        .empty_content()
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-#[allow(clippy::unwrap_used)]
-static COMMENT_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-                }
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "additionalProperties": false
-        }))
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-#[allow(clippy::unwrap_used)]
-static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "ref": {
-                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
-            },
-            "template": {
-                "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
-            },
-            "parameters": {
-                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-            }
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({}))
-        .unwrap()
-        .build()
-        .unwrap()
-});
 
 #[test_case(
     |provider| {
@@ -119,20 +34,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -142,7 +57,85 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
     }
     => true
     ;
-    "valid document"
+    "valid document with brand 'parameters'"
+)]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
+        provider.add_pk(kid.clone(), pk);
+        // Create a main comment doc, contain all fields mention in the document (except revocations)
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json.to_string(),
+                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "type": doc_types::PROPOSAL_COMMENT.clone(),
+                "id": id,
+                "ver": id,
+                "ref": {
+                    "id": PROPOSAL_FOR_CAMPAIGN_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_CAMPAIGN_DOC.doc_ver()?,
+                },
+                "template": {
+                    "id": COMMENT_TEMPLATE_FOR_CAMPAIGN_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_CAMPAIGN_DOC.doc_ver()?,
+                },
+                "reply": {
+                    "id": PROPOSAL_COMMENT_FOR_CAMPAIGN_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_CAMPAIGN_DOC.doc_ver()?
+                },
+                "parameters": {
+                    "id": CAMPAIGN_PARAMETERS_DOC.doc_id()?,
+                    "ver": CAMPAIGN_PARAMETERS_DOC.doc_ver()?,
+                }
+            }))?
+            .with_json_content(&serde_json::json!({}))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()?;
+        Ok(doc)
+    }
+    => true
+    ;
+    "valid document with campaign 'parameters'"
+)]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0)?;
+        provider.add_pk(kid.clone(), pk);
+        // Create a main comment doc, contain all fields mention in the document (except revocations)
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json.to_string(),
+                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "type": doc_types::PROPOSAL_COMMENT.clone(),
+                "id": id,
+                "ver": id,
+                "ref": {
+                    "id": PROPOSAL_FOR_CATEGORY_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_CATEGORY_DOC.doc_ver()?,
+                },
+                "template": {
+                    "id": COMMENT_TEMPLATE_FOR_CATEGORY_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_CATEGORY_DOC.doc_ver()?,
+                },
+                "reply": {
+                    "id": PROPOSAL_COMMENT_FOR_CATEGORY_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_CATEGORY_DOC.doc_ver()?
+                },
+                "parameters": {
+                    "id": CATEGORY_PARAMETERS_DOC.doc_id()?,
+                    "ver": CATEGORY_PARAMETERS_DOC.doc_ver()?,
+                }
+            }))?
+            .with_json_content(&serde_json::json!({}))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()?;
+        Ok(doc)
+    }
+    => true
+    ;
+    "valid document with category 'parameters'"
 )]
 #[test_case(
     |provider| {
@@ -157,20 +150,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -196,20 +189,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .empty_content()?
@@ -234,20 +227,20 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -273,16 +266,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -308,16 +301,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -343,16 +336,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "reply": {
-                    "id": COMMENT_REF_DOC.doc_id()?,
-                    "ver": COMMENT_REF_DOC.doc_ver()?
+                    "id": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_COMMENT_FOR_BRAND_DOC.doc_ver()?
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -378,16 +371,16 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
                 "id": id,
                 "ver": id,
                 "ref": {
-                    "id": DUMMY_PROPOSAL_DOC.doc_id()?,
-                    "ver": DUMMY_PROPOSAL_DOC.doc_ver()?,
+                    "id": PROPOSAL_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "template": {
-                    "id": COMMENT_TEMPLATE_DOC.doc_id()?,
-                    "ver": COMMENT_TEMPLATE_DOC.doc_ver()?,
+                    "id": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": COMMENT_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
-                    "id": DUMMY_BRAND_DOC.doc_id()?,
-                    "ver": DUMMY_BRAND_DOC.doc_ver()?,
+                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
+                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
@@ -407,10 +400,40 @@ async fn test_proposal_comment_doc(
 
     let doc = doc_gen(&mut provider).unwrap();
 
-    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
-    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
-    provider.add_document(None, &COMMENT_REF_DOC).unwrap();
-    provider.add_document(None, &COMMENT_TEMPLATE_DOC).unwrap();
+    provider.add_document(None, &BRAND_PARAMETERS_DOC).unwrap();
+    provider
+        .add_document(None, &CAMPAIGN_PARAMETERS_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &CATEGORY_PARAMETERS_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_FOR_BRAND_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_FOR_CAMPAIGN_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_FOR_CATEGORY_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_COMMENT_FOR_BRAND_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_COMMENT_FOR_CAMPAIGN_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_COMMENT_FOR_CATEGORY_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &COMMENT_TEMPLATE_FOR_BRAND_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &COMMENT_TEMPLATE_FOR_CAMPAIGN_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &COMMENT_TEMPLATE_FOR_CATEGORY_DOC)
+        .unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert_eq!(is_valid, !doc.problem_report().is_problematic());
