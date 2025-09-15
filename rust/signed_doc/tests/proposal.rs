@@ -130,6 +130,65 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "type": doc_types::PROPOSAL.clone(),
                 "id": id,
                 "ver": id,
+                "template": {
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                },
+                "parameters": {
+                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                }
+            }))?
+            .empty_content()?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .build()?;
+        Ok(doc)
+    }
+    => false
+    ;
+    "empty content"
+)]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        provider.add_pk(kid.clone(), pk);
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json.to_string(),
+                "type": doc_types::PROPOSAL.clone(),
+                "id": id,
+                "ver": id,
+                "template": {
+                    "id": PROPOSAL_TEMPLATE_DOC.doc_id().unwrap(),
+                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver().unwrap(),
+                },
+                "parameters": {
+                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                }
+            }))?
+            .with_json_content(&serde_json::json!({}))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .build()?;
+        Ok(doc)
+    }
+    => true
+    ;
+    "missing 'content-encoding' (optional)"
+)]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+        provider.add_pk(kid.clone(), pk);
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json.to_string(),
+                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "type": doc_types::PROPOSAL.clone(),
+                "id": id,
+                "ver": id,
                 "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
                     "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
@@ -184,5 +243,6 @@ async fn test_proposal_doc(
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert_eq!(is_valid, !doc.problem_report().is_problematic());
+    println!("{:?}", doc.problem_report());
     is_valid
 }
