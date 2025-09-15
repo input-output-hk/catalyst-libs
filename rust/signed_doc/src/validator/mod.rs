@@ -13,8 +13,8 @@ use rules::{
 
 use crate::{
     doc_types::{
-        BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
-        PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
+        BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL,
+        PROPOSAL_SUBMISSION_ACTION,
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
@@ -24,52 +24,6 @@ use crate::{
 
 /// A table representing a full set or validation rules per document id.
 static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
-
-/// Proposal Comment
-/// Require field: type, id, ver, ref, template, parameters
-/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment_template/>
-fn proposal_comment_rule() -> Rules {
-    // Parameter can be either brand, campaign or category
-    let parameters = vec![
-        BRAND_PARAMETERS.clone(),
-        CAMPAIGN_PARAMETERS.clone(),
-        CATEGORY_PARAMETERS.clone(),
-    ];
-    Rules {
-        id: IdRule,
-        ver: VerRule,
-        content_type: ContentTypeRule::Specified {
-            exp: ContentType::Json,
-        },
-        content_encoding: ContentEncodingRule::Specified {
-            exp: vec![ContentEncoding::Brotli],
-            optional: false,
-        },
-        template: TemplateRule::Specified {
-            allowed_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
-        },
-        doc_ref: RefRule::Specified {
-            allowed_type: vec![PROPOSAL.clone()],
-            multiple: false,
-            optional: false,
-        },
-        reply: ReplyRule::Specified {
-            allowed_type: PROPOSAL_COMMENT.clone(),
-            optional: true,
-        },
-        section: SectionRule::NotSpecified,
-        parameters: ParametersRule::Specified {
-            allowed_type: parameters.clone(),
-            optional: false,
-        },
-        content: ContentRule::NotNil,
-        kid: SignatureKidRule {
-            allowed_roles: vec![RoleId::Role0],
-        },
-        signature: SignatureRule { mutlisig: false },
-        original_author: OriginalAuthorRule,
-    }
-}
 
 /// Proposal Submission Action
 /// Require fields: type, id, ver, ref, parameters
@@ -132,7 +86,6 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
 
     // TODO: remove this redefinitions of the validation rules after
     // `catalyst_signed_documents_rules!` macro would be fully finished
-    document_rules_map.insert(PROPOSAL_COMMENT.clone(), proposal_comment_rule());
     document_rules_map.insert(
         PROPOSAL_SUBMISSION_ACTION.clone(),
         proposal_submission_action_rule(),
