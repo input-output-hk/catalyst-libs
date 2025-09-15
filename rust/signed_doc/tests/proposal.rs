@@ -29,8 +29,38 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .unwrap()
 });
 
+static DUMMY_CAMPAIGN_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::CAMPAIGN_PARAMETERS.clone(),
+        }))
+        .unwrap()
+        .empty_content()
+        .unwrap()
+        .build()
+        .unwrap()
+});
+
+static DUMMY_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::CATEGORY_PARAMETERS.clone(),
+        }))
+        .unwrap()
+        .empty_content()
+        .unwrap()
+        .build()
+        .unwrap()
+});
+
 #[allow(clippy::unwrap_used)]
-static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+static PROPOSAL_TEMPLATE_FOR_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
@@ -41,6 +71,58 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
             "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
                     "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                },
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }))
+        .unwrap()
+        .build()
+        .unwrap()
+});
+
+static PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "parameters": {
+                    "id": DUMMY_CAMPAIGN_DOC.doc_id().unwrap(),
+                    "ver": DUMMY_CAMPAIGN_DOC.doc_ver().unwrap(),
+                },
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }))
+        .unwrap()
+        .build()
+        .unwrap()
+});
+
+static PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "parameters": {
+                    "id": DUMMY_CATEGORY_DOC.doc_id().unwrap(),
+                    "ver": DUMMY_CATEGORY_DOC.doc_ver().unwrap(),
                 },
         }))
         .unwrap()
@@ -71,8 +153,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
+                    "id": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id()?,
@@ -80,13 +162,77 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()?;
         Ok(doc)
     }
     => true
     ;
-    "valid document"
+    "valid document with brand 'parameters'"
+)]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
+        provider.add_pk(kid.clone(), pk);
+        // Create a main proposal doc, contain all fields mention in the document (except
+        // 'collaborators' and 'revocations')
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json.to_string(),
+                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "type": doc_types::PROPOSAL.clone(),
+                "id": id,
+                "ver": id,
+                "template": {
+                    "id": PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC.doc_ver()?,
+                },
+                "parameters": {
+                    "id": DUMMY_CAMPAIGN_DOC.doc_id()?,
+                    "ver": DUMMY_CAMPAIGN_DOC.doc_ver()?,
+                }
+            }))?
+            .with_json_content(&serde_json::json!({}))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()?;
+        Ok(doc)
+    }
+    => true
+    ;
+    "valid document with campaign 'parameters'"
+)]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
+        provider.add_pk(kid.clone(), pk);
+        // Create a main proposal doc, contain all fields mention in the document (except
+        // 'collaborators' and 'revocations')
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json.to_string(),
+                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "type": doc_types::PROPOSAL.clone(),
+                "id": id,
+                "ver": id,
+                "template": {
+                    "id": PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC.doc_ver()?,
+                },
+                "parameters": {
+                    "id": DUMMY_CATEGORY_DOC.doc_id()?,
+                    "ver": DUMMY_CATEGORY_DOC.doc_ver()?,
+                }
+            }))?
+            .with_json_content(&serde_json::json!({}))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()?;
+        Ok(doc)
+    }
+    => true
+    ;
+    "valid document with category 'parameters'"
 )]
 #[test_case(
     |provider| {
@@ -101,8 +247,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
+                    "id": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id()?,
@@ -110,7 +256,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()?;
         Ok(doc)
     }
@@ -131,8 +277,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
+                    "id": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id()?,
@@ -140,7 +286,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 }
             }))?
             .empty_content()?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()?;
         Ok(doc)
     }
@@ -160,8 +306,8 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
+                    "id": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
                 "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id()?,
@@ -169,7 +315,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()?;
         Ok(doc)
     }
@@ -195,7 +341,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 }
             }))?
             .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()?;
         Ok(doc)
     }
@@ -216,12 +362,12 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
                 "id": id,
                 "ver": id,
                 "template": {
-                    "id": PROPOSAL_TEMPLATE_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_DOC.doc_ver()?,
+                    "id": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
+                    "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
                 },
             }))?
             .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?    
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()?;
         Ok(doc)
     }
@@ -235,11 +381,20 @@ async fn test_proposal_doc(
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
 
-
     let doc = doc_gen(&mut provider).unwrap();
 
-    provider.add_document(None, &PROPOSAL_TEMPLATE_DOC).unwrap();
+    provider
+        .add_document(None, &PROPOSAL_TEMPLATE_FOR_BRAND_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC)
+        .unwrap();
+    provider
+        .add_document(None, &PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC)
+        .unwrap();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
+    provider.add_document(None, &DUMMY_CAMPAIGN_DOC).unwrap();
+    provider.add_document(None, &DUMMY_CATEGORY_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert_eq!(is_valid, !doc.problem_report().is_problematic());
