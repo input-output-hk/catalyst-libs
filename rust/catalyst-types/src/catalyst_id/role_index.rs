@@ -31,13 +31,28 @@ pub enum RoleIdError {
 pub enum RoleId {
     /// Primary required role use for voting and commenting.
     Role0 = 0,
-
     /// Delegated representative (dRep) that vote on behalf of delegators.
     DelegatedRepresentative = 1,
-
     /// Proposer that enabling creation, collaboration, and submission of proposals.
     Proposer = 3,
-
+    ///
+    RootCA = 100,
+    ///
+    BrandCA = 101,
+    ///
+    CampaignCA = 102,
+    ///
+    CategoryCA = 103,
+    ///
+    RootAdmin = 104,
+    ///
+    BrandAdmin = 105,
+    ///
+    CampaignAdmin = 106,
+    ///
+    CategoryAdmin = 107,
+    ///
+    Moderator = 108,
     /// A custom role.
     Unknown(u8),
 }
@@ -56,6 +71,15 @@ impl RoleId {
             RoleId::Role0 => 0,
             RoleId::DelegatedRepresentative => 1,
             RoleId::Proposer => 3,
+            RoleId::RootCA => 100,
+            RoleId::BrandCA => 101,
+            RoleId::CampaignCA => 102,
+            RoleId::CategoryCA => 103,
+            RoleId::RootAdmin => 104,
+            RoleId::BrandAdmin => 105,
+            RoleId::CampaignAdmin => 106,
+            RoleId::CategoryAdmin => 107,
+            RoleId::Moderator => 108,
             RoleId::Unknown(b) => b,
         }
     }
@@ -73,6 +97,15 @@ impl From<u8> for RoleId {
             0 => Self::Role0,
             1 => Self::DelegatedRepresentative,
             3 => Self::Proposer,
+            100 => Self::RootCA,
+            101 => Self::BrandCA,
+            102 => Self::CampaignCA,
+            103 => Self::CategoryCA,
+            104 => Self::RootAdmin,
+            105 => Self::BrandAdmin,
+            106 => Self::CampaignAdmin,
+            107 => Self::CategoryAdmin,
+            108 => Self::Moderator,
             b => Self::Unknown(b),
         }
     }
