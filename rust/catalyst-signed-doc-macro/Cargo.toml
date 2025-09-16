@@ -1,6 +1,6 @@
 [package]
 name = "catalyst-signed-doc-macro"
-version = "0.0.2"
+version = "0.0.1"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -19,5 +19,5 @@ quote = "1.0"
 proc-macro2 = "1.0"
 anyhow = "1.0.99"
 
-catalyst-signed-doc-spec = { version = "0.1.4", path = "../catalyst-signed-doc-spec" }
+catalyst-signed-doc-spec = { version = "0.1.3", path = "../catalyst-signed-doc-spec" }
 
