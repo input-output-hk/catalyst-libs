@@ -1,6 +1,8 @@
 //! Catalyst Signed Document COSE signature `kid` (Catalyst Id) role validation
 
-use catalyst_signed_doc_spec::signers::roles::{Role, Roles};
+use std::collections::HashSet;
+
+use catalyst_signed_doc_spec::signers::roles::{AdminRole, Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
 use crate::CatalystSignedDocument;
@@ -9,24 +11,43 @@ use crate::CatalystSignedDocument;
 #[derive(Debug)]
 pub(crate) struct SignatureKidRule {
     /// expected `RoleId` values for the `kid` field
-    pub(crate) allowed_roles: Vec<RoleId>,
+    pub(crate) allowed_roles: HashSet<RoleId>,
 }
 
 impl SignatureKidRule {
     /// Generating `SignatureKidRule` from specs
-    pub(crate) fn new(spec: &Roles) -> Self {
-        let allowed_roles = spec
+    pub(crate) fn new(spec: &Roles) -> anyhow::Result<Self> {
+        let allowed_roles: HashSet<_> = spec
             .user
             .iter()
             .map(|v| {
                 match v {
-                    Role::Registered => RoleId::Role0,
-                    Role::Proposer => RoleId::Proposer,
-                    Role::Representative => RoleId::DelegatedRepresentative,
+                    UserRole::Registered => RoleId::Role0,
+                    UserRole::Proposer => RoleId::Proposer,
+                    UserRole::Representative => RoleId::DelegatedRepresentative,
                 }
             })
+            .chain(spec.admin.iter().map(|v| {
+                match v {
+                    AdminRole::RootCA => RoleId::RootCA,
+                    AdminRole::BrandCA => RoleId::BrandCA,
+                    AdminRole::CampaignCA => RoleId::CampaignCA,
+                    AdminRole::CategoryCA => RoleId::CategoryCA,
+                    AdminRole::RootAdmin => RoleId::RootAdmin,
+                    AdminRole::BrandAdmin => RoleId::BrandAdmin,
+                    AdminRole::CampaignAdmin => RoleId::CampaignAdmin,
+                    AdminRole::CategoryAdmin => RoleId::CategoryAdmin,
+                    AdminRole::Moderator => RoleId::Moderator,
+                }
+            }))
             .collect();
-        Self { allowed_roles }
+
+        anyhow::ensure!(
+            !allowed_roles.is_empty(),
+            "A list of allowed roles cannot be empty"
+        );
+
+        Ok(Self { allowed_roles })
     }
 
     /// Field validation rule
@@ -73,7 +94,9 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            allowed_roles: vec![RoleId::Role0, RoleId::DelegatedRepresentative],
+            allowed_roles: [RoleId::Role0, RoleId::DelegatedRepresentative]
+                .into_iter()
+                .collect(),
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
@@ -92,7 +115,7 @@ mod tests {
 
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.allowed_roles = vec![RoleId::Proposer];
+        rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
         assert!(!rule.check(&doc).await.unwrap());
     }
 }

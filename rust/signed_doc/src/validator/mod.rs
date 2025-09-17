@@ -9,7 +9,7 @@ use rules::Rules;
 
 use crate::{
     metadata::DocType,
-    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     CatalystSignedDocument,
 };
 
@@ -38,7 +38,7 @@ pub async fn validate<Provider>(
     provider: &Provider,
 ) -> anyhow::Result<bool>
 where
-    Provider: CatalystSignedDocumentProvider + VerifyingKeyProvider,
+    Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
 {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
