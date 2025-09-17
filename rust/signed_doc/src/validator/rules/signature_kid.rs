@@ -1,5 +1,7 @@
 //! Catalyst Signed Document COSE signature `kid` (Catalyst Id) role validation
 
+use std::collections::HashSet;
+
 use catalyst_signed_doc_spec::signers::roles::{AdminRole, Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
@@ -9,13 +11,13 @@ use crate::CatalystSignedDocument;
 #[derive(Debug)]
 pub(crate) struct SignatureKidRule {
     /// expected `RoleId` values for the `kid` field
-    pub(crate) allowed_roles: Vec<RoleId>,
+    pub(crate) allowed_roles: HashSet<RoleId>,
 }
 
 impl SignatureKidRule {
     /// Generating `SignatureKidRule` from specs
     pub(crate) fn new(spec: &Roles) -> anyhow::Result<Self> {
-        let allowed_roles: Vec<_> = spec
+        let allowed_roles: HashSet<_> = spec
             .user
             .iter()
             .map(|v| {
@@ -92,7 +94,9 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            allowed_roles: vec![RoleId::Role0, RoleId::DelegatedRepresentative],
+            allowed_roles: [RoleId::Role0, RoleId::DelegatedRepresentative]
+                .into_iter()
+                .collect(),
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
@@ -111,7 +115,7 @@ mod tests {
 
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.allowed_roles = vec![RoleId::Proposer];
+        rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
         assert!(!rule.check(&doc).await.unwrap());
     }
 }
