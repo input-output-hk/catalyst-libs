@@ -17,7 +17,8 @@ anyhow = "1.0.95"
 derive_more = {version = "1.0.0", features = ["from","into","display"] }
 ipld-core = { version = "0.4.1", features = ["serde"]}
 # A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
-rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs" }
+# rev-26b99cb as at July 30, 2025
+rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs", rev = "26b99cb" }
 tokio = "1.46.0"
 # Its a transitive dependency of the "rust-ipfs" crate,
 # could be removed after bumped to the rustc compiler 1.87
