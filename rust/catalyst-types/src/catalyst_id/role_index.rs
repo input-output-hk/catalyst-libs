@@ -35,23 +35,23 @@ pub enum RoleId {
     DelegatedRepresentative = 1,
     /// Proposer that enabling creation, collaboration, and submission of proposals.
     Proposer = 3,
-    ///
+    /// Root Certificate Authority role.
     RootCA = 100,
-    ///
+    /// Brand Certificate Authority role.
     BrandCA = 101,
-    ///
+    /// Campaign Certificate Authority role.
     CampaignCA = 102,
-    ///
+    /// Category Certificate Authority role.
     CategoryCA = 103,
-    ///
+    /// Root Admin role.
     RootAdmin = 104,
-    ///
+    /// Brand Admin role.
     BrandAdmin = 105,
-    ///
+    /// Campaign Admin role.
     CampaignAdmin = 106,
-    ///
+    /// Category Admin role.
     CategoryAdmin = 107,
-    ///
+    /// Mederator role.
     Moderator = 108,
     /// A custom role.
     Unknown(u8),
