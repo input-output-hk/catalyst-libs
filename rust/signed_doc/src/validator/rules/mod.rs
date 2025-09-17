@@ -4,7 +4,7 @@
 use futures::FutureExt;
 
 use crate::{
-    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     CatalystSignedDocument,
 };
 
@@ -80,7 +80,7 @@ impl Rules {
         provider: &Provider,
     ) -> anyhow::Result<bool>
     where
-        Provider: CatalystSignedDocumentProvider + VerifyingKeyProvider,
+        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
     {
         let rules = [
             self.id.check(doc, provider).boxed(),
@@ -139,7 +139,7 @@ impl Rules {
                 section: SectionRule::NotSpecified,
                 collaborators: CollaboratorsRule::NotSpecified,
                 content: ContentRule::new(&doc_spec.payload)?,
-                kid: SignatureKidRule::new(&doc_spec.signers.roles),
+                kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
                 signature: SignatureRule { mutlisig: false },
                 original_author: OriginalAuthorRule,
             };

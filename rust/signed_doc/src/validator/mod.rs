@@ -17,7 +17,7 @@ use crate::{
         PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
     },
     metadata::DocType,
-    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     validator::rules::{CollaboratorsRule, SignatureRule, TemplateRule},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
@@ -196,7 +196,7 @@ pub async fn validate<Provider>(
     provider: &Provider,
 ) -> anyhow::Result<bool>
 where
-    Provider: CatalystSignedDocumentProvider + VerifyingKeyProvider,
+    Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
 {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
