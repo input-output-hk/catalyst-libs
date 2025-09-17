@@ -14,7 +14,7 @@ mod content_encoding;
 mod content_type;
 mod doc_ref;
 mod id;
-mod original_author;
+mod ownership;
 mod parameters;
 mod reply;
 mod section;
@@ -30,7 +30,7 @@ pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
 pub(crate) use id::IdRule;
-pub(crate) use original_author::OriginalAuthorRule;
+pub(crate) use ownership::DocumentOwnershipRule;
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
@@ -69,7 +69,7 @@ pub(crate) struct Rules {
     /// document's signatures validation rule
     pub(crate) signature: SignatureRule,
     /// Original Author validation rule.
-    pub(crate) original_author: OriginalAuthorRule,
+    pub(crate) ownership: DocumentOwnershipRule,
 }
 
 impl Rules {
@@ -96,7 +96,7 @@ impl Rules {
             self.content.check(doc).boxed(),
             self.kid.check(doc).boxed(),
             self.signature.check(doc, provider).boxed(),
-            self.original_author.check(doc, provider).boxed(),
+            self.ownership.check(doc, provider).boxed(),
         ];
 
         let res = futures::future::join_all(rules)
@@ -141,7 +141,9 @@ impl Rules {
                 content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
                 signature: SignatureRule { mutlisig: false },
-                original_author: OriginalAuthorRule,
+                ownership: DocumentOwnershipRule {
+                    allow_collaborators: false,
+                },
             };
             let doc_type = doc_spec.doc_type.parse()?;
 
