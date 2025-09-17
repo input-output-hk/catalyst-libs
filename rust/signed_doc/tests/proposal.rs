@@ -8,43 +8,28 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::common::{
-    create_dummy_key_pair,
+    brand_parameters_doc, campaign_parameters_doc, category_parameters_doc, create_dummy_key_pair,
     dummies::{
         BRAND_PARAMETERS_DOC, CAMPAIGN_PARAMETERS_DOC, CATEGORY_PARAMETERS_DOC,
         PROPOSAL_TEMPLATE_FOR_BRAND_DOC, PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC,
         PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC,
     },
+    proposal_doc, proposal_form_template_doc,
 };
 
 mod common;
 
 #[test_case(
     |provider| {
-        let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
-        provider.add_pk(kid.clone(), pk);
-        // Create a main proposal doc, contain all fields mention in the document (except
-        // 'collaborators' and 'revocations')
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
-                "type": doc_types::PROPOSAL.clone(),
-                "id": id,
-                "ver": id,
-                "template": {
-                    "id": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_FOR_BRAND_DOC.doc_ver()?,
-                },
-                "parameters": {
-                    "id": BRAND_PARAMETERS_DOC.doc_id()?,
-                    "ver": BRAND_PARAMETERS_DOC.doc_ver()?,
-                }
-            }))?
-            .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+        let brand_parameters_doc = brand_parameters_doc().and_then(|doc| {
+            provider.add_document(None, &doc)?;
+            Ok(doc)
+        })?;
+        let proposal_form_template_doc = proposal_form_template_doc(&brand_parameters_doc).and_then(|doc| {
+            provider.add_document(None, &doc)?;
+            Ok(doc)
+        })?;
+        proposal_doc(&proposal_form_template_doc, &brand_parameters_doc, provider)
     }
     => true
     ;
@@ -52,31 +37,15 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
-        provider.add_pk(kid.clone(), pk);
-        // Create a main proposal doc, contain all fields mention in the document (except
-        // 'collaborators' and 'revocations')
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
-                "type": doc_types::PROPOSAL.clone(),
-                "id": id,
-                "ver": id,
-                "template": {
-                    "id": PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_FOR_CAMPAIGN_DOC.doc_ver()?,
-                },
-                "parameters": {
-                    "id": CAMPAIGN_PARAMETERS_DOC.doc_id()?,
-                    "ver": CAMPAIGN_PARAMETERS_DOC.doc_ver()?,
-                }
-            }))?
-            .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+        let parameters_doc = campaign_parameters_doc().and_then(|doc| {
+            provider.add_document(None, &doc)?;
+            Ok(doc)
+        })?;
+        let template_doc = proposal_form_template_doc(&parameters_doc).and_then(|doc| {
+            provider.add_document(None, &doc)?;
+            Ok(doc)
+        })?;
+        proposal_doc(&template_doc, &parameters_doc, provider)
     }
     => true
     ;
@@ -84,31 +53,15 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let id = UuidV7::new();
-        let (sk, pk, kid) = create_dummy_key_pair(RoleId::Proposer)?;
-        provider.add_pk(kid.clone(), pk);
-        // Create a main proposal doc, contain all fields mention in the document (except
-        // 'collaborators' and 'revocations')
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
-                "type": doc_types::PROPOSAL.clone(),
-                "id": id,
-                "ver": id,
-                "template": {
-                    "id": PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC.doc_id()?,
-                    "ver": PROPOSAL_TEMPLATE_FOR_CATEGORY_DOC.doc_ver()?,
-                },
-                "parameters": {
-                    "id": CATEGORY_PARAMETERS_DOC.doc_id()?,
-                    "ver": CATEGORY_PARAMETERS_DOC.doc_ver()?,
-                }
-            }))?
-            .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+        let parameters_doc = category_parameters_doc().and_then(|doc| {
+            provider.add_document(None, &doc)?;
+            Ok(doc)
+        })?;
+        let template_doc = proposal_form_template_doc(&parameters_doc).and_then(|doc| {
+            provider.add_document(None, &doc)?;
+            Ok(doc)
+        })?;
+        proposal_doc(&template_doc, &parameters_doc, provider)
     }
     => true
     ;

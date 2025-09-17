@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, unused_imports)]
 
 pub mod brand_parameters;
 pub mod campaign_parameters;
@@ -10,8 +10,14 @@ pub mod proposal_form_template;
 
 use std::str::FromStr;
 
+pub use brand_parameters::brand_parameters_doc;
+pub use campaign_parameters::campaign_parameters_doc;
 use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
+pub use category_parameters::category_parameters_doc;
+pub use proposal::proposal_doc;
+pub use proposal_comment_form_template::proposal_comment_form_template_doc;
+pub use proposal_form_template::proposal_form_template_doc;
 
 pub fn create_dummy_key_pair(
     role_index: RoleId
