@@ -51,7 +51,7 @@ pub enum RoleId {
     CampaignAdmin = 106,
     /// Category Admin role.
     CategoryAdmin = 107,
-    /// Mederator role.
+    /// Moderator role.
     Moderator = 108,
     /// A custom role.
     Unknown(u8),
