@@ -1,6 +1,12 @@
 #![allow(dead_code)]
 
+pub mod brand_parameters;
+pub mod campaign_parameters;
+pub mod category_parameters;
 pub mod dummies;
+pub mod proposal;
+pub mod proposal_comment_form_template;
+pub mod proposal_form_template;
 
 use std::str::FromStr;
 
