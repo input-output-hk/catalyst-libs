@@ -49,17 +49,21 @@ fn doc_builder(
     authors: Authors,
     collabs: Collabs,
 ) -> (UuidV7, Authors, CatalystSignedDocument) {
-    let _collaborators = collabs
-        .into_iter()
-        .map(|c| c.kid)
-        .collect::<Vec<CatalystId>>();
     let mut doc_builder = Builder::new()
         .with_metadata_field(SupportedField::Id(doc_id))
         .with_metadata_field(SupportedField::Ver(doc_ver))
         .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
-        .with_metadata_field(SupportedField::ContentType(ContentType::Json))
-        //.with_metadata_field(SupportedField::Collaborators(collaborators.into()))
-        .with_content(vec![1, 2, 3]);
+        .with_metadata_field(SupportedField::ContentType(ContentType::Json));
+
+    if !collabs.is_empty() {
+        let collaborators = collabs
+            .into_iter()
+            .map(|c| c.kid)
+            .collect::<Vec<CatalystId>>();
+        doc_builder =
+            doc_builder.with_metadata_field(SupportedField::Collaborators(collaborators.into()));
+    }
+
     for author in &authors {
         doc_builder = doc_builder
             .add_signature(|m| author.sk.sign(&m).to_vec(), author.kid.clone())
