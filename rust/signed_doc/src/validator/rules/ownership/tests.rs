@@ -17,8 +17,8 @@ use crate::{
 const NO_AUTHOR: usize = 0;
 const ONE_AUTHOR: usize = 1;
 
-const NO_COLLABS: usize = 0;
-const THREE_COLLABS: usize = 3;
+const NO_COLLABORATORS: usize = 0;
+const THREE_COLLABORATORS: usize = 3;
 
 #[derive(Clone)]
 struct CatalystAuthorId {
@@ -32,7 +32,7 @@ type DocId = UuidV7;
 
 type Authors = Vec<CatalystAuthorId>;
 
-type Collabs = Vec<CatalystAuthorId>;
+type Collaborators = Vec<CatalystAuthorId>;
 
 impl CatalystAuthorId {
     fn new() -> Self {
@@ -47,7 +47,7 @@ fn doc_builder(
     doc_id: UuidV7,
     doc_ver: UuidV7,
     authors: Authors,
-    collabs: Collabs,
+    collaborators: Collaborators,
 ) -> (UuidV7, Authors, CatalystSignedDocument) {
     let mut doc_builder = Builder::new()
         .with_metadata_field(SupportedField::Id(doc_id))
@@ -55,8 +55,8 @@ fn doc_builder(
         .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
         .with_metadata_field(SupportedField::ContentType(ContentType::Json));
 
-    if !collabs.is_empty() {
-        let collaborators = collabs
+    if !collaborators.is_empty() {
+        let collaborators = collaborators
             .into_iter()
             .map(|c| c.kid)
             .collect::<Vec<CatalystId>>();
@@ -79,16 +79,16 @@ fn gen_authors(size_of: usize) -> Authors {
 fn gen_next_ver_doc(
     doc_id: UuidV7,
     authors: Authors,
-    collabs: Collabs,
+    collaborators: Collaborators,
 ) -> CatalystSignedDocument {
-    let (_, _, new_doc) = doc_builder(doc_id, UuidV7::new(), authors, collabs);
+    let (_, _, new_doc) = doc_builder(doc_id, UuidV7::new(), authors, collaborators);
     new_doc
 }
 
 fn gen_original_doc_and_provider(
     num_authors: usize,
     num_collaborators: usize,
-) -> (CatDoc, DocId, Authors, Collabs, TestCatalystProvider) {
+) -> (CatDoc, DocId, Authors, Collaborators, TestCatalystProvider) {
     let authors = gen_authors(num_authors);
     let collaborators = gen_authors(num_collaborators);
     let doc_id = UuidV7::new();
@@ -100,14 +100,14 @@ fn gen_original_doc_and_provider(
 
 #[test_case(
     || {
-        let (doc_1, _, _, _, provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABS);
+        let (doc_1, _, _, _, provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABORATORS);
         (doc_1, provider)
     } => true ;
     "First Version Catalyst Signed Document has only one author"
 )]
 #[test_case(
     || {
-        let (doc_1, doc_id, authors, _, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABS);
+        let (doc_1, doc_id, authors, _, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABORATORS);
         provider.add_document(None, &doc_1).unwrap();
         let doc_2 = gen_next_ver_doc(doc_id, authors, Vec::new());
         (doc_2, provider)
@@ -116,14 +116,14 @@ fn gen_original_doc_and_provider(
 )]
 #[test_case(
     || {
-        let (doc_1, _doc_id, _authors, _, provider) = gen_original_doc_and_provider(NO_AUTHOR,NO_COLLABS);
+        let (doc_1, _doc_id, _authors, _, provider) = gen_original_doc_and_provider(NO_AUTHOR,NO_COLLABORATORS);
         (doc_1, provider)
     } => false ;
     "First Version Unsigned Catalyst Document fails"
 )]
 #[test_case(
     || {
-        let (doc_1, doc_id, _authors, _, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABS);
+        let (doc_1, doc_id, _authors, _, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABORATORS);
         provider.add_document(None, &doc_1).unwrap();
         let other_author = gen_authors(ONE_AUTHOR);
         let doc_2 = gen_next_ver_doc(doc_id, other_author, Vec::new());
@@ -146,16 +146,16 @@ async fn simple_author_rule_test(
 
 #[test_case(
     || {
-        let (doc_1, _, _, _, provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABS);
+        let (doc_1, _, _, _, provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABORATORS);
         (doc_1, provider)
     } => true ;
     "First Version Catalyst Signed Document has the only one author"
 )]
 #[test_case(
     || {
-        let (doc_1, doc_id, mut authors, collabs, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,THREE_COLLABS);
+        let (doc_1, doc_id, mut authors, collaborators, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,THREE_COLLABORATORS);
         provider.add_document(None, &doc_1).unwrap();
-        authors.extend_from_slice(&collabs);
+        authors.extend_from_slice(&collaborators);
         let doc_2 = gen_next_ver_doc(doc_id, authors, Vec::new());
         (doc_2, provider)
     } => true ;
@@ -164,10 +164,10 @@ async fn simple_author_rule_test(
 #[allow(clippy::indexing_slicing)]
 #[test_case(
     || {
-        let (doc_1, doc_id, _, collabs, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,THREE_COLLABS);
+        let (doc_1, doc_id, _, collaborators, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,THREE_COLLABORATORS);
         provider.add_document(None, &doc_1).unwrap();
 
-        let random_collaborator = collabs[thread_rng().gen_range(0..THREE_COLLABS)].clone();
+        let random_collaborator = collaborators[thread_rng().gen_range(0..THREE_COLLABORATORS)].clone();
         let doc_2 = gen_next_ver_doc(doc_id, vec![random_collaborator], Vec::new());
         (doc_2, provider)
     } => true ;
@@ -175,17 +175,17 @@ async fn simple_author_rule_test(
 )]
 #[test_case(
     || {
-        let (doc_1, _doc_id, _authors, _, provider) = gen_original_doc_and_provider(NO_AUTHOR,NO_COLLABS);
+        let (doc_1, _doc_id, _authors, _, provider) = gen_original_doc_and_provider(NO_AUTHOR,NO_COLLABORATORS);
         (doc_1, provider)
     } => false ;
     "First Version Unsigned Catalyst Document fails"
 )]
 #[test_case(
     || {
-        let (doc_1, doc_id, _authors, collabs, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,THREE_COLLABS);
+        let (doc_1, doc_id, _authors, collaborators, mut provider) = gen_original_doc_and_provider(ONE_AUTHOR,THREE_COLLABORATORS);
         provider.add_document(None, &doc_1).unwrap();
         let other_authors = gen_authors(ONE_AUTHOR);
-        let doc= gen_next_ver_doc(doc_id, other_authors, collabs);
+        let doc= gen_next_ver_doc(doc_id, other_authors, collaborators);
         (doc, provider)
     } => false ;
     "Latest Catalyst Signed Document signed by unexpected author"
