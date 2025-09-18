@@ -51,15 +51,30 @@ impl DocumentOwnershipRule {
                         "A latest version of the document must exist if a first version exists"
                     );
                 };
+
+                // Create sets of authors for comparison, ensure that they are in the same form
+                // (e.g. each `kid` is in `URI form`).
+                //
                 // Allowed authors for this document are the original author, and collaborators
                 // defined in the last published version of the Document ID.
                 let mut allowed_authors = first_doc
                     .authors()
                     .into_iter()
+                    .map(CatalystId::as_uri)
                     .collect::<HashSet<CatalystId>>();
-                allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
-
-                let doc_authors = doc.authors().into_iter().collect::<HashSet<CatalystId>>();
+                allowed_authors.extend(
+                    last_doc
+                        .doc_meta()
+                        .collaborators()
+                        .iter()
+                        .cloned()
+                        .map(CatalystId::as_uri),
+                );
+                let doc_authors = doc
+                    .authors()
+                    .into_iter()
+                    .map(CatalystId::as_uri)
+                    .collect::<HashSet<_>>();
 
                 let is_valid = allowed_authors.intersection(&doc_authors).count() > 0;
 
