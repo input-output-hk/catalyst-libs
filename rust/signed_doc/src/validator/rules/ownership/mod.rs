@@ -18,10 +18,8 @@ const REPORT_CONTEXT: &str = "Document ownership validation";
 fn single_author_check(doc: &CatalystSignedDocument) -> bool {
     let is_valid = doc.authors().len() == 1;
     if !is_valid {
-        doc.report().functional_validation(
-            "Document must only be signed by one author",
-            REPORT_CONTEXT,
-        );
+        doc.report()
+            .functional_validation("Document must only be signed by one author", REPORT_CONTEXT);
     }
     is_valid
 }
@@ -100,9 +98,9 @@ impl DocumentOwnershipRule {
             let is_valid = first_doc.authors() == doc.authors();
             if !is_valid {
                 doc.report().functional_validation(
-                        "Document authors must match the author from the first version",
-                        REPORT_CONTEXT,
-                    );
+                    "Document authors must match the author from the first version",
+                    REPORT_CONTEXT,
+                );
             }
             return Ok(is_valid);
         }
