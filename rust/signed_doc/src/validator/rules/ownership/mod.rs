@@ -9,6 +9,9 @@ use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
+/// Context for the validation problem report.
+const REPORT_CONTEXT: &str = "Document ownership validation";
+
 /// Returns `true` if the document has a single author.
 ///
 /// If not, it adds to the document's problem report.
@@ -16,8 +19,8 @@ fn single_author_check(doc: &CatalystSignedDocument) -> bool {
     let is_valid = doc.authors().len() == 1;
     if !is_valid {
         doc.report().functional_validation(
-            "New document must only be signed by a single author",
-            "Valid documents must only be signed by the original author",
+            "Document must only be signed by one author",
+            REPORT_CONTEXT,
         );
     }
     is_valid
@@ -80,8 +83,8 @@ impl DocumentOwnershipRule {
 
                 if !is_valid {
                     doc.report().functional_validation(
-                        "New document must only be signed by a single author or collaborators defined in the previous version",
-                        "Valid documents must only be signed by the original author or known collaborators",
+                        "Document must only be signed by original author and/or by collaborators defined in the previous version",
+                        REPORT_CONTEXT,
                     );
                 }
                 return Ok(is_valid);
@@ -97,8 +100,8 @@ impl DocumentOwnershipRule {
             let is_valid = first_doc.authors() == doc.authors();
             if !is_valid {
                 doc.report().functional_validation(
-                        &format!("New document authors must match the authors from the first version for Document ID {doc_id}"),
-                        "Valid documents must only be signed by the original author",
+                        "Document authors must match the author from the first version",
+                        REPORT_CONTEXT,
                     );
             }
             return Ok(is_valid);

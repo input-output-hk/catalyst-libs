@@ -103,7 +103,7 @@ fn gen_original_doc_and_provider(
         let (doc_1, _, _, _, provider) = gen_original_doc_and_provider(ONE_AUTHOR,NO_COLLABS);
         (doc_1, provider)
     } => true ;
-    "First Version Catalyst Signed Document has the only one author"
+    "First Version Catalyst Signed Document has only one author"
 )]
 #[test_case(
     || {
@@ -188,7 +188,7 @@ async fn simple_author_rule_test(
         let doc= gen_next_ver_doc(doc_id, other_authors, collabs);
         (doc, provider)
     } => false ;
-    "Latest Catalyst Signed Document has the unexpected authors"
+    "Latest Catalyst Signed Document signed by unexpected author"
 )]
 #[tokio::test]
 async fn author_with_collaborators_rule_test(
