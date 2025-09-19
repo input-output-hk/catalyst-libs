@@ -7,6 +7,7 @@ pub mod dummies;
 pub mod proposal;
 pub mod proposal_comment_form_template;
 pub mod proposal_form_template;
+pub mod proposal_submission_action;
 
 use std::str::FromStr;
 
@@ -18,6 +19,7 @@ pub use category_parameters::category_parameters_doc;
 pub use proposal::proposal_doc;
 pub use proposal_comment_form_template::proposal_comment_form_template_doc;
 pub use proposal_form_template::proposal_form_template_doc;
+pub use proposal_submission_action::proposal_submission_action_doc;
 
 pub fn create_dummy_key_pair(
     role_index: RoleId

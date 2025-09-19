@@ -3,10 +3,8 @@ use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
 
-/// Creates a Proposal doc, contain all fields mention in the document spec (except
-/// 'collaborators' and 'revocations')
-pub fn proposal_doc(
-    template_doc: &CatalystSignedDocument,
+pub fn proposal_submission_action_doc(
+    ref_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
@@ -17,19 +15,21 @@ pub fn proposal_doc(
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL.clone(),
+            "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
             "id": id,
             "ver": id,
-            "template": {
-                "id": template_doc.doc_id()?,
-                "ver": template_doc.doc_ver()?,
+            "ref": {
+                "id": ref_doc.doc_id()?,
+                "ver": ref_doc.doc_ver()?,
             },
             "parameters": {
                 "id": parameters_doc.doc_id()?,
                 "ver": parameters_doc.doc_ver()?,
             }
         }))?
-        .with_json_content(&serde_json::json!({}))?
+        .with_json_content(&serde_json::json!({
+            "action": "final"
+        }))?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?
         .build()?)
 }
