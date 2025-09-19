@@ -4,7 +4,7 @@ pub fn proposal_form_template_doc(
     parameters_doc: &CatalystSignedDocument
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let doc = Builder::new()
+    Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -17,6 +17,5 @@ pub fn proposal_form_template_doc(
                 },
         }))?
         .with_json_content(&serde_json::json!({}))?
-        .build()?;
-    Ok(doc)
+        .build()
 }

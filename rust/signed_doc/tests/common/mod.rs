@@ -3,8 +3,8 @@
 pub mod brand_parameters;
 pub mod campaign_parameters;
 pub mod category_parameters;
-pub mod dummies;
 pub mod proposal;
+pub mod proposal_comment;
 pub mod proposal_comment_form_template;
 pub mod proposal_form_template;
 pub mod proposal_submission_action;
@@ -17,6 +17,7 @@ use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
 pub use category_parameters::category_parameters_doc;
 pub use proposal::proposal_doc;
+pub use proposal_comment::proposal_comment_doc;
 pub use proposal_comment_form_template::proposal_comment_form_template_doc;
 pub use proposal_form_template::proposal_form_template_doc;
 pub use proposal_submission_action::proposal_submission_action_doc;

@@ -3,7 +3,7 @@ use super::*;
 pub fn proposal_comment_form_template_doc(
     parameters_doc: &CatalystSignedDocument
 ) -> anyhow::Result<CatalystSignedDocument> {
-    let doc = Builder::new()
+    Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -15,13 +15,6 @@ pub fn proposal_comment_form_template_doc(
                     "ver": parameters_doc.doc_ver()?,
                 }
         }))?
-        .with_json_content(&serde_json::json!({
-            "$schema": "http://json-schema.org/draft-07/schema#",
-            "type": "object",
-            "properties": {},
-            "required": [],
-            "additionalProperties": false
-        }))?
-        .build()?;
-    Ok(doc)
+        .with_json_content(&serde_json::json!({}))?
+        .build()
 }
