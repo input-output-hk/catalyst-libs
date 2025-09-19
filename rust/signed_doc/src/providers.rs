@@ -7,10 +7,12 @@ use ed25519_dalek::VerifyingKey;
 
 use crate::{CatalystSignedDocument, DocumentRef};
 
-/// `VerifyingKey` Provider trait
-pub trait VerifyingKeyProvider: Send + Sync {
-    /// Try to get `VerifyingKey`
-    fn try_get_key(
+/// `CatalystId` Provider trait
+pub trait CatalystIdProvider: Send + Sync {
+    /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
+    /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
+    /// corresponding `RoleId` and `KeyRotation` has not been registered.
+    fn try_get_registered_key(
         &self,
         kid: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<Option<VerifyingKey>>> + Send;
@@ -48,8 +50,8 @@ pub mod tests {
     use std::{collections::HashMap, time::Duration};
 
     use super::{
-        CatalystId, CatalystSignedDocument, CatalystSignedDocumentProvider, VerifyingKey,
-        VerifyingKeyProvider,
+        CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
+        VerifyingKey,
     };
     use crate::{DocLocator, DocumentRef};
 
@@ -123,8 +125,8 @@ pub mod tests {
         }
     }
 
-    impl VerifyingKeyProvider for TestCatalystProvider {
-        async fn try_get_key(
+    impl CatalystIdProvider for TestCatalystProvider {
+        async fn try_get_registered_key(
             &self,
             kid: &CatalystId,
         ) -> anyhow::Result<Option<VerifyingKey>> {

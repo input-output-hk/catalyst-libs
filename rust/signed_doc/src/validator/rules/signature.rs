@@ -4,7 +4,7 @@ use anyhow::Context;
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     signature::{tbs_data, Signature},
     CatalystSignedDocument,
 };
@@ -28,7 +28,7 @@ impl SignatureRule {
         provider: &Provider,
     ) -> anyhow::Result<bool>
     where
-        Provider: CatalystSignedDocumentProvider + VerifyingKeyProvider,
+        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
     {
         if doc.signatures().is_empty() {
             doc.report().other(
@@ -74,11 +74,11 @@ async fn validate_signature<Provider>(
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
 where
-    Provider: VerifyingKeyProvider,
+    Provider: CatalystIdProvider,
 {
     let kid = sign.kid();
 
-    let Some(pk) = provider.try_get_key(kid).await? else {
+    let Some(pk) = provider.try_get_registered_key(kid).await? else {
         report.other(
             &format!("Missing public key for {kid}."),
             "During public key extraction",
