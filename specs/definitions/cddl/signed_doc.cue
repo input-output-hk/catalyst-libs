@@ -1,47 +1,14 @@
-// Signed Document Definitions
+// Common CDDL Definitions
 // 
 // CDDL Definitions
-package signed_docs
-
-// List of cddl definitions, cddl_type_name: cddl_definition
-#cddlDefinitions: {
-	[string]: {
-		def: string
-		requires: [...#cddlTypesConstraint] | *[]
-		description?: string // Description - multiline
-		comment?:     string // Single line comments are displayed after a definition. Multiline comments, before.
-	}
-}
+package cddl
 
 cddlDefinitions: #cddlDefinitions & {
-	uuid_v7: {
-		def:         "#6.37(bytes .size 16)"
-		description: """
-			Version 7 UUID
-			See: \(documentation.links."RFC9562-V7")
-			     \(documentation.links."CBOR-TAG-37")
-			"""
-		comment:     "UUIDv7"
-	}
-	uuid_v4: {
-		def:         "#6.37(bytes .size 16)"
-		description: """
-			Version 4 UUID
-			See: \(documentation.links."RFC9562-V4")
-			     \(documentation.links."CBOR-TAG-37")
-			"""
-		comment:     "UUIDv4"
-	}
 	document_type: {
 		def: "[ 1* \(requires[0]) ]"
 		requires: ["uuid_v4"]
 		description: "Unique Document Type Identifier"
 		comment:     "Document Type"
-	}
-	blake2b_256: {
-		def:         "bytes .size 32"
-		description: "Blake2b Hash (256 bits)"
-		comment:     "Blake2B-256"
 	}
 	document_id: {
 		def: "\(requires[0])"
@@ -99,10 +66,6 @@ cddlDefinitions: #cddlDefinitions & {
 		]
 		comment: "Reference to a single Signed Document"
 	}
-	json_pointer: {
-		def:     "text"
-		comment: "RFC6901 Standard JSON Pointer"
-	}
 	section_ref: {
 		def: "\(requires[0])"
 		requires: ["json_pointer"]
@@ -117,21 +80,6 @@ cddlDefinitions: #cddlDefinitions & {
 		def: "[ * \(requires[0]) ] / true "
 		requires: ["document_ver"]
 		comment: "List of revoked versions of this document."
-	}
-	media_type: {
-		def: """
-			(
-			    (uint .eq (\(_cddlCoapTypes))) / 
-			    (tstr .eq (
-			        \(_cddlContentTypes)
-			    ))
-			)
-			"""
-		comment: """
-			Supported Content Media Types.
-			If the Media Type is supported by COAP, then the `uint` CoAP encoded
-			version of the media type must be used, in preference to the string.
-			"""
 	}
 	http_content_encoding: {
 		def: """
@@ -182,9 +130,3 @@ cddlDefinitions: #cddlDefinitions & {
 	}
 
 }
-
-#cddlTypes: [
-	for k, _ in cddlDefinitions {k},
-]
-
-#cddlTypesConstraint: or(#cddlTypes)

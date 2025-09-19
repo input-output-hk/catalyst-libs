@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import rich
+from pydantic import ValidationError
 from rich_argparse import RichHelpFormatter
 
 from docs.doc_index import DocIndex
@@ -70,7 +71,14 @@ def main() -> None:
     args = parse_args()
 
     # Get the compiled documentation json file
-    spec = SignedDoc.load(args.spec)
+    try:
+        spec = SignedDoc.load(args.spec)
+    except ValidationError as e:
+        SignedDoc.validation_error(e)
+        sys.exit(1)
+    except Exception:  # noqa: BLE001
+        rich.get_console().print_exception(show_locals=True)
+        sys.exit(1)
 
     # We start out hoping everything is OK.
     good = True

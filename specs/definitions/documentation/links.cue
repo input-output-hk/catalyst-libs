@@ -43,6 +43,7 @@ links: #docLinks & {
 	CSS:                        "https://www.w3.org/Style/CSS/"
 	"text/plain":               "https://www.rfc-editor.org/rfc/rfc2046.html"
 	"text/css":                 "https://www.rfc-editor.org/rfc/rfc2318.html"
+	RFC6901:                    "https://datatracker.ietf.org/doc/html/rfc6901"
 }
 
 // Constrains the URLs being linked to be unique

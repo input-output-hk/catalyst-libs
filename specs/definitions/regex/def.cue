@@ -47,6 +47,24 @@ def: #def & {
 			A name where every word starts with a capital letter.
 			"""
 	}
+	jsonContentType: {
+		pattern: #"^application\/(?:json|[a-z0-9!#$&^_.+-]+\+json)(?:\s*;\s*[^=]+=[^;]+)*$"#
+		description: """
+			Matches any known json content type.
+			"""
+	}
+	cborContentType: {
+		pattern: #"^application\/(?:cbor|[a-z0-9!#$&^_.+-]+\+cbor)(?:\s*;\s*[^=]+=[^;]+)*$"#
+		description: """
+			Matches any known cbor content type.
+			"""
+	}
+	cddlContentType: {
+		pattern: #"^application\/(?:cddl|[a-z0-9!#$&^_.+-]+\+cddl)(?:\s*;\s*[^=]+=[^;]+)*$"#
+		description: """
+			Matches any known cddl content type.
+			"""
+	}
 }
 
 // Every definition above MUST have at least one test below
@@ -86,6 +104,17 @@ positive_match: "A Title" =~ def.titleCaseName.pattern
 positive_match: "A Title Case" =~ def.titleCaseName.pattern
 positive_match: "A Title Case Name" =~ def.titleCaseName.pattern
 
+positive_match: "application/json" =~ def.jsonContentType.pattern
+positive_match: "application/json; charset=UTF-8" =~ def.jsonContentType.pattern
+positive_match: "application/schema+json; profile=\"http://example.org/schema\"" =~ def.jsonContentType.pattern
+positive_match: "application/ld+json; charset=utf-8; foo=bar" =~ def.jsonContentType.pattern
+
+positive_match: "application/cbor" =~ def.cborContentType.pattern
+positive_match: "application/ce+cbor; foo=bar" =~ def.cborContentType.pattern
+
+positive_match: "application/cddl" =~ def.cddlContentType.pattern
+positive_match: "application/schema+cddl; charset=utf-8" =~ def.cddlContentType.pattern
+
 // Negative match (where possible to test)
 negative_match: false
 
@@ -123,3 +152,12 @@ negative_match: "a" =~ def.titleCaseName.pattern
 negative_match: "A.Title" =~ def.titleCaseName.pattern
 negative_match: "A title Case" =~ def.titleCaseName.pattern
 negative_match: "A Title Case-name" =~ def.titleCaseName.pattern
+
+negative_match: "application/cbor" =~ def.jsonContentType.pattern
+negative_match: "application/cddl; charset=UTF-8" =~ def.jsonContentType.pattern
+
+negative_match: "application/json" =~ def.cborContentType.pattern
+negative_match: "application/ce+cddl; foo=bar" =~ def.cborContentType.pattern
+
+negative_match: "application/cbor" =~ def.cddlContentType.pattern
+negative_match: "application/schema+json; charset=utf-8" =~ def.cddlContentType.pattern
