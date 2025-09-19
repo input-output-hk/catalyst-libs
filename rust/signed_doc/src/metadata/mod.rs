@@ -4,6 +4,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+mod chain;
 mod collaborators;
 mod content_encoding;
 mod content_type;
@@ -13,6 +14,7 @@ mod section;
 mod supported_field;
 
 use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport, uuid::UuidV7};
+pub use chain::Chain;
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 pub use doc_type::DocType;
