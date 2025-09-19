@@ -1,6 +1,6 @@
 [package]
 name = "cardano-chain-follower"
-version = "0.0.13"
+version = "0.0.14"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-mithril-client = { version = "0.12.2", default-features = false, features = [
+mithril-client = { version = "=0.12.2", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
