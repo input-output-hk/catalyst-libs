@@ -50,7 +50,7 @@ mod common;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
-        let doc = Builder::new()
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
                 "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -68,8 +68,7 @@ mod common;
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
@@ -81,7 +80,7 @@ mod common;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
-        let doc = Builder::new()
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
                 "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -99,8 +98,7 @@ mod common;
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
@@ -112,7 +110,7 @@ mod common;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
-        let doc = Builder::new()
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
                 "type": doc_types::PROPOSAL.clone(),
@@ -129,8 +127,7 @@ mod common;
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => true
     ;
@@ -141,7 +138,7 @@ mod common;
         let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
-        let doc = Builder::new()
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
                 "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -155,8 +152,7 @@ mod common;
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
@@ -168,7 +164,7 @@ mod common;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
-        let doc = Builder::new()
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
                 "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -182,8 +178,7 @@ mod common;
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
