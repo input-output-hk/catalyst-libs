@@ -106,7 +106,7 @@ impl ContentTypeRule {
                 ContentType::Json => {
                     if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content)
                     {
-                        anyhow::bail!("Invalid {} content: {e}", exp)
+                        anyhow::bail!("Invalid {exp} content: {e}")
                     }
                 },
                 ContentType::Cbor => {
@@ -129,7 +129,7 @@ impl ContentTypeRule {
                 | ContentType::Plain
                 | ContentType::PlainHandlebars => {
                     // TODO: not implemented yet
-                    anyhow::bail!("`{}` is valid but unavailable yet", exp)
+                    anyhow::bail!("`{exp}` is valid but unavailable yet")
                 },
             }
         }

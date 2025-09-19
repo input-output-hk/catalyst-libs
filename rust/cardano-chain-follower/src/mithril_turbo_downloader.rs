@@ -397,7 +397,7 @@ impl FileDownloader for MithrilTurboDownloader {
 
         // We only support full downloads for now.
         if !matches!(download_event_type, DownloadEvent::Full { .. }) {
-            bail!("Unsupported Download Event Type: {:?}", download_event_type);
+            bail!("Unsupported Download Event Type: {download_event_type:?}");
         }
 
         let location = location.as_str();

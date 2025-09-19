@@ -7,8 +7,8 @@ use std::{collections::HashMap, sync::LazyLock};
 
 use catalyst_types::catalyst_id::role_index::RoleId;
 use rules::{
-    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, IdRule, OriginalAuthorRule,
-    ParametersRule, RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule, VerRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, DocumentOwnershipRule,
+    IdRule, ParametersRule, RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule, VerRule,
 };
 
 use crate::{
@@ -61,7 +61,9 @@ fn proposal_rule() -> Rules {
             allowed_roles: [RoleId::Proposer].into_iter().collect(),
         },
         signature: SignatureRule { mutlisig: false },
-        original_author: OriginalAuthorRule,
+        ownership: DocumentOwnershipRule {
+            allow_collaborators: false,
+        },
     }
 }
 
@@ -108,7 +110,9 @@ fn proposal_comment_rule() -> Rules {
             allowed_roles: [RoleId::Role0].into_iter().collect(),
         },
         signature: SignatureRule { mutlisig: false },
-        original_author: OriginalAuthorRule,
+        ownership: DocumentOwnershipRule {
+            allow_collaborators: false,
+        },
     }
 }
 
@@ -161,7 +165,9 @@ fn proposal_submission_action_rule() -> Rules {
             allowed_roles: [RoleId::Proposer].into_iter().collect(),
         },
         signature: SignatureRule { mutlisig: false },
-        original_author: OriginalAuthorRule,
+        ownership: DocumentOwnershipRule {
+            allow_collaborators: false,
+        },
     }
 }
 
