@@ -25,7 +25,7 @@ mod utils;
 mod ver;
 
 pub(crate) use collaborators::CollaboratorsRule;
-pub(crate) use content::{ContentRule, ContentSchema};
+pub(crate) use content::ContentRule;
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
