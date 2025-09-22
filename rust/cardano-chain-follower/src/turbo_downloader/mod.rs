@@ -417,10 +417,7 @@ impl ParallelDownloadProcessor {
         chain: Network,
     ) -> Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
-            bail!(
-                "Download chunk size must be at least {} bytes",
-                MIN_CHUNK_SIZE
-            );
+            bail!("Download chunk size must be at least {MIN_CHUNK_SIZE} bytes");
         }
         let file_size = get_content_length_async(url).await?;
 
@@ -595,7 +592,7 @@ impl ParallelDownloadProcessor {
                 let queue = worker_queue.value();
                 queue.send(order)?;
             } else {
-                bail!("Expected a work queue for worker: {:?}", this_worker);
+                bail!("Expected a work queue for worker: {this_worker:?}");
             }
         } else {
             // No more work, so remove the work queue from the map.
@@ -779,7 +776,7 @@ async fn get_content_length_async(url: &str) -> Result<usize> {
         Ok(result) => result,
         Err(error) => {
             error!("get_content_length failed");
-            Err(anyhow::anyhow!("get_content_length failed: {}", error))
+            Err(anyhow::anyhow!("get_content_length failed: {error}"))
         },
     }
 }
@@ -799,8 +796,7 @@ fn get_content_length(url: &str) -> Result<usize> {
     if let Some(accept_ranges) = response.header(ACCEPT_RANGES.as_str()) {
         if accept_ranges != "bytes" {
             bail!(
-                "Server doesn't support HTTP range byte requests (Accept-Ranges = {})",
-                accept_ranges
+                "Server doesn't support HTTP range byte requests (Accept-Ranges = {accept_ranges})",
             );
         }
     } else {
