@@ -10,7 +10,7 @@ pub fn proposal_submission_action_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer)
-        .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+        .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),

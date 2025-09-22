@@ -60,7 +60,7 @@ mod common;
         let comment = proposal_comment_doc(&proposal, &template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -101,7 +101,7 @@ mod common;
         let template = proposal_comment_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -138,7 +138,7 @@ mod common;
         let template = proposal_comment_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -176,7 +176,7 @@ mod common;
         let template = proposal_comment_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -212,7 +212,7 @@ mod common;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -246,7 +246,7 @@ mod common;
         let template = proposal_comment_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -278,7 +278,7 @@ mod common;
         let template = proposal_comment_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+            .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -305,6 +305,7 @@ mod common;
     "missing ref"
 )]
 #[tokio::test]
+#[allow(clippy::unwrap_used)]
 async fn test_proposal_comment_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {

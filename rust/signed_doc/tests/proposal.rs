@@ -49,7 +49,7 @@ mod common;
         let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+        let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -79,7 +79,7 @@ mod common;
         let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -109,7 +109,7 @@ mod common;
         let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -137,7 +137,7 @@ mod common;
     |provider| {
         let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -163,7 +163,7 @@ mod common;
         let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
         let template = proposal_form_template_doc(&parameters).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), pk.clone()))?;
+        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -185,6 +185,7 @@ mod common;
     "missing parameters"
 )]
 #[tokio::test]
+#[allow(clippy::unwrap_used)]
 async fn test_proposal_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
