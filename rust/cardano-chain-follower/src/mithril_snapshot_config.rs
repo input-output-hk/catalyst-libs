@@ -259,7 +259,10 @@ impl MithrilSnapshotConfig {
         // Hardlink the src file to the tmp file.
         if let Some(parent) = tmp_file.parent() {
             if let Err(error) = std::fs::create_dir_all(parent) {
-                error!("Error creating parent dir {parent:?} for tmp file {}: {error}", tmp_file.to_string_lossy());
+                error!(
+                    "Error creating parent dir {parent:?} for tmp file {}: {error}",
+                    tmp_file.to_string_lossy()
+                );
             }
         }
         if let Err(error) = std::fs::hard_link(src_file, tmp_file) {
@@ -272,7 +275,7 @@ impl MithrilSnapshotConfig {
         }
 
         // And if we made it here, file was successfully de-duped.  YAY.
-        debug!("DeDup OK: {tmp_file:?}", );
+        debug!("DeDup OK: {tmp_file:?}",);
         Ok(())
     }
 

@@ -417,9 +417,7 @@ impl ParallelDownloadProcessor {
         chain: Network,
     ) -> Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
-            bail!(
-                "Download chunk size must be at least {MIN_CHUNK_SIZE} bytes"
-            );
+            bail!("Download chunk size must be at least {MIN_CHUNK_SIZE} bytes");
         }
         let file_size = get_content_length_async(url).await?;
 
