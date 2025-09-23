@@ -8,15 +8,17 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::common::{
-    brand_parameters_doc, campaign_parameters_doc, category_parameters_doc, create_dummy_key_pair,
-    proposal_doc, proposal_form_template_doc, proposal_submission_action_doc,
+    brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
+    category_parameters_doc, create_dummy_key_pair, proposal_doc, proposal_form_template_doc,
+    proposal_submission_action_doc,
 };
 
 mod common;
 
 #[test_case(
     |provider| {
-        let parameters = brand_parameters_doc().inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         proposal_submission_action_doc(&proposal, &parameters, provider)
