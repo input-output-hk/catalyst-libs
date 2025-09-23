@@ -1,6 +1,6 @@
 //! `content-type` rule type impl.
 
-use crate::{metadata::ContentType, CatalystSignedDocument};
+use crate::{metadata::ContentType, validator::json_schema::JsonSchema, CatalystSignedDocument};
 
 /// `content-type` field validation rule
 #[derive(Debug)]
@@ -83,7 +83,7 @@ impl ContentTypeRule {
                 );
                 return Ok(false);
             };
-            if self.validate(&content).is_err() {
+            if !validate(*exp, &content) {
                 doc.report().invalid_value(
                     "payload",
                     &hex::encode(content),
@@ -95,45 +95,39 @@ impl ContentTypeRule {
         }
         Ok(true)
     }
+}
 
-    /// Validates the provided `content` bytes to be a defined `ContentType`.
-    fn validate(
-        &self,
-        content: &[u8],
-    ) -> anyhow::Result<()> {
-        if let Self::Specified { exp } = self {
-            match exp {
-                ContentType::Json => {
-                    if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content)
-                    {
-                        anyhow::bail!("Invalid {exp} content: {e}")
-                    }
-                },
-                ContentType::Cbor => {
-                    let mut decoder = minicbor::Decoder::new(content);
-
-                    decoder.skip()?;
-
-                    if decoder.position() != content.len() {
-                        anyhow::bail!("Unused bytes remain in the input after decoding")
-                    }
-                },
-                ContentType::Cddl
-                | ContentType::SchemaJson
-                | ContentType::Css
-                | ContentType::CssHandlebars
-                | ContentType::Html
-                | ContentType::HtmlHandlebars
-                | ContentType::Markdown
-                | ContentType::MarkdownHandlebars
-                | ContentType::Plain
-                | ContentType::PlainHandlebars => {
-                    // TODO: not implemented yet
-                    anyhow::bail!("`{exp}` is valid but unavailable yet")
-                },
-            }
-        }
-        Ok(())
+/// Validates the provided `content` bytes to be a defined `ContentType`.
+fn validate(
+    content_type: ContentType,
+    content: &[u8],
+) -> bool {
+    match content_type {
+        ContentType::Json => {
+            serde_json::from_slice::<&serde_json::value::RawValue>(content).is_ok()
+        },
+        ContentType::Cbor => {
+            let mut decoder = minicbor::Decoder::new(content);
+            decoder.skip().is_ok() && decoder.position() == content.len()
+        },
+        ContentType::SchemaJson => {
+            let Ok(template_json_schema) = serde_json::from_slice(content) else {
+                return false;
+            };
+            JsonSchema::try_from(&template_json_schema).is_ok()
+        },
+        ContentType::Cddl
+        | ContentType::Css
+        | ContentType::CssHandlebars
+        | ContentType::Html
+        | ContentType::HtmlHandlebars
+        | ContentType::Markdown
+        | ContentType::MarkdownHandlebars
+        | ContentType::Plain
+        | ContentType::PlainHandlebars => {
+            // TODO: not implemented yet
+            false
+        },
     }
 }
 
