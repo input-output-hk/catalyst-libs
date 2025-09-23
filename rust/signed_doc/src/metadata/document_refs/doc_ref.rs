@@ -12,13 +12,14 @@ use super::doc_locator::DocLocator;
 const DOC_REF_ARR_ITEM: u64 = 3;
 
 /// Reference to a Document.
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Serialize, serde::Deserialize)]
 pub struct DocumentRef {
     /// Reference to the Document Id
     id: UuidV7,
     /// Reference to the Document Ver
     ver: UuidV7,
     /// Document locator
+    #[serde(rename = "cid")]
     doc_locator: DocLocator,
 }
 

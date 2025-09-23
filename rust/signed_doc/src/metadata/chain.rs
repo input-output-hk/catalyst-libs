@@ -2,14 +2,14 @@
 //!
 //! ref: https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/metadata/#chain-link
 
-use std::hash::Hash;
+use std::{fmt::Display, hash::Hash};
 
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 
 use crate::DocumentRef;
 
 /// Reference to the previous Signed Document in a sequence.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
 pub struct Chain {
     /// The consecutive sequence number of the current document
     /// in the chain.
@@ -34,23 +34,16 @@ pub struct Chain {
     document_ref: Option<DocumentRef>,
 }
 
-impl<'de> serde::Deserialize<'de> for Chain {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
-        // TODO:
-        unimplemented!()
-    }
-}
-
-impl serde::Serialize for Chain {
-    fn serialize<S>(
+impl Display for Chain {
+    fn fmt(
         &self,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        unimplemented!()
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        if let Some(document_ref) = &self.document_ref {
+            write!(f, "height: {}, document_ref: {}", self.height, document_ref)
+        } else {
+            write!(f, "height: {}", self.height)
+        }
     }
 }
 

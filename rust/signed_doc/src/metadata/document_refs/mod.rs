@@ -203,24 +203,13 @@ mod serde_impl {
         ver: String,
     }
 
-    /// New structure as deserialize as map {id, ver, cid}
-    #[derive(serde::Deserialize, serde::Serialize)]
-    struct NewRef {
-        /// "id": "uuidv7"
-        id: String,
-        /// "ver": "uuidv7"
-        ver: String,
-        /// "cid": "0x..."
-        cid: String,
-    }
-
     #[derive(serde::Deserialize)]
     #[serde(untagged)]
     enum DocRefSerde {
         /// Old structure of document reference.
         Old(OldRef),
         /// New structure of document reference.
-        New(Vec<NewRef>),
+        New(Vec<DocumentRef>),
     }
 
     impl serde::Serialize for DocumentRefs {
@@ -231,14 +220,7 @@ mod serde_impl {
         where
             S: serde::Serializer,
         {
-            let iter = self.0.iter().map(|v| {
-                NewRef {
-                    id: v.id().to_string(),
-                    ver: v.ver().to_string(),
-                    cid: v.doc_locator().to_string(),
-                }
-            });
-            serializer.collect_seq(iter)
+            self.0.serialize(serializer)
         }
     }
 
@@ -261,23 +243,7 @@ mod serde_impl {
                         DocLocator::default(),
                     )]))
                 },
-                DocRefSerde::New(value) => {
-                    let mut dr = vec![];
-                    for v in value {
-                        let id = UuidV7::from_str(&v.id).map_err(|_| {
-                            serde::de::Error::custom(DocRefError::StringConversion(v.id.clone()))
-                        })?;
-                        let ver = UuidV7::from_str(&v.ver).map_err(|_| {
-                            serde::de::Error::custom(DocRefError::StringConversion(v.ver.clone()))
-                        })?;
-                        let cid = &v.cid.strip_prefix("0x").unwrap_or(&v.cid);
-                        let locator = hex::decode(cid).map_err(|_| {
-                            serde::de::Error::custom(DocRefError::HexDecode(v.cid.clone()))
-                        })?;
-                        dr.push(DocumentRef::new(id, ver, locator.into()));
-                    }
-                    Ok(DocumentRefs(dr))
-                },
+                DocRefSerde::New(v) => Ok(DocumentRefs(v)),
             }
         }
     }
