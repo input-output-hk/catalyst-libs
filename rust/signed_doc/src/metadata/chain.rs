@@ -60,7 +60,11 @@ impl minicbor::Encode<()> for Chain {
         e: &mut minicbor::Encoder<W>,
         _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        // TODO:
+        e.array(if self.document_ref.is_some() { 2 } else { 1 })?;
+        self.height.encode(e, &mut ())?;
+        if let Some(document_ref) = &self.document_ref {
+            document_ref.encode(e, &mut ())?;
+        }
         Ok(())
     }
 }
@@ -74,18 +78,18 @@ impl minicbor::Decode<'_, ()> for Chain {
 
         let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        let Some(height) = arr.get(0) else {
+        let Some(height_bytes) = arr.get(0) else {
             return Err(minicbor::decode::Error::message(format!(
                 "{CONTEXT}: expected [height, ? document_ref], found empty array"
             )));
         };
 
-        let height = minicbor::Decoder::new(height).int()?;
+        let height = minicbor::Decoder::new(height_bytes).int()?;
         let height = height.try_into().map_err(minicbor::decode::Error::custom)?;
 
         let document_ref = match arr.get(1) {
-            Some(value) => {
-                let mut d = minicbor::Decoder::new(value);
+            Some(bytes) => {
+                let mut d = minicbor::Decoder::new(bytes);
                 Some(DocumentRef::decode(&mut d, &mut ())?)
             },
             None => None,
