@@ -84,10 +84,9 @@ impl TemplateRule {
                     return false;
                 };
                 match template_content_type {
-                    ContentType::Json | ContentType::SchemaJson => {
-                        templated_json_schema_check(doc, template_doc)
-                    },
-                    ContentType::Cddl
+                    ContentType::SchemaJson => templated_json_schema_check(doc, template_doc),
+                    ContentType::Json
+                    | ContentType::Cddl
                     | ContentType::Cbor
                     | ContentType::Css
                     | ContentType::CssHandlebars
@@ -98,7 +97,7 @@ impl TemplateRule {
                     | ContentType::Plain
                     | ContentType::PlainHandlebars => {
                         // TODO: not implemented yet
-                        true
+                        false
                     },
                 }
             };
@@ -183,7 +182,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -212,7 +211,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -238,7 +237,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -265,7 +264,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -293,7 +292,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -321,7 +320,7 @@ mod tests {
             let doc = Builder::new()
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -377,7 +376,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
@@ -404,7 +403,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(vec![1,2 ,3])
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -478,7 +477,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(*template_ref.id()))
                 .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
                 .with_metadata_field(SupportedField::Type(allowed_type))
-                .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+                .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
                 .with_content(json_schema)
                 .build();
             provider.add_document(None, &doc).unwrap();
