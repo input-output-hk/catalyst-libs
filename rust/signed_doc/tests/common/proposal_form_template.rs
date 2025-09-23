@@ -1,9 +1,15 @@
+use catalyst_signed_doc::providers::tests::TestCatalystProvider;
+use ed25519_dalek::ed25519::signature::Signer;
+
 use super::*;
 
 pub fn proposal_form_template_doc(
-    parameters_doc: &CatalystSignedDocument
+    parameters_doc: &CatalystSignedDocument,
+    provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
+    let (sk, _, kid) = create_dummy_key_pair(RoleId::BrandAdmin)
+        .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::SchemaJson.to_string(),
@@ -17,5 +23,6 @@ pub fn proposal_form_template_doc(
                 },
         }))?
         .with_json_content(&serde_json::json!({}))?
+        .add_signature(|m| sk.sign(&m).to_vec(), kid)?
         .build()
 }
