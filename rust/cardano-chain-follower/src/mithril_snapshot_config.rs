@@ -239,7 +239,7 @@ impl MithrilSnapshotConfig {
 
         let Ok(relative_file) = tmp_file.strip_prefix(&tmp_path) else {
             error!("Failed to get relative path of file.");
-            bail!("Failed to strip prefix: {tmp_path:?}");
+            bail!("Failed to strip prefix: {}", tmp_path.to_string_lossy());
         };
 
         // IF we make it here, the files are identical, so we can de-dup them safely.
@@ -247,11 +247,10 @@ impl MithrilSnapshotConfig {
         if tmp_file.exists() {
             if let Err(error) = std::fs::remove_file(tmp_file) {
                 error!(
-                    "Error removing tmp file  {} :  {}",
+                    "Error removing tmp file  {} :  {error}",
                     tmp_file.to_string_lossy(),
-                    error
                 );
-                bail!("Failed to remove tmp file: {tmp_file:?}");
+                bail!("Failed to remove tmp file: {}", tmp_file.to_string_lossy());
             }
         }
 
@@ -260,21 +259,23 @@ impl MithrilSnapshotConfig {
         // Hardlink the src file to the tmp file.
         if let Some(parent) = tmp_file.parent() {
             if let Err(error) = std::fs::create_dir_all(parent) {
-                error!("Error creating parent dir {parent:?} for tmp file {tmp_file:?}: {error}");
+                error!(
+                    "Error creating parent dir {parent:?} for tmp file {}: {error}",
+                    tmp_file.to_string_lossy()
+                );
             }
         }
         if let Err(error) = std::fs::hard_link(src_file, tmp_file) {
             error!(
-                "Error linking src file {} to tmp file {} : {}",
+                "Error linking src file {} to tmp file {} : {error}",
                 src_file.to_string_lossy(),
                 tmp_file.to_string_lossy(),
-                error
             );
-            bail!("Failed to link src file: {src_file:?}");
+            bail!("Failed to link src file: {}", src_file.to_string_lossy());
         }
 
         // And if we made it here, file was successfully de-duped.  YAY.
-        debug!("DeDup OK: {tmp_file:?}");
+        debug!("DeDup OK: {tmp_file:?}",);
         Ok(())
     }
 

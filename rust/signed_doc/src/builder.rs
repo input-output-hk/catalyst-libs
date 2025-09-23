@@ -92,7 +92,8 @@ impl ContentBuilder {
         json: &serde_json::Value,
     ) -> anyhow::Result<SignaturesBuilder> {
         anyhow::ensure!(
-            self.metadata.content_type() == Some(ContentType::Json),
+            self.metadata.content_type() == Some(ContentType::Json)
+                || self.metadata.content_type() == Some(ContentType::SchemaJson),
             "Already set metadata field `content-type` is not JSON value"
         );
 

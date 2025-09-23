@@ -192,7 +192,7 @@ impl Metadata {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
         let metadata = Self::from_fields(fields.into_iter().map(anyhow::Result::<_>::Ok), &report)?;
-        anyhow::ensure!(!report.is_problematic(), "{:?}", report);
+        anyhow::ensure!(!report.is_problematic(), "{report:?}");
         Ok(metadata)
     }
 
