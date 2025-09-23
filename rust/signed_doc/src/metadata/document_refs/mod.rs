@@ -190,24 +190,13 @@ impl Encode<()> for DocumentRefs {
 mod serde_impl {
     //! `serde::Deserialize` and `serde::Serialize` trait implementations
 
-    use std::str::FromStr;
-
-    use super::{DocLocator, DocRefError, DocumentRef, DocumentRefs, UuidV7};
-
-    /// Old structure deserialize as map {id, ver}
-    #[derive(serde::Deserialize)]
-    struct OldRef {
-        /// "id": "uuidv7
-        id: String,
-        /// "ver": "uuidv7"
-        ver: String,
-    }
+    use super::{DocumentRef, DocumentRefs};
 
     #[derive(serde::Deserialize)]
     #[serde(untagged)]
     enum DocRefSerde {
         /// Old structure of document reference.
-        Old(OldRef),
+        Old(DocumentRef),
         /// New structure of document reference.
         New(Vec<DocumentRef>),
     }
@@ -227,22 +216,8 @@ mod serde_impl {
     impl<'de> serde::Deserialize<'de> for DocumentRefs {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de> {
-            let input = DocRefSerde::deserialize(deserializer)?;
-            match input {
-                DocRefSerde::Old(v) => {
-                    let id = UuidV7::from_str(&v.id).map_err(|_| {
-                        serde::de::Error::custom(DocRefError::StringConversion(v.id.clone()))
-                    })?;
-                    let ver = UuidV7::from_str(&v.ver).map_err(|_| {
-                        serde::de::Error::custom(DocRefError::StringConversion(v.ver.clone()))
-                    })?;
-
-                    Ok(DocumentRefs(vec![DocumentRef::new(
-                        id,
-                        ver,
-                        DocLocator::default(),
-                    )]))
-                },
+            match DocRefSerde::deserialize(deserializer)? {
+                DocRefSerde::Old(v) => Ok(DocumentRefs(vec![v])),
                 DocRefSerde::New(v) => Ok(DocumentRefs(v)),
             }
         }

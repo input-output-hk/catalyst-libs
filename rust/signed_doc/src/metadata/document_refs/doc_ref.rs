@@ -19,7 +19,7 @@ pub struct DocumentRef {
     /// Reference to the Document Ver
     ver: UuidV7,
     /// Document locator
-    #[serde(rename = "cid")]
+    #[serde(rename = "cid", default)]
     doc_locator: DocLocator,
 }
 
