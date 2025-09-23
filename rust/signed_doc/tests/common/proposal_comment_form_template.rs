@@ -5,7 +5,7 @@ pub fn proposal_comment_form_template_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     Builder::new()
         .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
+            "content-type": ContentType::SchemaJson.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
             "id": UuidV7::new(),
