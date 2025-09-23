@@ -12,7 +12,7 @@ mod common;
 
 #[test_case(
     |provider| {
-        brand_parameters_form_template_doc( provider)
+        brand_parameters_form_template_doc(provider)
     }
     => true
     ;
