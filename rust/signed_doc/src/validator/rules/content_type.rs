@@ -83,7 +83,7 @@ impl ContentTypeRule {
                 );
                 return Ok(false);
             };
-            if !validate(exp, &content) {
+            if !validate(*exp, &content) {
                 doc.report().invalid_value(
                     "payload",
                     &hex::encode(content),
@@ -108,11 +108,7 @@ fn validate(
         },
         ContentType::Cbor => {
             let mut decoder = minicbor::Decoder::new(content);
-            if decoder.skip().is_ok() && decoder.position() == content.len() {
-                true
-            } else {
-                false
-            }
+            decoder.skip().is_ok() && decoder.position() == content.len()
         },
         ContentType::SchemaJson => {
             let Ok(template_json_schema) = serde_json::from_slice(content) else {
