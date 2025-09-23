@@ -11,8 +11,8 @@ pub fn brand_parameters_form_template_doc(
         .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
     Builder::new()
         .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::SchemaJson.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "content-type": ContentType::SchemaJson,
+            "content-encoding": ContentEncoding::Brotli,
             "id": id,
             "ver": id,
             "type": doc_types::BRAND_PARAMETERS_FORM_TEMPLATE.clone(),

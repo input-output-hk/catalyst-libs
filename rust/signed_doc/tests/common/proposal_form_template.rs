@@ -12,8 +12,8 @@ pub fn proposal_form_template_doc(
         .inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
     Builder::new()
         .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::SchemaJson.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "content-type": ContentType::SchemaJson,
+            "content-encoding": ContentEncoding::Brotli,
             "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
             "id": id,
             "ver": id,

@@ -56,8 +56,8 @@ mod common;
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "content-type": ContentType::Json,
+                "content-encoding": ContentEncoding::Brotli,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
@@ -89,8 +89,8 @@ mod common;
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "content-type": ContentType::Json,
+                "content-encoding": ContentEncoding::Brotli,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
@@ -121,8 +121,8 @@ mod common;
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "content-type": ContentType::Json,
+                "content-encoding": ContentEncoding::Brotli,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
@@ -153,7 +153,7 @@ mod common;
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
+                "content-type": ContentType::Json,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
@@ -214,8 +214,8 @@ mod common;
         let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
+                "content-type": ContentType::Json,
+                "content-encoding": ContentEncoding::Brotli,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
