@@ -343,7 +343,7 @@ async fn follow_for(
             || (chain_update.immutable() != last_immutable)
             || reached_tip
             || follow_all
-            || (updates % RUNNING_UPDATE_INTERVAL == 0)
+            || updates.is_multiple_of(RUNNING_UPDATE_INTERVAL)
             || (last_fork != chain_update.data.fork())
         {
             current_era = this_era;

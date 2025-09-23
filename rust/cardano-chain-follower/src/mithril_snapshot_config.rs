@@ -494,7 +494,7 @@ fn remove_whitespace(s: &str) -> String {
 
 /// Check if a string is an even number of hex digits.
 fn is_hex(s: &str) -> bool {
-    s.chars().count() % 2 == 0 && s.chars().all(|c| c.is_ascii_hexdigit())
+    s.chars().count().is_multiple_of(2) && s.chars().all(|c| c.is_ascii_hexdigit())
 }
 
 #[cfg(test)]

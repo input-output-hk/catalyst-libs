@@ -1,6 +1,6 @@
 //! Document Payload Chain.
 //!
-//! ref: https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/metadata/#chain-link
+//! ref: <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/metadata/#chain-link>
 
 use std::{fmt::Display, hash::Hash};
 
@@ -71,7 +71,7 @@ impl minicbor::Decode<'_, ()> for Chain {
 
         let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        let Some(height_bytes) = arr.get(0) else {
+        let Some(height_bytes) = arr.first() else {
             return Err(minicbor::decode::Error::message(format!(
                 "{CONTEXT}: expected [height, ? document_ref], found empty array"
             )));

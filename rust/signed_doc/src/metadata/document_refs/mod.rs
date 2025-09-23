@@ -192,6 +192,7 @@ mod serde_impl {
 
     use super::{DocumentRef, DocumentRefs};
 
+    /// A struct to support deserializing for both the old and new version of `ref`.
     #[derive(serde::Deserialize)]
     #[serde(untagged)]
     enum DocRefSerde {
