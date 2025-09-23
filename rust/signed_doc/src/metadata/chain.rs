@@ -4,6 +4,8 @@
 
 use std::hash::Hash;
 
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
+
 use crate::DocumentRef;
 
 /// Reference to the previous Signed Document in a sequence.
@@ -68,7 +70,30 @@ impl minicbor::Decode<'_, ()> for Chain {
         d: &mut minicbor::Decoder<'_>,
         _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        // TODO:
-        unimplemented!();
+        const CONTEXT: &str = "Chain decoding";
+
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
+
+        let Some(height) = arr.get(0) else {
+            return Err(minicbor::decode::Error::message(format!(
+                "{CONTEXT}: expected [height, ? document_ref], found empty array"
+            )));
+        };
+
+        let height = minicbor::Decoder::new(height).int()?;
+        let height = height.try_into().map_err(minicbor::decode::Error::custom)?;
+
+        let document_ref = match arr.get(1) {
+            Some(value) => {
+                let mut d = minicbor::Decoder::new(value);
+                Some(DocumentRef::decode(&mut d, &mut ())?)
+            },
+            None => None,
+        };
+
+        Ok(Self {
+            height,
+            document_ref,
+        })
     }
 }
