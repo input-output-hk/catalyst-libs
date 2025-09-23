@@ -243,6 +243,10 @@ async fn test_proposal_submission_action_doc(
     let mut provider = TestCatalystProvider::default();
 
     let doc = doc_gen(&mut provider).unwrap();
+    assert_eq!(
+        *doc.doc_type().unwrap(),
+        doc_types::PROPOSAL_SUBMISSION_ACTION.clone()
+    );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert_eq!(is_valid, !doc.problem_report().is_problematic());
