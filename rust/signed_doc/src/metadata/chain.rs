@@ -55,8 +55,8 @@ impl minicbor::Encode<()> for Chain {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(if self.document_ref.is_some() { 2 } else { 1 })?;
         self.height.encode(e, &mut ())?;
-        if let Some(document_ref) = &self.document_ref {
-            document_ref.encode(e, &mut ())?;
+        if let Some(doc_ref) = &self.document_ref {
+            doc_ref.encode(e, &mut ())?;
         }
         Ok(())
     }
