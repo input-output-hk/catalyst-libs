@@ -94,3 +94,49 @@ impl minicbor::Decode<'_, ()> for Chain {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use catalyst_types::uuid::UuidV7;
+    use minicbor::{Decode, Decoder, Encode, Encoder};
+
+    use super::*;
+    use crate::DocLocator;
+
+    #[test]
+    fn test_chain_encode_decode_without_doc_ref() {
+        let chain = Chain {
+            height: 0,
+            document_ref: None,
+        };
+
+        let mut buf = Vec::new();
+        let mut enc = Encoder::new(&mut buf);
+        chain.encode(&mut enc, &mut ()).unwrap();
+
+        let mut dec = Decoder::new(&buf);
+        let decoded = Chain::decode(&mut dec, &mut ()).unwrap();
+
+        assert_eq!(decoded, chain);
+    }
+
+    #[test]
+    fn test_chain_encode_decode_with_doc_ref() {
+        let id = UuidV7::new();
+        let ver = UuidV7::new();
+
+        let chain = Chain {
+            height: 3,
+            document_ref: Some(DocumentRef::new(id, ver, DocLocator::default())),
+        };
+
+        let mut buf = Vec::new();
+        let mut enc = Encoder::new(&mut buf);
+        chain.encode(&mut enc, &mut ()).unwrap();
+
+        let mut dec = Decoder::new(&buf);
+        let decoded = Chain::decode(&mut dec, &mut ()).unwrap();
+
+        assert_eq!(decoded, chain);
+    }
+}
