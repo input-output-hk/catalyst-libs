@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_imports)]
 
 pub mod brand_parameters;
+pub mod brand_parameters_form_template;
 pub mod campaign_parameters;
 pub mod category_parameters;
 pub mod proposal;
@@ -12,6 +13,7 @@ pub mod proposal_submission_action;
 use std::str::FromStr;
 
 pub use brand_parameters::brand_parameters_doc;
+pub use brand_parameters_form_template::brand_parameters_form_template_doc;
 pub use campaign_parameters::campaign_parameters_doc;
 use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
