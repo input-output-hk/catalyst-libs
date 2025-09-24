@@ -80,13 +80,13 @@ impl minicbor::Decode<'_, ()> for Chain {
         let height = minicbor::Decoder::new(height_bytes).int()?;
         let height = height.try_into().map_err(minicbor::decode::Error::custom)?;
 
-        let document_ref = match arr.get(1) {
-            Some(bytes) => {
+        let document_ref = arr
+            .get(1)
+            .map(|bytes| {
                 let mut d = minicbor::Decoder::new(bytes);
-                Some(DocumentRef::decode(&mut d, &mut ())?)
-            },
-            None => None,
-        };
+                DocumentRef::decode(&mut d, &mut ())
+            })
+            .transpose()?;
 
         Ok(Self {
             height,
