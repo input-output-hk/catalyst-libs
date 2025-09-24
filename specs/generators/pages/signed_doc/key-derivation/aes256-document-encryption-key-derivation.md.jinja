@@ -67,8 +67,8 @@ The simplified pseudo-code of the algorithm is as follows.
 ```
 seed_phrase: list[str] = ["abandon", "abandon", "abandon", ... "zoo"];
 key_material: bytes[96] = path_derivation("m/508'/139'/1'/{role}/{index}", seed_phrase);
-context: bytes[] = cbor_encoded([document_type,document_id,document_ver])
-aes_256_key: bytes[32] = blake3_derive_key(context, key_material)
+context: bytes[] = cbor_encoded([document_type,document_id,document_ver]);
+aes_256_key: bytes[32] = blake3_derive_key(context, key_material);
 ```
 
 1. The seed_phrase is turned into 96 bytes of `key material` as discussed above.
@@ -100,7 +100,7 @@ Working Implementation before Fund 14.
 
 ### Implementation Plan
 
-Fund 14 project catalyst will deploy this scheme for Key derivation.>
+Fund 16 project catalyst will deploy this scheme for Key derivation.
 
 ## Copyright
 
