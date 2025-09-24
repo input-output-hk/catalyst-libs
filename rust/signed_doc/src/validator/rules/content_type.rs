@@ -99,7 +99,7 @@ impl ContentTypeRule {
 
 /// Validates the provided `content` bytes to be a defined `ContentType`.
 fn validate(
-    content_type: &ContentType,
+    content_type: ContentType,
     content: &[u8],
 ) -> bool {
     match content_type {
