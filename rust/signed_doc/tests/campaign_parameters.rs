@@ -8,7 +8,7 @@ use test_case::test_case;
 
 use crate::common::{
     brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
-    create_dummy_key_pair, campaign_parameters_form_template_doc
+    campaign_parameters_form_template_doc, create_dummy_key_pair,
 };
 
 mod common;
@@ -19,7 +19,6 @@ mod common;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         campaign_parameters_doc(&template, &parameters, provider)
-      
     }
     => true
     ;
