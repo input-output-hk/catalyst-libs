@@ -33,8 +33,7 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
         id: UuidV7,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 
-    /// Try to get the first known version of the `CatalystSignedDocument`, same
-    /// `id` and the lowest known `ver`.
+    /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver` are equal.
     fn try_get_first_doc(
         &self,
         id: UuidV7,
