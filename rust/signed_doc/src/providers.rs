@@ -33,6 +33,13 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
         id: UuidV7,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 
+    /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver`
+    /// are equal.
+    fn try_get_first_doc(
+        &self,
+        id: UuidV7,
+    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
     /// If `None` is returned, skips "too far in the future" validation.
@@ -113,6 +120,18 @@ pub mod tests {
                 .iter()
                 .filter(|(doc_ref, _)| doc_ref.id() == &id)
                 .max_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
+                .map(|(_, doc)| doc.clone()))
+        }
+
+        async fn try_get_first_doc(
+            &self,
+            id: catalyst_types::uuid::UuidV7,
+        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+            Ok(self
+                .signed_doc
+                .iter()
+                .filter(|(doc_ref, _)| doc_ref.id() == &id)
+                .min_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
                 .map(|(_, doc)| doc.clone()))
         }
 
