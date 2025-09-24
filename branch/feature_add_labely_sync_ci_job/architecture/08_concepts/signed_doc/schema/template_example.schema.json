@@ -1,0 +1,254 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema#",
+    "title": "Example Template Schema",
+    "description": "Example Template Schema showing all defined field types.",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "url": "https://projectcatalyst.io/"
+        }
+    ],
+    "$defs": {
+        "dropDownSingleSelect": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+        },
+        "multiLineTextEntry": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+        },
+        "multiLineTextEntryListMarkdown": {
+            "items": {
+                "contentMediaType": "text/markdown",
+                "minLength": 1,
+                "pattern": "^[\\S\\s]*$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
+        "multiLineTextEntryMarkdown": {
+            "contentMediaType": "text/markdown",
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+        },
+        "multiSelect": {
+            "items": {
+                "pattern": "^[^\\n]*$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
+        "radioButtonSelect": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+        },
+        "schemaReferenceNonUI": {
+            "readOnly": true,
+            "type": "string"
+        },
+        "section": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "segment": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "singleGroupedTagSelector": {
+            "additionalProperties": false,
+            "required": [
+                "group",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "singleLineHttpsURLEntry": {
+            "format": "uri",
+            "pattern": "^https://[^\\s]+$",
+            "type": "string"
+        },
+        "singleLineHttpsURLEntryList": {
+            "items": {
+                "format": "uri",
+                "minLength": 1,
+                "pattern": "^https://[^\\s]+$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
+        "singleLineTextEntry": {
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+        },
+        "singleLineTextEntryList": {
+            "items": {
+                "minLength": 1,
+                "pattern": "^[^\\n]*$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        }
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "dropDownSingleSelect": {
+            "exampleDropDownSingleSelect": {
+                "description": null,
+                "enum": null,
+                "title": null,
+                "x-guidance": null
+            },
+            "$ref": "#/$defs/dropDownSingleSelect"
+        },
+        "multiLineTextEntry": {
+            "exampleMultiLineTextEntry": {
+                "description": null,
+                "maxLength": null,
+                "minLength": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/multiLineTextEntry"
+        },
+        "multiLineTextEntryListMarkdown": {
+            "exampleMultiLineTextEntryListMarkdown": {
+                "contains": null,
+                "default": null,
+                "description": null,
+                "maxItems": null,
+                "minItems": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/multiLineTextEntryListMarkdown"
+        },
+        "multiLineTextEntryMarkdown": {
+            "exampleMultiLineTextEntryMarkdown": {
+                "description": null,
+                "maxLength": null,
+                "minLength": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/multiLineTextEntryMarkdown"
+        },
+        "multiSelect": {
+            "exampleMultiSelect": {
+                "contains": null,
+                "default": null,
+                "description": null,
+                "maxItems": null,
+                "minItems": null,
+                "title": null,
+                "x-guidance": null
+            },
+            "$ref": "#/$defs/multiSelect"
+        },
+        "radioButtonSelect": {
+            "exampleRadioButtonSelect": {
+                "description": null,
+                "enum": null,
+                "title": null,
+                "x-guidance": null
+            },
+            "$ref": "#/$defs/radioButtonSelect"
+        },
+        "schemaReferenceNonUI": {
+            "exampleSchemaReferenceNonUI": {
+                "const": null,
+                "default": null
+            },
+            "$ref": "#/$defs/schemaReferenceNonUI"
+        },
+        "section": {
+            "exampleSection": {
+                "description": null,
+                "properties": null,
+                "required": null,
+                "title": null,
+                "x-icon": null,
+                "x-order": null
+            },
+            "$ref": "#/$defs/section"
+        },
+        "segment": {
+            "exampleSegment": {
+                "description": null,
+                "properties": null,
+                "required": null,
+                "title": null,
+                "x-icon": null,
+                "x-order": null
+            },
+            "$ref": "#/$defs/segment"
+        },
+        "singleGroupedTagSelector": {
+            "exampleSingleGroupedTagSelector": {
+                "description": null,
+                "oneOf_groupedTags": null,
+                "title": null,
+                "x-guidance": null
+            },
+            "$ref": "#/$defs/singleGroupedTagSelector"
+        },
+        "singleLineHttpsURLEntry": {
+            "exampleSingleLineHttpsURLEntry": {
+                "description": null,
+                "maxLength": null,
+                "minLength": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/singleLineHttpsURLEntry"
+        },
+        "singleLineHttpsURLEntryList": {
+            "exampleSingleLineHttpsURLEntryList": {
+                "contains": null,
+                "default": null,
+                "description": null,
+                "maxItems": null,
+                "minItems": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/singleLineHttpsURLEntryList"
+        },
+        "singleLineTextEntry": {
+            "exampleSingleLineTextEntry": {
+                "description": null,
+                "maxLength": null,
+                "minLength": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/singleLineTextEntry"
+        },
+        "singleLineTextEntryList": {
+            "exampleSingleLineTextEntryList": {
+                "contains": null,
+                "default": null,
+                "description": null,
+                "maxItems": null,
+                "minItems": null,
+                "title": null,
+                "x-guidance": null,
+                "x-placeholder": null
+            },
+            "$ref": "#/$defs/singleLineTextEntryList"
+        }
+    }
+}

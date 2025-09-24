@@ -1,0 +1,24 @@
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
+block = [
+    block-header,
+    block-data,
+]
+
+block-header = [
+    height: int,
+    ?ledger-type: UUID, ; UUID v4
+    ?purpose-id: UUID, ; UUID v7
+    ~extra-header-data,
+]
+
+block-data = encoded-cbor
+
+UUID = #6.37(bytes) ; UUID type
+
+kid = hash-bytes ; hash of the x509/c509 certificate
+
+extra-header-data = [ *any ]
+
+;# include hash
