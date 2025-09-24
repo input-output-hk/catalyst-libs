@@ -66,8 +66,8 @@ async fn main() -> anyhow::Result<()> {
     let mut event_stream = hermes_a.pubsub_events(option_topic.clone()).await?;
     let mut event_stream_b = hermes_b.pubsub_events(option_topic).await?;
 
-    let stream = hermes_a.pubsub_subscribe(topic.to_string()).await?;
-    let stream_b = hermes_b.pubsub_subscribe(topic.to_string()).await?;
+    let stream = hermes_a.pubsub_subscribe(topic.clone()).await?;
+    let stream_b = hermes_b.pubsub_subscribe(topic.clone()).await?;
 
     pin_mut!(stream);
     pin_mut!(stream_b);

@@ -4,6 +4,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+mod chain;
 mod collaborators;
 mod content_encoding;
 mod content_type;
@@ -13,6 +14,7 @@ mod section;
 mod supported_field;
 
 use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport, uuid::UuidV7};
+pub use chain::Chain;
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 pub use doc_type::DocType;
@@ -132,6 +134,13 @@ impl Metadata {
             .and_then(SupportedField::try_as_parameters_ref)
     }
 
+    /// Return `chain` field.
+    pub fn chain(&self) -> Option<&Chain> {
+        self.0
+            .get(&SupportedLabel::Chain)
+            .and_then(SupportedField::try_as_chain_ref)
+    }
+
     /// Add `SupportedField` into the `Metadata`.
     ///
     /// # Warning
@@ -226,6 +235,7 @@ impl Display for Metadata {
         writeln!(f, "    section: {:?},", self.section())?;
         writeln!(f, "    collaborators: {:?},", self.collaborators())?;
         writeln!(f, "    parameters: {:?},", self.parameters())?;
+        writeln!(f, "    chain: {:?},", self.chain())?;
         writeln!(f, "  }},")?;
         writeln!(f, "}}")
     }
