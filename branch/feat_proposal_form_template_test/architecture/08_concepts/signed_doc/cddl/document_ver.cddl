@@ -1,8 +1,0 @@
-; Unique Chronological Document Version Identifier
-
-
-; Document Version
-document_ver = uuid_v7
-
-; UUIDv7
-uuid_v7 = #6.37(bytes .size 16)
