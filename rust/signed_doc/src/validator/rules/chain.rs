@@ -39,7 +39,36 @@ impl ChainRule {
             }
 
             // perform integrity validation
-            if let Some(chain) = chain {}
+            if let Some(chain) = chain {
+                if let Some(chained_ref) = chain.document_ref() {
+                    let Some(chained_doc) = provider.try_get_doc(chained_ref).await? else {
+                        return Ok(false);
+                    };
+
+                    // have the same id as the document being chained to.
+                    if chained_doc.doc_id()? != doc.doc_id()? {
+                        return Ok(false);
+                    }
+
+                    // have a ver that is greater than the ver being chained to.
+                    if chained_doc.doc_ver()? > doc.doc_ver()? {
+                        return Ok(false);
+                    }
+
+                    // have the same type as the chained document.
+                    if chained_doc.doc_type()? != doc.doc_type()? {
+                        return Ok(false);
+                    }
+
+                    // have parameters match.
+
+                    // have not be chaining to a document already chained to by another document.
+
+                    // have its absolute height exactly one more than the height of the document being chained to.
+                } else {
+                    
+                }
+            }
         }
         if let Self::NotSpecified = self {
             if chain.is_some() {
