@@ -96,7 +96,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
             optional: false,
         },
-        section: SectionRule::NotSpecified,
+        section: SectionRule::Specified { optional: true },
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
