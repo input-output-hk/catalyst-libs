@@ -19,6 +19,7 @@ pub(crate) enum ParametersRule {
         optional: bool,
     },
     /// `parameters` is not specified
+    #[allow(dead_code)]
     NotSpecified,
 }
 

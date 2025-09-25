@@ -61,7 +61,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         parameters: ParametersRule::Specified {
             exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
-            optional: true,
+            optional: false,
         },
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
@@ -92,8 +92,11 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp_reply_type: expect_uuidv4(COMMENT_DOCUMENT_UUID_TYPE),
             optional: true,
         },
+        parameters: ParametersRule::Specified {
+            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
+            optional: false,
+        },
         section: SectionRule::Specified { optional: true },
-        parameters: ParametersRule::NotSpecified,
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
@@ -120,7 +123,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
             exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
-            optional: true,
+            optional: false,
         },
         doc_ref: RefRule::Specified {
             exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
