@@ -692,7 +692,7 @@
 <polygon fill="#e7e2dd" stroke="none" points="194.2,-3355.16 194.2,-3415.41 1118.2,-3415.41 1118.2,-3355.16 194.2,-3355.16"/>
 <polygon fill="none" stroke="#29235c" points="194.2,-3355.16 194.2,-3415.41 1118.2,-3415.41 1118.2,-3355.16 194.2,-3355.16"/>
 <text xml:space="preserve" text-anchor="start" x="205.2" y="-3374.01" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">content type</text>
-<text xml:space="preserve" text-anchor="start" x="943.7" y="-3375.01" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">Undefined</text>
+<text xml:space="preserve" text-anchor="start" x="855.2" y="-3375.01" font-family="Helvetica,sans-Serif" font-style="italic" font-size="32.00" fill="#7706e5">application/json</text>
 <polygon fill="#b8b5b0" stroke="none" points="194.2,-3294.91 194.2,-3355.16 1118.2,-3355.16 1118.2,-3294.91 194.2,-3294.91"/>
 <polygon fill="none" stroke="#29235c" points="194.2,-3294.91 194.2,-3355.16 1118.2,-3355.16 1118.2,-3294.91 194.2,-3294.91"/>
 <text xml:space="preserve" text-anchor="start" x="205.2" y="-3313.76" font-family="Helvetica,sans-Serif" font-size="32.00" fill="#7706e5">type</text>

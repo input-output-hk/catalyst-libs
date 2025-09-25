@@ -8,6 +8,7 @@ import (
 	"list"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
 	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+	CDDL "github.com/input-output-hk/catalyst-libs/specs/cddl"
 )
 
 // Metadata Formats.
@@ -15,7 +16,7 @@ import (
 #metadataFormats: {
 	[string]: {
 		description: string
-		cddl:        #cddlTypesConstraint
+		cddl:        CDDL.#cddlTypesConstraint
 	}
 }
 
@@ -95,7 +96,7 @@ _allMetadataNames: or([
 // Definition of a metadata field.
 #metadataField: {
 	// Is the field required to be present.
-	required: optional.#field
+	required: optional.#field_default_excluded
 
 	// Format of the field.
 	format: #metadataTypesConstraint | *#metadataTypes[0]
@@ -235,7 +236,7 @@ _allMetadataNames: or([
 			As a special case, if the revocations are set to `true` then all versions of the document
 			are revoked, including the latest document.
 
-			In this case, when the latest document is revoked, the payload may be empty.
+			In this case, when the latest document is revoked, the payload may be `nil`.
 			Any older document that has `revocations` set to `true` is always to be filtered
 			and its payload is to be assumed to be invalid.
 

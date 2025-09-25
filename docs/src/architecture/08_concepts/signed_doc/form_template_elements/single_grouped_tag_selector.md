@@ -148,7 +148,7 @@ Parameters
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">excluded</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
@@ -156,7 +156,7 @@ Parameters
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left gt_striped">optional_property_type=None description='\tAn array of grouped tag objects, of which one can be selected.\n\tEach object <em>MUST</em> have the form:\n\t\n\t<code>json\n\t&quot;properties&quot;: {\n\t\t&quot;group&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagGroup&quot;,\n\t\t\t&quot;const&quot;: &lt;group name string&gt;\n\t\t},\n\t\t&quot;tag&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagSelection&quot;,\n\t\t\t&quot;enum&quot;: [\n\t\t\t\t&lt;tag 1 string&gt;,\n\t\t\t\t&lt;tag 2 string&gt;,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t</code>' required=&lt;OptionalField.excluded: 'excluded'&gt; type='object' items=None choices=None format=None content_media_type=None pattern=None min_length=None minimum=None maximum=None example=None element_name='Unknown' property_type='object' name='Unknown'</td>
+    <td class="gt_row gt_left gt_striped">optional_property_type=None description='\tAn array of grouped tag objects, of which one can be selected.\n\tEach object <em>MUST</em> have the form:\n\t\n\t<code>json\n\t&quot;properties&quot;: {\n\t\t&quot;group&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagGroup&quot;,\n\t\t\t&quot;const&quot;: &lt;group name string&gt;\n\t\t},\n\t\t&quot;tag&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagSelection&quot;,\n\t\t\t&quot;enum&quot;: [\n\t\t\t\t&lt;tag 1 string&gt;,\n\t\t\t\t&lt;tag 2 string&gt;,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t</code>' required=&lt;OptionalField.required: 'yes'&gt; type='object' items=None choices=None format=None content_media_type=None pattern=None min_length=None minimum=None maximum=None example=None element_name='Unknown' property_type='object' name='Unknown'</td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>

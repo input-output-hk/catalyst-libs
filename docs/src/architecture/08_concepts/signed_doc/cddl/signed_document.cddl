@@ -33,7 +33,7 @@ COSE_Document_Header_Map = {
 ; COSE Standard headers used by a Document
 COSE_Document_Standard_Headers = (
   3 => media_type
-  ?"content-encoding" => http_content_encoding
+  "content-encoding" => http_content_encoding
 )
 
 ; Supported Content Media Types.
@@ -113,6 +113,7 @@ cid = #6.42(bytes)
 section_ref = json_pointer
 
 ; RFC6901 Standard JSON Pointer
+; See: https://datatracker.ietf.org/doc/html/rfc6901
 json_pointer = text
 
 ; Allowed Collaborators on the next subsequent version of a document.
