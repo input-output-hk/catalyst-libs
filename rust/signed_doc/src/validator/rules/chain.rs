@@ -1,6 +1,9 @@
 //! `chain` rule type impl.
 
-use crate::CatalystSignedDocument;
+use crate::{
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
+    CatalystSignedDocument,
+};
 
 /// `chain` field validation rule
 #[derive(Debug)]
@@ -18,19 +21,28 @@ pub(crate) enum ChainRule {
 impl ChainRule {
     /// Field validation rule
     #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+        provider: &Provider,
+    ) -> anyhow::Result<bool>
+    where
+        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
+    {
+        let chain = doc.doc_meta().chain();
+
         if let Self::Specified { optional } = self {
-            if doc.doc_meta().chain().is_none() && !optional {
+            if chain.is_none() && !optional {
                 doc.report()
                     .missing_field("chain", "Document must have 'chain' field");
                 return Ok(false);
             }
+
+            // perform integrity validation
+            if let Some(chain) = chain {}
         }
         if let Self::NotSpecified = self {
-            if doc.doc_meta().chain().is_some() {
+            if chain.is_some() {
                 doc.report().unknown_field(
                     "chain",
                     &format!(
