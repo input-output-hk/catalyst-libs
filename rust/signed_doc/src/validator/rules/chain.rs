@@ -1,5 +1,7 @@
 //! `chain` rule type impl.
 
+use std::collections::HashMap;
+
 use crate::{
     providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     CatalystSignedDocument,
@@ -40,10 +42,25 @@ impl ChainRule {
 
             // perform integrity validation
             if let Some(chain) = chain {
+                let signed_docs = provider.try_get_all(doc.doc_id()?).await?;
+                let signed_docs: HashMap<_, _> = {
+                    let mut tmp = Vec::with_capacity(signed_docs.len());
+                    for doc in signed_docs {
+                        tmp.push(((doc.doc_id()?, doc.doc_ver()?), doc));
+                    }
+                    tmp.into_iter().collect()
+                };
+
                 if let Some(chained_ref) = chain.document_ref() {
-                    let Some(chained_doc) = provider.try_get_doc(chained_ref).await? else {
+                    let chained_key = (chained_ref.id().clone(), chained_ref.ver().clone());
+                    let Some(chained_doc) = signed_docs.get(&chained_key) else {
                         return Ok(false);
                     };
+
+                    // not have collaborators.
+                    if !chained_doc.doc_meta().collaborators().is_empty() {
+                        return Ok(false);
+                    }
 
                     // have the same id as the document being chained to.
                     if chained_doc.doc_id()? != doc.doc_id()? {
@@ -61,12 +78,16 @@ impl ChainRule {
                     }
 
                     // have parameters match.
+                    if chained_doc.doc_meta().parameters() != doc.doc_meta().parameters() {
+                        return Ok(false);
+                    }
 
-                    // have not be chaining to a document already chained to by another document.
+                    // have not be chaining to a document already chained to by another
+                    // document.
 
-                    // have its absolute height exactly one more than the height of the document being chained to.
+                    // have its absolute height exactly one more than the height of the
+                    // document being chained to.
                 } else {
-                    
                 }
             }
         }
