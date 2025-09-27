@@ -32,51 +32,51 @@ use crate::{
     "valid reference to the one correct document"
 )]
 #[test_case(
-`        |exp_types, provider| {
-            let ref_doc_1 = Builder::new()
-                .with_metadata_field(SupportedField::Id(UuidV7::new()))
-                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
-                .build();
-            provider.add_document(None, &ref_doc_1).unwrap();
-            let ref_doc_2 = Builder::new()
-                .with_metadata_field(SupportedField::Id(UuidV7::new()))
-                .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-                .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
-                .build();
-            provider.add_document(None, &ref_doc_2).unwrap();
-            let ref_doc_3 = Builder::new()
+    |exp_types, provider| {
+        let ref_doc_1 = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-            provider.add_document(None, &ref_doc_3).unwrap();
+        provider.add_document(None, &ref_doc_1).unwrap();
+        let ref_doc_2 = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
+            .build();
+        provider.add_document(None, &ref_doc_2).unwrap();
+        let ref_doc_3 = Builder::new()
+        .with_metadata_field(SupportedField::Id(UuidV7::new()))
+        .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+        .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
+        .build();
+        provider.add_document(None, &ref_doc_3).unwrap();
 
-            Builder::new()
-                .with_metadata_field(SupportedField::Ref(
-                    vec![DocumentRef::new(
-                        ref_doc_1.doc_id().unwrap(),
-                        ref_doc_1.doc_ver().unwrap(),
-                        DocLocator::default(),
-                    ),
-                    DocumentRef::new(
-                        ref_doc_2.doc_id().unwrap(),
-                        ref_doc_2.doc_ver().unwrap(),
-                        DocLocator::default(),
-                    ),
-                    DocumentRef::new(
-                        ref_doc_3.doc_id().unwrap(),
-                        ref_doc_3.doc_ver().unwrap(),
-                        DocLocator::default(),
-                    )]
-                    .into(),
-                ))
-                .build()
-        }
-        => true
-        ;
-        "valid reference to the multiple documents"
-    )]`
+        Builder::new()
+            .with_metadata_field(SupportedField::Ref(
+                vec![DocumentRef::new(
+                    ref_doc_1.doc_id().unwrap(),
+                    ref_doc_1.doc_ver().unwrap(),
+                    DocLocator::default(),
+                ),
+                DocumentRef::new(
+                    ref_doc_2.doc_id().unwrap(),
+                    ref_doc_2.doc_ver().unwrap(),
+                    DocLocator::default(),
+                ),
+                DocumentRef::new(
+                    ref_doc_3.doc_id().unwrap(),
+                    ref_doc_3.doc_ver().unwrap(),
+                    DocLocator::default(),
+                )]
+                .into(),
+            ))
+            .build()
+    }
+    => true
+    ;
+    "valid reference to the multiple documents"
+)]
 #[test_case(
     |exp_types, provider| {
         let ref_doc_1 = Builder::new()

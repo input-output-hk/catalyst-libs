@@ -1,5 +1,8 @@
 //! `content` rule type impl.
 
+#[cfg(test)]
+mod tests;
+
 use std::fmt::Debug;
 
 use catalyst_signed_doc_spec::payload::Payload;
