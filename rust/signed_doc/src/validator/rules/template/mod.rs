@@ -1,5 +1,8 @@
 //! `template` rule type impl.
 
+#[cfg(test)]
+mod tests;
+
 use catalyst_signed_doc_spec::{
     is_required::IsRequired, metadata::template::Template, DocSpecs, DocumentName,
 };
