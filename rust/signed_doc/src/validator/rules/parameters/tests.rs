@@ -573,7 +573,7 @@ async fn parameter_specified_test(
 }
 
 #[tokio::test]
-async fn ref_specified_optional_test() {
+async fn parameters_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = ParametersRule::Specified {
         allowed_type: vec![UuidV4::new().into()],
