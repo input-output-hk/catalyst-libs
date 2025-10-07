@@ -148,112 +148,597 @@ where
 #[cfg(test)]
 mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
+    use test_case::test_case;
 
     use super::*;
     use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(), 
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let template_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(template_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "template": {
+                        "id": template_doc.doc_id().unwrap(),
+                        "ver": template_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, with valid template field"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "template": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing template doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let template_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(template_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "template": {
+                        "id": template_doc.doc_id().unwrap(),
+                        "ver": template_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing parameters field in template doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let template_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "parameters": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    }
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(template_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "template": {
+                        "id": template_doc.doc_id().unwrap(),
+                        "ver": template_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with different parameters field in template doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let replied_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(replied_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "reply": {
+                        "id": replied_doc.doc_id().unwrap(),
+                        "ver": replied_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, with valid reply field"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "reply": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing reply doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let reply_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(reply_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "reply": {
+                        "id": reply_doc.doc_id().unwrap(),
+                        "ver": reply_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing parameters field in replied doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let reply_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "parameters": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    }
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(reply_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "reply": {
+                        "id": reply_doc.doc_id().unwrap(),
+                        "ver": reply_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with different parameters field in reply doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": {
+                        "id": ref_doc.doc_id().unwrap(),
+                        "ver": ref_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => true
+        ;
+        "valid reference to the valid parameters document, with valid ref field"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing ref doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": {
+                        "id": ref_doc.doc_id().unwrap(),
+                        "ver": ref_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with missing parameters field in ref doc"
+    )]
+    #[test_case(
+        |exp_param_types, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": exp_param_types,
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "parameters": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    }
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": {
+                        "id": ref_doc.doc_id().unwrap(),
+                        "ver": ref_doc.doc_ver().unwrap(),
+                    },
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the valid parameters document, with different parameters field in ref doc"
+    )]
+    #[test_case(
+        |_, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "type": UuidV4::new(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the invalid parameters document, wrong parameters type field value"
+    )]
+    #[test_case(
+        |_, provider| {
+            let parameter_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(parameter_doc.clone()).unwrap();
+
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "parameters": {
+                        "id": parameter_doc.doc_id().unwrap(),
+                        "ver": parameter_doc.doc_ver().unwrap(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "valid reference to the invalid parameters document, missing type field"
+    )]
+    #[test_case(
+        |_, _| {
+            Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "parameters": {
+                        "id": UuidV7::new(),
+                        "ver": UuidV7::new(),
+                    }
+                }))
+                .unwrap()
+                .build()
+        }
+        => false
+        ;
+        "reference to the not known document"
+    )]
     #[tokio::test]
-    async fn ref_rule_specified_test() {
+    async fn parameter_specified_test(
+        doc_gen: impl FnOnce(UuidV4, &mut TestCatalystSignedDocumentProvider) -> CatalystSignedDocument,
+    ) -> bool {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
         let exp_parameters_type = UuidV4::new();
 
-        let valid_category_doc_id = UuidV7::new();
-        let valid_category_doc_ver = UuidV7::new();
-        let another_type_category_doc_id = UuidV7::new();
-        let another_type_category_doc_ver = UuidV7::new();
-        let missing_type_category_doc_id = UuidV7::new();
-        let missing_type_category_doc_ver = UuidV7::new();
+        let doc = doc_gen(exp_parameters_type, &mut provider);
 
-        // prepare replied documents
-        {
-            let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": valid_category_doc_id.to_string(),
-                    "ver": valid_category_doc_ver.to_string(),
-                    "type": exp_parameters_type.to_string()
-                }))
-                .unwrap()
-                .build();
-            provider.add_document(ref_doc).unwrap();
-
-            // reply doc with other `type` field
-            let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": another_type_category_doc_id.to_string(),
-                    "ver": another_type_category_doc_ver.to_string(),
-                    "type": UuidV4::new().to_string()
-                }))
-                .unwrap()
-                .build();
-            provider.add_document(ref_doc).unwrap();
-
-            // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": missing_type_category_doc_id.to_string(),
-                    "ver": missing_type_category_doc_ver.to_string(),
-                }))
-                .unwrap()
-                .build();
-            provider.add_document(ref_doc).unwrap();
-        }
-
-        // all correct
-        let rule = ParametersRule::Specified {
+        let non_optional_res = ParametersRule::Specified {
             exp_parameters_type,
             optional: false,
-        };
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
-            }))
-            .unwrap()
-            .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
 
-        // all correct, `parameters` field is missing, but its optional
-        let rule = ParametersRule::Specified {
+        let optional_res = ParametersRule::Specified {
             exp_parameters_type,
             optional: true,
-        };
-        let doc = Builder::new().build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
+        }
+        .check(&doc, &provider)
+        .await
+        .unwrap();
 
-        // missing `parameters` field, but its required
-        let rule = ParametersRule::Specified {
-            exp_parameters_type,
-            optional: false,
-        };
-        let doc = Builder::new().build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // reference to the document with another `type` field
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
-            }))
-            .unwrap()
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing `type` field in the referenced document
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
-            }))
-            .unwrap()
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // cannot find a referenced document
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
-            }))
-            .unwrap()
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
+        assert_eq!(non_optional_res, optional_res);
+        non_optional_res
     }
 
     #[tokio::test]
