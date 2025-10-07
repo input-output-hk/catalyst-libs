@@ -105,8 +105,11 @@ impl ParametersRule {
 /// Parameter Link reference check
 #[allow(dead_code)]
 pub(crate) async fn link_check<Provider>(
-    ref_field: Option<&DocumentRef>, exp_parameters: &DocumentRef, field_name: &str,
-    provider: &Provider, report: &ProblemReport,
+    ref_field: Option<&DocumentRef>,
+    exp_parameters: &DocumentRef,
+    field_name: &str,
+    provider: &Provider,
+    report: &ProblemReport,
 ) -> anyhow::Result<bool>
 where
     Provider: CatalystSignedDocumentProvider,
@@ -717,7 +720,7 @@ mod tests {
     )]
     #[tokio::test]
     async fn parameter_specified_test(
-        doc_gen: impl FnOnce(UuidV4, &mut TestCatalystSignedDocumentProvider) -> CatalystSignedDocument,
+        doc_gen: impl FnOnce(UuidV4, &mut TestCatalystSignedDocumentProvider) -> CatalystSignedDocument
     ) -> bool {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
