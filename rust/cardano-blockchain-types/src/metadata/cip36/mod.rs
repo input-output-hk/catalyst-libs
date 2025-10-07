@@ -45,7 +45,10 @@ pub struct Cip36 {
 }
 
 impl fmt::Display for Cip36 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         write!(
             f,
             "Cip36 {{ network: {network}, slot: {slot:?}, txn_idx: {txn_idx:?}, is_catalyst_strict: {is_catalyst_strict}, key_registration: {key_registration:?}, registration_witness: {registration_witness:?}, validation: {{ signature: {is_valid_signature}, payment_address_network: {is_valid_payment_address_network}, voting_keys: {is_valid_voting_keys}, purpose: {is_valid_purpose} }}, err_report: {err_report} }}",
@@ -76,7 +79,10 @@ pub struct Cip36Error {
 }
 
 impl fmt::Display for Cip36Error {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        fmt: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         let report_json = serde_json::to_string(&self.report)
             .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"));
 
@@ -109,7 +115,9 @@ impl Cip36 {
     /// or if the CIP-36 key registration or registration witness metadata cannot be
     /// decoded.
     pub fn new(
-        block: &MultiEraBlock, txn_idx: TxnIndex, is_catalyst_strict: bool,
+        block: &MultiEraBlock,
+        txn_idx: TxnIndex,
+        is_catalyst_strict: bool,
     ) -> Result<Option<Cip36>, Cip36Error> {
         // Record of errors found during decoding and validation
         let mut err_report = ProblemReport::new("CIP36 Registration Decoding and Validation");
@@ -200,7 +208,8 @@ impl Cip36 {
     /// None if there is no CIP-36 registration found in the block.
     #[must_use]
     pub fn cip36_from_block(
-        block: &MultiEraBlock, is_catalyst_strict: bool,
+        block: &MultiEraBlock,
+        is_catalyst_strict: bool,
     ) -> Option<HashMap<TxnIndex, Result<Cip36, Cip36Error>>> {
         let mut cip36_map = HashMap::new();
 

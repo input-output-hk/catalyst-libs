@@ -7,7 +7,10 @@ use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, D
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.
 pub(crate) async fn validate_provided_doc<Provider, Validator>(
-    doc_ref: &DocumentRef, provider: &Provider, report: &ProblemReport, validator: Validator,
+    doc_ref: &DocumentRef,
+    provider: &Provider,
+    report: &ProblemReport,
+    validator: Validator,
 ) -> anyhow::Result<bool>
 where
     Provider: CatalystSignedDocumentProvider,

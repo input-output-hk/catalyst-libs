@@ -122,7 +122,10 @@ impl Statistics {
 
     /// Return the statistics formatted as JSON
     #[must_use]
-    pub fn as_json(&self, pretty: bool) -> String {
+    pub fn as_json(
+        &self,
+        pretty: bool,
+    ) -> String {
         let json = if pretty {
             serde_json::to_string_pretty(self)
         } else {
@@ -140,7 +143,10 @@ impl Statistics {
 
 /// Count the invalidly deserialized blocks
 #[allow(dead_code)]
-pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
+pub(crate) fn stats_invalid_block(
+    chain: Network,
+    immutable: bool,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -161,7 +167,10 @@ pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
 
 /// Count the validly deserialized blocks
 pub(crate) fn new_live_block(
-    chain: Network, total_live_blocks: u64, head_slot: Slot, tip_slot: Slot,
+    chain: Network,
+    total_live_blocks: u64,
+    head_slot: Slot,
+    tip_slot: Slot,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -182,7 +191,10 @@ pub(crate) fn new_live_block(
 
 /// Track the end of the current mithril update
 pub(crate) fn new_mithril_update(
-    chain: Network, mithril_tip: Slot, total_live_blocks: u64, tip_slot: Slot,
+    chain: Network,
+    mithril_tip: Slot,
+    total_live_blocks: u64,
+    tip_slot: Slot,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -225,7 +237,10 @@ pub(crate) fn backfill_started(chain: Network) {
 }
 
 /// When did we start the backfill.
-pub(crate) fn backfill_ended(chain: Network, backfill_size: u64) {
+pub(crate) fn backfill_ended(
+    chain: Network,
+    backfill_size: u64,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -242,7 +257,11 @@ pub(crate) fn backfill_ended(chain: Network, backfill_size: u64) {
 }
 
 /// Track statistics about connections to the cardano peer node.
-pub(crate) fn peer_connected(chain: Network, active: bool, peer_address: &str) {
+pub(crate) fn peer_connected(
+    chain: Network,
+    active: bool,
+    peer_address: &str,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -319,7 +338,10 @@ pub(crate) fn mithril_dl_started(chain: Network) {
 
 /// Record when DL finished, if it fails, set size to None, otherwise the size of the
 /// downloaded file.
-pub(crate) fn mithril_dl_finished(chain: Network, dl_size: Option<u64>) {
+pub(crate) fn mithril_dl_finished(
+    chain: Network,
+    dl_size: Option<u64>,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -365,8 +387,12 @@ pub(crate) fn mithril_extract_started(chain: Network) {
 /// Record when DL finished, if it fails, set size to None, otherwise the size of the
 /// downloaded file.
 pub(crate) fn mithril_extract_finished(
-    chain: Network, extract_size: Option<u64>, deduplicated_size: u64, deduplicated_files: u64,
-    changed_files: u64, new_files: u64,
+    chain: Network,
+    extract_size: Option<u64>,
+    deduplicated_size: u64,
+    deduplicated_files: u64,
+    changed_files: u64,
+    new_files: u64,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -404,7 +430,10 @@ pub(crate) enum MithrilValidationState {
 }
 
 /// Record when Mithril Cert validation starts, ends or fails).
-pub(crate) fn mithril_validation_state(chain: Network, mithril_state: MithrilValidationState) {
+pub(crate) fn mithril_validation_state(
+    chain: Network,
+    mithril_state: MithrilValidationState,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -442,7 +471,10 @@ pub(crate) enum MithrilSyncFailures {
 }
 
 /// Record when Mithril Cert validation starts, ends or fails).
-pub(crate) fn mithril_sync_failure(chain: Network, failure: MithrilSyncFailures) {
+pub(crate) fn mithril_sync_failure(
+    chain: Network,
+    failure: MithrilSyncFailures,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -488,7 +520,11 @@ pub(crate) fn mithril_sync_failure(chain: Network, failure: MithrilSyncFailures)
 
 /// Initialize a thread statistic with the given name.
 /// If it is service thread, mark it as such.
-pub(crate) fn start_thread(chain: Network, name: &str, is_service: bool) {
+pub(crate) fn start_thread(
+    chain: Network,
+    name: &str,
+    is_service: bool,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -506,7 +542,10 @@ pub(crate) fn start_thread(chain: Network, name: &str, is_service: bool) {
 }
 
 /// Stop the thread with the given name.
-pub(crate) fn stop_thread(chain: Network, name: &str) {
+pub(crate) fn stop_thread(
+    chain: Network,
+    name: &str,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -524,7 +563,10 @@ pub(crate) fn stop_thread(chain: Network, name: &str) {
 }
 
 /// Resume the thread with the given name.
-pub(crate) fn resume_thread(chain: Network, name: &str) {
+pub(crate) fn resume_thread(
+    chain: Network,
+    name: &str,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -542,7 +584,10 @@ pub(crate) fn resume_thread(chain: Network, name: &str) {
 }
 
 /// Pause the thread with the given name.
-pub(crate) fn pause_thread(chain: Network, name: &str) {
+pub(crate) fn pause_thread(
+    chain: Network,
+    name: &str,
+) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
         return;
@@ -561,7 +606,10 @@ pub(crate) fn pause_thread(chain: Network, name: &str) {
 
 /// Get the thread statistic with the given name.
 #[allow(dead_code)]
-pub fn thread_stat(chain: Network, name: &str) -> Option<ThreadStat> {
+pub fn thread_stat(
+    chain: Network,
+    name: &str,
+) -> Option<ThreadStat> {
     // This will actually always succeed.
     let stats = lookup_stats(chain)?;
 
