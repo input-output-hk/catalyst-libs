@@ -15,7 +15,7 @@ pallas = { version = "0.33.0" }
 pallas-hardano = { version = "0.33.0" }
 pallas-crypto = { version = "0.33.0" }
 
-mithril-client = { version = "0.12.2", default-features = false, features = [
+mithril-client = { version = "=0.12.2", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
