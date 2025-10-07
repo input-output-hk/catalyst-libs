@@ -1,11 +1,12 @@
 //! `parameters` rule type impl.
 
-use catalyst_types::uuid::UuidV4;
+use catalyst_types::{problem_report::ProblemReport, uuid::UuidV4};
+use futures::FutureExt;
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
     providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
-    CatalystSignedDocument,
+    CatalystSignedDocument, DocumentRef,
 };
 
 /// `parameters` field validation rule
@@ -34,7 +35,7 @@ impl ParametersRule {
             optional,
         } = self
         {
-            if let Some(parameters) = doc.doc_meta().parameters() {
+            if let Some(ref parameters) = doc.doc_meta().parameters() {
                 let parameters_validator = |replied_doc: CatalystSignedDocument| {
                     referenced_doc_check(
                         &replied_doc,
@@ -43,13 +44,39 @@ impl ParametersRule {
                         doc.report(),
                     )
                 };
-                return validate_provided_doc(
-                    &parameters,
+                let parameters_check =
+                    validate_provided_doc(parameters, provider, doc.report(), parameters_validator)
+                        .boxed();
+
+                let template = doc.doc_meta().template();
+                let template_link_check = link_check(
+                    template.as_ref(),
+                    parameters,
+                    "template",
                     provider,
                     doc.report(),
-                    parameters_validator,
                 )
-                .await;
+                .boxed();
+                let doc_ref = doc.doc_meta().doc_ref();
+                let ref_link_check =
+                    link_check(doc_ref.as_ref(), parameters, "ref", provider, doc.report()).boxed();
+                let reply = doc.doc_meta().reply();
+                let reply_link_check =
+                    link_check(reply.as_ref(), parameters, "reply", provider, doc.report()).boxed();
+
+                let checks = [
+                    parameters_check,
+                    template_link_check,
+                    ref_link_check,
+                    reply_link_check,
+                ];
+                let res = futures::future::join_all(checks)
+                    .await
+                    .into_iter()
+                    .collect::<anyhow::Result<Vec<_>>>()?
+                    .iter()
+                    .all(|res| *res);
+                return Ok(res);
             } else if !optional {
                 doc.report()
                     .missing_field("parameters", "Document must have a parameters field");
@@ -68,6 +95,53 @@ impl ParametersRule {
         }
 
         Ok(true)
+    }
+}
+
+/// Parameter Link reference check
+#[allow(dead_code)]
+pub(crate) async fn link_check<Provider>(
+    ref_field: Option<&DocumentRef>, exp_parameters: &DocumentRef, field_name: &str,
+    provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where
+    Provider: CatalystSignedDocumentProvider,
+{
+    let Some(ref_field) = ref_field else {
+        return Ok(true);
+    };
+
+    if let Some(ref ref_doc) = provider.try_get_doc(ref_field).await? {
+        let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
+            report.missing_field(
+                    "parameters",
+                    &format!(
+                        "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
+                    ),
+                );
+            return Ok(false);
+        };
+
+        if exp_parameters != &ref_doc_parameters {
+            report.invalid_value(
+                    "parameters",
+                    &format!("Reference doc param: {ref_doc_parameters}",),
+                    &format!("Doc param: {exp_parameters}"),
+                    &format!(
+                        "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
+                    ),
+                );
+
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    } else {
+        report.functional_validation(
+            &format!("Cannot retrieve a document {ref_field}"),
+            &format!("Referenced document link validation for the `{field_name}` field"),
+        );
+        Ok(false)
     }
 }
 
