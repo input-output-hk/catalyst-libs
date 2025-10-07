@@ -91,6 +91,7 @@ mod tests {
 
     use super::*;
 
+    #[allow(clippy::explicit_deref_methods)]
     #[proptest]
     fn encrypted_vote_to_bytes_from_bytes_test(
         #[strategy(0..5usize)] _size: usize,

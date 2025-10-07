@@ -125,7 +125,7 @@ pub fn validate_stake_public_key(
     let context = "Cip509 stake public key validation";
 
     let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
-    let witness = match TxnWitness::new(&[transaction.clone()]) {
+    let witness = match TxnWitness::new(std::slice::from_ref(&transaction)) {
         Ok(w) => w,
         Err(e) => {
             report.other(&format!("Failed to create TxWitness: {e:?}"), context);

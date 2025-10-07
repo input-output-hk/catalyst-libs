@@ -364,7 +364,7 @@ fn time_to_string(time: u64) -> anyhow::Result<String> {
     // Attempt to convert the timestamp and handle errors if they occur
     let timestamp: i64 = time
         .try_into()
-        .map_err(|e| anyhow::anyhow!("Failed to convert time: {:?}", e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to convert time: {e:?}"))?;
 
     // Convert the timestamp to a DateTime and handle any potential errors
     let datetime = DateTime::from_timestamp(timestamp, 0)

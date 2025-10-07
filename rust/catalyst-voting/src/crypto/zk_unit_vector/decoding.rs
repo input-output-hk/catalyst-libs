@@ -160,6 +160,7 @@ mod tests {
 
     use super::*;
 
+    #[allow(clippy::explicit_deref_methods)]
     #[proptest]
     fn proof_to_bytes_from_bytes_test(
         #[strategy(0..5usize)] _size: usize,

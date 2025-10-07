@@ -298,6 +298,7 @@ mod tests {
         ones == 1 && zeros == vector.len() - 1
     }
 
+    #[allow(clippy::explicit_deref_methods)]
     #[proptest(cases = 10)]
     fn zk_unit_vector_test(
         secret_key: Scalar,

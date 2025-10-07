@@ -110,6 +110,7 @@ mod tests {
 
     // Starting `max_log_value` from 2 allows to eliminate possible `Invalid use of empty
     // range 1..1` for `log` strategy
+    #[allow(clippy::explicit_deref_methods)]
     #[proptest]
     fn baby_step_giant_step_test(
         #[strategy(2..10000u64)] max_log_value: u64,

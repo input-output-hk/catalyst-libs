@@ -7,7 +7,7 @@ mod common;
 
 // not going to fix this tests for this feature branch.
 // its going to be covered as `cat-gateway` integration tests.
-#[allow(dead_code)]
+#[allow(dead_code, clippy::unwrap_used)]
 async fn test_valid_comment_doc() {
     let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
@@ -47,7 +47,7 @@ async fn test_valid_comment_doc() {
 
 // not going to fix this tests for this feature branch.
 // its going to be covered as `cat-gateway` integration tests.
-#[allow(dead_code)]
+#[allow(dead_code, clippy::unwrap_used)]
 async fn test_valid_comment_doc_with_reply() {
     let empty_json = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
@@ -112,7 +112,7 @@ async fn test_valid_comment_doc_with_reply() {
 
 // not going to fix this tests for this feature branch.
 // its going to be covered as `cat-gateway` integration tests.
-#[allow(dead_code)]
+#[allow(dead_code, clippy::unwrap_used)]
 async fn test_invalid_comment_doc() {
     let (proposal_doc, ..) =
         common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();

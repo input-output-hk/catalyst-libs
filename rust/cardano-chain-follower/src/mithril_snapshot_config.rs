@@ -247,7 +247,7 @@ impl MithrilSnapshotConfig {
 
         let Ok(relative_file) = tmp_file.strip_prefix(&tmp_path) else {
             error!("Failed to get relative path of file.");
-            bail!("Failed to strip prefix: {tmp_path:?}");
+            bail!("Failed to strip prefix: {}", tmp_file.to_string_lossy());
         };
 
         // IF we make it here, the files are identical, so we can de-dup them safely.
@@ -259,7 +259,7 @@ impl MithrilSnapshotConfig {
                     tmp_file.to_string_lossy(),
                     error
                 );
-                bail!("Failed to remove tmp file: {tmp_file:?}");
+                bail!("Failed to remove tmp file: {}", tmp_file.to_string_lossy());
             }
         }
 
@@ -268,7 +268,11 @@ impl MithrilSnapshotConfig {
         // Hardlink the src file to the tmp file.
         if let Some(parent) = tmp_file.parent() {
             if let Err(error) = std::fs::create_dir_all(parent) {
-                error!("Error creating parent dir {parent:?} for tmp file {tmp_file:?}: {error}");
+                error!(
+                    "Error creating parent dir {} for tmp file {}: {error}",
+                    parent.to_string_lossy(),
+                    tmp_file.to_string_lossy()
+                );
             }
         }
         if let Err(error) = std::fs::hard_link(src_file, tmp_file) {
@@ -278,7 +282,7 @@ impl MithrilSnapshotConfig {
                 tmp_file.to_string_lossy(),
                 error
             );
-            bail!("Failed to link src file: {src_file:?}");
+            bail!("Failed to link src file: {}", src_file.to_string_lossy());
         }
 
         // And if we made it here, file was successfully de-duped.  YAY.
