@@ -156,11 +156,12 @@ impl ResponseRandomness {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::explicit_deref_methods)]
+
     use test_strategy::proptest;
 
     use super::*;
 
-    #[allow(clippy::explicit_deref_methods)]
     #[proptest]
     fn proof_to_bytes_from_bytes_test(
         #[strategy(0..5usize)] _size: usize,

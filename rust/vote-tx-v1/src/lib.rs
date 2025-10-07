@@ -327,6 +327,8 @@ impl VotePayload {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::explicit_deref_methods)]
+
     use catalyst_voting::{
         crypto::ed25519::PrivateKey, vote_protocol::committee::ElectionSecretKey,
     };

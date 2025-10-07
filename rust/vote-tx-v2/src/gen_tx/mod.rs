@@ -126,6 +126,8 @@ fn cose_protected_header() -> coset::Header {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::explicit_deref_methods)]
+
     use proptest::{prelude::any_with, sample::size_range};
     use proptest_derive::Arbitrary;
     use test_strategy::proptest;
@@ -157,6 +159,7 @@ mod tests {
         }
     }
 
+    #[allow(clippy::explicit_deref_methods)]
     #[proptest]
     fn generalized_tx_from_bytes_to_bytes_test(
         vote_type: Vec<u8>,

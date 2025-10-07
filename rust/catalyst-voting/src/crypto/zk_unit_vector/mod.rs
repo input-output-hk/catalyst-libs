@@ -286,6 +286,8 @@ mod arbitrary_impl {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::explicit_deref_methods)]
+
     use proptest::sample::size_range;
     use rand_core::OsRng;
     use test_strategy::proptest;
