@@ -88,7 +88,10 @@ impl MithrilSnapshotConfig {
     }
 
     /// Set a custom downloader configuration.
-    pub fn with_dl_config(mut self, config: DlConfig) -> Self {
+    pub fn with_dl_config(
+        mut self,
+        config: DlConfig,
+    ) -> Self {
         self.dl_config = Some(config);
         self
     }
@@ -135,7 +138,10 @@ impl MithrilSnapshotConfig {
 
     /// Activate the tmp mithril path to a numbered snapshot path.
     /// And then remove any left over files in download or the tmp path, or old snapshots.
-    pub(crate) async fn activate(&self, snapshot_number: u64) -> io::Result<PathBuf> {
+    pub(crate) async fn activate(
+        &self,
+        snapshot_number: u64,
+    ) -> io::Result<PathBuf> {
         let new_path = self.mithril_path(snapshot_number);
         let latest_id = latest_mithril_snapshot_id(self.chain);
 
@@ -231,7 +237,9 @@ impl MithrilSnapshotConfig {
     ///
     /// This does not check if they SHOULD be de-duped, only de-dupes the files specified.
     pub(crate) fn dedup_tmp(
-        &self, tmp_file: &Path, latest_snapshot: &SnapshotData,
+        &self,
+        tmp_file: &Path,
+        latest_snapshot: &SnapshotData,
     ) -> anyhow::Result<()> {
         // Get the matching src file in the latest mithril snapshot to compare against.
         let snapshot_path = latest_snapshot.id().as_ref();
@@ -239,7 +247,7 @@ impl MithrilSnapshotConfig {
 
         let Ok(relative_file) = tmp_file.strip_prefix(&tmp_path) else {
             error!("Failed to get relative path of file.");
-            bail!("Failed to strip prefix: {tmp_path:?}");
+            bail!("Failed to strip prefix: {}", tmp_file.to_string_lossy());
         };
 
         // IF we make it here, the files are identical, so we can de-dup them safely.
@@ -251,7 +259,7 @@ impl MithrilSnapshotConfig {
                     tmp_file.to_string_lossy(),
                     error
                 );
-                bail!("Failed to remove tmp file: {tmp_file:?}");
+                bail!("Failed to remove tmp file: {}", tmp_file.to_string_lossy());
             }
         }
 
@@ -260,7 +268,11 @@ impl MithrilSnapshotConfig {
         // Hardlink the src file to the tmp file.
         if let Some(parent) = tmp_file.parent() {
             if let Err(error) = std::fs::create_dir_all(parent) {
-                error!("Error creating parent dir {parent:?} for tmp file {tmp_file:?}: {error}");
+                error!(
+                    "Error creating parent dir {} for tmp file {}: {error}",
+                    parent.to_string_lossy(),
+                    tmp_file.to_string_lossy()
+                );
             }
         }
         if let Err(error) = std::fs::hard_link(src_file, tmp_file) {
@@ -270,7 +282,7 @@ impl MithrilSnapshotConfig {
                 tmp_file.to_string_lossy(),
                 error
             );
-            bail!("Failed to link src file: {src_file:?}");
+            bail!("Failed to link src file: {}", src_file.to_string_lossy());
         }
 
         // And if we made it here, file was successfully de-duped.  YAY.
@@ -290,7 +302,10 @@ impl MithrilSnapshotConfig {
     /// Returns the path to the Numbered Snapshot Data.
     /// Will use a path relative to mithril data path.
     #[must_use]
-    pub(crate) fn mithril_path(&self, snapshot_number: u64) -> PathBuf {
+    pub(crate) fn mithril_path(
+        &self,
+        snapshot_number: u64,
+    ) -> PathBuf {
         let mut snapshot_path = self.path.clone();
         snapshot_path.push(snapshot_number.to_string());
         snapshot_path
@@ -392,12 +407,9 @@ impl MithrilSnapshotConfig {
         );
 
         // Start the Mithril Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
-            None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
-                return Err(Error::Internal); // Should not get here.
-            },
-            Some(entry) => entry,
+        let Some(lock_entry) = SYNC_JOIN_HANDLE_MAP.get(&self.chain) else {
+            error!("Join Map improperly initialized: Missing {}!!", self.chain);
+            return Err(Error::Internal); // Should not get here.
         };
         let mut locked_handle = lock_entry.value().lock().await;
 
@@ -448,9 +460,8 @@ fn check_writable(path: &Path) -> bool {
     }
 
     // Can't read the directory for any reason, so can't write to the directory.
-    let path_iterator = match path.read_dir() {
-        Err(_) => return false,
-        Ok(entries) => entries,
+    let Ok(path_iterator) = path.read_dir() else {
+        return false;
     };
 
     // Recursively check the contents of the directory

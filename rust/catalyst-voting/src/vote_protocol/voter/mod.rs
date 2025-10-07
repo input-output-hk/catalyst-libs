@@ -36,14 +36,20 @@ pub struct EncryptionRandomness(Vec<Scalar>);
 
 impl EncryptionRandomness {
     /// Randomly generate the `EncryptionRandomness`.
-    fn random<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
+    fn random<R: CryptoRngCore>(
+        rng: &mut R,
+        voting_options: usize,
+    ) -> Self {
         Self((0..voting_options).map(|_| Scalar::random(rng)).collect())
     }
 }
 
 impl EncryptedVote {
     /// Get the ciphertext to the corresponding `voting_option`.
-    pub(crate) fn get_ciphertext_for_choice(&self, voting_option: usize) -> Option<&Ciphertext> {
+    pub(crate) fn get_ciphertext_for_choice(
+        &self,
+        voting_option: usize,
+    ) -> Option<&Ciphertext> {
         self.0.get(voting_option)
     }
 }
@@ -55,7 +61,10 @@ impl Vote {
     /// # Errors
     ///   - Invalid voting choice, the value of `choice`, should be less than the number
     ///     of `voting_options`.
-    pub fn new(choice: usize, voting_options: usize) -> anyhow::Result<Vote> {
+    pub fn new(
+        choice: usize,
+        voting_options: usize,
+    ) -> anyhow::Result<Vote> {
         ensure!(choice < voting_options,"Invalid voting choice, the value of choice: {choice}, should be less than the number of voting options: {voting_options}." );
 
         Ok(Vote {
@@ -91,7 +100,9 @@ impl Vote {
 ///   - `EncryptedVoteError`
 #[must_use]
 pub fn encrypt_vote<R: CryptoRngCore>(
-    vote: &Vote, public_key: &ElectionPublicKey, rng: &mut R,
+    vote: &Vote,
+    public_key: &ElectionPublicKey,
+    rng: &mut R,
 ) -> (EncryptedVote, EncryptionRandomness) {
     let randomness = EncryptionRandomness::random(rng, vote.voting_options);
 
@@ -109,7 +120,8 @@ pub fn encrypt_vote<R: CryptoRngCore>(
 /// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#vote-encryption)
 #[must_use]
 pub fn encrypt_vote_with_default_rng(
-    vote: &Vote, public_key: &ElectionPublicKey,
+    vote: &Vote,
+    public_key: &ElectionPublicKey,
 ) -> (EncryptedVote, EncryptionRandomness) {
     encrypt_vote(vote, public_key, &mut default_rng())
 }
@@ -121,7 +133,10 @@ pub fn encrypt_vote_with_default_rng(
 ///
 /// # Errors
 ///   - Invalid encrypted vote, not a valid unit vector.
-pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> anyhow::Result<Vote> {
+pub fn decrypt_vote(
+    vote: &EncryptedVote,
+    secret_key: &ElectionSecretKey,
+) -> anyhow::Result<Vote> {
     // Assuming that the provided encrypted vote is a correctly encoded unit vector,
     // the maximum log value is `1`.
     let setup = BabyStepGiantStep::new(1, None)?;

@@ -17,7 +17,9 @@ impl Content {
     /// verifies a Document's content, that it is correctly encoded and it corresponds and
     /// parsed to the specified type
     pub(crate) fn from_encoded(
-        mut data: Vec<u8>, content_encoding: Option<ContentEncoding>, report: &ProblemReport,
+        mut data: Vec<u8>,
+        content_encoding: Option<ContentEncoding>,
+        report: &ProblemReport,
     ) -> Self {
         if let Some(content_encoding) = content_encoding {
             if let Ok(decoded_data) = content_encoding.decode(&data) {
@@ -57,7 +59,8 @@ impl Content {
     ///  - Missing Document content
     ///  - Failed to encode content.
     pub(crate) fn encoded_bytes(
-        &self, content_encoding: Option<ContentEncoding>,
+        &self,
+        content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Vec<u8>> {
         let content = self.decoded_bytes()?;
         if let Some(content_encoding) = content_encoding {

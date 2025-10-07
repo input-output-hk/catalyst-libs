@@ -91,7 +91,8 @@ impl ExtraFields {
 
     /// Fill the COSE header `ExtraFields` data into the header builder.
     pub(super) fn fill_cose_header_fields(
-        &self, mut builder: coset::HeaderBuilder,
+        &self,
+        mut builder: coset::HeaderBuilder,
     ) -> anyhow::Result<coset::HeaderBuilder> {
         if let Some(doc_ref) = &self.doc_ref {
             builder = builder.text_value(REF_KEY.to_string(), Value::try_from(*doc_ref)?);
@@ -123,7 +124,8 @@ impl ExtraFields {
 
     /// Converting COSE Protected Header to `ExtraFields`.
     pub(crate) fn from_protected_header(
-        protected: &ProtectedHeader, error_report: &ProblemReport,
+        protected: &ProtectedHeader,
+        error_report: &ProblemReport,
     ) -> Self {
         /// Context for problem report messages during decoding from COSE protected
         /// header.

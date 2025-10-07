@@ -98,7 +98,10 @@ impl Point {
     /// let point = Point::new(slot.into(), hash.into());
     /// ```
     #[must_use]
-    pub fn new(slot: Slot, hash: Blake2b256Hash) -> Self {
+    pub fn new(
+        slot: Slot,
+        hash: Blake2b256Hash,
+    ) -> Self {
         Self(pallas::network::miniprotocols::Point::Specific(
             slot.into(),
             hash.into(),
@@ -328,7 +331,10 @@ impl Point {
     /// assert!(!point3.strict_eq(&point4));
     /// ```
     #[must_use]
-    pub fn strict_eq(&self, b: &Self) -> bool {
+    pub fn strict_eq(
+        &self,
+        b: &Self,
+    ) -> bool {
         self.0 == b.0
     }
 }
@@ -338,7 +344,10 @@ impl PartialEq<Option<Blake2b256Hash>> for Point {
     /// It returns `true` if the hashes match and `false` otherwise. If the
     /// provided hash is `None`, the function checks if the `Point` has an
     /// empty hash.
-    fn eq(&self, other: &Option<Blake2b256Hash>) -> bool {
+    fn eq(
+        &self,
+        other: &Option<Blake2b256Hash>,
+    ) -> bool {
         match other {
             Some(cmp_hash) => {
                 match self.0 {
@@ -364,13 +373,19 @@ impl PartialEq<Option<Hash<32>>> for Point {
     /// It returns `true` if the hashes match and `false` otherwise. If the
     /// provided hash is `None`, the function checks if the `Point` has an
     /// empty hash.
-    fn eq(&self, other: &Option<Hash<32>>) -> bool {
+    fn eq(
+        &self,
+        other: &Option<Hash<32>>,
+    ) -> bool {
         *self == other.map(Blake2b256Hash::from)
     }
 }
 
 impl Display for Point {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::result::Result<(), std::fmt::Error> {
         if *self == Self::ORIGIN {
             return write!(f, "Point @ Origin");
         } else if *self == Self::TIP {
@@ -409,7 +424,10 @@ impl From<Point> for pallas::network::miniprotocols::Point {
 impl PartialOrd for Point {
     /// Implements a partial ordering based on the slot number
     /// of two `Point` instances. It only checks the slot number for ordering.
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(
+        &self,
+        other: &Self,
+    ) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -417,20 +435,29 @@ impl PartialOrd for Point {
 impl Ord for Point {
     /// Implements a total ordering based on the slot number
     /// of two `Point` instances. It only checks the slot number for ordering.
-    fn cmp(&self, other: &Self) -> Ordering {
+    fn cmp(
+        &self,
+        other: &Self,
+    ) -> Ordering {
         cmp_point(&self.0, &other.0)
     }
 }
 
 impl PartialEq<u64> for Point {
-    fn eq(&self, other: &u64) -> bool {
+    fn eq(
+        &self,
+        other: &u64,
+    ) -> bool {
         self.0.slot_or_default() == *other
     }
 }
 
 impl PartialOrd<u64> for Point {
     /// Allows to compare a `Point` against a `u64`
-    fn partial_cmp(&self, other: &u64) -> Option<Ordering> {
+    fn partial_cmp(
+        &self,
+        other: &u64,
+    ) -> Option<Ordering> {
         self.0.slot_or_default().partial_cmp(other)
     }
 }
@@ -439,7 +466,10 @@ impl PartialEq<Option<Point>> for Point {
     /// Allows for direct comparison between a `Point` and an `Option<Point>`,
     /// returning `true` only if the `Option` contains a `Point` that is equal to the
     /// `self` instance.
-    fn eq(&self, other: &Option<Point>) -> bool {
+    fn eq(
+        &self,
+        other: &Option<Point>,
+    ) -> bool {
         if let Some(other) = other {
             *self == *other
         } else {
@@ -451,7 +481,10 @@ impl PartialEq<Option<Point>> for Point {
 impl PartialOrd<Option<Point>> for Point {
     /// Allows comparing a `Point` with an `Option<Point>`, where a `Point` is always
     /// considered greater than `None`.
-    fn partial_cmp(&self, other: &Option<Point>) -> Option<Ordering> {
+    fn partial_cmp(
+        &self,
+        other: &Option<Point>,
+    ) -> Option<Ordering> {
         if let Some(other) = other {
             self.partial_cmp(other)
         } else {
@@ -469,7 +502,8 @@ impl Default for Point {
 
 /// Compare Points, because Pallas does not impl `Ord` for `Point`.
 fn cmp_point(
-    a: &pallas::network::miniprotocols::Point, b: &pallas::network::miniprotocols::Point,
+    a: &pallas::network::miniprotocols::Point,
+    b: &pallas::network::miniprotocols::Point,
 ) -> Ordering {
     match a {
         pallas::network::miniprotocols::Point::Origin => {

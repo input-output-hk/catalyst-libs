@@ -23,7 +23,10 @@ pub enum C509Cert {
 }
 
 impl Decode<'_, ProblemReport> for C509Cert {
-    fn decode(d: &mut Decoder, _report: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        _report: &mut ProblemReport,
+    ) -> Result<Self, decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "C509Cert")?;

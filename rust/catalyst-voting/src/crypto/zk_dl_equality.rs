@@ -23,8 +23,12 @@ pub struct DleqProof(Scalar, Scalar);
 
 /// Generates a DLEQ proof.
 pub fn generate_dleq_proof(
-    base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement, point_2: &GroupElement,
-    dlog: &Scalar, randomness: &Scalar,
+    base_1: &GroupElement,
+    base_2: &GroupElement,
+    point_1: &GroupElement,
+    point_2: &GroupElement,
+    dlog: &Scalar,
+    randomness: &Scalar,
 ) -> DleqProof {
     let a_1 = base_1 * randomness;
     let a_2 = base_2 * randomness;
@@ -38,7 +42,10 @@ pub fn generate_dleq_proof(
 /// Verify a DLEQ proof.
 #[must_use]
 pub fn verify_dleq_proof(
-    proof: &DleqProof, base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement,
+    proof: &DleqProof,
+    base_1: &GroupElement,
+    base_2: &GroupElement,
+    point_1: &GroupElement,
     point_2: &GroupElement,
 ) -> bool {
     let a_1 = &(base_1 * &proof.1) - &(point_1 * &proof.0);
@@ -51,8 +58,12 @@ pub fn verify_dleq_proof(
 /// Calculates the challenge value.
 /// Its a hash value represented as `Scalar` of all provided elements.
 fn calculate_challenge(
-    base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement, point_2: &GroupElement,
-    a_1: &GroupElement, a_2: &GroupElement,
+    base_1: &GroupElement,
+    base_2: &GroupElement,
+    point_1: &GroupElement,
+    point_2: &GroupElement,
+    a_1: &GroupElement,
+    a_2: &GroupElement,
 ) -> Scalar {
     let blake2b_hasher = Blake2b512Hasher::new()
         .chain_update(base_1.to_bytes())
@@ -74,7 +85,13 @@ mod tests {
     use super::*;
 
     #[proptest(cases = 10)]
-    fn zk_dleq_test(e1: Scalar, e2: Scalar, dlog1: Scalar, dlog2: Scalar, randomness: Scalar) {
+    fn zk_dleq_test(
+        e1: Scalar,
+        e2: Scalar,
+        dlog1: Scalar,
+        dlog2: Scalar,
+        randomness: Scalar,
+    ) {
         let base_1 = GroupElement::GENERATOR.mul(&e1);
         let base_2 = GroupElement::GENERATOR.mul(&e2);
 

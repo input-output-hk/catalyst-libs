@@ -29,7 +29,10 @@ pub struct OtherNameHardwareModuleName {
 impl OtherNameHardwareModuleName {
     /// Create a new instance of `OtherNameHardwareModuleName`.
     #[must_use]
-    pub fn new(hw_type: Oid<'static>, hw_serial_num: Vec<u8>) -> Self {
+    pub fn new(
+        hw_type: Oid<'static>,
+        hw_serial_num: Vec<u8>,
+    ) -> Self {
         Self {
             hw_type: C509oid::new(hw_type),
             hw_serial_num,
@@ -51,7 +54,9 @@ impl OtherNameHardwareModuleName {
 
 impl Encode<()> for OtherNameHardwareModuleName {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         encode_array_len(e, "OtherNameHardwareModule", 2)?;
         self.hw_type.encode(e, ctx)?;
@@ -65,7 +70,10 @@ impl Encode<()> for OtherNameHardwareModuleName {
 }
 
 impl<'a> Decode<'a, ()> for OtherNameHardwareModuleName {
-    fn decode(d: &mut Decoder<'a>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'a>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         decode_array_len(d, "OtherNameHardwareModule")?;
         let hw_type = C509oid::decode(d, ctx)?;
         let hw_serial_num = decode_bytes(d, "OtherNameHardwareModule serial number")?;

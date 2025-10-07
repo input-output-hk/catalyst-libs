@@ -11,7 +11,9 @@ pub(crate) fn extract_key_hash(key: &[u8]) -> Option<VKeyHash> {
 
 /// Compare the given public key bytes with the transaction witness set.
 pub(crate) fn compare_key_hash(
-    pk_addrs: &[VKeyHash], witness: &TxnWitness, txn_idx: TxnIndex,
+    pk_addrs: &[VKeyHash],
+    witness: &TxnWitness,
+    txn_idx: TxnIndex,
 ) -> anyhow::Result<()> {
     if pk_addrs.is_empty() {
         bail!("No public key addresses provided");
@@ -20,10 +22,7 @@ pub(crate) fn compare_key_hash(
     pk_addrs.iter().try_for_each(|pk_addr| {
         // Key hash not found in the transaction witness set
         if !witness.check_witness_in_tx(pk_addr, txn_idx) {
-            bail!(
-                "Public key hash not found in transaction witness set given {:?}",
-                pk_addr
-            );
+            bail!("Public key hash not found in transaction witness set given {pk_addr:?}");
         }
 
         Ok(())
