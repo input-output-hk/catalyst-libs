@@ -129,7 +129,9 @@ where
             return Ok(false);
         };
 
-        if exp_parameters != &ref_doc_parameters {
+        if exp_parameters == &ref_doc_parameters {
+            Ok(true)
+        } else {
             report.invalid_value(
                     "parameters",
                     &format!("Reference doc param: {ref_doc_parameters}",),
@@ -140,8 +142,6 @@ where
                 );
 
             Ok(false)
-        } else {
-            Ok(true)
         }
     } else {
         report.functional_validation(
