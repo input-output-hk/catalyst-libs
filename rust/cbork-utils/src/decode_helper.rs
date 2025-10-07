@@ -8,9 +8,13 @@ use minicbor::{data::Tag, decode, Decoder};
 ///
 /// Error if the decoding fails.
 pub fn decode_helper<'a, T, C>(
-    d: &mut Decoder<'a>, from: &str, context: &mut C,
+    d: &mut Decoder<'a>,
+    from: &str,
+    context: &mut C,
 ) -> Result<T, decode::Error>
-where T: minicbor::Decode<'a, C> {
+where
+    T: minicbor::Decode<'a, C>,
+{
     T::decode(d, context).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode {:?} in {from}: {e}",
@@ -24,7 +28,10 @@ where T: minicbor::Decode<'a, C> {
 /// # Errors
 ///
 /// Error if the decoding fails.
-pub fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
+pub fn decode_bytes(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<Vec<u8>, decode::Error> {
     d.bytes().map(<[u8]>::to_vec).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode bytes in {from}:
@@ -38,7 +45,10 @@ pub fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Erro
 /// # Errors
 ///
 /// Error if the decoding fails.
-pub fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
+pub fn decode_array_len(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<u64, decode::Error> {
     d.array()
         .map_err(|e| {
             decode::Error::message(format!(
@@ -56,7 +66,10 @@ pub fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Erro
 /// # Errors
 ///
 /// Error if the decoding fails.
-pub fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
+pub fn decode_map_len(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<u64, decode::Error> {
     d.map()
         .map_err(|e| decode::Error::message(format!("Failed to decode map in {from}: {e}")))?
         .ok_or(decode::Error::message(format!(
@@ -69,7 +82,10 @@ pub fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error>
 /// # Errors
 ///
 /// Error if the decoding fails.
-pub fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
+pub fn decode_tag(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<Tag, decode::Error> {
     d.tag()
         .map_err(|e| decode::Error::message(format!("Failed to decode tag in {from}: {e}")))
 }
@@ -79,7 +95,10 @@ pub fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
 /// # Errors
 ///
 /// Error if the decoding fails.
-pub fn decode_any<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decode::Error> {
+pub fn decode_any<'d>(
+    d: &mut Decoder<'d>,
+    from: &str,
+) -> Result<&'d [u8], decode::Error> {
     let start = d.position();
     d.skip()?;
     let end = d.position();

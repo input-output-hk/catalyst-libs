@@ -142,7 +142,9 @@ const SELF_SIGNED_INT: u8 = 2;
 
 /// A function to generate C509 certificate.
 fn generate(
-    file: &PathBuf, output: Option<PathBuf>, private_key: Option<&PrivateKey>,
+    file: &PathBuf,
+    output: Option<PathBuf>,
+    private_key: Option<&PrivateKey>,
     key_type: Option<String>,
 ) -> anyhow::Result<()> {
     let data = fs::read_to_string(file)?;
@@ -209,7 +211,10 @@ fn generate(
 }
 
 /// Write a data to a file given an output path.
-fn write_to_output_file(output: PathBuf, data: &[u8]) -> anyhow::Result<()> {
+fn write_to_output_file(
+    output: PathBuf,
+    data: &[u8],
+) -> anyhow::Result<()> {
     let mut file = File::create(output).map_err(|e| anyhow::anyhow!(e))?;
     file.write_all(data).map_err(|e| anyhow::anyhow!(e))?;
     Ok(())
@@ -219,7 +224,9 @@ fn write_to_output_file(output: PathBuf, data: &[u8]) -> anyhow::Result<()> {
 /// If self-signed is true, issuer is the same as subject.
 /// Otherwise, issuer must be present.
 fn determine_issuer(
-    self_signed: bool, issuer: Option<Vec<Attribute>>, subject: Vec<Attribute>,
+    self_signed: bool,
+    issuer: Option<Vec<Attribute>>,
+    subject: Vec<Attribute>,
 ) -> anyhow::Result<Vec<Attribute>> {
     if self_signed {
         Ok(subject)
@@ -230,7 +237,8 @@ fn determine_issuer(
 
 /// Validate the certificate type.
 fn validate_certificate_type(
-    self_signed: bool, certificate_type: Option<u8>,
+    self_signed: bool,
+    certificate_type: Option<u8>,
 ) -> anyhow::Result<()> {
     if self_signed && certificate_type.unwrap_or(SELF_SIGNED_INT) != SELF_SIGNED_INT {
         return Err(anyhow::anyhow!(
@@ -260,7 +268,10 @@ fn get_key_type(key_type: Option<String>) -> anyhow::Result<(Oid<'static>, Optio
 }
 
 /// Parse date string to u64.
-fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u64, anyhow::Error> {
+fn parse_or_default_date(
+    date_option: Option<String>,
+    default: u64,
+) -> Result<u64, anyhow::Error> {
     match date_option {
         Some(date) => {
             DateTime::parse_from_rfc3339(&date)
@@ -284,7 +295,10 @@ fn parse_serial_number(serial_number: Option<UnwrappedBigUint>) -> UnwrappedBigU
 // -------------------verify-----------------------
 
 /// Verify the signature of the certificate given public key file path.
-fn verify(file: &PathBuf, public_key: PathBuf) -> anyhow::Result<()> {
+fn verify(
+    file: &PathBuf,
+    public_key: PathBuf,
+) -> anyhow::Result<()> {
     let cert = fs::read(file)?;
     let pk = PublicKey::from_file(public_key)?;
     match c509_certificate::verify(&cert, &pk) {
@@ -297,7 +311,10 @@ fn verify(file: &PathBuf, public_key: PathBuf) -> anyhow::Result<()> {
 // -------------------decode-----------------------
 
 /// Decode the certificate to JSON.
-fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
+fn decode(
+    file: &PathBuf,
+    output: Option<PathBuf>,
+) -> anyhow::Result<()> {
     let cert = fs::read(file)?;
     let mut d = minicbor::Decoder::new(&cert);
     let c509 = c509_certificate::c509::C509::decode(&mut d, &mut ())?;
@@ -347,7 +364,7 @@ fn time_to_string(time: u64) -> anyhow::Result<String> {
     // Attempt to convert the timestamp and handle errors if they occur
     let timestamp: i64 = time
         .try_into()
-        .map_err(|e| anyhow::anyhow!("Failed to convert time: {:?}", e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to convert time: {e:?}"))?;
 
     // Convert the timestamp to a DateTime and handle any potential errors
     let datetime = DateTime::from_timestamp(timestamp, 0)

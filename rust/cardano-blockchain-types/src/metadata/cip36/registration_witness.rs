@@ -22,7 +22,10 @@ pub(crate) struct Cip36RegistrationWitness {
 }
 
 impl Decode<'_, ProblemReport> for Cip36RegistrationWitness {
-    fn decode(d: &mut Decoder, err_report: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        err_report: &mut ProblemReport,
+    ) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Registration Witness")?;
 
         // Expected only 1 key in the map.

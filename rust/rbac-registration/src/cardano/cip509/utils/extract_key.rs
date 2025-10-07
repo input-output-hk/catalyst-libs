@@ -45,7 +45,11 @@ pub enum Error {
 
 impl Error {
     /// Shortcut function to report `Self` into a [`ProblemReport`].
-    pub fn report_problem(&self, context: &str, report: &ProblemReport) {
+    pub fn report_problem(
+        &self,
+        context: &str,
+        report: &ProblemReport,
+    ) {
         match self {
             Error::UnsupportedSignatureAlgo { oid } => {
                 report.invalid_value(

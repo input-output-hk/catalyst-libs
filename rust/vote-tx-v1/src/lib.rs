@@ -97,7 +97,10 @@ impl Tx {
     /// # Errors
     ///   - Invalid voting choice
     pub fn new_public(
-        vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
+        vote_plan_id: [u8; 32],
+        proposal_index: u8,
+        voting_options: u8,
+        choice: u8,
         users_private_key: &PrivateKey,
     ) -> anyhow::Result<Self> {
         let vote = VotePayload::new_public(choice, voting_options)?;
@@ -116,8 +119,13 @@ impl Tx {
     /// # Errors
     ///   - Invalid voting choice
     pub fn new_private<R: CryptoRngCore>(
-        vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
-        election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey, rng: &mut R,
+        vote_plan_id: [u8; 32],
+        proposal_index: u8,
+        voting_options: u8,
+        choice: u8,
+        election_public_key: &ElectionPublicKey,
+        users_private_key: &PrivateKey,
+        rng: &mut R,
     ) -> anyhow::Result<Self> {
         let vote = VotePayload::new_private(
             &vote_plan_id,
@@ -142,8 +150,12 @@ impl Tx {
     /// # Errors
     ///   - Invalid voting choice
     pub fn new_private_with_default_rng(
-        vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
-        election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey,
+        vote_plan_id: [u8; 32],
+        proposal_index: u8,
+        voting_options: u8,
+        choice: u8,
+        election_public_key: &ElectionPublicKey,
+        users_private_key: &PrivateKey,
     ) -> anyhow::Result<Self> {
         Self::new_private(
             vote_plan_id,
@@ -185,7 +197,10 @@ impl Tx {
     /// # Errors
     ///   - Not a private vote
     #[allow(clippy::cast_possible_truncation)]
-    pub fn private_choice(&self, secret_key: &ElectionSecretKey) -> anyhow::Result<u8> {
+    pub fn private_choice(
+        &self,
+        secret_key: &ElectionSecretKey,
+    ) -> anyhow::Result<u8> {
         if let VotePayload::Private(vote, _) = &self.vote {
             let vote = decrypt_vote(vote, secret_key)?;
             let choice = vote.choice() as u8;
@@ -218,7 +233,10 @@ impl Tx {
     ///
     /// # Errors
     ///   - Invalid proof
-    pub fn verify_proof(&self, election_public_key: &ElectionPublicKey) -> anyhow::Result<()> {
+    pub fn verify_proof(
+        &self,
+        election_public_key: &ElectionPublicKey,
+    ) -> anyhow::Result<()> {
         if let VotePayload::Private(encrypted_vote, proof) = &self.vote {
             let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(self.vote_plan_id);
             let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
@@ -237,7 +255,10 @@ impl Tx {
 
     /// Generate transaction signature
     fn sign(
-        vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, private_key: &PrivateKey,
+        vote_plan_id: &[u8; 32],
+        proposal_index: u8,
+        vote: &VotePayload,
+        private_key: &PrivateKey,
     ) -> Signature {
         let bytes = Self::bytes_to_sign(
             vote_plan_id,
@@ -251,7 +272,10 @@ impl Tx {
     /// Generate bytes to be signed.
     /// A Blake2b256 hash of the transaction body
     fn bytes_to_sign(
-        vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, public_key: &PublicKey,
+        vote_plan_id: &[u8; 32],
+        proposal_index: u8,
+        vote: &VotePayload,
+        public_key: &PublicKey,
     ) -> Vec<u8> {
         let mut bytes = Vec::new();
         Self::tx_body_decode(vote_plan_id, proposal_index, vote, public_key, &mut bytes);
@@ -264,7 +288,10 @@ impl Tx {
 
 #[allow(clippy::missing_docs_in_private_items)]
 impl VotePayload {
-    fn new_public(choice: u8, proposal_voting_options: u8) -> anyhow::Result<Self> {
+    fn new_public(
+        choice: u8,
+        proposal_voting_options: u8,
+    ) -> anyhow::Result<Self> {
         // Try to make a `Vote` just for applying underlying validation, which must be the same
         // even for public vote
         Vote::new(choice.into(), proposal_voting_options.into())?;
@@ -272,8 +299,11 @@ impl VotePayload {
     }
 
     fn new_private<R: CryptoRngCore>(
-        vote_plan_id: &[u8; 32], choice: u8, proposal_voting_options: u8,
-        election_public_key: &ElectionPublicKey, rng: &mut R,
+        vote_plan_id: &[u8; 32],
+        choice: u8,
+        proposal_voting_options: u8,
+        election_public_key: &ElectionPublicKey,
+        rng: &mut R,
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
@@ -297,6 +327,8 @@ impl VotePayload {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::explicit_deref_methods)]
+
     use catalyst_voting::{
         crypto::ed25519::PrivateKey, vote_protocol::committee::ElectionSecretKey,
     };
@@ -306,7 +338,9 @@ mod tests {
 
     #[proptest]
     fn tx_test(
-        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
+        vote_plan_id: [u8; 32],
+        proposal_index: u8,
+        #[strategy(1u8..5)] voting_options: u8,
         #[strategy(0..#voting_options)] choice: u8,
     ) {
         let users_private_key = PrivateKey::random_with_default_rng();

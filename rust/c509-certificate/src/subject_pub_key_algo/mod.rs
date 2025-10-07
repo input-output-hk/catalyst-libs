@@ -39,7 +39,10 @@ pub struct SubjectPubKeyAlgorithm {
 impl SubjectPubKeyAlgorithm {
     /// Create new instance of `SubjectPubKeyAlgorithm` where it registered with
     /// Subject Public Key Algorithm lookup table.
-    pub fn new(oid: Oid<'static>, param: Option<String>) -> Self {
+    pub fn new(
+        oid: Oid<'static>,
+        param: Option<String>,
+    ) -> Self {
         Self {
             registered_oid: C509oidRegistered::new(
                 oid.clone(),
@@ -83,8 +86,13 @@ impl<'de> Deserialize<'de> for SubjectPubKeyAlgorithm {
 }
 
 impl Serialize for SubjectPubKeyAlgorithm {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         let helper = Helper {
             oid: self.registered_oid.c509_oid().oid().to_string(),
             param: self.algo_identifier.param().clone(),
@@ -95,7 +103,9 @@ impl Serialize for SubjectPubKeyAlgorithm {
 
 impl Encode<()> for SubjectPubKeyAlgorithm {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if let Some(&i) = self
             .registered_oid
@@ -112,7 +122,10 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
 }
 
 impl Decode<'_, ()> for SubjectPubKeyAlgorithm {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         // Check u8 for 0 - 28
         if decode_datatype(d, "Subject public key algorithm")? == minicbor::data::Type::U8 {
             let i = decode_helper(d, "Subject public key algorithm", ctx)?;

@@ -152,9 +152,12 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
 pub async fn validate<Provider>(
-    doc: &CatalystSignedDocument, provider: &Provider,
+    doc: &CatalystSignedDocument,
+    provider: &Provider,
 ) -> anyhow::Result<bool>
-where Provider: CatalystSignedDocumentProvider {
+where
+    Provider: CatalystSignedDocumentProvider,
+{
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
@@ -187,9 +190,12 @@ where Provider: CatalystSignedDocumentProvider {
 /// 3. If `provider.future_threshold()` not `None`, document `id` cannot be too far behind
 ///    (`past_threshold` arg) from `SystemTime::now()` based on the provide threshold
 fn validate_id_and_ver<Provider>(
-    doc: &CatalystSignedDocument, provider: &Provider,
+    doc: &CatalystSignedDocument,
+    provider: &Provider,
 ) -> anyhow::Result<bool>
-where Provider: CatalystSignedDocumentProvider {
+where
+    Provider: CatalystSignedDocumentProvider,
+{
     let id = doc.doc_id().ok();
     let ver = doc.doc_ver().ok();
     if id.is_none() {
@@ -282,7 +288,8 @@ where Provider: CatalystSignedDocumentProvider {
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
 pub async fn validate_signatures(
-    doc: &CatalystSignedDocument, provider: &impl VerifyingKeyProvider,
+    doc: &CatalystSignedDocument,
+    provider: &impl VerifyingKeyProvider,
 ) -> anyhow::Result<bool> {
     let Ok(cose_sign) = doc.as_cose_sign() else {
         doc.report().other(
@@ -319,7 +326,10 @@ pub async fn validate_signatures(
 
 /// A single signature validation function
 async fn validate_signature<Provider>(
-    cose_sign: &CoseSign, signature: &CoseSignature, kid: &CatalystId, provider: &Provider,
+    cose_sign: &CoseSign,
+    signature: &CoseSignature,
+    kid: &CatalystId,
+    provider: &Provider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
 where

@@ -46,9 +46,12 @@ pub struct UnitVectorProof(
 /// Pls make sure that you are providing a correct arguments, otherwise
 /// the proof will be invalid.
 pub fn generate_unit_vector_proof<R: CryptoRngCore>(
-    unit_vector: &[Scalar], mut ciphertexts: Vec<Ciphertext>,
-    mut encryption_randomness: Vec<Scalar>, public_key: &GroupElement,
-    commitment_key: &GroupElement, rng: &mut R,
+    unit_vector: &[Scalar],
+    mut ciphertexts: Vec<Ciphertext>,
+    mut encryption_randomness: Vec<Scalar>,
+    public_key: &GroupElement,
+    commitment_key: &GroupElement,
+    rng: &mut R,
 ) -> UnitVectorProof {
     let i = unit_vector
         .iter()
@@ -106,7 +109,11 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 /// Generates `D_l` and `R_l` elements
 #[allow(clippy::indexing_slicing)]
 fn generate_dl_and_rl<R: CryptoRngCore>(
-    log_n: u32, ch_1: &Scalar, public_key: &GroupElement, polynomials: &[Polynomial], rng: &mut R,
+    log_n: u32,
+    ch_1: &Scalar,
+    public_key: &GroupElement,
+    polynomials: &[Polynomial],
+    rng: &mut R,
 ) -> (Vec<Ciphertext>, Vec<Scalar>) {
     let r_l: Vec<_> = (0..log_n).map(|_| Scalar::random(rng)).collect();
 
@@ -132,7 +139,11 @@ fn generate_dl_and_rl<R: CryptoRngCore>(
 
 /// Generate response element `R`
 fn generate_response(
-    log_n: u32, ch_1: &Scalar, ch_2: &Scalar, encryption_randomness: &[Scalar], r_l: &[Scalar],
+    log_n: u32,
+    ch_1: &Scalar,
+    ch_2: &Scalar,
+    encryption_randomness: &[Scalar],
+    r_l: &[Scalar],
 ) -> Scalar {
     // exp_ch_2 == `ch_2^(log_2(N))`
     let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(ch_2));
@@ -161,7 +172,9 @@ fn generate_response(
 /// Verify a unit vector proof.
 #[must_use]
 pub fn verify_unit_vector_proof(
-    proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &GroupElement,
+    proof: &UnitVectorProof,
+    mut ciphertexts: Vec<Ciphertext>,
+    public_key: &GroupElement,
     commitment_key: &GroupElement,
 ) -> bool {
     let m = ciphertexts.len();
@@ -183,7 +196,11 @@ pub fn verify_unit_vector_proof(
 }
 
 /// Check the first part of the proof
-fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &GroupElement) -> bool {
+fn check_1(
+    proof: &UnitVectorProof,
+    ch_2: &Scalar,
+    commitment_key: &GroupElement,
+) -> bool {
     proof.0.iter().zip(proof.2.iter()).all(|(an, rand)| {
         let right = &an.i.mul(ch_2) + &an.b;
         let left = &GroupElement::GENERATOR.mul(&rand.z) + &commitment_key.mul(&rand.w);
@@ -199,7 +216,11 @@ fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &GroupElement
 
 /// Check the second part of the proof
 fn check_2(
-    proof: &UnitVectorProof, log_n: u32, ch_1: &Scalar, ch_2: &Scalar, ciphertexts: &[Ciphertext],
+    proof: &UnitVectorProof,
+    log_n: u32,
+    ch_1: &Scalar,
+    ch_2: &Scalar,
+    ciphertexts: &[Ciphertext],
     public_key: &GroupElement,
 ) -> bool {
     let left = encrypt(&Scalar::zero(), public_key, &proof.3);
@@ -265,6 +286,8 @@ mod arbitrary_impl {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::explicit_deref_methods)]
+
     use proptest::sample::size_range;
     use rand_core::OsRng;
     use test_strategy::proptest;
@@ -277,9 +300,11 @@ mod tests {
         ones == 1 && zeros == vector.len() - 1
     }
 
+    #[allow(clippy::explicit_deref_methods)]
     #[proptest(cases = 10)]
     fn zk_unit_vector_test(
-        secret_key: Scalar, commitment_key: GroupElement,
+        secret_key: Scalar,
+        commitment_key: GroupElement,
         #[strategy(1..10_usize)] unit_vector_size: usize,
         #[strategy(0..#unit_vector_size)] unit_vector_index: usize,
     ) {
@@ -329,7 +354,8 @@ mod tests {
 
     #[proptest(cases = 10)]
     fn not_a_unit_vector_test(
-        secret_key: Scalar, commitment_key: GroupElement,
+        secret_key: Scalar,
+        commitment_key: GroupElement,
         #[any(size_range(1..10_usize).lift())] random_vector: Vec<Scalar>,
     ) {
         let mut rng = OsRng;
