@@ -75,14 +75,20 @@ impl ChainRule {
 
                     let Some(current_doc) = signed_docs.get(&current_key) else {
                         doc.report().other(
-                            "Cannot find the Chained Document from the provider",
+                            &format!(
+                                "Cannot find the Chained Document ({}) from the provider",
+                                current_key
+                            ),
                             "Chained Documents validation",
                         );
                         return Ok(false);
                     };
                     let Some(chained_doc) = signed_docs.get(&chained_key) else {
                         doc.report().other(
-                            "Cannot find the Chained Document from the provider",
+                            &format!(
+                                "Cannot find the Chained Document ({}) from the provider",
+                                chained_key
+                            ),
                             "Chained Documents validation",
                         );
                         return Ok(false);
