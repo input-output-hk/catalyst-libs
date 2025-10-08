@@ -2,11 +2,9 @@
 
 use std::collections::HashMap;
 
-use catalyst_types::uuid::UuidV7;
-
 use crate::{
     providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
-    CatalystSignedDocument,
+    CatalystSignedDocument, DocumentRef,
 };
 
 /// `chain` field validation rule
@@ -48,22 +46,44 @@ impl ChainRule {
                 let signed_docs: HashMap<_, _> = {
                     let mut tmp = Vec::with_capacity(signed_docs.len());
                     for doc in signed_docs {
-                        tmp.push(((doc.doc_id()?, doc.doc_ver()?), doc));
+                        let doc_ref = DocumentRef::try_from(&doc)?;
+                        tmp.push((doc_ref, doc));
                     }
                     tmp.into_iter().collect()
                 };
-                let mut visited: Vec<(UuidV7, UuidV7)> = Vec::with_capacity(signed_docs.len());
+                let mut visited: Vec<DocumentRef> = Vec::with_capacity(signed_docs.len());
 
-                let visiting_chained_doc = chain.document_ref();
-                while let Some(chained_ref) = visiting_chained_doc {
-                    let chained_key = (chained_ref.id().clone(), chained_ref.ver().clone());
+                let mut current_chaining_ref = Some(DocumentRef::try_from(doc)?);
+                let mut visiting_chained_ref = chain.document_ref().cloned();
+                while let (Some(chaining_ref), Some(chained_ref)) =
+                    (current_chaining_ref, visiting_chained_ref)
+                {
+                    let current_key = DocumentRef::from_without_locator(&chaining_ref);
+                    let chained_key = DocumentRef::from_without_locator(&chained_ref);
+
+                    // have not be chaining to a document already chained to by another
+                    // document.
+                    if visited.contains(&chained_key) {
+                        doc.report().other(
+                            "Must not be chaining to a document already chained to by another document",
+                            "Chained Documents validation"
+                        );
+                        return Ok(false);
+                    }
 
                     visited.push(chained_key.clone());
 
+                    let Some(current_doc) = signed_docs.get(&current_key) else {
+                        doc.report().other(
+                            "Cannot find the Chained Document from the provider",
+                            "Chained Documents validation",
+                        );
+                        return Ok(false);
+                    };
                     let Some(chained_doc) = signed_docs.get(&chained_key) else {
                         doc.report().other(
                             "Cannot find the Chained Document from the provider",
-                            "Chained Documents validation"
+                            "Chained Documents validation",
                         );
                         return Ok(false);
                     };
@@ -115,11 +135,48 @@ impl ChainRule {
                         return Ok(false);
                     }
 
-                    // have not be chaining to a document already chained to by another
-                    // document.
-
                     // have its absolute height exactly one more than the height of the
                     // document being chained to.
+                    let current_height = current_doc.doc_meta().chain().map(|chain| chain.height());
+                    let chained_height = chained_doc.doc_meta().chain().map(|chain| chain.height());
+
+                    if let (Some(current_height), Some(chained_height)) =
+                        (current_height, chained_height)
+                    {
+                        if i32::abs(current_height) - i32::abs(chained_height) != 1 {
+                            doc.report().functional_validation(
+                                "Must have parameters match",
+                                "Chained Documents validation",
+                            );
+                            return Ok(false);
+                        }
+                    }
+
+                    current_chaining_ref = Some(DocumentRef::try_from(chained_doc)?);
+                    visiting_chained_ref = chained_doc
+                        .doc_meta()
+                        .chain()
+                        .map(|v| v.document_ref())
+                        .flatten()
+                        .cloned();
+
+                    // incomplete chain
+                    if visiting_chained_ref.is_none()
+                        && current_doc
+                            .doc_meta()
+                            .chain()
+                            .is_some_and(|chain| chain.height() != 0)
+                    {
+                        return Ok(false);
+                    }
+                    if current_doc
+                        .doc_meta()
+                        .chain()
+                        .is_some_and(|chain| chain.height() == 0)
+                        && visiting_chained_ref.is_some()
+                    {
+                        return Ok(false);
+                    }
                 }
             }
         }

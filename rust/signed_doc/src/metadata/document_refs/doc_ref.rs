@@ -7,6 +7,7 @@ use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Encode};
 
 use super::doc_locator::DocLocator;
+use crate::CatalystSignedDocument;
 
 /// Number of item that should be in each document reference instance.
 const DOC_REF_ARR_ITEM: u64 = 3;
@@ -38,6 +39,12 @@ impl DocumentRef {
         }
     }
 
+    /// Create a new instance of another document reference without including
+    /// `doc_locator`.
+    pub fn from_without_locator(other: &Self) -> Self {
+        Self::new(*other.id(), *other.ver(), Default::default())
+    }
+
     /// Get Document Id.
     #[must_use]
     pub fn id(&self) -> &UuidV7 {
@@ -54,6 +61,18 @@ impl DocumentRef {
     #[must_use]
     pub fn doc_locator(&self) -> &DocLocator {
         &self.doc_locator
+    }
+}
+
+impl TryFrom<&CatalystSignedDocument> for DocumentRef {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
+        Ok(Self::new(
+            value.doc_id()?,
+            value.doc_ver()?,
+            Default::default(),
+        ))
     }
 }
 
