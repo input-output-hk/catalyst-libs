@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 
+use catalyst_types::uuid::UuidV7;
+
 use crate::{
     providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     CatalystSignedDocument,
@@ -50,35 +52,66 @@ impl ChainRule {
                     }
                     tmp.into_iter().collect()
                 };
+                let mut visited: Vec<(UuidV7, UuidV7)> = Vec::with_capacity(signed_docs.len());
 
-                if let Some(chained_ref) = chain.document_ref() {
+                let visiting_chained_doc = chain.document_ref();
+                while let Some(chained_ref) = visiting_chained_doc {
                     let chained_key = (chained_ref.id().clone(), chained_ref.ver().clone());
+
+                    visited.push(chained_key.clone());
+
                     let Some(chained_doc) = signed_docs.get(&chained_key) else {
+                        doc.report().other(
+                            "Cannot find the Chained Document from the provider",
+                            "Chained Documents validation"
+                        );
                         return Ok(false);
                     };
 
                     // not have collaborators.
                     if !chained_doc.doc_meta().collaborators().is_empty() {
+                        doc.report().invalid_value(
+                            "collaborators",
+                            &format!("{} entries", chained_doc.doc_meta().collaborators().len()),
+                            "Must not have collaborators",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
 
                     // have the same id as the document being chained to.
                     if chained_doc.doc_id()? != doc.doc_id()? {
+                        doc.report().functional_validation(
+                            "Must have the same id as the document being chained to",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
 
                     // have a ver that is greater than the ver being chained to.
                     if chained_doc.doc_ver()? > doc.doc_ver()? {
+                        doc.report().functional_validation(
+                            "Must have a ver that is greater than the ver being chained to",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
 
                     // have the same type as the chained document.
                     if chained_doc.doc_type()? != doc.doc_type()? {
+                        doc.report().functional_validation(
+                            "Must have the same type as the chained document",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
 
                     // have parameters match.
                     if chained_doc.doc_meta().parameters() != doc.doc_meta().parameters() {
+                        doc.report().functional_validation(
+                            "Must have parameters match",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
 
@@ -87,7 +120,6 @@ impl ChainRule {
 
                     // have its absolute height exactly one more than the height of the
                     // document being chained to.
-                } else {
                 }
             }
         }
