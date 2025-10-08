@@ -184,6 +184,39 @@ impl ChainRule {
                         return Ok(false);
                     }
                 }
+
+                // validate remainings in the pool
+                let remaining_refs: Vec<_> = signed_docs
+                    .keys()
+                    .filter(|k| !visited.contains(k))
+                    .cloned()
+                    .collect();
+
+                for remaining_ref in remaining_refs {
+                    let Some(doc) = signed_docs.get(&remaining_ref) else {
+                        doc.report().other(
+                            &format!(
+                                "Cannot find the Chained Document ({}) from the provider",
+                                remaining_ref
+                            ),
+                            "Chained Documents validation",
+                        );
+                        return Ok(false);
+                    };
+
+                    let chained_ref = doc
+                        .doc_meta()
+                        .chain()
+                        .map(|chain| chain.document_ref())
+                        .flatten();
+                    if chained_ref.is_some_and(|doc_ref| visited.contains(&doc_ref)) {
+                        doc.report().other(
+                            "Either of the two documents being present invalidates the data in the entire chain",
+                            "Chained Documents validation",
+                        );
+                        return Ok(false);
+                    }
+                }
             }
         }
         if let Self::NotSpecified = self {
