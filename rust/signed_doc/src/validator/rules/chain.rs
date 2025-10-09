@@ -248,10 +248,35 @@ impl ChainRule {
 
 #[cfg(test)]
 mod tests {
+    use catalyst_types::uuid::{UuidV4, UuidV7};
     use test_case::test_case;
 
     use super::*;
-    use crate::{builder::tests::Builder, providers::tests::TestCatalystProvider};
+    use crate::{
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        DocType,
+    };
+
+    #[tokio::test]
+    async fn test_without_chaining_documents() {
+        let doc_type = UuidV4::new();
+        let doc_id = UuidV7::new();
+        let doc_ver = UuidV7::new();
+
+        let provider = TestCatalystProvider::default();
+        let doc = Builder::new()
+            .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+            .with_metadata_field(SupportedField::Id(doc_id))
+            .with_metadata_field(SupportedField::Ver(doc_ver))
+            .build();
+
+        let rule = ChainRule::NotSpecified;
+        assert!(rule.check(&doc, &provider).await.unwrap());
+        let rule = ChainRule::Specified { optional: true };
+        assert!(rule.check(&doc, &provider).await.unwrap());
+        let rule = ChainRule::Specified { optional: false };
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+    }
 
     #[test_case(
         {
@@ -260,7 +285,16 @@ mod tests {
 
             (provider, doc)
         } => true;
-        "valid minimal chained documents"
+        "valid minimal chained documents (0, -1)"
+    )]
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => true;
+        "valid long chained documents (0, 1, 2, 3, -4)"
     )]
     #[tokio::test]
     async fn test_valid_chained_documents(
