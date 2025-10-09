@@ -280,6 +280,51 @@ mod tests {
         } => false;
         "missing collaborators field"
     )]
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => false;
+        "not have the same id as the document being chained to"
+    )]
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => false;
+        "not have a ver that is greater than the ver being chained to"
+    )]
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => false;
+        "not the same type as the chained document"
+    )]
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => false;
+        "chaining to the document already chained to by another document"
+    )]
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => false;
+        "not have its absolute height exactly one more than the height of the document being chained to"
+    )]
     #[tokio::test]
     async fn test_invalid_chained_documents(
         (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
