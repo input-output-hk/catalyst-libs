@@ -2,10 +2,7 @@
 
 use std::collections::HashMap;
 
-use crate::{
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
-    CatalystSignedDocument, DocumentRef,
-};
+use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef};
 
 /// `chain` field validation rule
 #[derive(Debug)]
@@ -29,7 +26,7 @@ impl ChainRule {
         provider: &Provider,
     ) -> anyhow::Result<bool>
     where
-        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
+        Provider: CatalystSignedDocumentProvider,
     {
         let chain = doc.doc_meta().chain();
 
@@ -173,6 +170,10 @@ impl ChainRule {
                             .chain()
                             .is_some_and(|chain| chain.height() != 0)
                     {
+                        doc.report().functional_validation(
+                            "The next Chained Document must exist while the height is not 0",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
                     if current_doc
@@ -181,6 +182,10 @@ impl ChainRule {
                         .is_some_and(|chain| chain.height() == 0)
                         && visiting_chained_ref.is_some()
                     {
+                        doc.report().functional_validation(
+                            "The next Chained Document must not exist while the height is 0",
+                            "Chained Documents validation",
+                        );
                         return Ok(false);
                     }
                 }
@@ -238,5 +243,49 @@ impl ChainRule {
         }
 
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_case::test_case;
+
+    use super::*;
+    use crate::{builder::tests::Builder, providers::tests::TestCatalystProvider};
+
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => true;
+        "valid minimal chained documents"
+    )]
+    #[tokio::test]
+    async fn test_valid_chained_documents(
+        (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
+    ) -> bool {
+        let rule = ChainRule::Specified { optional: false };
+
+        rule.check(&doc, &provider).await.unwrap()
+    }
+
+    #[test_case(
+        {
+            let provider = TestCatalystProvider::default();
+            let doc = Builder::new().build();
+
+            (provider, doc)
+        } => false;
+        "missing collaborators field"
+    )]
+    #[tokio::test]
+    async fn test_invalid_chained_documents(
+        (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
+    ) -> bool {
+        let rule = ChainRule::Specified { optional: false };
+
+        rule.check(&doc, &provider).await.unwrap()
     }
 }
