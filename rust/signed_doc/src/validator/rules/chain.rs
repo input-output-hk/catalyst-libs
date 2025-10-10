@@ -253,9 +253,27 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-        DocType,
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider, Chain, DocType
     };
+
+    mod helper {
+        use std::time::{Duration, SystemTime, UNIX_EPOCH};
+        use catalyst_types::uuid::UuidV7;
+        use uuid::{Timestamp, Uuid};
+
+        pub(super) fn get_now_plus_uuidv7(secs: u64) -> UuidV7 {
+            let future_time = SystemTime::now() + Duration::from_secs(secs);
+            let duration_since_epoch = future_time.duration_since(UNIX_EPOCH).unwrap();
+
+            let unix_secs = duration_since_epoch.as_secs();
+            let nanos = duration_since_epoch.subsec_nanos();
+
+            let ts = Timestamp::from_unix(uuid::NoContext, unix_secs, nanos);
+            let uuid = Uuid::new_v7(ts);
+
+            UuidV7::try_from_uuid(uuid).unwrap()
+        }
+    }
 
     #[tokio::test]
     async fn test_without_chaining_documents() {
@@ -280,14 +298,38 @@ mod tests {
 
     #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let first_doc_ver = UuidV7::new();
+            let last_doc_ver = helper::get_now_plus_uuidv7(60);
+
+            // provider
+            let mut provider = TestCatalystProvider::default();
+
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+
+            provider.add_document(Some(first_doc_ref.clone()), &first).unwrap();
+            
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(-1, Some(first_doc_ref))
+                ))
+                .build();
+
+            (provider, last)
         } => true;
         "valid minimal chained documents (0, -1)"
     )]
-    #[test_case(
+    /* #[test_case(
         {
             let provider = TestCatalystProvider::default();
             let doc = Builder::new().build();
@@ -295,17 +337,21 @@ mod tests {
             (provider, doc)
         } => true;
         "valid long chained documents (0, 1, 2, 3, -4)"
-    )]
+    )] */
     #[tokio::test]
     async fn test_valid_chained_documents(
         (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
     ) -> bool {
         let rule = ChainRule::Specified { optional: false };
 
-        rule.check(&doc, &provider).await.unwrap()
+        drop(rule.check(&doc, &provider).await);
+
+        println!("{:?}", doc.problem_report().entries().collect::<Vec<_>>());
+
+        panic!()
     }
 
-    #[test_case(
+    /* #[test_case(
         {
             let provider = TestCatalystProvider::default();
             let doc = Builder::new().build();
@@ -366,5 +412,5 @@ mod tests {
         let rule = ChainRule::Specified { optional: false };
 
         rule.check(&doc, &provider).await.unwrap()
-    }
+    } */
 }
