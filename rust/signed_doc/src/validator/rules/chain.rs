@@ -1,6 +1,6 @@
 //! `chain` rule type impl.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef};
 
@@ -48,7 +48,7 @@ impl ChainRule {
                     }
                     tmp.into_iter().collect()
                 };
-                let mut visited: Vec<DocumentRef> = Vec::with_capacity(signed_docs.len());
+                let mut visited: HashSet<DocumentRef> = HashSet::with_capacity(signed_docs.len());
 
                 let mut current_chaining_ref = Some(DocumentRef::try_from(doc)?);
                 let mut visiting_chained_ref = chain.document_ref().cloned();
@@ -68,7 +68,8 @@ impl ChainRule {
                         return Ok(false);
                     }
 
-                    visited.push(chained_key.clone());
+                    visited.insert(current_key.clone());
+                    visited.insert(chained_key.clone());
 
                     let Some(current_doc) = signed_docs.get(&current_key) else {
                         doc.report().other(
@@ -162,6 +163,7 @@ impl ChainRule {
                         .map(|v| v.document_ref())
                         .flatten()
                         .cloned();
+                    let current_doc = chained_doc;
 
                     // incomplete chain
                     if visiting_chained_ref.is_none()
@@ -253,11 +255,13 @@ mod tests {
 
     use super::*;
     use crate::{
-        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider, Chain, DocType
+        builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+        Chain, DocType,
     };
 
     mod helper {
         use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
         use catalyst_types::uuid::UuidV7;
         use uuid::{Timestamp, Uuid};
 
@@ -313,17 +317,19 @@ mod tests {
                 .with_metadata_field(SupportedField::Ver(first_doc_ver))
                 .build();
             let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-
-            provider.add_document(Some(first_doc_ref.clone()), &first).unwrap();
             
             let last = Builder::new()
                 .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
                 .with_metadata_field(SupportedField::Id(doc_id))
                 .with_metadata_field(SupportedField::Ver(last_doc_ver))
                 .with_metadata_field(SupportedField::Chain(
-                    Chain::new(-1, Some(first_doc_ref))
+                    Chain::new(-1, Some(first_doc_ref.clone()))
                 ))
                 .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
 
             (provider, last)
         } => true;
@@ -344,11 +350,7 @@ mod tests {
     ) -> bool {
         let rule = ChainRule::Specified { optional: false };
 
-        drop(rule.check(&doc, &provider).await);
-
-        println!("{:?}", doc.problem_report().entries().collect::<Vec<_>>());
-
-        panic!()
+        rule.check(&doc, &provider).await.unwrap()
     }
 
     /* #[test_case(
