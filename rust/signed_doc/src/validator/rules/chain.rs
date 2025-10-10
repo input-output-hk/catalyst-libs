@@ -19,6 +19,7 @@ pub(crate) enum ChainRule {
 
 impl ChainRule {
     /// Field validation rule
+    #[allow(clippy::too_many_lines)]
     #[allow(clippy::unused_async)]
     pub(crate) async fn check<Provider>(
         &self,
@@ -74,8 +75,7 @@ impl ChainRule {
                     let Some(current_doc) = signed_docs.get(&current_key) else {
                         doc.report().other(
                             &format!(
-                                "Cannot find the Chained Document ({}) from the provider",
-                                current_key
+                                "Cannot find the Chained Document ({current_key}) from the provider"
                             ),
                             "Chained Documents validation",
                         );
@@ -84,8 +84,7 @@ impl ChainRule {
                     let Some(chained_doc) = signed_docs.get(&chained_key) else {
                         doc.report().other(
                             &format!(
-                                "Cannot find the Chained Document ({}) from the provider",
-                                chained_key
+                                "Cannot find the Chained Document ({chained_key}) from the provider"
                             ),
                             "Chained Documents validation",
                         );
@@ -93,7 +92,9 @@ impl ChainRule {
                     };
 
                     // not have collaborators.
-                    if !chained_doc.doc_meta().collaborators().is_empty() {
+                    if !chained_doc.doc_meta().collaborators().is_empty()
+                        || !current_doc.doc_meta().collaborators().is_empty()
+                    {
                         doc.report().invalid_value(
                             "collaborators",
                             &format!("{} entries", chained_doc.doc_meta().collaborators().len()),
@@ -104,7 +105,7 @@ impl ChainRule {
                     }
 
                     // have the same id as the document being chained to.
-                    if chained_doc.doc_id()? != doc.doc_id()? {
+                    if chained_doc.doc_id()? != current_doc.doc_id()? {
                         doc.report().functional_validation(
                             "Must have the same id as the document being chained to",
                             "Chained Documents validation",
@@ -113,7 +114,7 @@ impl ChainRule {
                     }
 
                     // have a ver that is greater than the ver being chained to.
-                    if chained_doc.doc_ver()? > doc.doc_ver()? {
+                    if chained_doc.doc_ver()? > current_doc.doc_ver()? {
                         doc.report().functional_validation(
                             "Must have a ver that is greater than the ver being chained to",
                             "Chained Documents validation",
@@ -122,7 +123,7 @@ impl ChainRule {
                     }
 
                     // have the same type as the chained document.
-                    if chained_doc.doc_type()? != doc.doc_type()? {
+                    if chained_doc.doc_type()? != current_doc.doc_type()? {
                         doc.report().functional_validation(
                             "Must have the same type as the chained document",
                             "Chained Documents validation",
@@ -131,7 +132,7 @@ impl ChainRule {
                     }
 
                     // have parameters match.
-                    if chained_doc.doc_meta().parameters() != doc.doc_meta().parameters() {
+                    if chained_doc.doc_meta().parameters() != current_doc.doc_meta().parameters() {
                         doc.report().functional_validation(
                             "Must have parameters match",
                             "Chained Documents validation",
@@ -141,27 +142,31 @@ impl ChainRule {
 
                     // have its absolute height exactly one more than the height of the
                     // document being chained to.
-                    let current_height = current_doc.doc_meta().chain().map(|chain| chain.height());
-                    let chained_height = chained_doc.doc_meta().chain().map(|chain| chain.height());
+                    let current_height = current_doc
+                        .doc_meta()
+                        .chain()
+                        .map_or(0, crate::Chain::height);
+                    let chained_height = chained_doc
+                        .doc_meta()
+                        .chain()
+                        .map_or(0, crate::Chain::height);
 
-                    if let (Some(current_height), Some(chained_height)) =
-                        (current_height, chained_height)
-                    {
-                        if i32::abs(current_height) - i32::abs(chained_height) != 1 {
-                            doc.report().functional_validation(
-                                "Must have parameters match",
-                                "Chained Documents validation",
-                            );
-                            return Ok(false);
-                        }
+                    if !matches!(
+                        i32::abs(current_height).checked_sub(i32::abs(chained_height)),
+                        Some(1)
+                    ) {
+                        doc.report().functional_validation(
+                            "Must have parameters match",
+                            "Chained Documents validation",
+                        );
+                        return Ok(false);
                     }
 
                     current_chaining_ref = Some(DocumentRef::try_from(chained_doc)?);
                     visiting_chained_ref = chained_doc
                         .doc_meta()
                         .chain()
-                        .map(|v| v.document_ref())
-                        .flatten()
+                        .and_then(|v| v.document_ref())
                         .cloned();
                     let current_doc = chained_doc;
 
@@ -203,8 +208,7 @@ impl ChainRule {
                     let Some(doc) = signed_docs.get(&remaining_ref) else {
                         doc.report().other(
                             &format!(
-                                "Cannot find the Chained Document ({}) from the provider",
-                                remaining_ref
+                                "Cannot find the Chained Document ({remaining_ref}) from the provider"
                             ),
                             "Chained Documents validation",
                         );
@@ -214,9 +218,8 @@ impl ChainRule {
                     let chained_ref = doc
                         .doc_meta()
                         .chain()
-                        .map(|chain| chain.document_ref())
-                        .flatten();
-                    if chained_ref.is_some_and(|doc_ref| visited.contains(&doc_ref)) {
+                        .and_then(|chain| chain.document_ref());
+                    if chained_ref.is_some_and(|doc_ref| visited.contains(doc_ref)) {
                         doc.report().other(
                             "Either of the two documents being present invalidates the data in the entire chain",
                             "Chained Documents validation",
@@ -250,13 +253,16 @@ impl ChainRule {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::uuid::{UuidV4, UuidV7};
+    use catalyst_types::{
+        catalyst_id::role_index::RoleId,
+        uuid::{UuidV4, UuidV7},
+    };
     use test_case::test_case;
 
     use super::*;
     use crate::{
         builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-        Chain, DocType,
+        validator::rules::utils::create_dummy_key_pair, Chain, DocType,
     };
 
     mod helper {
@@ -266,7 +272,9 @@ mod tests {
         use uuid::{Timestamp, Uuid};
 
         pub(super) fn get_now_plus_uuidv7(secs: u64) -> UuidV7 {
-            let future_time = SystemTime::now() + Duration::from_secs(secs);
+            let future_time = SystemTime::now()
+                .checked_add(Duration::from_secs(secs))
+                .unwrap();
             let duration_since_epoch = future_time.duration_since(UNIX_EPOCH).unwrap();
 
             let unix_secs = duration_since_epoch.as_secs();
@@ -305,12 +313,9 @@ mod tests {
             let doc_type = UuidV4::new();
             let doc_id = UuidV7::new();
 
-            let first_doc_ver = UuidV7::new();
-            let last_doc_ver = helper::get_now_plus_uuidv7(60);
-
-            // provider
             let mut provider = TestCatalystProvider::default();
 
+            let first_doc_ver = UuidV7::new();
             let first = Builder::new()
                 .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
                 .with_metadata_field(SupportedField::Id(doc_id))
@@ -318,6 +323,7 @@ mod tests {
                 .build();
             let first_doc_ref = DocumentRef::try_from(&first).unwrap();
             
+            let last_doc_ver = helper::get_now_plus_uuidv7(60);
             let last = Builder::new()
                 .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
                 .with_metadata_field(SupportedField::Id(doc_id))
@@ -335,15 +341,51 @@ mod tests {
         } => true;
         "valid minimal chained documents (0, -1)"
     )]
-    /* #[test_case(
+    #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+
+            let intermediate_doc_ver = helper::get_now_plus_uuidv7(60);
+            let intermediate = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(intermediate_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(1, Some(first_doc_ref.clone()))
+                ))
+                .build();
+            let intermediate_doc_ref = DocumentRef::try_from(&intermediate).unwrap();
+            
+            let last_doc_ver = helper::get_now_plus_uuidv7(120);
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(-2, Some(intermediate_doc_ref.clone()))
+                ))
+                .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(intermediate_doc_ref), &intermediate).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+            (provider, last)
         } => true;
-        "valid long chained documents (0, 1, 2, 3, -4)"
-    )] */
+        "valid intermediate chained documents (0, 1, -2)"
+    )]
     #[tokio::test]
     async fn test_valid_chained_documents(
         (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
@@ -353,57 +395,215 @@ mod tests {
         rule.check(&doc, &provider).await.unwrap()
     }
 
-    /* #[test_case(
+    #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+            
+            let last_doc_ver = helper::get_now_plus_uuidv7(60);
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                // collaborators field here
+                .with_metadata_field(SupportedField::Collaborators(vec![create_dummy_key_pair(RoleId::Role0).2].into()))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(-1, Some(first_doc_ref.clone()))
+                ))
+                .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+            (provider, last)
         } => false;
-        "missing collaborators field"
+        "collaborators field exist"
     )]
     #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
+            // with another doc id
+            let doc_id_another = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+            
+            let last_doc_ver = helper::get_now_plus_uuidv7(60);
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id_another))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(-1, Some(first_doc_ref.clone()))
+                ))
+                .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+            (provider, last)
         } => false;
         "not have the same id as the document being chained to"
     )]
     #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+            
+            // same version
+            let last_doc_ver = first_doc_ver;
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(-1, Some(first_doc_ref.clone()))
+                ))
+                .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+            (provider, last)
         } => false;
         "not have a ver that is greater than the ver being chained to"
     )]
     #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            // with another doc type
+            let doc_type_another = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+            
+            let last_doc_ver = helper::get_now_plus_uuidv7(60);
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type_another)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    Chain::new(-1, Some(first_doc_ref.clone()))
+                ))
+                .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+            (provider, last)
         } => false;
         "not the same type as the chained document"
     )]
     #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+
+            let mut doc = None;
+            for _ in 0..2 {
+                let last_doc_ver = helper::get_now_plus_uuidv7(60);
+                let last = Builder::new()
+                    .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                    .with_metadata_field(SupportedField::Id(doc_id))
+                    .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                    .with_metadata_field(SupportedField::Chain(
+                        Chain::new(-1, Some(first_doc_ref.clone()))
+                    ))
+                    .build();
+                let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+                provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+                doc = Some(last);
+            }
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+
+            (provider, doc.unwrap())
         } => false;
         "chaining to the document already chained to by another document"
     )]
     #[test_case(
         {
-            let provider = TestCatalystProvider::default();
-            let doc = Builder::new().build();
+            let doc_type = UuidV4::new();
+            let doc_id = UuidV7::new();
 
-            (provider, doc)
+            let mut provider = TestCatalystProvider::default();
+
+            let first_doc_ver = UuidV7::new();
+            let first = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(first_doc_ver))
+                .build();
+            let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+            
+            let last_doc_ver = helper::get_now_plus_uuidv7(60);
+            let last = Builder::new()
+                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+                .with_metadata_field(SupportedField::Id(doc_id))
+                .with_metadata_field(SupportedField::Ver(last_doc_ver))
+                .with_metadata_field(SupportedField::Chain(
+                    // -2
+                    Chain::new(-2, Some(first_doc_ref.clone()))
+                ))
+                .build();
+            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+
+            provider.add_document(Some(first_doc_ref), &first).unwrap();
+            provider.add_document(Some(last_doc_ref), &last).unwrap();
+
+            (provider, last)
         } => false;
         "not have its absolute height exactly one more than the height of the document being chained to"
     )]
@@ -414,5 +614,5 @@ mod tests {
         let rule = ChainRule::Specified { optional: false };
 
         rule.check(&doc, &provider).await.unwrap()
-    } */
+    }
 }

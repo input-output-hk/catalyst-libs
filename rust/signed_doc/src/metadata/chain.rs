@@ -36,6 +36,7 @@ pub struct Chain {
 
 impl Chain {
     /// Creates a new `Chain`.
+    #[must_use]
     pub fn new(
         height: i32,
         document_ref: Option<DocumentRef>,
@@ -47,11 +48,13 @@ impl Chain {
     }
 
     /// Gets `height`.
+    #[must_use]
     pub fn height(&self) -> i32 {
         self.height
     }
 
     /// Gets `document_ref`.
+    #[must_use]
     pub fn document_ref(&self) -> Option<&DocumentRef> {
         self.document_ref.as_ref()
     }

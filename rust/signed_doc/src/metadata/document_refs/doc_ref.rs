@@ -41,8 +41,9 @@ impl DocumentRef {
 
     /// Create a new instance of another document reference without including
     /// `doc_locator`.
+    #[must_use]
     pub fn from_without_locator(other: &Self) -> Self {
-        Self::new(*other.id(), *other.ver(), Default::default())
+        Self::new(*other.id(), *other.ver(), DocLocator::default())
     }
 
     /// Get Document Id.
@@ -71,7 +72,7 @@ impl TryFrom<&CatalystSignedDocument> for DocumentRef {
         Ok(Self::new(
             value.doc_id()?,
             value.doc_ver()?,
-            Default::default(),
+            DocLocator::default(),
         ))
     }
 }
