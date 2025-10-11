@@ -67,7 +67,7 @@ async fn test_without_chaining_documents() {
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-        
+
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
@@ -111,7 +111,7 @@ async fn test_without_chaining_documents() {
             ))
             .build();
         let intermediate_doc_ref = DocumentRef::try_from(&intermediate).unwrap();
-        
+
         let last_doc_ver = helper::get_now_plus_uuidv7(120);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
@@ -154,7 +154,7 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-        
+
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
@@ -191,7 +191,7 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-        
+
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
@@ -224,7 +224,7 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-        
+
         // same version
         let last_doc_ver = first_doc_ver;
         let last = Builder::new()
@@ -260,7 +260,7 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-        
+
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type_another)))
@@ -332,7 +332,7 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-        
+
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
