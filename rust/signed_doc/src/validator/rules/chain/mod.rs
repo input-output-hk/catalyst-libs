@@ -219,7 +219,7 @@ impl ChainRule {
                     }
                 }
 
-                // validate remainings in the pool
+                // validate remaining docs in the pool
                 let remaining_refs: Vec<_> = signed_docs
                     .keys()
                     .filter(|k| !visited.contains(k))
