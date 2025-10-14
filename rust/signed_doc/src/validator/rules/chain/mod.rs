@@ -60,6 +60,19 @@ impl ChainRule {
 
             // perform integrity validation
             if let Some(doc_chain) = chain {
+                if doc_chain.document_ref().is_none() && doc_chain.height() != 0 {
+                    doc.report().functional_validation(
+                        "The chain height must be zero when there is no chained doc",
+                        "Chained Documents validation",
+                    );
+                }
+                if doc_chain.height() == 0 && doc_chain.document_ref().is_some() {
+                    doc.report().functional_validation(
+                        "The next Chained Document must not exist while the height is 0",
+                        "Chained Documents validation",
+                    );
+                }
+
                 if let Some(chained_ref) = doc_chain.document_ref() {
                     let Some(chained_doc) = provider.try_get_doc(chained_ref).await? else {
                         doc.report().other(
@@ -122,14 +135,6 @@ impl ChainRule {
                         ) {
                             doc.report().functional_validation(
                                 "Must have its absolute height exactly one more than the height of the document being chained to",
-                                "Chained Documents validation",
-                            );
-                        }
-                    } else {
-                        // but the doc height is not zero
-                        if doc_chain.height() != 0 {
-                            doc.report().functional_validation(
-                                "The chain height must be zero when there is no chained doc",
                                 "Chained Documents validation",
                             );
                         }
