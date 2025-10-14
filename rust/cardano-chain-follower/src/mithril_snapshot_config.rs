@@ -239,7 +239,7 @@ impl MithrilSnapshotConfig {
 
         let Ok(relative_file) = tmp_file.strip_prefix(&tmp_path) else {
             error!("Failed to get relative path of file.");
-            bail!("Failed to strip prefix: {tmp_path:?}");
+            bail!("Failed to strip prefix: {}", tmp_path.to_string_lossy());
         };
 
         // IF we make it here, the files are identical, so we can de-dup them safely.
@@ -251,7 +251,7 @@ impl MithrilSnapshotConfig {
                     tmp_file.to_string_lossy(),
                     error
                 );
-                bail!("Failed to remove tmp file: {tmp_file:?}");
+                bail!("Failed to remove tmp file: {}", tmp_file.to_string_lossy());
             }
         }
 
@@ -270,7 +270,7 @@ impl MithrilSnapshotConfig {
                 tmp_file.to_string_lossy(),
                 error
             );
-            bail!("Failed to link src file: {src_file:?}");
+            bail!("Failed to link src file: {}", src_file.to_string_lossy());
         }
 
         // And if we made it here, file was successfully de-duped.  YAY.

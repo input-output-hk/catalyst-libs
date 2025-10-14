@@ -98,7 +98,7 @@ impl TryFrom<u64> for ScriptType {
 
     fn try_from(value: u64) -> Result<Self, Self::Error> {
         match value {
-            0 => Err(anyhow!("Invalid script type: {}", value)),
+            0 => Err(anyhow!("Invalid script type: {value}")),
             1 => Ok(Self::Native),
             _ => Ok(Self::Plutus(value.saturating_sub(1))),
         }

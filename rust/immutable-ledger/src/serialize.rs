@@ -427,7 +427,7 @@ impl BlockHeader {
         let prev_block_hash_type = match hash_function.as_u64() {
             BLAKE3_CBOR_TAG => HashFunction::Blake3,
             BLAKE_2B_CBOR_TAG => HashFunction::Blake2b,
-            _ => bail!(format!("Invalid hash function type {:?}", hash_function)),
+            _ => bail!(format!("Invalid hash function type {hash_function:?}")),
         };
 
         let prev_block_hash = cbor_decoder
