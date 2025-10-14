@@ -39,13 +39,6 @@ impl DocumentRef {
         }
     }
 
-    /// Create a new instance of another document reference without including
-    /// `doc_locator`.
-    #[must_use]
-    pub fn from_without_locator(other: &Self) -> Self {
-        Self::new(*other.id(), *other.ver(), DocLocator::default())
-    }
-
     /// Get Document Id.
     #[must_use]
     pub fn id(&self) -> &UuidV7 {

@@ -26,12 +26,6 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
         doc_ref: &DocumentRef,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 
-    /// Try to get all versions of the `CatalystSignedDocument` from the given `id`.
-    fn try_get_all(
-        &self,
-        id: UuidV7,
-    ) -> impl Future<Output = anyhow::Result<Vec<CatalystSignedDocument>>> + Send;
-
     /// Try to get the last known version of the `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
     fn try_get_last_doc(
@@ -115,18 +109,6 @@ pub mod tests {
             doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             Ok(self.signed_doc.get(doc_ref).cloned())
-        }
-
-        async fn try_get_all(
-            &self,
-            id: catalyst_types::uuid::UuidV7,
-        ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
-            Ok(self
-                .signed_doc
-                .iter()
-                .filter(|(doc_ref, _)| doc_ref.id() == &id)
-                .map(|(_, doc)| doc.clone())
-                .collect())
         }
 
         async fn try_get_last_doc(

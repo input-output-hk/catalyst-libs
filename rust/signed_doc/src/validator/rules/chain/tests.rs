@@ -1,13 +1,10 @@
-use catalyst_types::{
-    catalyst_id::role_index::RoleId,
-    uuid::{UuidV4, UuidV7},
-};
+use catalyst_types::uuid::{UuidV4, UuidV7};
 use test_case::test_case;
 
 use super::*;
 use crate::{
     builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-    validator::rules::utils::create_dummy_key_pair, Chain, DocType,
+    Chain, DocType, DocumentRef,
 };
 
 mod helper {
@@ -144,41 +141,6 @@ async fn test_valid_chained_documents(
     {
         let doc_type = UuidV4::new();
         let doc_id = UuidV7::new();
-
-        let mut provider = TestCatalystProvider::default();
-
-        let first_doc_ver = UuidV7::new();
-        let first = Builder::new()
-            .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
-            .with_metadata_field(SupportedField::Id(doc_id))
-            .with_metadata_field(SupportedField::Ver(first_doc_ver))
-            .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-
-        let last_doc_ver = helper::get_now_plus_uuidv7(60);
-        let last = Builder::new()
-            .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
-            .with_metadata_field(SupportedField::Id(doc_id))
-            .with_metadata_field(SupportedField::Ver(last_doc_ver))
-            // collaborators field here
-            .with_metadata_field(SupportedField::Collaborators(vec![create_dummy_key_pair(RoleId::Role0).2].into()))
-            .with_metadata_field(SupportedField::Chain(
-                Chain::new(-1, Some(first_doc_ref.clone()))
-            ))
-            .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
-
-        (provider, last)
-    } => false;
-    "collaborators field exist"
-)]
-#[test_case(
-    {
-        let doc_type = UuidV4::new();
-        let doc_id = UuidV7::new();
         // with another doc id
         let doc_id_another = UuidV7::new();
 
@@ -278,45 +240,6 @@ async fn test_valid_chained_documents(
         (provider, last)
     } => false;
     "not the same type as the chained document"
-)]
-#[test_case(
-    {
-        let doc_type = UuidV4::new();
-        let doc_id = UuidV7::new();
-
-        let mut provider = TestCatalystProvider::default();
-
-        let first_doc_ver = UuidV7::new();
-        let first = Builder::new()
-            .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
-            .with_metadata_field(SupportedField::Id(doc_id))
-            .with_metadata_field(SupportedField::Ver(first_doc_ver))
-            .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
-
-        let mut doc = None;
-        for _ in 0..2 {
-            let last_doc_ver = helper::get_now_plus_uuidv7(60);
-            let last = Builder::new()
-                .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
-                .with_metadata_field(SupportedField::Id(doc_id))
-                .with_metadata_field(SupportedField::Ver(last_doc_ver))
-                .with_metadata_field(SupportedField::Chain(
-                    Chain::new(-1, Some(first_doc_ref.clone()))
-                ))
-                .build();
-            let last_doc_ref = DocumentRef::try_from(&last).unwrap();
-
-            provider.add_document(Some(last_doc_ref), &last).unwrap();
-
-            doc = Some(last);
-        }
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-
-        (provider, doc.unwrap())
-    } => false;
-    "chaining to the document already chained to by another document"
 )]
 #[test_case(
     {
