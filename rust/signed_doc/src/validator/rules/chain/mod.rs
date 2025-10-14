@@ -77,7 +77,6 @@ impl ChainRule {
                             "Must have the same id as the document being chained to",
                             "Chained Documents validation",
                         );
-                        return Ok(false);
                     }
 
                     // have a ver that is greater than the ver being chained to.
@@ -86,7 +85,6 @@ impl ChainRule {
                             "Must have a ver that is greater than the ver being chained to",
                             "Chained Documents validation",
                         );
-                        return Ok(false);
                     }
 
                     // have the same type as the chained document.
@@ -95,7 +93,6 @@ impl ChainRule {
                             "Must have the same type as the chained document",
                             "Chained Documents validation",
                         );
-                        return Ok(false);
                     }
 
                     // have parameters match.
@@ -104,7 +101,6 @@ impl ChainRule {
                             "Must have parameters match",
                             "Chained Documents validation",
                         );
-                        return Ok(false);
                     }
 
                     // have its absolute height exactly one more than the height of the
@@ -119,7 +115,6 @@ impl ChainRule {
                                 "The height of the document being chained to must not be nagative",
                                 "Chained Documents validation",
                             );
-                            return Ok(false);
                         }
 
                         if !matches!(
@@ -130,7 +125,6 @@ impl ChainRule {
                                 "Must have its absolute height exactly one more than the height of the document being chained to",
                                 "Chained Documents validation",
                             );
-                            return Ok(false);
                         }
                     } else {
                         // but the doc height is not zero
@@ -139,8 +133,11 @@ impl ChainRule {
                                 "The chain height must be zero when there is no chained doc",
                                 "Chained Documents validation",
                             );
-                            return Ok(false);
                         }
+                    }
+
+                    if doc.report().is_problematic() {
+                        return Ok(false);
                     }
                 }
             }
