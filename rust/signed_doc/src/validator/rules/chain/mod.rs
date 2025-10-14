@@ -132,14 +132,12 @@ impl ChainRule {
             if chain.is_some() {
                 doc.report().unknown_field(
                     "chain",
-                    &format!(
-                        "{:#?}",
-                        doc.doc_meta()
-                            .chain()
-                            .iter()
-                            .map(ToString::to_string)
-                            .reduce(|a, b| format!("{a}, {b}"))
-                    ),
+                    &doc.doc_meta()
+                        .chain()
+                        .iter()
+                        .map(ToString::to_string)
+                        .reduce(|a, b| format!("{a}, {b}"))
+                        .unwrap_or_default(),
                     "Document does not expect to have 'chain' field",
                 );
                 return Ok(false);
