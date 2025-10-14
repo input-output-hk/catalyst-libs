@@ -62,6 +62,9 @@ async fn test_without_chaining_documents() {
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
+            .with_metadata_field(SupportedField::Chain(
+                Chain::new(0, None)
+            ))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 
@@ -95,6 +98,9 @@ async fn test_without_chaining_documents() {
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
+            .with_metadata_field(SupportedField::Chain(
+                Chain::new(0, None)
+            ))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 
@@ -151,6 +157,9 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
+            .with_metadata_field(SupportedField::Chain(
+                Chain::new(0, None)
+            ))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 
@@ -184,6 +193,9 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
+            .with_metadata_field(SupportedField::Chain(
+                Chain::new(0, None)
+            ))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 
@@ -220,6 +232,9 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
+            .with_metadata_field(SupportedField::Chain(
+                Chain::new(0, None)
+            ))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 
@@ -253,6 +268,9 @@ async fn test_valid_chained_documents(
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))
             .with_metadata_field(SupportedField::Ver(first_doc_ver))
+            .with_metadata_field(SupportedField::Chain(
+                Chain::new(0, None)
+            ))
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 

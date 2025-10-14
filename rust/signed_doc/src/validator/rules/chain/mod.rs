@@ -59,8 +59,8 @@ impl ChainRule {
             }
 
             // perform integrity validation
-            if let Some(chain) = chain {
-                if let Some(chained_ref) = chain.document_ref() {
+            if let Some(doc_chain) = chain {
+                if let Some(chained_ref) = doc_chain.document_ref() {
                     let Some(chained_doc) = provider.try_get_doc(chained_ref).await? else {
                         doc.report().other(
                             &format!(
@@ -109,21 +109,38 @@ impl ChainRule {
 
                     // have its absolute height exactly one more than the height of the
                     // document being chained to.
-                    let current_height = doc.doc_meta().chain().map_or(0, crate::Chain::height);
-                    let chained_height = chained_doc
-                        .doc_meta()
-                        .chain()
-                        .map_or(0, crate::Chain::height);
+                    let doc_height = doc_chain.height();
+                    if let Some(chained_height) =
+                        chained_doc.doc_meta().chain().map(crate::Chain::height)
+                    {
+                        // chain doc must not be negative
+                        if chained_height < 0 {
+                            doc.report().functional_validation(
+                                "The height of the document being chained to must not be nagative",
+                                "Chained Documents validation",
+                            );
+                            return Ok(false);
+                        }
 
-                    if !matches!(
-                        i32::abs(current_height).checked_sub(i32::abs(chained_height)),
-                        Some(1)
-                    ) {
-                        doc.report().functional_validation(
-                            "Must have its absolute height exactly one more than the height of the document being chained to",
-                            "Chained Documents validation",
-                        );
-                        return Ok(false);
+                        if !matches!(
+                            i32::abs(doc_height).checked_sub(i32::abs(chained_height)),
+                            Some(1)
+                        ) {
+                            doc.report().functional_validation(
+                                "Must have its absolute height exactly one more than the height of the document being chained to",
+                                "Chained Documents validation",
+                            );
+                            return Ok(false);
+                        }
+                    } else {
+                        // but the doc height is not zero
+                        if doc_height != 0 {
+                            doc.report().functional_validation(
+                                "The chain height must be zero when there is no chained doc",
+                                "Chained Documents validation",
+                            );
+                            return Ok(false);
+                        }
                     }
                 }
             }
