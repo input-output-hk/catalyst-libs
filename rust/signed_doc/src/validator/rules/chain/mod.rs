@@ -103,9 +103,6 @@ impl ChainRule {
                         );
                     }
 
-                    // have its absolute height exactly one more than the height of the
-                    // document being chained to.
-                    let doc_height = doc_chain.height();
                     if let Some(chained_height) =
                         chained_doc.doc_meta().chain().map(crate::Chain::height)
                     {
@@ -117,8 +114,10 @@ impl ChainRule {
                             );
                         }
 
+                        // have its absolute height exactly one more than the height of the
+                        // document being chained to.
                         if !matches!(
-                            i32::abs(doc_height).checked_sub(i32::abs(chained_height)),
+                            i32::abs(doc_chain.height()).checked_sub(i32::abs(chained_height)),
                             Some(1)
                         ) {
                             doc.report().functional_validation(
@@ -128,7 +127,7 @@ impl ChainRule {
                         }
                     } else {
                         // but the doc height is not zero
-                        if doc_height != 0 {
+                        if doc_chain.height() != 0 {
                             doc.report().functional_validation(
                                 "The chain height must be zero when there is no chained doc",
                                 "Chained Documents validation",
