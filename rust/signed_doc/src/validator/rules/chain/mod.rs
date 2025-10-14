@@ -22,25 +22,22 @@ pub(crate) enum ChainRule {
 
 impl ChainRule {
     /// Generating `ChainRule` from specs
-    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn new(
         _docs: &DocSpecs,
         spec: &Chain,
-    ) -> anyhow::Result<Self> {
+    ) -> Self {
         let optional = match spec.required {
             IsRequired::Yes => false,
             IsRequired::Optional => true,
             IsRequired::Excluded => {
-                return Ok(Self::NotSpecified);
+                return Self::NotSpecified;
             },
         };
 
-        Ok(Self::Specified { optional })
+        Self::Specified { optional }
     }
 
     /// Field validation rule
-    #[allow(clippy::too_many_lines)]
-    #[allow(clippy::unused_async)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
