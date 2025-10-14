@@ -68,7 +68,7 @@ impl ChainRule {
                 }
                 if doc_chain.height() == 0 && doc_chain.document_ref().is_some() {
                     doc.report().functional_validation(
-                        "The next Chained Document must not exist while the height is 0",
+                        "The next Chained Document must not exist while the height is zero",
                         "Chained Documents validation",
                     );
                 }
