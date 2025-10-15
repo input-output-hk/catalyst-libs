@@ -1,6 +1,7 @@
 //! Chain of Cardano registration data
 
 mod update_rbac;
+mod validation;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -490,41 +491,6 @@ impl RegistrationChainInner {
 
         Some(new_inner)
     }
-}
-
-/// `RegistrationChain` Provider trait
-pub trait RbacRegistrationProvider {
-    /// Returns either persistent or "latest" (persistent + volatile) registration chain for
-    /// the given Catalyst ID.
-    fn chain(
-        &self,
-        id: CatalystId,
-        is_persistent: bool,
-    ) -> anyhow::Result<Option<RegistrationChain>>;
-
-    /// Returns `true` if a chain with the given Catalyst ID already exists.
-    ///
-    /// This function behaves in the same way as `latest_rbac_chain(...).is_some()` but the
-    /// implementation is more optimized because we don't need to build the whole chain.
-    fn is_chain_known(
-        &self,
-        id: CatalystId,
-        is_persistent: bool,
-    ) -> anyhow::Result<bool>;
-
-    /// Returns a Catalyst ID corresponding to the given stake address.
-    fn catalyst_id_from_stake_address(
-        &self,
-        address: &StakeAddress,
-        is_persistent: bool,
-    ) -> anyhow::Result<Option<CatalystId>>;
-
-    /// Returns a Catalyst ID corresponding to the given public key.
-    fn catalyst_id_from_public_key(
-        &self,
-        key: VerifyingKey,
-        is_persistent: bool
-    ) -> anyhow::Result<Option<CatalystId>>;
 }
 
 /// Perform a check on the validation signature.
