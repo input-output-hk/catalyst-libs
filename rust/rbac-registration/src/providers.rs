@@ -3,6 +3,7 @@
 use std::future::Future;
 
 use cardano_blockchain_types::StakeAddress;
+use cardano_chain_follower::hashes::TransactionId;
 use catalyst_types::catalyst_id::CatalystId;
 use ed25519_dalek::VerifyingKey;
 
@@ -42,4 +43,27 @@ pub trait RbacRegistrationProvider {
         key: VerifyingKey,
         is_persistent: bool,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
+
+    /// Returns a Catalyst ID corresponding to the given transaction hash.
+    fn catalyst_id_from_txn_id(
+        &self,
+        txn_id: TransactionId,
+        is_persistent: bool,
+    ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
+}
+
+/// `RbacCache` Provider trait
+pub trait RbacCacheProvider {
+    /// Add (or update) a persistent chain to the cache.
+    fn cache_persistent_rbac_chain(
+        &self,
+        id: CatalystId,
+        chain: RegistrationChain,
+    );
+
+    /// Returns a cached persistent chain by the given Catalyst ID.
+    fn cached_persistent_rbac_chain(
+        &self,
+        id: &CatalystId,
+    ) -> Option<RegistrationChain>;
 }
