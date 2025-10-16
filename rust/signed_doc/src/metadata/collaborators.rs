@@ -140,7 +140,9 @@ mod tests {
         {
             let mut e = Encoder::new(Vec::new());
             e.array(1).unwrap();
+            /* cspell:disable */
             e.bytes(b"preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3").unwrap();
+            /* cspell:enable */
             e
         } ;
         "CatalystId not in ID form"
