@@ -122,7 +122,7 @@ impl ChainRule {
                         // chain doc must not be negative
                         if chained_height < 0 {
                             doc.report().functional_validation(
-                                "The height of the document being chained to must not be negative",
+                                "The height of the document being chained to must be positive number",
                                 "Chained Documents validation",
                             );
                         }
