@@ -121,7 +121,7 @@
     },
     "collaborators": {
       "comment": "Allowed Collaborators on the next subsequent version of a document.",
-      "def": "[ * catalyst_id_kid ]",
+      "def": "[ + catalyst_id_kid ]",
       "requires": [
         "catalyst_id_kid"
       ]
