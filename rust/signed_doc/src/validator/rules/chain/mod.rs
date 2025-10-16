@@ -2,7 +2,10 @@
 
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain, DocSpecs};
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{
+    providers::CatalystSignedDocumentProvider, validator::rules::parameters::link_check,
+    CatalystSignedDocument,
+};
 
 #[cfg(test)]
 mod tests;
@@ -38,6 +41,7 @@ impl ChainRule {
     }
 
     /// Field validation rule
+    #[allow(clippy::too_many_lines)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
@@ -65,12 +69,14 @@ impl ChainRule {
                         "The chain height must be zero when there is no chained doc",
                         "Chained Documents validation",
                     );
+                    return Ok(false);
                 }
                 if doc_chain.height() == 0 && doc_chain.document_ref().is_some() {
                     doc.report().functional_validation(
                         "The next Chained Document must not exist while the height is zero",
                         "Chained Documents validation",
                     );
+                    return Ok(false);
                 }
 
                 if let Some(chained_ref) = doc_chain.document_ref() {
@@ -90,6 +96,7 @@ impl ChainRule {
                             "Must have the same id as the document being chained to",
                             "Chained Documents validation",
                         );
+                        return Ok(false);
                     }
 
                     // have a ver that is greater than the ver being chained to.
@@ -98,6 +105,7 @@ impl ChainRule {
                             "Must have a ver that is greater than the ver being chained to",
                             "Chained Documents validation",
                         );
+                        return Ok(false);
                     }
 
                     // have the same type as the chained document.
@@ -106,14 +114,27 @@ impl ChainRule {
                             "Must have the same type as the chained document",
                             "Chained Documents validation",
                         );
+                        return Ok(false);
                     }
 
                     // have parameters match.
-                    if chained_doc.doc_meta().parameters() != doc.doc_meta().parameters() {
-                        doc.report().functional_validation(
-                            "Must have parameters match",
-                            "Chained Documents validation",
-                        );
+                    if let Some(doc_parameters) = doc.doc_meta().parameters() {
+                        let is_valid = link_check(
+                            chained_doc.doc_meta().parameters(),
+                            doc_parameters,
+                            "parameters",
+                            provider,
+                            doc.report(),
+                        )
+                        .await?;
+
+                        if !is_valid {
+                            doc.report().functional_validation(
+                                "Must have parameters match",
+                                "Chained Documents validation",
+                            );
+                            return Ok(false);
+                        }
                     }
 
                     if let Some(chained_height) =
@@ -125,6 +146,7 @@ impl ChainRule {
                                 "The height of the document being chained to must be positive number",
                                 "Chained Documents validation",
                             );
+                            return Ok(false);
                         }
 
                         // have its absolute height exactly one more than the height of the
@@ -137,11 +159,8 @@ impl ChainRule {
                                 "Must have its absolute height exactly one more than the height of the document being chained to",
                                 "Chained Documents validation",
                             );
+                            return Ok(false);
                         }
-                    }
-
-                    if doc.report().is_problematic() {
-                        return Ok(false);
                     }
                 }
             }
