@@ -121,8 +121,7 @@ impl Rules {
     ///  - `signed_doc.json` filed loading and JSON parsing errors.
     ///  - `catalyst-signed-doc-spec` crate version doesn't  align with the latest version
     ///    of the `signed_doc.json`.
-    pub(crate) fn documents_rules(
-    ) -> anyhow::Result<impl Iterator<Item = (crate::DocType, crate::validator::rules::Rules)>>
+    pub(crate) fn documents_rules() -> anyhow::Result<impl Iterator<Item = (crate::DocType, Rules)>>
     {
         let spec = catalyst_signed_doc_spec::CatalystSignedDocSpec::load_signed_doc_spec()?;
 
@@ -147,9 +146,7 @@ impl Rules {
                 content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
                 signature: SignatureRule { mutlisig: false },
-                ownership: DocumentOwnershipRule {
-                    allow_collaborators: false,
-                },
+                ownership: DocumentOwnershipRule::new(&doc_spec.signers.update)?,
             };
             let doc_type = doc_spec.doc_type.parse()?;
 
