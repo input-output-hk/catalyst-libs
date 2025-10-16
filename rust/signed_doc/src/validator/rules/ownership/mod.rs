@@ -5,6 +5,8 @@ mod tests;
 
 use std::collections::HashSet;
 
+use anyhow::ensure;
+use catalyst_signed_doc_spec::signers::update::Update;
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
@@ -28,10 +30,19 @@ fn single_author_check(doc: &CatalystSignedDocument) -> bool {
 #[derive(Debug)]
 pub(crate) struct DocumentOwnershipRule {
     /// Collaborators are allowed.
-    pub(crate) allow_collaborators: bool,
+    allow_collaborators: bool,
 }
 
 impl DocumentOwnershipRule {
+    /// Creates `DocumentOwnershipRule` from specs.
+    pub(crate) fn new(spec: &Update) -> anyhow::Result<Self> {
+        ensure!(spec.author, "'author' field must always be equal to `true`");
+
+        Ok(Self {
+            allow_collaborators: spec.collaborators,
+        })
+    }
+
     /// Check document ownership rule
     pub(crate) async fn check<Provider>(
         &self,
