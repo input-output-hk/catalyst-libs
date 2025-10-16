@@ -69,7 +69,7 @@ impl minicbor::Decode<'_, ()> for Collaborators {
                             Ok(id)
                         } else {
                             Err(minicbor::decode::Error::message(format!(
-                            "provided CatalystId {id} must in ID format for collaborators field"
+                            "provided CatalystId {id} must in URI format for collaborators field"
                         )))
                         }
                     })
