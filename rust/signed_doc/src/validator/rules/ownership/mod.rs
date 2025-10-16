@@ -14,18 +14,6 @@ use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 /// Context for the validation problem report.
 const REPORT_CONTEXT: &str = "Document ownership validation";
 
-/// Returns `true` if the document has a single author.
-///
-/// If not, it adds to the document's problem report.
-fn single_author_check(doc: &CatalystSignedDocument) -> bool {
-    let is_valid = doc.authors().len() == 1;
-    if !is_valid {
-        doc.report()
-            .functional_validation("Document must only be signed by one author", REPORT_CONTEXT);
-    }
-    is_valid
-}
-
 /// Document Ownership Validation Rule
 #[derive(Debug)]
 pub(crate) struct DocumentOwnershipRule {
@@ -53,10 +41,17 @@ impl DocumentOwnershipRule {
         Provider: CatalystSignedDocumentProvider,
     {
         let doc_id = doc.doc_id()?;
-        let first_doc_opt = provider.try_get_first_doc(doc_id).await?;
 
-        if self.allow_collaborators {
-            if let Some(first_doc) = first_doc_opt {
+        if doc_id == doc.doc_ver()? && doc.authors().len() != 1 {
+            doc.report().functional_validation(
+                "Document must only be signed by one author",
+                REPORT_CONTEXT,
+            );
+            return Ok(false);
+        }
+
+        if let Some(first_doc) = provider.try_get_first_doc(doc_id).await? {
+            if self.allow_collaborators {
                 // This a new version of an existing `doc_id`
                 let Some(last_doc) = provider.try_get_last_doc(doc_id).await? else {
                     anyhow::bail!(
@@ -72,51 +67,45 @@ impl DocumentOwnershipRule {
                 let mut allowed_authors = first_doc
                     .authors()
                     .into_iter()
-                    .map(CatalystId::as_uri)
                     .collect::<HashSet<CatalystId>>();
                 allowed_authors.extend(
                     last_doc
                         .doc_meta()
                         .collaborators()
                         .iter()
-                        .cloned()
-                        .map(CatalystId::as_uri),
+                        .map(CatalystId::as_short_id),
                 );
-                let doc_authors = doc
-                    .authors()
-                    .into_iter()
-                    .map(CatalystId::as_uri)
-                    .collect::<HashSet<_>>();
+                let doc_authors = doc.authors().into_iter().collect::<HashSet<_>>();
 
-                let is_valid = allowed_authors.intersection(&doc_authors).count() > 0;
+                // all elements of the `doc_authors` should be intersecting with the
+                // `allowed_authors`
+                let is_valid =
+                    allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
 
                 if !is_valid {
                     doc.report().functional_validation(
-                        "Document must only be signed by original author and/or by collaborators defined in the previous version",
+                         &format!(
+                            "Document must only be signed by original author and/or by collaborators defined in the previous version. Allowed signers: {:?}, Document signers: {:?}",
+                            allowed_authors.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                            doc_authors.iter().map(|v| v.to_string()).collect::<Vec<_>>()
+                        ),
+                        REPORT_CONTEXT,
+                    );
+                }
+                return Ok(is_valid);
+            } else {
+                // No collaborators are allowed
+                let is_valid = first_doc.authors() == doc.authors();
+                if !is_valid {
+                    doc.report().functional_validation(
+                        "Document authors must match the author from the first version",
                         REPORT_CONTEXT,
                     );
                 }
                 return Ok(is_valid);
             }
-
-            // This is a first version of the doc
-            return Ok(single_author_check(doc));
         }
 
-        // No collaborators are allowed
-        if let Some(first_doc) = first_doc_opt {
-            // This a new version of an existing `doc_id`
-            let is_valid = first_doc.authors() == doc.authors();
-            if !is_valid {
-                doc.report().functional_validation(
-                    "Document authors must match the author from the first version",
-                    REPORT_CONTEXT,
-                );
-            }
-            return Ok(is_valid);
-        }
-
-        // This is a first version of the doc
-        Ok(single_author_check(doc))
+        Ok(true)
     }
 }
