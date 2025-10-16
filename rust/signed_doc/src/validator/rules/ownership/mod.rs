@@ -86,24 +86,23 @@ impl DocumentOwnershipRule {
                     doc.report().functional_validation(
                          &format!(
                             "Document must only be signed by original author and/or by collaborators defined in the previous version. Allowed signers: {:?}, Document signers: {:?}",
-                            allowed_authors.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
-                            doc_authors.iter().map(|v| v.to_string()).collect::<Vec<_>>()
+                            allowed_authors.iter().map(ToString::to_string).collect::<Vec<_>>(),
+                            doc_authors.iter().map(ToString::to_string).collect::<Vec<_>>()
                         ),
                         REPORT_CONTEXT,
                     );
                 }
                 return Ok(is_valid);
-            } else {
-                // No collaborators are allowed
-                let is_valid = first_doc.authors() == doc.authors();
-                if !is_valid {
-                    doc.report().functional_validation(
-                        "Document authors must match the author from the first version",
-                        REPORT_CONTEXT,
-                    );
-                }
-                return Ok(is_valid);
             }
+            // No collaborators are allowed
+            let is_valid = first_doc.authors() == doc.authors();
+            if !is_valid {
+                doc.report().functional_validation(
+                    "Document authors must match the author from the first version",
+                    REPORT_CONTEXT,
+                );
+            }
+            return Ok(is_valid);
         }
 
         Ok(true)

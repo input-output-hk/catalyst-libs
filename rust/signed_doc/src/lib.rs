@@ -241,6 +241,9 @@ impl CatalystSignedDocument {
     }
 
     /// Returns CBOR bytes.
+    ///
+    /// # Errors
+    ///  - `minicbor::encode::Error`
     pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         let mut e = minicbor::Encoder::new(Vec::new());
         self.encode(&mut e, &mut ())?;
@@ -248,6 +251,9 @@ impl CatalystSignedDocument {
     }
 
     /// Build `CatalystSignedDoc` instance from CBOR bytes.
+    ///
+    /// # Errors
+    ///  - `minicbor::decode::Error`
     pub fn from_bytes(
         bytes: &[u8],
         mut policy: CompatibilityPolicy,
