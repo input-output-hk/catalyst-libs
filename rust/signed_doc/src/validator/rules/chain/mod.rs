@@ -2,10 +2,7 @@
 
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain, DocSpecs};
 
-use crate::{
-    providers::CatalystSignedDocumentProvider, validator::rules::parameters::link_check,
-    CatalystSignedDocument,
-};
+use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
 #[cfg(test)]
 mod tests;
@@ -115,26 +112,6 @@ impl ChainRule {
                             "Chained Documents validation",
                         );
                         return Ok(false);
-                    }
-
-                    // have parameters match.
-                    if let Some(doc_parameters) = doc.doc_meta().parameters() {
-                        let is_valid = link_check(
-                            chained_doc.doc_meta().parameters(),
-                            doc_parameters,
-                            "parameters",
-                            provider,
-                            doc.report(),
-                        )
-                        .await?;
-
-                        if !is_valid {
-                            doc.report().functional_validation(
-                                "Must have parameters match",
-                                "Chained Documents validation",
-                            );
-                            return Ok(false);
-                        }
                     }
 
                     if let Some(chained_height) =
