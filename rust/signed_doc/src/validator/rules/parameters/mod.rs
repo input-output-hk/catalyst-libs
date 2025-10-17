@@ -120,12 +120,26 @@ impl ParametersRule {
                     doc.report(),
                 )
                 .boxed();
+                let chain_field = doc
+                    .doc_meta()
+                    .chain()
+                    .and_then(|v| v.document_ref().cloned())
+                    .map(|v| vec![v].into());
+                let chain_link_check = link_check(
+                    chain_field.as_ref(),
+                    parameters_ref,
+                    "chain",
+                    provider,
+                    doc.report(),
+                )
+                .boxed();
 
                 let checks = [
                     parameters_check,
                     template_link_check,
                     ref_link_check,
                     reply_link_check,
+                    chain_link_check,
                 ];
                 let res = futures::future::join_all(checks)
                     .await
@@ -158,7 +172,24 @@ impl ParametersRule {
     }
 }
 
-/// Parameter Link reference check
+/// Performs a parameter link validation between a given reference field and the expected
+/// parameters.
+///
+/// Validates that all referenced documents
+/// have matching `parameters` with the current document's expected `exp_parameters`.
+///
+/// # Returns
+/// - `Ok(true)` if:
+///   - `ref_field` is `None`, or
+///   - all referenced documents are successfully retrieved **and** each has a
+///     `parameters` field that matches `exp_parameters`.
+///
+/// - `Ok(false)` if:
+///   - any referenced document cannot be retrieved,
+///   - a referenced document is missing its `parameters` field, or
+///   - the parameters mismatch the expected ones.
+///
+/// - `Err(anyhow::Error)` if an unexpected error occurs while accessing the provider.
 pub(crate) async fn link_check<Provider>(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
