@@ -3,13 +3,14 @@
 #[cfg(test)]
 mod tests;
 
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::collaborators::Collaborators};
+
 use crate::CatalystSignedDocument;
 
 /// `collaborators` field validation rule
 #[derive(Debug)]
 pub(crate) enum CollaboratorsRule {
     /// Is 'collaborators' specified
-    #[allow(dead_code)]
     Specified {
         /// optional flag for the `collaborators` field
         optional: bool,
@@ -19,6 +20,19 @@ pub(crate) enum CollaboratorsRule {
 }
 
 impl CollaboratorsRule {
+    /// Generating `CollaboratorsRule` from specs
+    pub(crate) fn new(spec: &Collaborators) -> Self {
+        let optional = match spec.required {
+            IsRequired::Yes => false,
+            IsRequired::Optional => true,
+            IsRequired::Excluded => {
+                return Self::NotSpecified;
+            },
+        };
+
+        Self::Specified { optional }
+    }
+
     /// Field validation rule
     #[allow(clippy::unused_async)]
     pub(crate) async fn check(
