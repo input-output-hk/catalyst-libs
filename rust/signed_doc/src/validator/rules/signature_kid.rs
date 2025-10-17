@@ -11,7 +11,7 @@ use crate::CatalystSignedDocument;
 #[derive(Debug)]
 pub(crate) struct SignatureKidRule {
     /// expected `RoleId` values for the `kid` field
-    pub(crate) allowed_roles: HashSet<RoleId>,
+    allowed_roles: HashSet<RoleId>,
 }
 
 impl SignatureKidRule {

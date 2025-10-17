@@ -60,8 +60,9 @@ pub(super) fn create_dummy_key_pair(
 ) {
     let sk = create_signing_key();
     let pk = sk.verifying_key();
-    let kid =
-        catalyst_types::catalyst_id::CatalystId::new("cardano", None, pk).with_role(role_index);
+    let kid = catalyst_types::catalyst_id::CatalystId::new("cardano", None, pk)
+        .with_role(role_index)
+        .as_uri();
     (sk, pk, kid)
 }
 
