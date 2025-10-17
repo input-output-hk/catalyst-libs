@@ -1,0 +1,243 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 4
+    pad: 100
+    center: true
+  }
+}
+
+title: |~md
+  # Signed Document Relationship Hierarchy
+~| {near: top-center}
+
+copyright: |~md
+  ## Copyright
+
+| Copyright | :copyright: 2024-2025 IOG Singapore, All Rights Reserved |
+| --- | --- |
+| License | This document is licensed under CC-BY-4.0 |
+| Created | 2024-12-27 |
+| Modified | 2025-04-09 |
+| Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Steven Johnson <steven.johnson@iohk.io> |
+~|  {near: bottom-right}
+
+"Brand Parameters": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": ebcabeeb-5bc5-4f95-91e8-cab8ca724172
+  "id": UUIDv7
+  "ver": UUIDv7
+
+}
+
+
+
+"Campaign Parameters": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5ef32d5d-f240-462c-a7a4-ba4af221fa23
+  "id": UUIDv7
+  "ver": UUIDv7
+  "brand_id": Brand Parameters
+
+}
+
+"Campaign Parameters"."brand_id"->"Brand Parameters"
+
+
+"Category Parameters": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 818938c3-3139-4daa-afe6-974c78488e95
+  "id": UUIDv7
+  "ver": UUIDv7
+  "campaign_id": Campaign Parameters
+
+}
+
+"Category Parameters"."campaign_id"->"Campaign Parameters"
+
+
+"Comment Moderation Action": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
+  "id": UUIDv7
+  "ver": UUIDv7
+  "ref": Proposal Comment
+
+}
+
+"Comment Moderation Action"."ref"->"Proposal Comment"
+
+
+"Election Parameters": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 788ff4c6-d65a-451f-bb33-575fe056b411
+  "id": UUIDv7
+  "ver": UUIDv7
+  "brand_id": Brand Parameters
+  "campaign_id": Campaign Parameters
+  "category_id": Category Parameters
+
+}
+
+"Election Parameters"."brand_id"->"Brand Parameters"
+"Election Parameters"."campaign_id"->"Campaign Parameters"
+"Election Parameters"."category_id"->"Category Parameters"
+
+
+"Proposal": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "template": Proposal Template
+  "collaborators": Collaborators Reference List
+  "revocations": Version Revocations
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal"."template"->"Proposal Template"
+"Proposal"."brand_id"->"Brand Parameters": Optional
+"Proposal"."campaign_id"->"Campaign Parameters": Optional
+"Proposal"."category_id"->"Category Parameters": Optional
+
+
+"Proposal Comment": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "ref": Proposal
+  "template": Proposal Comment Template
+  "reply": Proposal Comment (Optional)
+  "section": Section Reference
+  "revocations": Version Revocations
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Comment"."ref"->"Proposal"
+"Proposal Comment"."template"->"Proposal Comment Template"
+"Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
+"Proposal Comment"."brand_id"->"Brand Parameters": Optional
+"Proposal Comment"."campaign_id"->"Campaign Parameters": Optional
+"Proposal Comment"."category_id"->"Category Parameters": Optional
+
+
+"Proposal Comment Meta Template": {
+  shape: sql_table
+  "content type": application/schema+json
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [2]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [3]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Comment Meta Template"."category_id"->"Category Parameters": Optional
+
+
+"Proposal Comment Template": {
+  shape: sql_table
+  "content type": application/schema+json
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "template": Proposal Comment Meta Template (Optional)
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Comment Template"."template"->"Proposal Comment Meta Template": Optional
+"Proposal Comment Template"."brand_id"->"Brand Parameters": Optional
+"Proposal Comment Template"."campaign_id"->"Campaign Parameters": Optional
+"Proposal Comment Template"."category_id"->"Category Parameters": Optional
+
+
+"Proposal Meta Template": {
+  shape: sql_table
+  "content type": application/schema+json
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Meta Template"."category_id"->"Category Parameters": Optional
+
+
+"Proposal Moderation Action": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
+  "id": UUIDv7
+  "ver": UUIDv7
+  "ref": Proposal
+
+}
+
+"Proposal Moderation Action"."ref"->"Proposal"
+
+
+"Proposal Submission Action": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "type [2]": 78927329-cfd9-4ea1-9c71-0e019b126a65
+  "id": UUIDv7
+  "ver": UUIDv7
+  "ref": Proposal
+  "category_id": Category Parameters
+
+}
+
+"Proposal Submission Action"."ref"->"Proposal"
+"Proposal Submission Action"."category_id"->"Category Parameters"
+
+
+"Proposal Template": {
+  shape: sql_table
+  "content type": application/schema+json
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "template": Proposal Meta Template (Optional)
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Template"."template"->"Proposal Meta Template": Optional
+"Proposal Template"."brand_id"->"Brand Parameters": Optional
+"Proposal Template"."campaign_id"->"Campaign Parameters": Optional
+"Proposal Template"."category_id"->"Category Parameters": Optional
