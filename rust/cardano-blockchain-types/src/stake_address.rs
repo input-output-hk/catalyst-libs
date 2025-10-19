@@ -160,7 +160,7 @@ mod tests {
         ];
 
         for (network, is_script, hash, expected_header) in test_data {
-            let stake_address = StakeAddress::new(network, is_script, hash.into());
+            let stake_address = StakeAddress::new(network.clone(), is_script, hash.into());
             assert_eq!(stake_address.is_script(), is_script);
 
             // Check that conversion to bytes includes the expected header value.
