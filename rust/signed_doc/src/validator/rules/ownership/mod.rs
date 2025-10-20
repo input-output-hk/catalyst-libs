@@ -6,7 +6,9 @@ mod tests;
 use std::collections::HashSet;
 
 use anyhow::ensure;
-use catalyst_signed_doc_spec::signers::update::Update;
+use catalyst_signed_doc_spec::{
+    is_required::IsRequired, metadata::collaborators::Collaborators, signers::update::Update,
+};
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
@@ -23,8 +25,15 @@ pub(crate) struct DocumentOwnershipRule {
 
 impl DocumentOwnershipRule {
     /// Creates `DocumentOwnershipRule` from specs.
-    pub(crate) fn new(spec: &Update) -> anyhow::Result<Self> {
+    pub(crate) fn new(
+        spec: &Update,
+        collab_field: &Collaborators,
+    ) -> anyhow::Result<Self> {
         ensure!(spec.author, "'author' field must always be equal to `true`");
+        ensure!(
+            !(spec.collaborators && collab_field.required == IsRequired::Excluded),
+            "'collaborators' metadata field cannot be 'excluded' if 'update'->'collaborators' is true"
+        );
 
         Ok(Self {
             allow_collaborators: spec.collaborators,
