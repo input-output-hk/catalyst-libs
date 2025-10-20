@@ -34,7 +34,7 @@ use role_index::RoleId;
 ///
 /// `CatalystId` is an immutable data type: all modifying methods create a new instance.
 /// Also, this structure uses [`Arc`] internally, so it is cheap to clone.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Hash)]
 #[allow(clippy::module_name_repetitions)]
 pub struct CatalystId {
     /// An inner data.
@@ -796,7 +796,7 @@ mod tests {
         let uri_id = test_uri.parse::<CatalystId>().unwrap();
         let short_id = expected_id.parse::<CatalystId>().unwrap();
 
-        assert_eq!(uri_id.as_short_id(), short_id);
+        assert_eq!(uri_id.as_short_id().inner, short_id.inner);
     }
 
     #[ignore = "Test to be fixed and re-enabled"]
