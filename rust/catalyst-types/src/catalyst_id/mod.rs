@@ -9,6 +9,7 @@ pub mod role_index;
 
 use std::{
     fmt::{Display, Formatter},
+    hash::Hash,
     str::FromStr,
     sync::Arc,
 };
@@ -34,7 +35,7 @@ use role_index::RoleId;
 ///
 /// `CatalystId` is an immutable data type: all modifying methods create a new instance.
 /// Also, this structure uses [`Arc`] internally, so it is cheap to clone.
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(clippy::module_name_repetitions)]
 pub struct CatalystId {
     /// An inner data.
@@ -42,7 +43,7 @@ pub struct CatalystId {
 }
 
 /// A Catalyst ID data intended to be wrapper in `Arc`.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 struct CatalystIdInner {
     /// Username
     username: Option<String>,
@@ -534,6 +535,30 @@ impl CatalystId {
             .without_nonce()
             .without_encryption()
             .as_id()
+    }
+}
+
+impl PartialEq for CatalystIdInner {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.network.eq(&other.network)
+            && self.subnet.eq(&other.subnet)
+            && self.role0_pk.eq(&other.role0_pk)
+    }
+}
+
+impl Eq for CatalystIdInner {}
+
+impl Hash for CatalystIdInner {
+    fn hash<H: std::hash::Hasher>(
+        &self,
+        state: &mut H,
+    ) {
+        self.network.hash(state);
+        self.subnet.hash(state);
+        self.role0_pk.hash(state);
     }
 }
 
