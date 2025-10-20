@@ -51,19 +51,3 @@ pub trait RbacRegistrationProvider {
         is_persistent: bool,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 }
-
-/// `RbacCache` Provider trait
-pub trait RbacCacheProvider {
-    /// Add (or update) a persistent chain to the cache.
-    fn cache_persistent_rbac_chain(
-        &self,
-        id: CatalystId,
-        chain: RegistrationChain,
-    );
-
-    /// Returns a cached persistent chain by the given Catalyst ID.
-    fn cached_persistent_rbac_chain(
-        &self,
-        id: &CatalystId,
-    ) -> Option<RegistrationChain>;
-}

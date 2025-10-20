@@ -1,15 +1,18 @@
 //! Utilities for RBAC registrations validation.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::{Context, Result};
 use cardano_chain_follower::{hashes::TransactionId, StakeAddress};
-use catalyst_types::problem_report::ProblemReport;
+use catalyst_types::{
+    catalyst_id::{role_index::RoleId, CatalystId},
+    problem_report::ProblemReport,
+};
 use ed25519_dalek::VerifyingKey;
 
 use crate::{
     cardano::cip509::{Cip0134UriSet, Cip509},
-    providers::{RbacCacheProvider, RbacRegistrationProvider},
+    providers::RbacRegistrationProvider,
     registration::cardano::{
         validation_result::{RbacValidationError, RbacValidationResult, RbacValidationSuccess},
         RegistrationChain,
@@ -24,7 +27,7 @@ async fn update_chain<Provider>(
     provider: &Provider,
 ) -> RbacValidationResult
 where
-    Provider: RbacRegistrationProvider + RbacCacheProvider,
+    Provider: RbacRegistrationProvider,
 {
     let purpose = reg.purpose();
     let report = reg.report().to_owned();
@@ -86,10 +89,6 @@ where
         });
     }
 
-    if is_persistent {
-        provider.cache_persistent_rbac_chain(catalyst_id.clone(), new_chain);
-    }
-
     Ok(RbacValidationSuccess {
         catalyst_id,
         stake_addresses,
@@ -97,6 +96,104 @@ where
         // Only new chains can take ownership of stake addresses of existing chains, so in this case
         // other chains aren't affected.
         modified_chains: Vec::new(),
+        purpose,
+    })
+}
+
+/// Tries to start a new RBAC chain.
+async fn start_new_chain<Provider>(
+    reg: Cip509,
+    is_persistent: bool,
+    provider: &Provider,
+) -> RbacValidationResult
+where
+    Provider: RbacRegistrationProvider,
+{
+    let catalyst_id = reg.catalyst_id().map(CatalystId::as_short_id);
+    let purpose = reg.purpose();
+    let report = reg.report().to_owned();
+
+    // Try to start a new chain.
+    let new_chain = RegistrationChain::new(reg).ok_or_else(|| {
+        if let Some(catalyst_id) = catalyst_id {
+            RbacValidationError::InvalidRegistration {
+                catalyst_id,
+                purpose,
+                report: report.clone(),
+            }
+        } else {
+            RbacValidationError::UnknownCatalystId
+        }
+    })?;
+
+    // Verify that a Catalyst ID of this chain is unique.
+    let catalyst_id = new_chain.catalyst_id().as_short_id();
+    if provider
+        .is_chain_known(catalyst_id.clone(), is_persistent)
+        .await?
+    {
+        report.functional_validation(
+            &format!("{catalyst_id} is already used"),
+            "It isn't allowed to use same Catalyst ID (certificate subject public key) in multiple registration chains",
+        );
+        return Err(RbacValidationError::InvalidRegistration {
+            catalyst_id,
+            purpose,
+            report,
+        });
+    }
+
+    // Validate stake addresses.
+    let new_addresses = new_chain.stake_addresses();
+    let mut updated_chains: HashMap<_, HashSet<StakeAddress>> = HashMap::new();
+    for address in &new_addresses {
+        if let Some(id) = provider
+            .catalyst_id_from_stake_address(address, is_persistent)
+            .await?
+        {
+            // If an address is used in existing chain then a new chain must have different role 0
+            // signing key.
+            let previous_chain = provider.chain(id.clone(), is_persistent)
+                .await?
+                .context("{id} is present in 'catalyst_id_for_stake_address', but not in 'rbac_registration'")?;
+            if previous_chain.get_latest_signing_pk_for_role(&RoleId::Role0)
+                == new_chain.get_latest_signing_pk_for_role(&RoleId::Role0)
+            {
+                report.functional_validation(
+                    &format!("A new registration ({catalyst_id}) uses the same public key as the previous one ({})",
+                        previous_chain.catalyst_id().as_short_id()
+                    ),
+                    "It is only allowed to override the existing chain by using different public key",
+                );
+            } else {
+                // The new root registration "takes" an address(es) from the existing chain, so that
+                // chain needs to be updated.
+                updated_chains
+                    .entry(id)
+                    .and_modify(|e| {
+                        e.insert(address.clone());
+                    })
+                    .or_insert([address.clone()].into_iter().collect());
+            }
+        }
+    }
+
+    // Check that new public keys aren't used by other chains.
+    let public_keys = validate_public_keys(&new_chain, is_persistent, &report, provider).await?;
+
+    if report.is_problematic() {
+        return Err(RbacValidationError::InvalidRegistration {
+            catalyst_id,
+            purpose,
+            report,
+        });
+    }
+
+    Ok(RbacValidationSuccess {
+        catalyst_id,
+        stake_addresses: new_addresses,
+        public_keys,
+        modified_chains: updated_chains.into_iter().collect(),
         purpose,
     })
 }
