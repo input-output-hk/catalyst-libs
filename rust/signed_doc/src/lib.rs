@@ -239,6 +239,27 @@ impl CatalystSignedDocument {
     pub fn into_builder(&self) -> anyhow::Result<SignaturesBuilder> {
         self.try_into()
     }
+
+    /// Returns CBOR bytes.
+    ///
+    /// # Errors
+    ///  - `minicbor::encode::Error`
+    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
+        let mut e = minicbor::Encoder::new(Vec::new());
+        self.encode(&mut e, &mut ())?;
+        Ok(e.into_writer())
+    }
+
+    /// Build `CatalystSignedDoc` instance from CBOR bytes.
+    ///
+    /// # Errors
+    ///  - `minicbor::decode::Error`
+    pub fn from_bytes(
+        bytes: &[u8],
+        mut policy: CompatibilityPolicy,
+    ) -> anyhow::Result<Self> {
+        Ok(minicbor::decode_with(bytes, &mut policy)?)
+    }
 }
 
 impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
@@ -344,17 +365,14 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(minicbor::decode_with(
-            value,
-            &mut CompatibilityPolicy::Accept,
-        )?)
+        Self::from_bytes(value, CompatibilityPolicy::Accept)
     }
 }
 
-impl TryFrom<CatalystSignedDocument> for Vec<u8> {
+impl TryFrom<&CatalystSignedDocument> for Vec<u8> {
     type Error = anyhow::Error;
 
-    fn try_from(value: CatalystSignedDocument) -> Result<Self, Self::Error> {
-        Ok(minicbor::to_vec(value)?)
+    fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
+        value.to_bytes()
     }
 }

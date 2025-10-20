@@ -549,7 +549,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-09-09 |
+| Modified | 2025-10-17 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -607,6 +607,10 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 #### 0.1.3 (2025-09-09)
 
 * Fixed an invalid 'Presentation Template' [JSON schema][JSON Schema-2020-12].
+
+#### 0.1.4 (2025-10-17)
+
+* Modified [`collaborators`](metadata.md#collaborators) [cddl][RFC8610] definition, it must have at least one element in array.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

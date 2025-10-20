@@ -8,6 +8,7 @@ use crate::{
     CatalystSignedDocument,
 };
 
+mod chain;
 mod collaborators;
 mod content;
 mod content_encoding;
@@ -24,6 +25,7 @@ mod template;
 mod utils;
 mod ver;
 
+pub(crate) use chain::ChainRule;
 pub(crate) use collaborators::CollaboratorsRule;
 pub(crate) use content::ContentRule;
 pub(crate) use content_encoding::ContentEncodingRule;
@@ -60,6 +62,8 @@ pub(crate) struct Rules {
     pub(crate) section: SectionRule,
     /// 'parameters' field validation rule
     pub(crate) parameters: ParametersRule,
+    /// 'chain' field validation rule
+    pub(crate) chain: ChainRule,
     /// 'collaborators' field validation rule
     pub(crate) collaborators: CollaboratorsRule,
     /// document's content validation rule
@@ -92,6 +96,7 @@ impl Rules {
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
+            self.chain.check(doc, provider).boxed(),
             self.collaborators.check(doc).boxed(),
             self.content.check(doc).boxed(),
             self.kid.check(doc).boxed(),
@@ -116,8 +121,7 @@ impl Rules {
     ///  - `signed_doc.json` filed loading and JSON parsing errors.
     ///  - `catalyst-signed-doc-spec` crate version doesn't  align with the latest version
     ///    of the `signed_doc.json`.
-    pub(crate) fn documents_rules(
-    ) -> anyhow::Result<impl Iterator<Item = (crate::DocType, crate::validator::rules::Rules)>>
+    pub(crate) fn documents_rules() -> anyhow::Result<impl Iterator<Item = (crate::DocType, Rules)>>
     {
         let spec = catalyst_signed_doc_spec::CatalystSignedDocSpec::load_signed_doc_spec()?;
 
@@ -134,6 +138,7 @@ impl Rules {
                 content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
                 template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
                 parameters: ParametersRule::new(&spec.docs, &doc_spec.metadata.parameters)?,
+                chain: ChainRule::new(&spec.docs, &doc_spec.metadata.chain),
                 doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
                 reply: ReplyRule::new(&spec.docs, &doc_spec.metadata.reply)?,
                 section: SectionRule::NotSpecified,
@@ -141,9 +146,7 @@ impl Rules {
                 content: ContentRule::new(&doc_spec.payload)?,
                 kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
                 signature: SignatureRule { mutlisig: false },
-                ownership: DocumentOwnershipRule {
-                    allow_collaborators: false,
-                },
+                ownership: DocumentOwnershipRule::new(&doc_spec.signers.update)?,
             };
             let doc_type = doc_spec.doc_type.parse()?;
 
