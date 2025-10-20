@@ -2,7 +2,6 @@
 
 mod update_rbac;
 pub mod validation;
-pub mod validation_result;
 
 use std::{
     collections::{HashMap, HashSet},

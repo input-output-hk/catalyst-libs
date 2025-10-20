@@ -7,17 +7,51 @@ use cardano_chain_follower::{hashes::TransactionId, StakeAddress};
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
     problem_report::ProblemReport,
+    uuid::UuidV4,
 };
 use ed25519_dalek::VerifyingKey;
 
 use crate::{
     cardano::cip509::{Cip0134UriSet, Cip509},
     providers::RbacRegistrationProvider,
-    registration::cardano::{
-        validation_result::{RbacValidationError, RbacValidationResult, RbacValidationSuccess},
-        RegistrationChain,
-    },
+    registration::cardano::RegistrationChain,
 };
+
+/// A return value of the `validate_rbac_registration` method.
+pub type RbacValidationResult = Result<Cip509, RbacValidationError>;
+
+/// An error returned from the `validate_rbac_registration` method.
+#[allow(clippy::large_enum_variant)]
+pub enum RbacValidationError {
+    /// A registration is invalid (`report.is_problematic()` returns `true`).
+    ///
+    /// This variant is inserted to the `rbac_invalid_registration` table.
+    InvalidRegistration {
+        /// A Catalyst ID.
+        catalyst_id: CatalystId,
+        /// A registration purpose.
+        purpose: Option<UuidV4>,
+        /// A problem report.
+        report: ProblemReport,
+    },
+    /// Unable to determine a Catalyst ID of the registration.
+    ///
+    /// This can happen if a previous transaction ID in the registration is incorrect.
+    UnknownCatalystId,
+    /// A "fatal" error occurred during validation.
+    ///
+    /// This means that the validation wasn't performed properly (usually because of a
+    /// database failure) and we cannot process the given registration. This error is
+    /// propagated on a higher level, so there will be another attempt to index that
+    /// block.
+    Fatal(anyhow::Error),
+}
+
+impl From<anyhow::Error> for RbacValidationError {
+    fn from(e: anyhow::Error) -> Self {
+        RbacValidationError::Fatal(e)
+    }
+}
 
 /// Tries to update an existing RBAC chain.
 async fn update_chain<Provider>(
@@ -69,7 +103,7 @@ where
     let stake_addresses = cip509_stake_addresses(&reg);
 
     // Try to add a new registration to the chain.
-    let new_chain = chain.update(reg).ok_or_else(|| {
+    let new_chain = chain.update(reg.clone()).ok_or_else(|| {
         RbacValidationError::InvalidRegistration {
             catalyst_id: catalyst_id.clone(),
             purpose,
@@ -89,15 +123,13 @@ where
         });
     }
 
-    Ok(RbacValidationSuccess {
-        catalyst_id,
+    Ok(reg.put_validation_result(
         stake_addresses,
         public_keys,
-        // Only new chains can take ownership of stake addresses of existing chains, so in this case
-        // other chains aren't affected.
-        modified_chains: Vec::new(),
-        purpose,
-    })
+        // Only new chains can take ownership of stake addresses of existing chains, so in this
+        // case other chains aren't affected.
+        Vec::new(),
+    ))
 }
 
 /// Tries to start a new RBAC chain.
@@ -114,7 +146,7 @@ where
     let report = reg.report().to_owned();
 
     // Try to start a new chain.
-    let new_chain = RegistrationChain::new(reg).ok_or_else(|| {
+    let new_chain = RegistrationChain::new(reg.clone()).ok_or_else(|| {
         if let Some(catalyst_id) = catalyst_id {
             RbacValidationError::InvalidRegistration {
                 catalyst_id,
@@ -189,13 +221,11 @@ where
         });
     }
 
-    Ok(RbacValidationSuccess {
-        catalyst_id,
-        stake_addresses: new_addresses,
+    Ok(reg.put_validation_result(
+        new_addresses,
         public_keys,
-        modified_chains: updated_chains.into_iter().collect(),
-        purpose,
-    })
+        updated_chains.into_iter().collect(),
+    ))
 }
 
 /// Checks that a new registration doesn't contain a signing key that was used by any
