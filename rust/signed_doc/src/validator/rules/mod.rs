@@ -1,6 +1,7 @@
 //! A list of validation rules for all metadata fields
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
+use anyhow::Context;
 use catalyst_signed_doc_spec::{DocSpec, DocSpecs};
 use futures::FutureExt;
 
@@ -159,9 +160,8 @@ impl Rules {
                 continue;
             }
 
-            let rules = Self::new(&spec.docs, doc_spec).map_err(|e| {
-                anyhow::anyhow!("Fail to initializing document '{doc_name}', err: {e}")
-            })?;
+            let rules = Self::new(&spec.docs, doc_spec)
+                .context(format!("Fail to initializing document '{doc_name}'"))?;
             let doc_type = doc_spec.doc_type.parse()?;
 
             doc_rules.push((doc_type, rules));
@@ -177,7 +177,10 @@ mod tests {
 
     #[test]
     fn rules_documents_rules_test() {
-        for (doc_type, rules) in Rules::documents_rules().unwrap() {
+        for (doc_type, rules) in Rules::documents_rules()
+            .map_err(|e| format!("{e:#}"))
+            .unwrap()
+        {
             println!("{doc_type}: {rules:?}");
         }
     }
