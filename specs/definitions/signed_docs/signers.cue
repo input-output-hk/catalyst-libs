@@ -49,18 +49,14 @@ _allAdminRoles: or(_allAdminRolesList)
 }
 
 #allowedUpdaters: {
-	collaborators?: bool | *false // Listed collaborators can post updated versions
+	collaborators:  "collaborators" | "ref" | *"excluded" // Listed collaborators can post updated versions based on the metadata field as a source of collaborators information
 	author:         bool | *true  // The original author can post updated versions
-	any?:           bool | *false // Anyone with the correct role can post updated versions
 }
 
 #allowedSigners: {
 	// Who is allowed to sign a new document
 	// TODO: Import roles from a role definition configuration.
 	roles: #allowedRoles
-
-	// Limited to the same signer as the document referenced
-	referenced?: bool | *false
 
 	// Who is allowed to sign an update to an existing document.
 	update: #allowedUpdaters
