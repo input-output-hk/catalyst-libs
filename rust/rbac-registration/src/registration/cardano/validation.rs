@@ -54,7 +54,7 @@ impl From<anyhow::Error> for RbacValidationError {
 }
 
 /// Tries to update an existing RBAC chain.
-async fn update_chain<Provider>(
+pub async fn update_chain<Provider>(
     reg: Cip509,
     previous_txn: TransactionId,
     is_persistent: bool,
@@ -133,7 +133,7 @@ where
 }
 
 /// Tries to start a new RBAC chain.
-async fn start_new_chain<Provider>(
+pub async fn start_new_chain<Provider>(
     reg: Cip509,
     is_persistent: bool,
     provider: &Provider,
@@ -230,7 +230,7 @@ where
 
 /// Checks that a new registration doesn't contain a signing key that was used by any
 /// other chain. Returns a list of public keys in the registration.
-async fn validate_public_keys<Provider>(
+pub async fn validate_public_keys<Provider>(
     chain: &RegistrationChain,
     is_persistent: bool,
     report: &ProblemReport,
@@ -265,7 +265,7 @@ where
 }
 
 /// Returns a set of stake addresses in the given registration.
-fn cip509_stake_addresses(cip509: &Cip509) -> HashSet<StakeAddress> {
+pub fn cip509_stake_addresses(cip509: &Cip509) -> HashSet<StakeAddress> {
     cip509
         .certificate_uris()
         .map(Cip0134UriSet::stake_addresses)

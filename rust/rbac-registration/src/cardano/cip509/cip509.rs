@@ -303,6 +303,21 @@ impl Cip509 {
         self.catalyst_id.as_ref()
     }
 
+    /// Returns stake addresses processed from either `update_chain` or `start_new_chain`.
+    pub fn stake_addresses(&self) -> &HashSet<StakeAddress> {
+        &self.stake_addresses
+    }
+
+    /// Returns public keys processed from either `update_chain` or `start_new_chain`.
+    pub fn public_keys(&self) -> &HashSet<VerifyingKey> {
+        &self.public_keys
+    }
+
+    /// Returns modified chains from either `update_chain` or `start_new_chain`.
+    pub fn modified_chains(&self) -> &Vec<(CatalystId, HashSet<StakeAddress>)> {
+        &self.modified_chains
+    }
+
     /// Returns a list of addresses extracted from certificate URIs of a specific role.
     #[must_use]
     pub fn certificate_addresses(
