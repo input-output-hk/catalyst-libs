@@ -76,7 +76,6 @@ impl DocumentOwnershipRule {
 
         let mut allowed_authors = HashSet::new();
         if let DocumentOwnershipRule::RefFieldBased = self {
-            todo!();
         } else if let Some(first_doc) = provider.try_get_first_doc(doc_id).await? {
             allowed_authors.extend(first_doc.authors());
 
