@@ -135,9 +135,7 @@ docs: #DocumentDefinitions & {
 				]
 			}
 
-			referenced: true
-
-			update: collaborators: true
+			update: collaborators: "ref"
 		}
 
 		versions: [

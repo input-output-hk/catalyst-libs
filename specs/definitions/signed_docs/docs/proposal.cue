@@ -91,7 +91,7 @@ docs: #DocumentDefinitions & {
 				"Proposer",
 			]
 
-			update: collaborators: true
+			update: collaborators: "collaborators"
 		}
 
 		authors: "Steven Johnson": "steven.johnson@iohk.io"

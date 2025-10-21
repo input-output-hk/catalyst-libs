@@ -48,8 +48,11 @@ _allAdminRoles: or(_allAdminRolesList)
 	admin?: #allowedAdminRoles
 }
 
+// Listed collaborators can post updated versions based on the metadata field as a source of collaborators information
+#collaboratorsDef: "collaborators" | "ref" | *"excluded" | "what_the_fuck"
+
 #allowedUpdaters: {
-	collaborators:  "collaborators" | "ref" | *"excluded" // Listed collaborators can post updated versions based on the metadata field as a source of collaborators information
+	collaborators:  #collaboratorsDef
 	author:         bool | *true  // The original author can post updated versions
 }
 

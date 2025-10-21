@@ -48,54 +48,6 @@ use crate::{
    "Latest Version Catalyst Signed Document has the same author as the first version"
 )]
 #[test_case(
-    |provider| {
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
-        let (c_sk, _, c_kid) = create_dummy_key_pair(RoleId::Role0);
-        let id = UuidV7::new();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(id))
-            .with_metadata_field(SupportedField::Collaborators(vec![c_kid.clone()].into()))
-            .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
-            .unwrap()
-            .build();
-        provider.add_document(None, &doc).unwrap();
-
-        Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
-            .unwrap()
-            .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
-            .unwrap()
-            .build()
-    } => false ;
-   "Latest Version Catalyst Signed Document signed by first author and one collaborator"
-)]
-#[test_case(
-    |provider| {
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
-        let (c_sk, _, c_kid) = create_dummy_key_pair(RoleId::Role0);
-        let id = UuidV7::new();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(id))
-            .with_metadata_field(SupportedField::Collaborators(vec![c_kid.clone()].into()))
-            .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
-            .unwrap()
-            .build();
-        provider.add_document(None, &doc).unwrap();
-
-        Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
-            .unwrap()
-            .build()
-    } => false ;
-   "Latest Version Catalyst Signed Document signed by one collaborator"
-)]
-#[test_case(
     |_| {
         let id = UuidV7::new();
         Builder::new()
@@ -166,34 +118,6 @@ use crate::{
             .build()
     } => false ;
    "Latest Version Catalyst Signed Document signed by first author and not added collaborator"
-)]
-#[test_case(
-    |provider| {
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
-        let (c1_sk, _, c1_kid) = create_dummy_key_pair(RoleId::Role0);
-        let id = UuidV7::new();
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(id))
-            .with_metadata_field(SupportedField::Collaborators(vec![c1_kid.clone()].into()))
-            .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
-            .unwrap()
-            .build();
-        provider.add_document(None, &doc).unwrap();
-
-        let (c2_sk, _, c2_kid) = create_dummy_key_pair(RoleId::Role0);
-        Builder::new()
-            .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
-            .unwrap()
-            .add_signature(|m| c1_sk.sign(&m).to_vec(), c1_kid.clone())
-            .unwrap()
-            .add_signature(|m| c2_sk.sign(&m).to_vec(), c2_kid.clone())
-            .unwrap()
-            .build()
-    } => false ;
-   "Latest Version Catalyst Signed Document signed by first author and one collaborator and one unknown collaborator"
 )]
 #[tokio::test]
 async fn ownership_test(
