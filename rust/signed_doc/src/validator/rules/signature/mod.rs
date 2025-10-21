@@ -14,7 +14,7 @@ use crate::{
 
 /// Signed Document signatures validation rule.
 #[derive(Debug)]
-pub(crate) struct SignatureRule {}
+pub(crate) struct SignatureRule;
 
 impl SignatureRule {
     /// Verify document signatures.

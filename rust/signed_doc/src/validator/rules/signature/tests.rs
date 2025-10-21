@@ -27,10 +27,6 @@ fn metadata() -> serde_json::Value {
     })
 }
 
-fn rule() -> SignatureRule {
-    SignatureRule {}
-}
-
 #[tokio::test]
 async fn single_signature_validation_test() {
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0);
@@ -51,13 +47,13 @@ async fn single_signature_validation_test() {
     let mut provider = TestCatalystProvider::default();
     provider.add_pk(kid.clone(), pk);
     assert!(
-        rule().check(&signed_doc, &provider).await.unwrap(),
+        SignatureRule.check(&signed_doc, &provider).await.unwrap(),
         "{:?}",
         signed_doc.problem_report()
     );
 
     // case: empty provider
-    assert!(!rule()
+    assert!(!SignatureRule
         .check(&signed_doc, &TestCatalystProvider::default())
         .await
         .unwrap());
@@ -71,7 +67,7 @@ async fn single_signature_validation_test() {
         .unwrap()
         .build()
         .unwrap();
-    assert!(!rule().check(&invalid_doc, &provider).await.unwrap());
+    assert!(!SignatureRule.check(&invalid_doc, &provider).await.unwrap());
 
     // case: missing signatures
     let unsigned_doc = Builder::new()
@@ -86,7 +82,7 @@ async fn single_signature_validation_test() {
         .unwrap()
         .build()
         .unwrap();
-    assert!(!rule().check(&unsigned_doc, &provider).await.unwrap());
+    assert!(!SignatureRule.check(&unsigned_doc, &provider).await.unwrap());
 }
 
 #[tokio::test]
@@ -117,21 +113,21 @@ async fn multiple_signatures_validation_test() {
     provider.add_pk(kid1.clone(), pk1);
     provider.add_pk(kid2.clone(), pk2);
     provider.add_pk(kid3.clone(), pk3);
-    assert!(rule().check(&signed_doc, &provider).await.unwrap());
+    assert!(SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: partially available signatures
     let mut provider = TestCatalystProvider::default();
     provider.add_pk(kid1.clone(), pk1);
     provider.add_pk(kid2.clone(), pk2);
-    assert!(!rule().check(&signed_doc, &provider).await.unwrap());
+    assert!(!SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: with unrecognized provider
     let mut provider = TestCatalystProvider::default();
     provider.add_pk(kid_n.clone(), pk_n);
-    assert!(!rule().check(&signed_doc, &provider).await.unwrap());
+    assert!(!SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: no valid signatures available
-    assert!(!rule()
+    assert!(!SignatureRule
         .check(&signed_doc, &TestCatalystProvider::default())
         .await
         .unwrap());
@@ -281,7 +277,7 @@ async fn special_cbor_cases() {
         .unwrap();
 
         assert!(
-            rule().check(&doc, &provider).await.unwrap(),
+            SignatureRule.check(&doc, &provider).await.unwrap(),
             "[case: {}] {:?}",
             case.name,
             doc.problem_report()
