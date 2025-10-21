@@ -5,6 +5,14 @@
 #[allow(clippy::missing_docs_in_private_items)]
 pub struct Update {
     pub author: bool,
-    #[serde(default)]
-    pub collaborators: bool,
+    pub collaborators: Collaborators,
+}
+
+#[derive(serde::Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
+#[serde(rename_all = "lowercase")]
+pub enum Collaborators {
+    Collaborators,
+    Ref,
+    Excluded,
 }

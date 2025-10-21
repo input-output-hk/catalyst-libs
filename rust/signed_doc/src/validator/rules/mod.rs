@@ -136,10 +136,7 @@ impl Rules {
             content: ContentRule::new(&doc_spec.payload)?,
             kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
             signature: SignatureRule { mutlisig: false },
-            ownership: DocumentOwnershipRule::new(
-                &doc_spec.signers.update,
-                &doc_spec.metadata.collaborators,
-            )?,
+            ownership: DocumentOwnershipRule::new(&doc_spec.signers.update, &doc_spec)?,
         })
     }
 

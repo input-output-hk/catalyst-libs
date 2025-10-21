@@ -7,7 +7,9 @@ use std::collections::HashSet;
 
 use anyhow::ensure;
 use catalyst_signed_doc_spec::{
-    is_required::IsRequired, metadata::collaborators::Collaborators, signers::update::Update,
+    is_required::IsRequired,
+    signers::update::{Collaborators, Update},
+    DocSpec,
 };
 use catalyst_types::catalyst_id::CatalystId;
 
@@ -18,26 +20,40 @@ const REPORT_CONTEXT: &str = "Document ownership validation";
 
 /// Document Ownership Validation Rule
 #[derive(Debug)]
-pub(crate) struct DocumentOwnershipRule {
-    /// Collaborators are allowed.
-    allow_collaborators: bool,
+pub(crate) enum DocumentOwnershipRule {
+    /// Collaborators are allowed, based on the 'collaborators' metadata field.
+    CollaboratorsFieldBased,
+    /// Collaborators are allowed, based on the 'ref' metadata field.
+    RefFieldBased,
+    /// Collaborators are not allowed, only original author.
+    WitoutCollaborators,
 }
 
 impl DocumentOwnershipRule {
     /// Creates `DocumentOwnershipRule` from specs.
     pub(crate) fn new(
         spec: &Update,
-        collab_field: &Collaborators,
+        doc_spec: &DocSpec,
     ) -> anyhow::Result<Self> {
         ensure!(spec.author, "'author' field must always be equal to `true`");
-        ensure!(
-            !(spec.collaborators && collab_field.required == IsRequired::Excluded),
-            "'collaborators' metadata field cannot be 'excluded' if 'update'->'collaborators' is true"
-        );
 
-        Ok(Self {
-            allow_collaborators: spec.collaborators,
-        })
+        match spec.collaborators {
+            Collaborators::Collaborators => {
+                ensure!(
+                    doc_spec.metadata.collaborators.required != IsRequired::Excluded,
+                    "'collaborators' metadata field cannot be 'excluded' if 'update'->'collaborators' is 'collaborators' based"
+                );
+                Ok(Self::CollaboratorsFieldBased)
+            },
+            Collaborators::Ref => {
+                ensure!(
+                    doc_spec.metadata.doc_ref.required != IsRequired::Excluded,
+                    "'ref' metadata field cannot be 'excluded' if 'update'->'collaborators' is 'ref' based"
+                );
+                Ok(Self::RefFieldBased)
+            },
+            Collaborators::Excluded => Ok(Self::WitoutCollaborators),
+        }
     }
 
     /// Check document ownership rule
@@ -50,7 +66,6 @@ impl DocumentOwnershipRule {
         Provider: CatalystSignedDocumentProvider,
     {
         let doc_id = doc.doc_id()?;
-
         if doc_id == doc.doc_ver()? && doc.authors().len() != 1 {
             doc.report().functional_validation(
                 "Document must only be signed by one author",
@@ -59,8 +74,13 @@ impl DocumentOwnershipRule {
             return Ok(false);
         }
 
-        if let Some(first_doc) = provider.try_get_first_doc(doc_id).await? {
-            if self.allow_collaborators {
+        let mut allowed_authors = HashSet::new();
+        if let DocumentOwnershipRule::RefFieldBased = self {
+            todo!();
+        } else if let Some(first_doc) = provider.try_get_first_doc(doc_id).await? {
+            allowed_authors.extend(first_doc.authors());
+
+            if let DocumentOwnershipRule::CollaboratorsFieldBased = self {
                 // This a new version of an existing `doc_id`
                 let Some(last_doc) = provider.try_get_last_doc(doc_id).await? else {
                     anyhow::bail!(
@@ -68,15 +88,6 @@ impl DocumentOwnershipRule {
                     );
                 };
 
-                // Create sets of authors for comparison, ensure that they are in the same form
-                // (e.g. each `kid` is in `URI form`).
-                //
-                // Allowed authors for this document are the original author, and collaborators
-                // defined in the last published version of the Document ID.
-                let mut allowed_authors = first_doc
-                    .authors()
-                    .into_iter()
-                    .collect::<HashSet<CatalystId>>();
                 allowed_authors.extend(
                     last_doc
                         .doc_meta()
@@ -84,36 +95,26 @@ impl DocumentOwnershipRule {
                         .iter()
                         .map(CatalystId::as_short_id),
                 );
-                let doc_authors = doc.authors().into_iter().collect::<HashSet<_>>();
-
-                // all elements of the `doc_authors` should be intersecting with the
-                // `allowed_authors`
-                let is_valid =
-                    allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
-
-                if !is_valid {
-                    doc.report().functional_validation(
-                         &format!(
-                            "Document must only be signed by original author and/or by collaborators defined in the previous version. Allowed signers: {:?}, Document signers: {:?}",
-                            allowed_authors.iter().map(ToString::to_string).collect::<Vec<_>>(),
-                            doc_authors.iter().map(ToString::to_string).collect::<Vec<_>>()
-                        ),
-                        REPORT_CONTEXT,
-                    );
-                }
-                return Ok(is_valid);
             }
-            // No collaborators are allowed
-            let is_valid = first_doc.authors() == doc.authors();
-            if !is_valid {
-                doc.report().functional_validation(
-                    "Document authors must match the author from the first version",
-                    REPORT_CONTEXT,
-                );
-            }
-            return Ok(is_valid);
         }
 
-        Ok(true)
+        let doc_authors = doc.authors().into_iter().collect::<HashSet<_>>();
+
+        // all elements of the `doc_authors` should be intersecting with the `allowed_authors` OR
+        // `allowed_authors` must be empty
+        let is_valid = allowed_authors.is_empty()
+            || allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
+
+        if !is_valid {
+            doc.report().functional_validation(
+                &format!(
+                    "Document must only be signed by original author and/or by collaborators defined in the previous version. Allowed signers: {:?}, Document signers: {:?}",
+                    allowed_authors.iter().map(ToString::to_string).collect::<Vec<_>>(),
+                    doc_authors.iter().map(ToString::to_string).collect::<Vec<_>>()
+                ),
+                REPORT_CONTEXT
+            );
+        }
+        Ok(is_valid)
     }
 }

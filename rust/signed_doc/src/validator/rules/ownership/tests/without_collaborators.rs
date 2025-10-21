@@ -1,13 +1,16 @@
-//! Ownership Validation Rule testing
+//! Ownership Validation Rule tests for `DocumentOwnershipRule::WitoutCollaborators`
+//! scenario
 
 use catalyst_types::{catalyst_id::role_index::RoleId, uuid::UuidV7};
 use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
-use super::*;
 use crate::{
-    builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-    validator::rules::utils::create_dummy_key_pair,
+    builder::tests::Builder,
+    metadata::SupportedField,
+    providers::tests::TestCatalystProvider,
+    validator::rules::{utils::create_dummy_key_pair, DocumentOwnershipRule},
+    CatalystSignedDocument,
 };
 
 #[test_case(
@@ -20,7 +23,7 @@ use crate::{
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
             .unwrap()
             .build()
-    } => (true, true) ;
+    } => true ;
     "First Version Catalyst Signed Document has only one author"
 )]
 #[test_case(
@@ -41,7 +44,7 @@ use crate::{
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
             .unwrap()
             .build()
-    } => (true, true) ;
+    } => true ;
    "Latest Version Catalyst Signed Document has the same author as the first version"
 )]
 #[test_case(
@@ -66,7 +69,7 @@ use crate::{
             .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
             .unwrap()
             .build()
-    } => (false, true) ;
+    } => false ;
    "Latest Version Catalyst Signed Document signed by first author and one collaborator"
 )]
 #[test_case(
@@ -89,7 +92,7 @@ use crate::{
             .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
             .unwrap()
             .build()
-    } => (false, true) ;
+    } => false ;
    "Latest Version Catalyst Signed Document signed by one collaborator"
 )]
 #[test_case(
@@ -99,7 +102,7 @@ use crate::{
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .build()
-    } => (false, false) ;
+    } => false ;
     "First Version Unsigned Catalyst Document"
 )]
 #[test_case(
@@ -115,7 +118,7 @@ use crate::{
             .add_signature(|m| sk2.sign(&m).to_vec(), kid2.clone())
             .unwrap()
             .build()
-    } => (false, false) ;
+    } => false ;
     "First Version Catalyst Signed Document two authors"
 )]
 #[test_case(
@@ -137,7 +140,7 @@ use crate::{
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
             .unwrap()
             .build()
-    } => (false, false) ;
+    } => false ;
     "Latest Catalyst Signed Document has a different author from the first version"
 )]
 #[test_case(
@@ -161,7 +164,7 @@ use crate::{
             .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
             .unwrap()
             .build()
-    } => (false, false) ;
+    } => false ;
    "Latest Version Catalyst Signed Document signed by first author and not added collaborator"
 )]
 #[test_case(
@@ -189,29 +192,21 @@ use crate::{
             .add_signature(|m| c2_sk.sign(&m).to_vec(), c2_kid.clone())
             .unwrap()
             .build()
-    } => (false, false) ;
+    } => false ;
    "Latest Version Catalyst Signed Document signed by first author and one collaborator and one unknown collaborator"
 )]
 #[tokio::test]
-async fn ownership_without_collaborators_test(
+async fn ownership_test(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument
-) -> (bool, bool) {
+) -> bool {
     let mut provider = TestCatalystProvider::default();
 
     let doc = doc_gen(&mut provider);
 
-    let without_collaborators = DocumentOwnershipRule {
-        allow_collaborators: false,
-    }
-    .check(&doc, &provider)
-    .await
-    .unwrap();
-    let allowed_collaborators = DocumentOwnershipRule {
-        allow_collaborators: true,
-    }
-    .check(&doc, &provider)
-    .await
-    .unwrap();
+    let res = DocumentOwnershipRule::WitoutCollaborators
+        .check(&doc, &provider)
+        .await
+        .unwrap();
     println!("{:?}", doc.report());
-    (without_collaborators, allowed_collaborators)
+    res
 }
