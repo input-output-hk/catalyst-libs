@@ -357,7 +357,7 @@ fn validate_x509_self_signed_cert(
 #[allow(clippy::similar_names)]
 pub fn validate_role_data(
     metadata: &Cip509RbacMetadata,
-    subnet: Network,
+    subnet: &Network,
     report: &ProblemReport,
 ) -> Option<CatalystId> {
     let context = "Role data validation";
@@ -474,7 +474,7 @@ pub fn validate_role_data(
 fn validate_role_0(
     role: &RoleData,
     metadata: &Cip509RbacMetadata,
-    subnet: Network,
+    subnet: &Network,
     context: &str,
     report: &ProblemReport,
 ) -> Option<CatalystId> {
