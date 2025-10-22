@@ -304,16 +304,19 @@ impl Cip509 {
     }
 
     /// Returns stake addresses processed from either `update_chain` or `start_new_chain`.
+    #[must_use]
     pub fn stake_addresses(&self) -> &HashSet<StakeAddress> {
         &self.stake_addresses
     }
 
     /// Returns public keys processed from either `update_chain` or `start_new_chain`.
+    #[must_use]
     pub fn public_keys(&self) -> &HashSet<VerifyingKey> {
         &self.public_keys
     }
 
     /// Returns modified chains from either `update_chain` or `start_new_chain`.
+    #[must_use]
     pub fn modified_chains(&self) -> &Vec<(CatalystId, HashSet<StakeAddress>)> {
         &self.modified_chains
     }
@@ -372,6 +375,7 @@ impl Cip509 {
 }
 
 impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
+    #[allow(clippy::too_many_lines)]
     fn decode(
         d: &mut Decoder,
         decode_context: &mut DecodeContext,

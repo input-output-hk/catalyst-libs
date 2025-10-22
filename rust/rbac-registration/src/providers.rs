@@ -7,7 +7,7 @@ use cardano_chain_follower::hashes::TransactionId;
 use catalyst_types::catalyst_id::CatalystId;
 use ed25519_dalek::VerifyingKey;
 
-use crate::registration::cardano::*;
+use crate::registration::cardano::RegistrationChain;
 
 /// `RegistrationChain` Provider trait
 pub trait RbacRegistrationProvider {

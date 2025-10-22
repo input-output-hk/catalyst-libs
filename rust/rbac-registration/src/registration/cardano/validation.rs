@@ -18,7 +18,7 @@ use crate::{
 };
 
 /// A return value of the `validate_rbac_registration` method.
-pub type RbacValidationResult = Result<Cip509, RbacValidationError>;
+pub type RbacValidationResult = Result<(RegistrationChain, Cip509), RbacValidationError>;
 
 /// An error returned from the `validate_rbac_registration` method.
 #[allow(clippy::large_enum_variant)]
@@ -53,7 +53,18 @@ impl From<anyhow::Error> for RbacValidationError {
     }
 }
 
-/// Tries to update an existing RBAC chain.
+/// Attempts to update an existing RBAC registration chain
+/// with a new CIP-509 registration, validating address and key usage consistency.
+///
+/// # Returns
+/// - `Ok((new_chain, validation_result))` if the chain was successfully updated and
+///   validated.
+///
+/// # Errors
+/// - Returns [`RbacValidationError::UnknownCatalystId`] if no Catalyst chain is found for
+///   `previous_txn`.
+/// - Returns [`RbacValidationError::InvalidRegistration`] if address/key duplication or
+///   validation inconsistencies are detected.
 pub async fn update_chain<Provider>(
     reg: Cip509,
     previous_txn: TransactionId,
@@ -123,16 +134,30 @@ where
         });
     }
 
-    Ok(reg.put_validation_result(
-        stake_addresses,
-        public_keys,
-        // Only new chains can take ownership of stake addresses of existing chains, so in this
-        // case other chains aren't affected.
-        Vec::new(),
+    Ok((
+        new_chain,
+        reg.put_validation_result(
+            stake_addresses,
+            public_keys,
+            // Only new chains can take ownership of stake addresses of existing chains, so in this
+            // case other chains aren't affected.
+            Vec::new(),
+        ),
     ))
 }
 
-/// Tries to start a new RBAC chain.
+/// Attempts to initialize a new RBAC registration chain
+/// from a given CIP-509 registration, ensuring uniqueness of Catalyst ID, stake
+/// addresses, and associated public keys.
+///
+/// # Returns
+/// - `Ok((new_chain, validation_result))` if the chain was successfully initialized and
+///   validated.
+///
+/// # Errors
+/// - [`RbacValidationError::UnknownCatalystId`]: if `reg` lacks a valid Catalyst ID.
+/// - [`RbacValidationError::InvalidRegistration`]: if any functional validation, stake
+///   address conflict, or public key duplication occurs.
 pub async fn start_new_chain<Provider>(
     reg: Cip509,
     is_persistent: bool,
@@ -221,15 +246,27 @@ where
         });
     }
 
-    Ok(reg.put_validation_result(
-        new_addresses,
-        public_keys,
-        updated_chains.into_iter().collect(),
+    Ok((
+        new_chain,
+        reg.put_validation_result(
+            new_addresses,
+            public_keys,
+            updated_chains.into_iter().collect(),
+        ),
     ))
 }
 
-/// Checks that a new registration doesn't contain a signing key that was used by any
-/// other chain. Returns a list of public keys in the registration.
+/// Validates that none of the signing keys in a given RBAC registration chain
+/// have been used by any other existing chain, ensuring global key uniqueness
+/// across all Catalyst registrations.
+///
+/// # Returns
+/// Returns a [`Result<HashSet<VerifyingKey>>`] containing all unique public keys
+/// extracted from the registration chain if validation passes successfully.
+///
+/// # Errors
+/// - Propagates any I/O or provider-level errors encountered while checking key ownership
+///   (e.g., database lookup failures).
 pub async fn validate_public_keys<Provider>(
     chain: &RegistrationChain,
     is_persistent: bool,
