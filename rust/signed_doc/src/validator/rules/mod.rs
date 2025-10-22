@@ -135,7 +135,7 @@ impl Rules {
             collaborators: CollaboratorsRule::new(&doc_spec.metadata.collaborators),
             content: ContentRule::new(&doc_spec.payload)?,
             kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
-            signature: SignatureRule { mutlisig: false },
+            signature: SignatureRule,
             ownership: DocumentOwnershipRule::new(&doc_spec.signers.update, &doc_spec)?,
         })
     }

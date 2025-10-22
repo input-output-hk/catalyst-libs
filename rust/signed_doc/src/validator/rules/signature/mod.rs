@@ -14,10 +14,7 @@ use crate::{
 
 /// Signed Document signatures validation rule.
 #[derive(Debug)]
-pub(crate) struct SignatureRule {
-    /// Allows multiple signatures.
-    pub(crate) mutlisig: bool,
-}
+pub(crate) struct SignatureRule;
 
 impl SignatureRule {
     /// Verify document signatures.
@@ -36,18 +33,6 @@ impl SignatureRule {
         if doc.signatures().is_empty() {
             doc.report().other(
                 "Catalyst Signed Document is unsigned",
-                "During Catalyst Signed Document signature validation",
-            );
-            return Ok(false);
-        }
-
-        if !self.mutlisig && doc.signatures().len() > 1 {
-            doc.report().other(
-                format!(
-                    "Multi-signature is not allowed, found {} signatures",
-                    doc.signatures().len()
-                )
-                .as_str(),
                 "During Catalyst Signed Document signature validation",
             );
             return Ok(false);

@@ -236,8 +236,8 @@ impl MultiEraBlock {
     ///
     /// - The network that this block originated on.
     #[must_use]
-    pub fn network(&self) -> Network {
-        self.inner.network
+    pub fn network(&self) -> &Network {
+        &self.inner.network
     }
 
     /// Get The Metadata fora a transaction and known label from the block

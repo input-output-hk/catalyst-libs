@@ -175,7 +175,7 @@ impl Cip36 {
         let mut cip36 = Cip36 {
             key_registration,
             registration_witness,
-            network,
+            network: network.clone(),
             slot: slot.into(),
             txn_idx,
             is_catalyst_strict,
@@ -298,8 +298,8 @@ impl Cip36 {
 
     /// Get the network of this CIP-36 registration.
     #[must_use]
-    pub fn network(&self) -> Network {
-        self.network
+    pub fn network(&self) -> &Network {
+        &self.network
     }
 
     /// Get the transaction index of this CIP-36 registration.
@@ -373,7 +373,7 @@ mod tests {
         let res = Cip36::new(&block_1(), 1.into(), true).unwrap().unwrap();
         assert!(!res.err_report().is_problematic());
         assert!(res.is_valid());
-        assert!(res.network() == Network::Preprod);
+        assert!(res.network() == &Network::Preprod);
         assert!(res.raw_nonce() == Some(55_076_993));
         assert!(res.nonce() == Some(55_076_993));
     }
