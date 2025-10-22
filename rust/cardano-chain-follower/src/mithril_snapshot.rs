@@ -43,7 +43,7 @@ impl MithrilSnapshot {
         &self,
         point: &Point,
     ) -> bool {
-        let latest_id = latest_mithril_snapshot_id(self.chain);
+        let latest_id = latest_mithril_snapshot_id(&self.chain);
 
         point.slot_or_default() <= latest_id.tip().slot_or_default()
     }
@@ -65,7 +65,7 @@ impl MithrilSnapshot {
         &self,
         point: &Point,
     ) -> Option<MithrilSnapshotIterator> {
-        let snapshot_id = latest_mithril_snapshot_id(self.chain);
+        let snapshot_id = latest_mithril_snapshot_id(&self.chain);
         let snapshot_path = snapshot_id.immutable_path();
 
         // Quick check if the block can be within the immutable data.
@@ -74,7 +74,7 @@ impl MithrilSnapshot {
         }
 
         // We don't know the previous block, so we need to find it.
-        MithrilSnapshotIterator::new(self.chain, &snapshot_path, point, None)
+        MithrilSnapshotIterator::new(&self.chain, &snapshot_path, point, None)
             .await
             .ok()
     }

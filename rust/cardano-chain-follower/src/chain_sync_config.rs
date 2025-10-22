@@ -54,11 +54,11 @@ impl ChainSyncConfig {
     #[must_use]
     pub fn default_for(chain: Network) -> Self {
         Self {
-            chain,
             relay_address: chain.default_relay(),
             chain_update_buffer_size: DEFAULT_CHAIN_UPDATE_BUFFER_SIZE,
             immutable_slot_window: DEFAULT_IMMUTABLE_SLOT_WINDOW,
-            mithril_cfg: MithrilSnapshotConfig::default_for(chain),
+            mithril_cfg: MithrilSnapshotConfig::default_for(chain.clone()),
+            chain,
         }
     }
 
@@ -135,11 +135,11 @@ impl ChainSyncConfig {
             "Chain Synchronization Starting"
         );
 
-        stats::sync_started(self.chain);
+        stats::sync_started(&self.chain);
 
         // Start the Chain Sync - IFF its not already running.
         let lock_entry = SYNC_JOIN_HANDLE_MAP
-            .entry(self.chain)
+            .entry(self.chain.clone())
             .or_insert_with(|| Mutex::new(None));
         let mut locked_handle = lock_entry.value().lock().await;
 
@@ -154,9 +154,9 @@ impl ChainSyncConfig {
         let config = self.clone();
         // Start Chain Sync
         *locked_handle = Some(tokio::spawn(async move {
-            stats::start_thread(config.chain, stats::thread::name::CHAIN_SYNC, true);
+            stats::start_thread(&config.chain, stats::thread::name::CHAIN_SYNC, true);
             chain_sync(config.clone(), rx).await;
-            stats::stop_thread(config.chain, stats::thread::name::CHAIN_SYNC);
+            stats::stop_thread(&config.chain, stats::thread::name::CHAIN_SYNC);
         }));
 
         // sync_map.insert(chain, handle);

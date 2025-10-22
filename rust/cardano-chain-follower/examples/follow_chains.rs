@@ -99,7 +99,7 @@ async fn start_sync_for(
     network: &Network,
     matches: ArgMatches,
 ) -> Result<(), Box<dyn Error>> {
-    let mut cfg = ChainSyncConfig::default_for(*network);
+    let mut cfg = ChainSyncConfig::default_for(network.clone());
     let mut mithril_dl_connect_timeout = "Not Set".to_string();
     let mut mithril_dl_data_timeout = "Not Set".to_string();
 
@@ -244,7 +244,7 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 /// Try and follow a chain continuously, from Genesis until Tip.
 #[allow(clippy::too_many_lines)]
 async fn follow_for(
-    network: Network,
+    network: &Network,
     matches: ArgMatches,
 ) {
     info!(chain = network.to_string(), "Following");
@@ -472,7 +472,7 @@ async fn follow_for(
 /// interested metadata label.
 fn update_largest_metadata(
     block: &MultiEraBlock,
-    network: Network,
+    network: &Network,
     txn_idx: TxnIndex,
     largest_metadata_size: &mut usize,
 ) {
@@ -504,7 +504,7 @@ fn update_largest_metadata(
 /// Helper function for logging the raw box auxiliary data.
 fn raw_aux_info(
     block: &pallas_traverse::MultiEraBlock,
-    network: Network,
+    network: &Network,
 ) {
     match block {
         pallas_traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
@@ -532,7 +532,7 @@ fn raw_aux_info(
 /// Helper function for updating the largest auxiliary data.
 fn update_largest_aux(
     block: &pallas_traverse::MultiEraBlock,
-    network: Network,
+    network: &Network,
     largest_metadata_size: &mut usize,
 ) {
     match block {
@@ -578,7 +578,7 @@ fn compare_and_log_aux(
     aux_len: usize,
     block_no: u64,
     txn_idx: u32,
-    network: Network,
+    network: &Network,
     largest_metadata_size: &mut usize,
 ) {
     if aux_len > *largest_metadata_size {
@@ -599,7 +599,7 @@ fn compare_and_log_aux(
 /// - CIP36 that is invalid decoded.
 fn log_bad_cip36_info(
     block: &MultiEraBlock,
-    network: Network,
+    network: &Network,
 ) {
     if let Some(map) = Cip36::cip36_from_block(block, true) {
         for (key, value) in &map {
@@ -624,7 +624,7 @@ fn log_bad_cip36_info(
 /// Function for logging bad CIP509.
 fn log_bad_cip509_info(
     block: &MultiEraBlock,
-    network: Network,
+    network: &Network,
 ) {
     for cip509 in Cip509::from_block(block, &[]) {
         if cip509.report().is_problematic() {
@@ -648,7 +648,7 @@ fn get_cip509(
 
 /// Log a transactions details in full.
 fn log_transaction(
-    network: Network,
+    network: &Network,
     block: &MultiEraBlock,
     txn_idx: TxnIndex,
     tx: &MultiEraTx,
@@ -734,7 +734,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Make a follower for the network.
     let mut tasks = Vec::new();
     for network in &networks {
-        tasks.push(tokio::spawn(follow_for(*network, matches.clone())));
+        tasks.push(tokio::spawn(follow_for(network, matches.clone())));
     }
 
     // Wait for all followers to finish.
