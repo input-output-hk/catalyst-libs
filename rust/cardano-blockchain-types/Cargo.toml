@@ -2,7 +2,7 @@
 name = "cardano-blockchain-types"
 description = "Common Cardano Blockchain data types for use in both applications and crates"
 keywords = ["cardano", "catalyst", ]
-version = "0.0.6"
+version = "0.0.7"
 authors = [
     "Steven Johnson <steven.johnson@iohk.io>"
 ]
@@ -41,12 +41,12 @@ thiserror = "2.0.11"
 
 # TODO: Revert ALL to Upstream Pallas after <https://github.com/txpipe/pallas/pull/685> merges. 
 # pallas related commit is from <https://github.com/input-output-hk/catalyst-pallas/pull/4>
-pallas-traverse = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
-pallas-addresses = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
-pallas-primitives = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
-pallas-crypto = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
-pallas-codec = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-traverse = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-addresses = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-primitives = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-crypto = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-codec = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
 # Only include these for non-wasm32 targets
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-pallas-network = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
-pallas-hardano = { version = "=1.0.0-alpha.2",  git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-network = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
+pallas-hardano = { version = "=1.0.0-alpha.2", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9c6322e6b51916b2cc54ba713b07bb25ef07dd00" }
