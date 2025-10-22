@@ -60,7 +60,7 @@ test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.8", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "rbac-registration/v0.0.8" }
+rbac-registration = { version = "0.0.12", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "rbac-registration/v0.0.12" }
 minicbor = { version = "2.0.0", features = ["alloc", "half"] }
 
 # Note, these features are for support of features exposed by dependencies.
