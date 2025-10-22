@@ -9,7 +9,8 @@ pub fn proposal_submission_action_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(RoleId::Proposer)
+    let (sk, kid) = get_doc_kid_and_sk(provider, ref_doc, 0)
+        .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
     Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -30,6 +31,6 @@ pub fn proposal_submission_action_doc(
         .with_json_content(&serde_json::json!({
             "action": "final"
         }))?
-        .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())?
         .build()
 }

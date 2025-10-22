@@ -103,6 +103,14 @@ pub mod tests {
         ) {
             self.secret_key.insert(kid, sk);
         }
+
+        /// Returns a reference to the corresponding `SigningKey`.
+        pub fn get_sk(
+            &self,
+            kid: &CatalystId,
+        ) -> Option<&SigningKey> {
+            self.secret_key.get(kid)
+        }
     }
 
     impl CatalystSignedDocumentProvider for TestCatalystProvider {

@@ -51,7 +51,7 @@ impl DocumentOwnershipRule {
                     "'ref' metadata field cannot be 'excluded' or 'optional' if 'update'->'collaborators' is 'ref' based"
                 );
                 ensure!(
-                    !doc_spec.metadata.doc_ref.multiple,
+                    doc_spec.metadata.doc_ref.multiple,
                     "'ref' metadata field cannot has multiple document references if 'update'->'collaborators' is 'ref' based"
                 );
                 Ok(Self::RefFieldBased)
