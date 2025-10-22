@@ -244,7 +244,7 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 /// Try and follow a chain continuously, from Genesis until Tip.
 #[allow(clippy::too_many_lines)]
 async fn follow_for(
-    network: &Network,
+    network: Network,
     matches: ArgMatches,
 ) {
     info!(chain = network.to_string(), "Following");
@@ -290,7 +290,7 @@ async fn follow_for(
     let mut largest_aux_size: usize = 0;
     let mut found_transactions: usize = 0;
 
-    let mut follower = ChainFollower::new(network, origin, Point::TIP).await;
+    let mut follower = ChainFollower::new(&network, origin, Point::TIP).await;
 
     while let Some(chain_update) = follower.next().await {
         updates = updates.saturating_add(1);
@@ -382,7 +382,7 @@ async fn follow_for(
                 if largest_metadata {
                     update_largest_metadata(
                         block,
-                        network,
+                        &network,
                         txn_idx.into(),
                         &mut largest_metadata_size,
                     );
@@ -391,29 +391,29 @@ async fn follow_for(
                     let this_hash = format!("{}", tx.hash());
                     if check_txn_hashes(&this_hash, dump_txn_hash) {
                         found_transactions = found_transactions.saturating_add(1);
-                        log_transaction(network, block, txn_idx.into(), tx, &this_hash);
+                        log_transaction(&network, block, txn_idx.into(), tx, &this_hash);
                     }
                 }
             }
         }
         // Update and log the largest transaction auxiliary data.
         if largest_aux {
-            update_largest_aux(decoded_block, network, &mut largest_aux_size);
+            update_largest_aux(decoded_block, &network, &mut largest_aux_size);
         }
 
         // Log the raw auxiliary data.
         if log_raw_aux {
-            raw_aux_info(decoded_block, network);
+            raw_aux_info(decoded_block, &network);
         }
 
         // Illustrate how the chain-follower works with metadata.
         // Log bad CIP36.
         if log_bad_cip36 {
-            log_bad_cip36_info(block, network);
+            log_bad_cip36_info(block, &network);
         }
         // Log bad CIP509.
         if log_bad_cip509 {
-            log_bad_cip509_info(block, network);
+            log_bad_cip509_info(block, &network);
         }
 
         prev_hash = Some(decoded_block.hash());
@@ -433,7 +433,7 @@ async fn follow_for(
         if check_time.duration_since(last_metrics_time).as_secs() >= 60 {
             last_metrics_time = check_time;
 
-            let stats = Statistics::new(network);
+            let stats = Statistics::new(&network);
 
             if !inhibit_stats {
                 info!("Json Metrics:  {}", stats.as_json(true));
@@ -461,7 +461,7 @@ async fn follow_for(
     }
 
     if !inhibit_stats {
-        let stats = Statistics::new(network);
+        let stats = Statistics::new(&network);
         info!("Json Metrics:  {}", stats.as_json(true));
     }
 
@@ -734,7 +734,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Make a follower for the network.
     let mut tasks = Vec::new();
     for network in &networks {
-        tasks.push(tokio::spawn(follow_for(network, matches.clone())));
+        tasks.push(tokio::spawn(follow_for(network.clone(), matches.clone())));
     }
 
     // Wait for all followers to finish.
