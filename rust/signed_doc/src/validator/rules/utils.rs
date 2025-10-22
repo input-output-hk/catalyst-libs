@@ -55,15 +55,13 @@ pub(super) fn create_dummy_key_pair(
     role_index: catalyst_types::catalyst_id::role_index::RoleId
 ) -> (
     ed25519_dalek::SigningKey,
-    ed25519_dalek::VerifyingKey,
     catalyst_types::catalyst_id::CatalystId,
 ) {
     let sk = create_signing_key();
-    let pk = sk.verifying_key();
-    let kid = catalyst_types::catalyst_id::CatalystId::new("cardano", None, pk)
+    let kid = catalyst_types::catalyst_id::CatalystId::new("cardano", None, sk.verifying_key())
         .with_role(role_index)
         .as_uri();
-    (sk, pk, kid)
+    (sk, kid)
 }
 
 #[cfg(test)]

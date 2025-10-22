@@ -30,19 +30,14 @@ pub use proposal_submission_action::proposal_submission_action_doc;
 
 pub fn create_dummy_key_pair(
     role_index: RoleId
-) -> anyhow::Result<(
-    ed25519_dalek::SigningKey,
-    ed25519_dalek::VerifyingKey,
-    CatalystId,
-)> {
+) -> anyhow::Result<(ed25519_dalek::SigningKey, CatalystId)> {
     let sk = create_signing_key();
-    let pk = sk.verifying_key();
     let kid = CatalystId::from_str(&format!(
         "id.catalyst://cardano/{}/{role_index}/0",
-        base64_url::encode(pk.as_bytes())
+        base64_url::encode(sk.verifying_key().as_bytes())
     ))?;
 
-    Ok((sk, pk, kid))
+    Ok((sk, kid))
 }
 
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {

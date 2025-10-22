@@ -15,7 +15,7 @@ use crate::{
 
 #[test_case(
     |provider| {
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
+        let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
@@ -46,8 +46,8 @@ use crate::{
 )]
 #[test_case(
     |provider| {
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
-        let (c_sk, _, c_kid) = create_dummy_key_pair(RoleId::Role0);
+        let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
+        let (c_sk, c_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
@@ -89,7 +89,7 @@ use crate::{
 )]
 #[test_case(
     |_| {
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0);
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
@@ -102,7 +102,7 @@ use crate::{
 )]
 #[test_case(
     |provider| {
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
+        let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
@@ -112,7 +112,7 @@ use crate::{
             .build();
         provider.add_document(None, &doc).unwrap();
 
-        let (a_sk, _, a_kid) = create_dummy_key_pair(RoleId::Role0);
+        let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))

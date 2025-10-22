@@ -11,7 +11,7 @@ use crate::{
     || {
         Builder::new()
             .with_metadata_field(SupportedField::Collaborators(
-                    vec![create_dummy_key_pair(RoleId::Role0).2].into()
+                    vec![create_dummy_key_pair(RoleId::Role0).1].into()
                 ))
             .build()
     }
@@ -41,7 +41,7 @@ async fn section_rule_specified_optional_test(
     || {
         Builder::new()
             .with_metadata_field(SupportedField::Collaborators(
-                    vec![create_dummy_key_pair(RoleId::Role0).2].into()
+                    vec![create_dummy_key_pair(RoleId::Role0).1].into()
                 ))
             .build()
     }
@@ -79,7 +79,7 @@ async fn section_rule_specified_not_optional_test(
     || {
         Builder::new()
             .with_metadata_field(SupportedField::Collaborators(
-                    vec![create_dummy_key_pair(RoleId::Role0).2].into()
+                    vec![create_dummy_key_pair(RoleId::Role0).1].into()
                 ))
             .build()
     }
