@@ -1,6 +1,14 @@
 """Signers Specification."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, Enum
+
+
+class Collaborators(str, Enum):
+    """Signders Collaborators Specification."""
+
+    collaborators_field_based = "collaborators"
+    ref_field_based = "ref"
+    excluded = "excluded"
 
 
 class AllowedRoles(BaseModel):
@@ -15,9 +23,8 @@ class AllowedRoles(BaseModel):
 class AllowedUpdaters(BaseModel):
     """Allowed Updaters Specification."""
 
-    collaborators: bool = Field(default=False)
+    collaborators: Collaborators
     author: bool = Field(default=True)
-    any: bool = Field(default=False)
 
     model_config = ConfigDict(extra="forbid")
 

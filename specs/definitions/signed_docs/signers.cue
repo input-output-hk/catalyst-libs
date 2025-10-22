@@ -49,7 +49,7 @@ _allAdminRoles: or(_allAdminRolesList)
 }
 
 // Listed collaborators can post updated versions based on the metadata field as a source of collaborators information
-#collaboratorsDef: "collaborators" | "ref" | *"excluded" | "what_the_fuck"
+#collaboratorsDef: "collaborators" | "ref" | *"excluded"
 
 #allowedUpdaters: {
 	collaborators:  #collaboratorsDef
