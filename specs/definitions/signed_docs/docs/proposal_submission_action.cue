@@ -73,7 +73,6 @@ docs: #DocumentDefinitions & {
 			ref: {
 				type:     "Proposal"
 				required: "yes"
-				multiple: true
 			}
 
 			parameters: {

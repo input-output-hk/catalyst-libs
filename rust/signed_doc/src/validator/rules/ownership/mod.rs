@@ -47,8 +47,12 @@ impl DocumentOwnershipRule {
             },
             Collaborators::Ref => {
                 ensure!(
-                    doc_spec.metadata.doc_ref.required != IsRequired::Excluded,
-                    "'ref' metadata field cannot be 'excluded' if 'update'->'collaborators' is 'ref' based"
+                    doc_spec.metadata.doc_ref.required == IsRequired::Yes,
+                    "'ref' metadata field cannot be 'excluded' or 'optional' if 'update'->'collaborators' is 'ref' based"
+                );
+                ensure!(
+                    !doc_spec.metadata.doc_ref.multiple,
+                    "'ref' metadata field cannot has multiple document references if 'update'->'collaborators' is 'ref' based"
                 );
                 Ok(Self::RefFieldBased)
             },
@@ -76,16 +80,50 @@ impl DocumentOwnershipRule {
 
         let mut allowed_authors = HashSet::new();
         if let DocumentOwnershipRule::RefFieldBased = self {
+            let Some(doc_ref) = doc.doc_meta().doc_ref() else {
+                doc.report().missing_field("ref", REPORT_CONTEXT);
+                return Ok(false);
+            };
+            let &[ref doc_ref] = doc_ref.as_slice() else {
+                doc.report()
+                    .other("'ref' field cannot have multiple values", REPORT_CONTEXT);
+                return Ok(false);
+            };
+            let Some(first_ref_doc) = provider.try_get_first_doc(*doc_ref.id()).await? else {
+                doc.report().other(
+                    "Cannot find a first version of the referenced document",
+                    REPORT_CONTEXT,
+                );
+                return Ok(false);
+            };
+            allowed_authors.extend(first_ref_doc.authors());
+
+            let last_doc =
+                provider
+                    .try_get_last_doc(*doc_ref.id())
+                    .await?
+                    .ok_or(anyhow::anyhow!(
+                        "A latest version of the document must exist if a first version exists"
+                    ))?;
+
+            allowed_authors.extend(
+                last_doc
+                    .doc_meta()
+                    .collaborators()
+                    .iter()
+                    .map(CatalystId::as_short_id),
+            );
         } else if let Some(first_doc) = provider.try_get_first_doc(doc_id).await? {
             allowed_authors.extend(first_doc.authors());
 
             if let DocumentOwnershipRule::CollaboratorsFieldBased = self {
                 // This a new version of an existing `doc_id`
-                let Some(last_doc) = provider.try_get_last_doc(doc_id).await? else {
-                    anyhow::bail!(
+                let last_doc = provider
+                    .try_get_last_doc(doc_id)
+                    .await?
+                    .ok_or(anyhow::anyhow!(
                         "A latest version of the document must exist if a first version exists"
-                    );
-                };
+                    ))?;
 
                 allowed_authors.extend(
                     last_doc
