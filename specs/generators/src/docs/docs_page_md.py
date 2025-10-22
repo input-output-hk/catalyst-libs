@@ -123,10 +123,7 @@ In this case, it *MUST* be encoded as a CBOR `null (0xf6)`.
 
         signers_doc = signers_doc.strip()
 
-        signers_doc += "\n\nNew versions of this document may be published by:\n\n"
-        for updater in signers.update:
-            if signers.update[updater]:
-                signers_doc += f"* {updater}\n"
+        signers_doc += f"\n\n{signers.update.description}\n\n"
 
         return signers_doc.strip()
 

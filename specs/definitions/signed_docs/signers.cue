@@ -48,13 +48,22 @@ _allAdminRoles: or(_allAdminRolesList)
 	admin?: #allowedAdminRoles
 }
 
-// Listed collaborators can post updated versions based on the metadata field as a source of collaborators information
-#collaboratorsDef: "collaborators" | "ref" | *"excluded"
+#allowedUpdaterType: "collaborators" | "ref" | *"author"
+
+#updaterDescriptions: {
+	collaborators: "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version."
+	ref: "Updates are allowed by the original author and from the 'collaborators' metadata field of the referenced document specified by the 'ref' metadata field."
+	author: "Only the original author can update and sign a new version of documents."
+}
 
 #allowedUpdaters: {
-	collaborators:  #collaboratorsDef
-	author:         bool | *true  // The original author can post updated versions
+	// The type defaults to "author" from #allowedUpdaterType
+	type: #allowedUpdaterType
+
+	// The description is looked up from the map using the value of 'type'
+	description: #updaterDescriptions[type]
 }
+
 
 #allowedSigners: {
 	// Who is allowed to sign a new document
@@ -71,5 +80,4 @@ _allowedSigners: #allowedSigners & {
 			_allUserRolesList[0],
 		]
 	}
-	update: #allowedUpdaters
 }

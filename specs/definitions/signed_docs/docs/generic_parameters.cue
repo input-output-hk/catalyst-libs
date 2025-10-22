@@ -60,7 +60,7 @@ _parameters_payload_description: """
 				"Brand Admin",
 			]
 		}
-		update: collaborators: "collaborators"
+		update: type: "collaborators"
 	}
 
 	authors: {

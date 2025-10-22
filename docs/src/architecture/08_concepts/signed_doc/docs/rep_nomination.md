@@ -272,9 +272,7 @@ The following User roles may sign documents of this type:
 
 * Representative
 
-New versions of this document may be published by:
-
-* author
+Only the original author can update and sign a new version of documents.
 
 ## Copyright
 
