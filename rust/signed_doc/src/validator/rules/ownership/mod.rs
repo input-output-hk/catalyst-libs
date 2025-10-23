@@ -153,8 +153,10 @@ impl DocumentOwnershipRule {
 
         let doc_authors = doc.authors().into_iter().collect::<HashSet<_>>();
 
-        // all elements of the `doc_authors` should be intersecting with the `allowed_authors`
-        let is_valid = allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
+        // all elements of the `doc_authors` should be intersecting with the `allowed_authors` OR
+        // `allowed_authors` must be empty
+        let is_valid = allowed_authors.is_empty()
+            || allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
 
         if !is_valid {
             doc.report().functional_validation(
