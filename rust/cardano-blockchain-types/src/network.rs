@@ -22,7 +22,7 @@ pub(crate) const ENVVAR_MITHRIL_EXE_NAME: &str = "MITHRIL_EXE_NAME";
 
 /// Enum of possible Cardano networks.
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, strum::VariantNames, strum::Display,
+    Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, strum::VariantNames, strum::Display,
 )]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
@@ -36,7 +36,7 @@ pub enum Network {
     /// Cardano devnet network.
     Devnet {
         /// Mithril signature genesis key for a blockchain.
-        genesis_key: &'static str,
+        genesis_key: String,
         /// Cardano blockchain networking magic number genesis block setting
         magic: u64,
         /// Cardano blockchain network id genesis block setting
@@ -48,7 +48,7 @@ pub enum Network {
         /// Cardano byron known slot genesis block setting
         byron_known_slot: u64,
         /// Cardano byron known hash genesis block setting
-        byron_known_hash: &'static str,
+        byron_known_hash: String,
         /// Cardano byron known time genesis block setting
         byron_known_time: u64,
         /// Cardano shelley epoch length genesis block setting
@@ -58,7 +58,7 @@ pub enum Network {
         /// Cardano shelley known slot genesis block setting
         shelley_known_slot: u64,
         /// Cardano shelley known hash genesis block setting
-        shelley_known_hash: &'static str,
+        shelley_known_hash: String,
         /// Cardano shelley known time genesis block setting
         shelley_known_time: u64,
     },
@@ -311,18 +311,18 @@ mod tests {
         assert_eq!(Network::Preview.to_string(), "preview");
         assert_eq!(
             Network::Devnet {
-                genesis_key: "genesis_key",
+                genesis_key: "genesis_key".into(),
                 magic: 0,
                 network_id: 0,
                 byron_epoch_length: 0,
                 byron_slot_length: 0,
                 byron_known_slot: 0,
-                byron_known_hash: "byron_known_hash",
+                byron_known_hash: "byron_known_hash".into(),
                 byron_known_time: 0,
                 shelley_epoch_length: 0,
                 shelley_slot_length: 0,
                 shelley_known_slot: 0,
-                shelley_known_hash: "shelley_known_hash",
+                shelley_known_hash: "shelley_known_hash".into(),
                 shelley_known_time: 0
             }
             .to_string(),
