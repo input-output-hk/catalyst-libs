@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use anyhow::ensure;
 use catalyst_signed_doc_spec::{
     is_required::IsRequired,
-    signers::update::{Collaborators, Update},
+    signers::update::{Update, UpdatersType},
     DocSpec,
 };
 use catalyst_types::catalyst_id::CatalystId;
@@ -26,7 +26,7 @@ pub(crate) enum DocumentOwnershipRule {
     /// Collaborators are allowed, based on the 'ref' metadata field.
     RefFieldBased,
     /// Collaborators are not allowed, only original author.
-    WitoutCollaborators,
+    OriginalAuthor,
 }
 
 impl DocumentOwnershipRule {
@@ -35,17 +35,15 @@ impl DocumentOwnershipRule {
         spec: &Update,
         doc_spec: &DocSpec,
     ) -> anyhow::Result<Self> {
-        ensure!(spec.author, "'author' field must always be equal to `true`");
-
-        match spec.collaborators {
-            Collaborators::Collaborators => {
+        match spec.r#type {
+            UpdatersType::Collaborators => {
                 ensure!(
                     doc_spec.metadata.collaborators.required != IsRequired::Excluded,
                     "'collaborators' metadata field cannot be 'excluded' if 'update'->'collaborators' is 'collaborators' based"
                 );
                 Ok(Self::CollaboratorsFieldBased)
             },
-            Collaborators::Ref => {
+            UpdatersType::Ref => {
                 ensure!(
                     doc_spec.metadata.doc_ref.required == IsRequired::Yes,
                     "'ref' metadata field cannot be 'excluded' or 'optional' if 'update'->'collaborators' is 'ref' based"
@@ -56,7 +54,7 @@ impl DocumentOwnershipRule {
                 );
                 Ok(Self::RefFieldBased)
             },
-            Collaborators::Excluded => Ok(Self::WitoutCollaborators),
+            UpdatersType::Author => Ok(Self::OriginalAuthor),
         }
     }
 

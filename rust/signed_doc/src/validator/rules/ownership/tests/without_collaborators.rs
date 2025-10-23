@@ -127,7 +127,7 @@ async fn ownership_test(
 
     let doc = doc_gen(&mut provider);
 
-    let res = DocumentOwnershipRule::WitoutCollaborators
+    let res = DocumentOwnershipRule::OriginalAuthor
         .check(&doc, &provider)
         .await
         .unwrap();
