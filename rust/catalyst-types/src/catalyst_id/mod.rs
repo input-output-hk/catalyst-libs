@@ -536,6 +536,24 @@ impl CatalystId {
             .without_encryption()
             .as_id()
     }
+
+    /// Comparisons of `CatalystId` based on original `PartialEq` plus includiing the
+    /// `username`, `nonce` fields.
+    pub fn eq_with_userinfo(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.eq(other) && self.username().eq(&other.username()) && self.nonce().eq(&other.nonce())
+    }
+
+    /// Comparisons of `CatalystId` based on `CatalystId::eq_with_rolekey` plus
+    /// includiing the `username`, `nonce` fields.
+    pub fn eq_with_rolekey(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.eq_with_userinfo(other) && self.role_and_rotation().eq(&other.role_and_rotation())
+    }
 }
 
 impl PartialEq for CatalystIdInner {
@@ -768,6 +786,7 @@ mod tests {
     use chrono::{DateTime, Utc};
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;
+    use test_case::test_case;
 
     use super::CatalystId;
 
@@ -822,6 +841,44 @@ mod tests {
         let short_id = expected_id.parse::<CatalystId>().unwrap();
 
         assert_eq!(uri_id.as_short_id().inner, short_id.inner);
+    }
+
+    #[test_case(0, 1, true, false, false; "base vs user")]
+    #[test_case(0, 2, true, false, false; "base vs user_nonce")]
+    #[test_case(0, 3, true, false, false; "base vs nonce")]
+    #[test_case(0, 4, true, true, true; "base vs base_duplicate")]
+    #[test_case(7, 8, true, true, false; "midnight_0_1 vs midnight_2_1")]
+    #[test_case(0, 5, false, false, false; "cardano vs preprod")]
+    #[test_case(5, 6, false, false, false; "preprod vs preview")]
+    #[test_case(6, 7, false, false, false; "preview vs midnight")]
+    #[test_case(1, 2, true, false, false; "user vs user_nonce")]
+    #[test_case(2, 3, true, false, false; "user_nonce vs nonce")]
+    #[test_case(8, 8, true, true, true; "identical self comparison")]
+    fn test_all_comparisons(
+        idx_a: usize,
+        idx_b: usize,
+        expected_eq: bool,
+        expected_userinfo: bool,
+        expected_rolekey: bool,
+    ) {
+        let id_a = CATALYST_ID_TEST_VECTOR[idx_a]
+            .parse::<CatalystId>()
+            .unwrap();
+        let id_b = CATALYST_ID_TEST_VECTOR[idx_b]
+            .parse::<CatalystId>()
+            .unwrap();
+
+        assert_eq!(id_a == id_b, expected_eq, "PartialEq failed");
+        assert_eq!(
+            id_a.eq_with_userinfo(&id_b),
+            expected_userinfo,
+            "eq_with_userinfo failed"
+        );
+        assert_eq!(
+            id_a.eq_with_rolekey(&id_b),
+            expected_rolekey,
+            "eq_with_rolekey failed"
+        );
     }
 
     #[ignore = "Test to be fixed and re-enabled"]
