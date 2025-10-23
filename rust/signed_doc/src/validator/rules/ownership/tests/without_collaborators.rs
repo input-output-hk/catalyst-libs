@@ -1,4 +1,4 @@
-//! Ownership Validation Rule tests for `DocumentOwnershipRule::WitoutCollaborators`
+//! Ownership Validation Rule tests for `DocumentOwnershipRule::OriginalAuthor`
 //! scenario
 
 use catalyst_types::{catalyst_id::role_index::RoleId, uuid::UuidV7};

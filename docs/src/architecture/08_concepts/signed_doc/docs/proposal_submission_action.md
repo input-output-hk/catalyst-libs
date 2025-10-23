@@ -318,7 +318,8 @@ The following User roles may sign documents of this type:
 
 * Proposer
 
-Updates are allowed by the original author and from the 'collaborators' metadata field of the referenced document specified by the 'ref' metadata field.
+Updates are allowed by the original author and from the 'collaborators' metadata field
+of the referenced document specified by the 'ref' metadata field.
 
 ## Copyright
 

@@ -51,9 +51,19 @@ _allAdminRoles: or(_allAdminRolesList)
 #allowedUpdaterType: "collaborators" | "ref" | *"author"
 
 #updaterDescriptions: {
-	collaborators: "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version."
-	ref:           "Updates are allowed by the original author and from the 'collaborators' metadata field of the referenced document specified by the 'ref' metadata field."
-	author:        "Only the original author can update and sign a new version of documents."
+	collaborators: """
+		Updates are allowed by the original author and from the 'collaborators' metadata field
+		of the previous submitted document's version.
+		"""
+	
+	ref: """
+		Updates are allowed by the original author and from the 'collaborators' metadata field
+		of the referenced document specified by the 'ref' metadata field.
+		"""
+	
+	author: """
+		Only the original author can update and sign a new version of documents.
+		"""
 }
 
 #allowedUpdaters: {

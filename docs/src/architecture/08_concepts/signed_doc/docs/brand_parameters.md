@@ -186,7 +186,8 @@ The following Admin roles may sign documents of this type:
 
 * Brand Admin
 
-Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.
+Updates are allowed by the original author and from the 'collaborators' metadata field
+of the previous submitted document's version.
 
 ## Copyright
 

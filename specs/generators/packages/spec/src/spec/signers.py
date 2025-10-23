@@ -4,8 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from enum import Enum
 
 
-class CollaboratorsType(str, Enum):
-    """Signders Collaborators Specification."""
+class UpdatersType(str, Enum):
+    """Allowed Updaters Types."""
 
     collaborators = "collaborators"
     ref_field_based = "ref"
@@ -24,7 +24,7 @@ class AllowedRoles(BaseModel):
 class AllowedUpdaters(BaseModel):
     """Allowed Updaters Specification."""
 
-    type: CollaboratorsType
+    type: UpdatersType
     description: str
 
     model_config = ConfigDict(extra="forbid")

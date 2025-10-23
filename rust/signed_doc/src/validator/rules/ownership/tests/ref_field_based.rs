@@ -42,7 +42,7 @@ use crate::{
             .unwrap()
             .build()
     } => true ;
-   "Latest Version Catalyst Signed Document signed by first author of the refenced doc"
+   "Latest Version Catalyst Signed Document signed by first author of the referenced doc"
 )]
 #[test_case(
     |provider| {
@@ -75,7 +75,7 @@ use crate::{
             .unwrap()
             .build()
     } => true ;
-   "Latest Version Catalyst Signed Document signed by one collaborator of the refenced doc"
+   "Latest Version Catalyst Signed Document signed by one collaborator of the referenced doc"
 )]
 #[test_case(
     |_| {

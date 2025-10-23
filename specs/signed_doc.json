@@ -500,7 +500,7 @@
           "user": []
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.",
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
           "type": "collaborators"
         }
       },
@@ -757,7 +757,7 @@
           "user": []
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.",
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
           "type": "collaborators"
         }
       },
@@ -1019,7 +1019,7 @@
           "user": []
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.",
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
           "type": "collaborators"
         }
       },
@@ -1531,7 +1531,7 @@
           "user": []
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.",
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
           "type": "collaborators"
         }
       },
@@ -2015,7 +2015,7 @@
           ]
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.",
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
           "type": "collaborators"
         }
       },
@@ -2740,7 +2740,7 @@
           ]
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the referenced document specified by the 'ref' metadata field.",
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the referenced document specified by the 'ref' metadata field.",
           "type": "ref"
         }
       },
