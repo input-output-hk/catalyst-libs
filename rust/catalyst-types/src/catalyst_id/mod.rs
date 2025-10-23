@@ -859,7 +859,7 @@ mod tests {
         idx_b: usize,
         expected_eq: bool,
         expected_userinfo: bool,
-        expected_rolekey: bool,
+        expected_role: bool,
     ) {
         let id_a = CATALYST_ID_TEST_VECTOR[idx_a]
             .parse::<CatalystId>()
@@ -875,8 +875,8 @@ mod tests {
             "eq_with_userinfo failed"
         );
         assert_eq!(
-            id_a.eq_with_rolekey(&id_b),
-            expected_rolekey,
+            id_a.eq_with_role(&id_b),
+            expected_role,
             "eq_with_rolekey failed"
         );
     }
