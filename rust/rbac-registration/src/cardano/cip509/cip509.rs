@@ -173,7 +173,7 @@ impl Cip509 {
             &cip509.report,
         );
         if let Some(metadata) = &cip509.metadata {
-            cip509.catalyst_id = validate_role_data(metadata, block.network(), &cip509.report);
+            cip509.catalyst_id = validate_role_data(metadata, &block.network(), &cip509.report);
             // General check for all roles, check whether the addresses in the certificate URIs are
             // witnessed in the transaction.
             validate_cert_addrs(txn, cip509.certificate_uris(), &report);
