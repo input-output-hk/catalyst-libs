@@ -2,8 +2,7 @@
 
 use std::future::Future;
 
-use cardano_blockchain_types::StakeAddress;
-use cardano_chain_follower::hashes::TransactionId;
+use cardano_blockchain_types::{hashes::TransactionId, StakeAddress};
 use catalyst_types::catalyst_id::CatalystId;
 use ed25519_dalek::VerifyingKey;
 
