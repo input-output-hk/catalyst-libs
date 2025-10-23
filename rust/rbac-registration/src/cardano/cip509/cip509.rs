@@ -15,7 +15,6 @@ use cardano_blockchain_types::{
     pallas_traverse::MultiEraTx,
     MetadatumLabel, MultiEraBlock, TxnIndex,
 };
-use cardano_chain_follower::StakeAddress;
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
     cbor_utils::{report_duplicated_key, report_missing_keys},
@@ -23,7 +22,6 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
-use ed25519_dalek::VerifyingKey;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
@@ -84,15 +82,6 @@ pub struct Cip509 {
     ///
     /// This field is only present in role 0 registrations.
     catalyst_id: Option<CatalystId>,
-    /// A list of stake addresses that were added to the chain.
-    stake_addresses: HashSet<StakeAddress>,
-    /// A list of role public keys used in this registration.
-    public_keys: HashSet<VerifyingKey>,
-    /// A list of updates to other chains containing Catalyst IDs and removed stake
-    /// addresses.
-    ///
-    /// A new RBAC registration can take ownership of stake addresses of other chains.
-    modified_chains: Vec<(CatalystId, HashSet<StakeAddress>)>,
     /// Raw aux data associated with the transaction that CIP509 is attached to,
     raw_aux_data: Vec<u8>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
@@ -219,23 +208,6 @@ impl Cip509 {
         result
     }
 
-    /// Updates and replaces information once it being processed by calling either
-    /// `update_chain` or `start_new_chain`.
-    #[must_use]
-    pub(crate) fn put_validation_result(
-        self,
-        stake_addresses: HashSet<StakeAddress>,
-        public_keys: HashSet<VerifyingKey>,
-        modified_chains: Vec<(CatalystId, HashSet<StakeAddress>)>,
-    ) -> Self {
-        Self {
-            stake_addresses,
-            public_keys,
-            modified_chains,
-            ..self
-        }
-    }
-
     /// Returns all role numbers present in this `Cip509` instance.
     #[must_use]
     pub fn all_roles(&self) -> Vec<RoleId> {
@@ -301,24 +273,6 @@ impl Cip509 {
     #[must_use]
     pub fn catalyst_id(&self) -> Option<&CatalystId> {
         self.catalyst_id.as_ref()
-    }
-
-    /// Returns stake addresses processed from either `update_chain` or `start_new_chain`.
-    #[must_use]
-    pub fn stake_addresses(&self) -> &HashSet<StakeAddress> {
-        &self.stake_addresses
-    }
-
-    /// Returns public keys processed from either `update_chain` or `start_new_chain`.
-    #[must_use]
-    pub fn public_keys(&self) -> &HashSet<VerifyingKey> {
-        &self.public_keys
-    }
-
-    /// Returns modified chains from either `update_chain` or `start_new_chain`.
-    #[must_use]
-    pub fn modified_chains(&self) -> &Vec<(CatalystId, HashSet<StakeAddress>)> {
-        &self.modified_chains
     }
 
     /// Returns a list of addresses extracted from certificate URIs of a specific role.
@@ -495,9 +449,6 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             txn_hash,
             origin: decode_context.origin.clone(),
             catalyst_id: None,
-            stake_addresses: HashSet::new(),
-            public_keys: HashSet::new(),
-            modified_chains: Vec::new(),
             raw_aux_data: Vec::new(),
             report: decode_context.report.clone(),
         })

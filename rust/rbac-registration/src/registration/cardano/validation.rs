@@ -18,7 +18,7 @@ use crate::{
 };
 
 /// A return value of the `validate_rbac_registration` method.
-pub type RbacValidationResult = Result<(RegistrationChain, Cip509), RbacValidationError>;
+pub type RbacValidationResult = Result<RbacValidationSuccess, RbacValidationError>;
 
 /// An error returned from the `validate_rbac_registration` method.
 #[allow(clippy::large_enum_variant)]
@@ -51,6 +51,21 @@ impl From<anyhow::Error> for RbacValidationError {
     fn from(e: anyhow::Error) -> Self {
         RbacValidationError::Fatal(e)
     }
+}
+
+/// Represents the result yielded by `update_chain` or `start_new_chain` upon successful execution.
+pub struct RbacValidationSuccess {
+    /// A list of stake addresses that were added to the chain.
+    pub stake_addresses: HashSet<StakeAddress>,
+    /// A list of role public keys used in this registration.
+    pub public_keys: HashSet<VerifyingKey>,
+    /// A list of updates to other chains containing Catalyst IDs and removed stake
+    /// addresses.
+    ///
+    /// A new RBAC registration can take ownership of stake addresses of other chains.
+    pub modified_chains: Vec<(CatalystId, HashSet<StakeAddress>)>,
+    /// An updated registration chain.
+    pub chain: RegistrationChain,
 }
 
 /// Attempts to update an existing RBAC registration chain
@@ -134,16 +149,14 @@ where
         });
     }
 
-    Ok((
-        new_chain,
-        reg.put_validation_result(
-            stake_addresses,
-            public_keys,
-            // Only new chains can take ownership of stake addresses of existing chains, so in this
-            // case other chains aren't affected.
-            Vec::new(),
-        ),
-    ))
+    Ok(RbacValidationSuccess {
+        stake_addresses,
+        public_keys,
+        // Only new chains can take ownership of stake addresses of existing chains, so in this
+        // case other chains aren't affected.
+        modified_chains: Vec::new(),
+        chain: new_chain,
+    })
 }
 
 /// Attempts to initialize a new RBAC registration chain
@@ -246,14 +259,12 @@ where
         });
     }
 
-    Ok((
-        new_chain,
-        reg.put_validation_result(
-            new_addresses,
-            public_keys,
-            updated_chains.into_iter().collect(),
-        ),
-    ))
+    Ok(RbacValidationSuccess {
+        stake_addresses: new_addresses,
+        public_keys,
+        modified_chains: updated_chains.into_iter().collect(),
+        chain: new_chain,
+    })
 }
 
 /// Validates that none of the signing keys in a given RBAC registration chain
