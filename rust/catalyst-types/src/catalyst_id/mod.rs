@@ -539,6 +539,7 @@ impl CatalystId {
 
     /// Comparisons of `CatalystId` based on original `PartialEq` plus including
     /// `username` and `nonce` fields.
+    #[must_use]
     pub fn eq_with_userinfo(
         &self,
         other: &Self,
@@ -548,6 +549,7 @@ impl CatalystId {
 
     /// Comparisons of `CatalystId` based on `CatalystId::eq_with_userinfo` plus including
     /// `role` and `rotation` fields.
+    #[must_use]
     pub fn eq_with_role(
         &self,
         other: &Self,
@@ -854,6 +856,7 @@ mod tests {
     #[test_case(1, 2, true, false, false; "user vs user_nonce")]
     #[test_case(2, 3, true, false, false; "user_nonce vs nonce")]
     #[test_case(8, 8, true, true, true; "identical self comparison")]
+    #[allow(clippy::indexing_slicing, clippy::similar_names)]
     fn test_all_comparisons(
         idx_a: usize,
         idx_b: usize,
