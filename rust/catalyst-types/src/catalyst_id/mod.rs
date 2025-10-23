@@ -537,8 +537,8 @@ impl CatalystId {
             .as_id()
     }
 
-    /// Comparisons of `CatalystId` based on original `PartialEq` plus includiing the
-    /// `username`, `nonce` fields.
+    /// Comparisons of `CatalystId` based on original `PartialEq` plus including
+    /// `username` and `nonce` fields.
     pub fn eq_with_userinfo(
         &self,
         other: &Self,
@@ -546,9 +546,9 @@ impl CatalystId {
         self.eq(other) && self.username().eq(&other.username()) && self.nonce().eq(&other.nonce())
     }
 
-    /// Comparisons of `CatalystId` based on `CatalystId::eq_with_rolekey` plus
-    /// includiing the `username`, `nonce` fields.
-    pub fn eq_with_rolekey(
+    /// Comparisons of `CatalystId` based on `CatalystId::eq_with_userinfo` plus including
+    /// `role` and `rotation` fields.
+    pub fn eq_with_role(
         &self,
         other: &Self,
     ) -> bool {
