@@ -52,8 +52,8 @@ _allAdminRoles: or(_allAdminRolesList)
 
 #updaterDescriptions: {
 	collaborators: "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version."
-	ref: "Updates are allowed by the original author and from the 'collaborators' metadata field of the referenced document specified by the 'ref' metadata field."
-	author: "Only the original author can update and sign a new version of documents."
+	ref:           "Updates are allowed by the original author and from the 'collaborators' metadata field of the referenced document specified by the 'ref' metadata field."
+	author:        "Only the original author can update and sign a new version of documents."
 }
 
 #allowedUpdaters: {
@@ -63,7 +63,6 @@ _allAdminRoles: or(_allAdminRolesList)
 	// The description is looked up from the map using the value of 'type'
 	description: #updaterDescriptions[type]
 }
-
 
 #allowedSigners: {
 	// Who is allowed to sign a new document
