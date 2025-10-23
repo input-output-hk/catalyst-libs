@@ -877,7 +877,7 @@ mod tests {
         assert_eq!(
             id_a.eq_with_role(&id_b),
             expected_role,
-            "eq_with_rolekey failed"
+            "eq_with_role failed"
         );
     }
 
