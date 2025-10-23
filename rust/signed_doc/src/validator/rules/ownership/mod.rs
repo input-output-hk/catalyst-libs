@@ -79,33 +79,40 @@ impl DocumentOwnershipRule {
         let mut allowed_authors = HashSet::new();
         match self {
             Self::OriginalAuthor => {
-                let first_doc = provider
-                    .try_get_first_doc(doc_id)
-                    .await?
-                    .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
-                allowed_authors.extend(first_doc.authors());
+                // only run check for the non first version of the document
+                if doc_id != doc.doc_ver()? {
+                    let first_doc = provider
+                        .try_get_first_doc(doc_id)
+                        .await?
+                        .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
+                    allowed_authors.extend(first_doc.authors());
+                }
             },
             Self::CollaboratorsFieldBased => {
-                let first_doc = provider
-                    .try_get_first_doc(doc_id)
-                    .await?
-                    .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
-                allowed_authors.extend(first_doc.authors());
+                // only run check for the non first version of the document
+                if doc_id != doc.doc_ver()? {
+                    let first_doc = provider
+                        .try_get_first_doc(doc_id)
+                        .await?
+                        .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
+                    allowed_authors.extend(first_doc.authors());
 
-                let last_doc = provider
-                    .try_get_last_doc(doc_id)
-                    .await?
-                    .ok_or(anyhow::anyhow!(
+                    let last_doc =
+                        provider
+                            .try_get_last_doc(doc_id)
+                            .await?
+                            .ok_or(anyhow::anyhow!(
                         "A latest version of the document must exist if a first version exists"
                     ))?;
 
-                allowed_authors.extend(
-                    last_doc
-                        .doc_meta()
-                        .collaborators()
-                        .iter()
-                        .map(CatalystId::as_short_id),
-                );
+                    allowed_authors.extend(
+                        last_doc
+                            .doc_meta()
+                            .collaborators()
+                            .iter()
+                            .map(CatalystId::as_short_id),
+                    );
+                }
             },
             Self::RefFieldBased => {
                 let Some(doc_ref) = doc.doc_meta().doc_ref() else {
@@ -146,10 +153,8 @@ impl DocumentOwnershipRule {
 
         let doc_authors = doc.authors().into_iter().collect::<HashSet<_>>();
 
-        // all elements of the `doc_authors` should be intersecting with the `allowed_authors` OR
-        // `allowed_authors` must be empty
-        let is_valid = allowed_authors.is_empty()
-            || allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
+        // all elements of the `doc_authors` should be intersecting with the `allowed_authors`
+        let is_valid = allowed_authors.intersection(&doc_authors).count() == doc_authors.len();
 
         if !is_valid {
             doc.report().functional_validation(
