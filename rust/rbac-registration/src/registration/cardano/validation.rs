@@ -53,8 +53,11 @@ impl From<anyhow::Error> for RbacValidationError {
     }
 }
 
-/// Represents the result yielded by `update_chain` or `start_new_chain` upon successful execution.
+/// Represents the result yielded by `update_chain` or `start_new_chain` upon successful
+/// execution.
 pub struct RbacValidationSuccess {
+    /// A Catalyst ID of the chain this registration belongs to.
+    pub catalyst_id: CatalystId,
     /// A list of stake addresses that were added to the chain.
     pub stake_addresses: HashSet<StakeAddress>,
     /// A list of role public keys used in this registration.
@@ -150,6 +153,7 @@ where
     }
 
     Ok(RbacValidationSuccess {
+        catalyst_id,
         stake_addresses,
         public_keys,
         // Only new chains can take ownership of stake addresses of existing chains, so in this
@@ -260,6 +264,7 @@ where
     }
 
     Ok(RbacValidationSuccess {
+        catalyst_id,
         stake_addresses: new_addresses,
         public_keys,
         modified_chains: updated_chains.into_iter().collect(),
