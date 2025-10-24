@@ -1,6 +1,7 @@
 //! Chain of Cardano registration data
 
 mod update_rbac;
+pub mod validation;
 
 use std::{
     collections::{HashMap, HashSet},
