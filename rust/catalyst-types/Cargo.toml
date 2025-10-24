@@ -39,3 +39,4 @@ ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 proptest = { version = "1.6.0", features = ["attr-macro"] }
 rand = "0.8.5"
 serde_json = "1"
+test-case = "3.3.1"
