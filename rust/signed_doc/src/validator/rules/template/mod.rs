@@ -36,14 +36,14 @@ impl TemplateRule {
     ) -> anyhow::Result<Self> {
         if let IsRequired::Excluded = spec.required {
             anyhow::ensure!(
-                spec.doc_type.is_empty() && spec.multiple.is_none(),
+                spec.doc_type.is_empty() && !spec.multiple,
                 "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'template'  metadata definition"
             );
             return Ok(Self::NotSpecified);
         }
 
         anyhow::ensure!(
-            spec.multiple.is_some_and(|v| !v),
+            !spec.multiple,
             "'multiple' field should be only set to false for the required 'template' metadata definition"
         );
         anyhow::ensure!(

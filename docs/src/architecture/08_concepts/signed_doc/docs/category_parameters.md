@@ -215,10 +215,8 @@ The following Admin roles may sign documents of this type:
 
 * Brand Admin
 
-New versions of this document may be published by:
-
-* author
-* collaborators
+Updates are allowed by the original author and from the 'collaborators' metadata field
+of the previous submitted document's version.
 
 ## Copyright
 
@@ -226,7 +224,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-17 |
+| Modified | 2025-10-24 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

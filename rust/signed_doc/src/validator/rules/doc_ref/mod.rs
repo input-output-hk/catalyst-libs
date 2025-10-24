@@ -37,7 +37,7 @@ impl RefRule {
             IsRequired::Optional => true,
             IsRequired::Excluded => {
                 anyhow::ensure!(
-                    spec.doc_type.is_empty() && spec.multiple.is_none(),
+                    spec.doc_type.is_empty() && !spec.multiple,
                      "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
                 );
                 return Ok(Self::NotSpecified);
@@ -57,13 +57,9 @@ impl RefRule {
             },
         )?;
 
-        let multiple = spec.multiple.ok_or(anyhow::anyhow!(
-            "'multiple' field should exists for the required 'ref' metadata definition"
-        ))?;
-
         Ok(Self::Specified {
             allowed_type: exp_ref_types,
-            multiple,
+            multiple: spec.multiple,
             optional,
         })
     }

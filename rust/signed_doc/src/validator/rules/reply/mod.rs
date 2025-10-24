@@ -37,7 +37,7 @@ impl ReplyRule {
             IsRequired::Optional => true,
             IsRequired::Excluded => {
                 anyhow::ensure!(
-                    spec.doc_type.is_empty() && spec.multiple.is_none(),
+                    spec.doc_type.is_empty() && !spec.multiple,
                     "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'reply'  metadata definition"
                 );
                 return Ok(Self::NotSpecified);
@@ -45,7 +45,7 @@ impl ReplyRule {
         };
 
         anyhow::ensure!(
-            spec.multiple.is_some_and(|v| !v),
+            !spec.multiple,
             "'multiple' field should be only set to false for the required 'reply' metadata definition"
         );
 
