@@ -37,12 +37,12 @@ type StatsMap = DashMap<Network, Arc<RwLock<Statistics>>>;
 static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(StatsMap::default);
 
 /// Get the stats for a particular chain.
-fn lookup_stats(chain: Network) -> Arc<RwLock<Statistics>> {
-    if let Some(chain_entry) = STATS_MAP.get(&chain) {
+fn lookup_stats(chain: &Network) -> Arc<RwLock<Statistics>> {
+    if let Some(chain_entry) = STATS_MAP.get(chain) {
         chain_entry.value().clone()
     } else {
         let res = Arc::new(RwLock::new(Statistics::default()));
-        STATS_MAP.insert(chain, res.clone());
+        STATS_MAP.insert(chain.clone(), res.clone());
         res
     }
 }
@@ -50,7 +50,7 @@ fn lookup_stats(chain: Network) -> Arc<RwLock<Statistics>> {
 impl Statistics {
     /// Get a new statistics struct for a given blockchain network.
     #[must_use]
-    pub fn new(chain: Network) -> Self {
+    pub fn new(chain: &Network) -> Self {
         let stats = lookup_stats(chain);
 
         let Ok(chain_stats) = stats.read() else {
@@ -73,7 +73,7 @@ impl Statistics {
     }
 
     /// Get the current tips of the immutable chain and live chain.
-    pub(crate) fn tips(chain: Network) -> (Slot, Slot) {
+    pub(crate) fn tips(chain: &Network) -> (Slot, Slot) {
         let zero_slot = Slot::from_saturating(0);
         let stats = lookup_stats(chain);
 
@@ -86,7 +86,7 @@ impl Statistics {
 
     /// Reset amd return cumulative counters contained in the statistics.
     #[must_use]
-    pub fn reset(chain: Network) -> Self {
+    pub fn reset(chain: &Network) -> Self {
         let stats = lookup_stats(chain);
 
         let Ok(mut chain_stats) = stats.write() else {
@@ -128,7 +128,7 @@ impl Statistics {
 /// Count the invalidly deserialized blocks
 #[allow(dead_code)]
 pub(crate) fn stats_invalid_block(
-    chain: Network,
+    chain: &Network,
     immutable: bool,
 ) {
     let stats = lookup_stats(chain);
@@ -148,7 +148,7 @@ pub(crate) fn stats_invalid_block(
 
 /// Count the validly deserialized blocks
 pub(crate) fn new_live_block(
-    chain: Network,
+    chain: &Network,
     total_live_blocks: u64,
     head_slot: Slot,
     tip_slot: Slot,
@@ -169,7 +169,7 @@ pub(crate) fn new_live_block(
 
 /// Track the end of the current mithril update
 pub(crate) fn new_mithril_update(
-    chain: Network,
+    chain: &Network,
     mithril_tip: Slot,
 ) {
     let stats = lookup_stats(chain);
@@ -186,7 +186,7 @@ pub(crate) fn new_mithril_update(
 
 /// Track the current total live blocks count
 pub(crate) fn new_live_total_blocks(
-    chain: Network,
+    chain: &Network,
     total_live_blocks: u64,
 ) {
     let stats = lookup_stats(chain);
@@ -201,7 +201,7 @@ pub(crate) fn new_live_total_blocks(
 }
 
 /// When did we start the backfill.
-pub(crate) fn backfill_started(chain: Network) {
+pub(crate) fn backfill_started(chain: &Network) {
     let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
@@ -222,7 +222,7 @@ pub(crate) fn backfill_started(chain: Network) {
 
 /// When did we start the backfill.
 pub(crate) fn backfill_ended(
-    chain: Network,
+    chain: &Network,
     backfill_size: u64,
 ) {
     let stats = lookup_stats(chain);
@@ -239,7 +239,7 @@ pub(crate) fn backfill_ended(
 
 /// Track statistics about connections to the cardano peer node.
 pub(crate) fn peer_connected(
-    chain: Network,
+    chain: &Network,
     active: bool,
     peer_address: &str,
 ) {
@@ -264,7 +264,7 @@ pub(crate) fn peer_connected(
 }
 
 /// Record when we started syncing
-pub(crate) fn sync_started(chain: Network) {
+pub(crate) fn sync_started(chain: &Network) {
     let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
@@ -278,7 +278,7 @@ pub(crate) fn sync_started(chain: Network) {
 
 /// Record when we first reached tip. This can safely be called multiple times.
 /// Except for overhead, only the first call will actually record the time.
-pub(crate) fn tip_reached(chain: Network) {
+pub(crate) fn tip_reached(chain: &Network) {
     let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
@@ -293,7 +293,7 @@ pub(crate) fn tip_reached(chain: Network) {
 }
 
 /// Record that a Mithril snapshot Download has started.
-pub(crate) fn mithril_dl_started(chain: Network) {
+pub(crate) fn mithril_dl_started(chain: &Network) {
     let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
@@ -308,7 +308,7 @@ pub(crate) fn mithril_dl_started(chain: Network) {
 /// Record when DL finished, if it fails, set size to None, otherwise the size of the
 /// downloaded file.
 pub(crate) fn mithril_dl_finished(
-    chain: Network,
+    chain: &Network,
     dl_size: Option<u64>,
 ) {
     let stats = lookup_stats(chain);
@@ -335,7 +335,7 @@ pub(crate) fn mithril_dl_finished(
 }
 
 /// Record that extracting the mithril snapshot archive has started.
-pub(crate) fn mithril_extract_started(chain: Network) {
+pub(crate) fn mithril_extract_started(chain: &Network) {
     let stats = lookup_stats(chain);
 
     let Ok(mut chain_stats) = stats.write() else {
@@ -350,7 +350,7 @@ pub(crate) fn mithril_extract_started(chain: Network) {
 /// Record when DL finished, if it fails, set size to None, otherwise the size of the
 /// downloaded file.
 pub(crate) fn mithril_extract_finished(
-    chain: Network,
+    chain: &Network,
     extract_size: Option<u64>,
     deduplicated_size: u64,
     deduplicated_files: u64,
@@ -391,7 +391,7 @@ pub(crate) enum MithrilValidationState {
 
 /// Record when Mithril Cert validation starts, ends or fails).
 pub(crate) fn mithril_validation_state(
-    chain: Network,
+    chain: &Network,
     mithril_state: MithrilValidationState,
 ) {
     let stats = lookup_stats(chain);
@@ -429,7 +429,7 @@ pub(crate) enum MithrilSyncFailures {
 
 /// Record when Mithril Cert validation starts, ends or fails).
 pub(crate) fn mithril_sync_failure(
-    chain: Network,
+    chain: &Network,
     failure: MithrilSyncFailures,
 ) {
     let stats = lookup_stats(chain);
@@ -475,7 +475,7 @@ pub(crate) fn mithril_sync_failure(
 /// Initialize a thread statistic with the given name.
 /// If it is service thread, mark it as such.
 pub(crate) fn start_thread(
-    chain: Network,
+    chain: &Network,
     name: &str,
     is_service: bool,
 ) {
@@ -494,7 +494,7 @@ pub(crate) fn start_thread(
 
 /// Stop the thread with the given name.
 pub(crate) fn stop_thread(
-    chain: Network,
+    chain: &Network,
     name: &str,
 ) {
     let stats = lookup_stats(chain);
@@ -512,7 +512,7 @@ pub(crate) fn stop_thread(
 
 /// Resume the thread with the given name.
 pub(crate) fn resume_thread(
-    chain: Network,
+    chain: &Network,
     name: &str,
 ) {
     let stats = lookup_stats(chain);
@@ -530,7 +530,7 @@ pub(crate) fn resume_thread(
 
 /// Pause the thread with the given name.
 pub(crate) fn pause_thread(
-    chain: Network,
+    chain: &Network,
     name: &str,
 ) {
     let stats = lookup_stats(chain);
@@ -549,7 +549,7 @@ pub(crate) fn pause_thread(
 /// Get the thread statistic with the given name.
 #[allow(dead_code)]
 pub fn thread_stat(
-    chain: Network,
+    chain: &Network,
     name: &str,
 ) -> Option<ThreadStat> {
     let stats = lookup_stats(chain);
@@ -565,7 +565,7 @@ pub fn thread_stat(
 
 /// Get the names of all the thread statistics.
 #[allow(dead_code)]
-pub fn thread_stat_names(chain: Network) -> Vec<String> {
+pub fn thread_stat_names(chain: &Network) -> Vec<String> {
     let stats = lookup_stats(chain);
 
     let Ok(chain_stats) = stats.write() else {
@@ -640,8 +640,8 @@ mod tests {
     #[test]
     fn test_new_live_block() {
         let network = Network::Preprod;
-        new_live_block(network, 100, 50.into(), 200.into());
-        let stats = lookup_stats(network);
+        new_live_block(&network, 100, 50.into(), 200.into());
+        let stats = lookup_stats(&network);
         let stats = stats.read().unwrap();
         assert_eq!(stats.live.blocks, 100);
         assert_eq!(stats.live.head_slot, 50.into());
@@ -651,8 +651,8 @@ mod tests {
     #[test]
     fn test_mithril_dl_started() {
         let network = Network::Preprod;
-        mithril_dl_started(network);
-        let stats = lookup_stats(network);
+        mithril_dl_started(&network);
+        let stats = lookup_stats(&network);
         let stats = stats.read().unwrap();
         assert!(stats.mithril.dl_start <= Utc::now());
     }
