@@ -29,7 +29,7 @@ fn metadata() -> serde_json::Value {
 
 #[tokio::test]
 async fn single_signature_validation_test() {
-    let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0);
+    let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
 
     let signed_doc = Builder::new()
         .with_json_metadata(metadata())
@@ -45,7 +45,7 @@ async fn single_signature_validation_test() {
 
     // case: has key
     let mut provider = TestCatalystProvider::default();
-    provider.add_pk(kid.clone(), pk);
+    provider.add_sk(kid.clone(), sk);
     assert!(
         SignatureRule.check(&signed_doc, &provider).await.unwrap(),
         "{:?}",
@@ -87,10 +87,10 @@ async fn single_signature_validation_test() {
 
 #[tokio::test]
 async fn multiple_signatures_validation_test() {
-    let (sk1, pk1, kid1) = create_dummy_key_pair(RoleId::Role0);
-    let (sk2, pk2, kid2) = create_dummy_key_pair(RoleId::Role0);
-    let (sk3, pk3, kid3) = create_dummy_key_pair(RoleId::Role0);
-    let (_, pk_n, kid_n) = create_dummy_key_pair(RoleId::Role0);
+    let (sk1, kid1) = create_dummy_key_pair(RoleId::Role0);
+    let (sk2, kid2) = create_dummy_key_pair(RoleId::Role0);
+    let (sk3, kid3) = create_dummy_key_pair(RoleId::Role0);
+    let (sk_n, kid_n) = create_dummy_key_pair(RoleId::Role0);
 
     let signed_doc = Builder::new()
         .with_json_metadata(metadata())
@@ -110,20 +110,20 @@ async fn multiple_signatures_validation_test() {
 
     // case: all signatures valid
     let mut provider = TestCatalystProvider::default();
-    provider.add_pk(kid1.clone(), pk1);
-    provider.add_pk(kid2.clone(), pk2);
-    provider.add_pk(kid3.clone(), pk3);
+    provider.add_sk(kid1.clone(), sk1.clone());
+    provider.add_sk(kid2.clone(), sk2.clone());
+    provider.add_sk(kid3.clone(), sk3.clone());
     assert!(SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: partially available signatures
     let mut provider = TestCatalystProvider::default();
-    provider.add_pk(kid1.clone(), pk1);
-    provider.add_pk(kid2.clone(), pk2);
+    provider.add_sk(kid1.clone(), sk1);
+    provider.add_sk(kid2.clone(), sk2);
     assert!(!SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: with unrecognized provider
     let mut provider = TestCatalystProvider::default();
-    provider.add_pk(kid_n.clone(), pk_n);
+    provider.add_sk(kid_n.clone(), sk_n);
     assert!(!SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: no valid signatures available
@@ -234,9 +234,9 @@ struct SpecialCborTestCase<'a> {
 
 #[tokio::test]
 async fn special_cbor_cases() {
-    let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0);
+    let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     let mut provider = TestCatalystProvider::default();
-    provider.add_pk(kid.clone(), pk);
+    provider.add_sk(kid.clone(), sk.clone());
 
     let test_cases: &[SpecialCborTestCase] = &[
         SpecialCborTestCase {

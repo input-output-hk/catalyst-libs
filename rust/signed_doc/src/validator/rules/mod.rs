@@ -1,6 +1,8 @@
 //! A list of validation rules for all metadata fields
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
+use anyhow::Context;
+use catalyst_signed_doc_spec::{DocSpec, DocSpecs};
 use futures::FutureExt;
 
 use crate::{
@@ -114,6 +116,30 @@ impl Rules {
         Ok(res)
     }
 
+    /// Creating a `Rules` instance from the provided specs.
+    fn new(
+        all_docs_specs: &DocSpecs,
+        doc_spec: &DocSpec,
+    ) -> anyhow::Result<Self> {
+        Ok(Self {
+            id: IdRule,
+            ver: VerRule,
+            content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
+            content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
+            template: TemplateRule::new(all_docs_specs, &doc_spec.metadata.template)?,
+            parameters: ParametersRule::new(all_docs_specs, &doc_spec.metadata.parameters)?,
+            chain: ChainRule::new(&doc_spec.metadata.chain),
+            doc_ref: RefRule::new(all_docs_specs, &doc_spec.metadata.doc_ref)?,
+            reply: ReplyRule::new(all_docs_specs, &doc_spec.metadata.reply)?,
+            section: SectionRule::NotSpecified,
+            collaborators: CollaboratorsRule::new(&doc_spec.metadata.collaborators),
+            content: ContentRule::new(&doc_spec.payload)?,
+            kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
+            signature: SignatureRule,
+            ownership: DocumentOwnershipRule::new(&doc_spec.signers.update, doc_spec)?,
+        })
+    }
+
     /// Returns an iterator with all defined Catalyst Signed Documents validation rules
     /// per corresponding document type based on the `signed_doc.json` file
     ///
@@ -126,28 +152,13 @@ impl Rules {
         let spec = catalyst_signed_doc_spec::CatalystSignedDocSpec::load_signed_doc_spec()?;
 
         let mut doc_rules = Vec::new();
-        for doc_spec in spec.docs.values() {
+        for (doc_name, doc_spec) in spec.docs.iter() {
             if doc_spec.draft {
                 continue;
             }
 
-            let rules = Self {
-                id: IdRule,
-                ver: VerRule,
-                content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
-                content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
-                template: TemplateRule::new(&spec.docs, &doc_spec.metadata.template)?,
-                parameters: ParametersRule::new(&spec.docs, &doc_spec.metadata.parameters)?,
-                chain: ChainRule::new(&spec.docs, &doc_spec.metadata.chain),
-                doc_ref: RefRule::new(&spec.docs, &doc_spec.metadata.doc_ref)?,
-                reply: ReplyRule::new(&spec.docs, &doc_spec.metadata.reply)?,
-                section: SectionRule::NotSpecified,
-                collaborators: CollaboratorsRule::NotSpecified,
-                content: ContentRule::new(&doc_spec.payload)?,
-                kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
-                signature: SignatureRule {},
-                ownership: DocumentOwnershipRule::new(&doc_spec.signers.update)?,
-            };
+            let rules = Self::new(&spec.docs, doc_spec)
+                .context(format!("Fail to initializing document '{doc_name}'"))?;
             let doc_type = doc_spec.doc_type.parse()?;
 
             doc_rules.push((doc_type, rules));
@@ -163,7 +174,10 @@ mod tests {
 
     #[test]
     fn rules_documents_rules_test() {
-        for (doc_type, rules) in Rules::documents_rules().unwrap() {
+        for (doc_type, rules) in Rules::documents_rules()
+            .map_err(|e| format!("{e:#}"))
+            .unwrap()
+        {
             println!("{doc_type}: {rules:?}");
         }
     }

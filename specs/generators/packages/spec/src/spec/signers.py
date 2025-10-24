@@ -1,6 +1,16 @@
 """Signers Specification."""
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class UpdatersType(str, Enum):
+    """Allowed Updaters Types."""
+
+    collaborators = "collaborators"
+    ref_field_based = "ref"
+    author = "author"
 
 
 class AllowedRoles(BaseModel):
@@ -15,9 +25,8 @@ class AllowedRoles(BaseModel):
 class AllowedUpdaters(BaseModel):
     """Allowed Updaters Specification."""
 
-    collaborators: bool = Field(default=False)
-    author: bool = Field(default=True)
-    any: bool = Field(default=False)
+    type: UpdatersType
+    description: str
 
     model_config = ConfigDict(extra="forbid")
 
@@ -26,7 +35,6 @@ class Signers(BaseModel):
     """Signers Specification."""
 
     roles: AllowedRoles
-    referenced: bool = Field(default=False)
-    update: dict[str, bool]
+    update: AllowedUpdaters
 
     model_config = ConfigDict(extra="forbid")

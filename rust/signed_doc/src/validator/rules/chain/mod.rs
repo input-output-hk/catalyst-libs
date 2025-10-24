@@ -1,6 +1,6 @@
 //! `chain` rule type impl.
 
-use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain, DocSpecs};
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain};
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
@@ -11,7 +11,6 @@ mod tests;
 #[derive(Debug)]
 pub(crate) enum ChainRule {
     /// Is 'chain' specified
-    #[allow(dead_code)]
     Specified {
         /// optional flag for the `chain` field
         optional: bool,
@@ -22,10 +21,7 @@ pub(crate) enum ChainRule {
 
 impl ChainRule {
     /// Generating `ChainRule` from specs
-    pub(crate) fn new(
-        _docs: &DocSpecs,
-        spec: &Chain,
-    ) -> Self {
+    pub(crate) fn new(spec: &Chain) -> Self {
         let optional = match spec.required {
             IsRequired::Yes => false,
             IsRequired::Optional => true,
@@ -38,7 +34,6 @@ impl ChainRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::too_many_lines)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,

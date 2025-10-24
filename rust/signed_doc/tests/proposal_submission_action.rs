@@ -10,7 +10,7 @@ use test_case::test_case;
 use crate::common::{
     brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
     campaign_parameters_form_template_doc, category_parameters_doc,
-    category_parameters_form_template_doc, create_dummy_key_pair, proposal_doc,
+    category_parameters_form_template_doc, create_dummy_key_pair, get_doc_kid_and_sk, proposal_doc,
     proposal_form_template_doc, proposal_submission_action_doc,
 };
 
@@ -65,7 +65,9 @@ mod common;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Role0)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -99,8 +101,44 @@ mod common;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
-        let doc = Builder::new()
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json,
+                "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
+                "id": id,
+                "ver": id,
+                "ref": {
+                    "id": proposal.doc_id()?,
+                    "ver": proposal.doc_ver()?,
+                },
+                "parameters": {
+                    "id": parameters.doc_id()?,
+                    "ver": parameters.doc_ver()?,
+                }
+            }))?
+            .with_json_content(&serde_json::json!({
+                "action": "final"
+            }))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()
+    }
+    => false
+    ;
+    "singed by other kid"
+)]
+#[test_case(
+    |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let id = UuidV7::new();
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "content-encoding": ContentEncoding::Brotli,
@@ -118,8 +156,7 @@ mod common;
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
@@ -132,8 +169,10 @@ mod common;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
-        let doc = Builder::new()
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "content-encoding": ContentEncoding::Brotli,
@@ -151,8 +190,7 @@ mod common;
             }))?
             .with_json_content(&serde_json::json!("null"))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
@@ -165,8 +203,10 @@ mod common;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
-        let doc = Builder::new()
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
@@ -185,8 +225,7 @@ mod common;
                 "action": "final"
             }))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => true
     ;
@@ -196,9 +235,13 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
-        let doc = Builder::new()
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
                 "content-encoding": ContentEncoding::Brotli.to_string(),
@@ -214,8 +257,7 @@ mod common;
                 "action": "final"
             }))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .build()
     }
     => false
     ;
@@ -228,8 +270,10 @@ mod common;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, _, kid) = create_dummy_key_pair(RoleId::Proposer).inspect(|(_, pk, kid)| provider.add_pk(kid.clone(), *pk))?;
-        let doc = Builder::new()
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "content-encoding": ContentEncoding::Brotli,
@@ -244,9 +288,8 @@ mod common;
             .with_json_content(&serde_json::json!({
                 "action": "final"
             }))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
+            .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())?
+            .build()
     }
     => false
     ;
