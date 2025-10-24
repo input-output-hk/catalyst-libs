@@ -130,7 +130,6 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Multiple References | True |
 | Valid References | [Proposal](proposal.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
@@ -319,10 +318,8 @@ The following User roles may sign documents of this type:
 
 * Proposer
 
-New versions of this document may be published by:
-
-* author
-* collaborators
+Updates are allowed by the original author and from the 'collaborators' metadata field
+of the referenced document specified by the 'ref' metadata field.
 
 ## Copyright
 
@@ -330,7 +327,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-17 |
+| Modified | 2025-10-24 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

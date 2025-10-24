@@ -73,7 +73,6 @@ docs: #DocumentDefinitions & {
 			ref: {
 				type:     "Proposal"
 				required: "yes"
-				multiple: true
 			}
 
 			parameters: {
@@ -135,9 +134,7 @@ docs: #DocumentDefinitions & {
 				]
 			}
 
-			referenced: true
-
-			update: collaborators: true
+			update: type: "ref"
 		}
 
 		versions: [

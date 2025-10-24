@@ -56,6 +56,8 @@ pub mod tests {
 
     use std::{collections::HashMap, time::Duration};
 
+    use ed25519_dalek::SigningKey;
+
     use super::{
         CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
         VerifyingKey,
@@ -68,7 +70,7 @@ pub mod tests {
         /// For `CatalystSignedDocumentProvider`.
         signed_doc: HashMap<DocumentRef, CatalystSignedDocument>,
         /// For `VerifyingKeyProvider`.
-        verifying_key: HashMap<CatalystId, VerifyingKey>,
+        secret_key: HashMap<CatalystId, SigningKey>,
     }
 
     impl TestCatalystProvider {
@@ -93,13 +95,22 @@ pub mod tests {
             Ok(())
         }
 
-        /// Inserts public key into the `TestVerifyingKeyProvider`
-        pub fn add_pk(
+        /// Inserts signing key into the `TestVerifyingKeyProvider`
+        pub fn add_sk(
             &mut self,
             kid: CatalystId,
-            pk: VerifyingKey,
+            sk: SigningKey,
         ) {
-            self.verifying_key.insert(kid, pk);
+            self.secret_key.insert(kid, sk);
+        }
+
+        /// Returns a reference to the corresponding `SigningKey`.
+        #[must_use]
+        pub fn get_sk(
+            &self,
+            kid: &CatalystId,
+        ) -> Option<&SigningKey> {
+            self.secret_key.get(kid)
         }
     }
 
@@ -149,7 +160,7 @@ pub mod tests {
             &self,
             kid: &CatalystId,
         ) -> anyhow::Result<Option<VerifyingKey>> {
-            Ok(self.verifying_key.get(kid).copied())
+            Ok(self.secret_key.get(kid).map(SigningKey::verifying_key))
         }
     }
 }
