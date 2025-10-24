@@ -319,6 +319,11 @@
         "changes": "* Modified `collaborators` cddl definition, it must have at least one element in array.",
         "modified": "2025-10-17",
         "version": "0.1.4"
+      },
+      {
+        "changes": "* Updated 'Proposal Submission Action' document, set `ref` metadata field `multiply` property to `false`.\n* Changed spec `signers.update` property structure.",
+        "modified": "2025-10-24",
+        "version": "0.1.5"
       }
     ]
   },
