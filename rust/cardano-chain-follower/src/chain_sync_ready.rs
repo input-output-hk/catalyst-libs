@@ -38,7 +38,7 @@ impl SyncReady {
 
 /// Sand a chain update to any subscribers that are listening.
 pub(crate) fn notify_follower(
-    chain: Network,
+    chain: &Network,
     update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
     kind: &chain_update::Kind,
 ) {
@@ -78,14 +78,14 @@ type SyncReadyRef = dashmap::mapref::one::Ref<'static, Network, RwLock<SyncReady
 
 /// returns `SYNC_READY` entry by the provided network, if not present inserts the default
 /// value
-fn get_sync_ready(chain: Network) -> SyncReadyRef {
-    if let Some(sync_entry) = SYNC_READY.get(&chain) {
+fn get_sync_ready(chain: &Network) -> SyncReadyRef {
+    if let Some(sync_entry) = SYNC_READY.get(chain) {
         sync_entry
     } else {
-        SYNC_READY.insert(chain, RwLock::new(SyncReady::new()));
+        SYNC_READY.insert(chain.clone(), RwLock::new(SyncReady::new()));
         #[allow(clippy::expect_used)]
         SYNC_READY
-            .get(&chain)
+            .get(chain)
             .expect("cannot fail, we just inserted the value")
     }
 }
@@ -96,8 +96,8 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
     let (tx, rx) = oneshot::channel::<()>();
 
     tokio::spawn(async move {
-        stats::start_thread(chain, stats::thread::name::WAIT_FOR_SYNC_READY, true);
-        let lock_entry = get_sync_ready(chain);
+        stats::start_thread(&chain, stats::thread::name::WAIT_FOR_SYNC_READY, true);
+        let lock_entry = get_sync_ready(&chain);
 
         let lock = lock_entry.value();
 
@@ -107,7 +107,7 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
         if let Ok(()) = rx.await {
             status.ready = true;
         }
-        stats::stop_thread(chain, stats::thread::name::WAIT_FOR_SYNC_READY);
+        stats::stop_thread(&chain, stats::thread::name::WAIT_FOR_SYNC_READY);
         // If the channel closes early, we can NEVER use the Blockchain data.
     });
 
@@ -115,7 +115,7 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
 }
 
 /// Get a Read lock on the Sync State, and return if we are ready or not.
-async fn check_sync_ready(chain: Network) -> bool {
+async fn check_sync_ready(chain: &Network) -> bool {
     let lock_entry = get_sync_ready(chain);
     let lock = lock_entry.value();
 
@@ -131,7 +131,7 @@ const SYNC_READY_RACE_BACKOFF_SECS: u64 = 1;
 /// Block until the chain is synced to TIP.
 /// This is necessary to ensure the Blockchain data is fully intact before attempting to
 /// consume it.
-pub(crate) async fn block_until_sync_ready(chain: Network) {
+pub(crate) async fn block_until_sync_ready(chain: &Network) {
     // There is a potential race where we haven't yet write locked the SYNC_READY lock when we
     // check it. So, IF the ready state returns as false, sleep a while and try again.
     while !check_sync_ready(chain).await {
@@ -141,7 +141,7 @@ pub(crate) async fn block_until_sync_ready(chain: Network) {
 
 /// Get the Broadcast Receive queue for the given chain updates.
 pub(crate) async fn get_chain_update_rx_queue(
-    chain: Network
+    chain: &Network
 ) -> broadcast::Receiver<chain_update::Kind> {
     let lock_entry = get_sync_ready(chain);
 
@@ -154,7 +154,7 @@ pub(crate) async fn get_chain_update_rx_queue(
 
 /// Get the Broadcast Transmit queue for the given chain updates.
 pub(crate) async fn get_chain_update_tx_queue(
-    chain: Network
+    chain: &Network
 ) -> Option<broadcast::Sender<chain_update::Kind>> {
     let lock_entry = get_sync_ready(chain);
 

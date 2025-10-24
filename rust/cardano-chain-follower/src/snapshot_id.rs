@@ -56,7 +56,7 @@ impl SnapshotId {
     /// Try and create a new `SnapshotID` from a given path.
     /// Includes properly getting the Immutable TIP.
     pub(crate) async fn try_new(
-        chain: Network,
+        chain: &Network,
         path: &Path,
     ) -> Option<Self> {
         let Ok(tip) = get_mithril_tip(chain, path).await else {
@@ -254,7 +254,7 @@ mod tests {
             .expect("cannot get absolute path");
 
         assert_eq!(
-            SnapshotId::try_new(Network::Preprod, &dir_path_1).await,
+            SnapshotId::try_new(&Network::Preprod, &dir_path_1).await,
             None
         );
     }

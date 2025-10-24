@@ -50,7 +50,7 @@ const DOWNLOAD_ERROR_RETRY_DURATION: Duration = Duration::from_secs(2 * 60); // 
 /// identical.
 async fn get_latest_snapshots(
     client: &Client,
-    network: Network,
+    network: &Network,
 ) -> Option<(SnapshotListItem, SnapshotListItem)> {
     // Get current latest snapshot from the aggregator
     let snapshots = match client.cardano_database().list().await {
@@ -75,7 +75,7 @@ async fn get_latest_snapshots(
 /// Given a particular snapshot ID, find the Actual Snapshot for it.
 async fn get_snapshot_by_id(
     client: &Client,
-    network: Network,
+    network: &Network,
     snapshot_id: &SnapshotId,
 ) -> Option<SnapshotListItem> {
     let snapshots = match client.cardano_database().list().await {
@@ -168,7 +168,7 @@ fn calculate_sleep_duration(
 async fn get_snapshot(
     client: &Client,
     snapshot_item: &SnapshotListItem,
-    network: Network,
+    network: &Network,
 ) -> Option<Snapshot> {
     let latest_digest = snapshot_item.digest.as_ref();
     let snapshot = match client.cardano_database().get(latest_digest).await {
@@ -198,7 +198,7 @@ async fn get_snapshot(
 async fn download_and_verify_snapshot_certificate(
     client: &Client,
     snapshot: &Snapshot,
-    network: Network,
+    network: &Network,
 ) -> Option<MithrilCertificate> {
     let certificate = match client
         .certificate()
@@ -259,7 +259,7 @@ pub(crate) const MITHRIL_IMMUTABLE_SUB_DIRECTORY: &str = "immutable";
 #[allow(clippy::indexing_slicing)]
 //#[logcall(ok = "debug", err = "error")]
 pub(crate) async fn get_mithril_tip(
-    chain: Network,
+    chain: &Network,
     path: &Path,
 ) -> Result<MultiEraBlock> {
     let mut path = path.to_path_buf();
@@ -290,7 +290,7 @@ pub(crate) async fn get_mithril_tip(
 
 /// Get the Snapshot Data itself from the Aggregator, and a validate Certificate.
 async fn get_mithril_snapshot_and_certificate(
-    chain: Network,
+    chain: &Network,
     client: &Client,
     item: &SnapshotListItem,
 ) -> Option<(Snapshot, MithrilCertificate)> {
@@ -313,20 +313,21 @@ async fn get_mithril_snapshot_and_certificate(
 
 /// Validate that a Mithril Snapshot downloaded matches its certificate.
 async fn validate_mithril_snapshot(
-    chain: Network,
+    chain: &Network,
     certificate: &MithrilCertificate,
     path: &Path,
 ) -> bool {
     let cert = certificate.clone();
     let mithril_path = path.to_path_buf();
+    let chain_ = chain.clone();
     match tokio::spawn(async move {
         // This can be long running and CPU Intensive.
         // So we spawn it off to a background task.
-        stats::start_thread(chain, stats::thread::name::COMPUTE_SNAPSHOT_MSG, true);
+        stats::start_thread(&chain_, stats::thread::name::COMPUTE_SNAPSHOT_MSG, true);
         let result = MessageBuilder::new()
             .compute_snapshot_message(&cert, &mithril_path)
             .await;
-        stats::stop_thread(chain, stats::thread::name::COMPUTE_SNAPSHOT_MSG);
+        stats::stop_thread(&chain_, stats::thread::name::COMPUTE_SNAPSHOT_MSG);
         result
     })
     .await
@@ -358,13 +359,13 @@ async fn validate_mithril_snapshot(
 /// 1. The actual latest mithril snapshot; AND
 /// 2. It must
 async fn get_latest_validated_mithril_snapshot(
-    chain: Network,
+    chain: &Network,
     client: &Client,
     cfg: &MithrilSnapshotConfig,
 ) -> Option<SnapshotId> {
     /// Purge a bad mithril snapshot from disk.
     async fn purge_bad_mithril_snapshot(
-        chain: Network,
+        chain: &Network,
         latest_mithril: &SnapshotId,
     ) {
         debug!("Purging Bad Mithril Snapshot: {latest_mithril}");
@@ -427,7 +428,7 @@ async fn recover_existing_snapshot(
     tx: &Sender<MithrilUpdateMessage>,
 ) -> Option<SnapshotId> {
     // This is a Mithril Validation, so record it.
-    mithril_validation_state(cfg.chain, stats::MithrilValidationState::Start);
+    mithril_validation_state(&cfg.chain, stats::MithrilValidationState::Start);
 
     // Note: we pre-validated connection before we ran, so failure here should be transient.
     // Just wait if we fail, and try again later.
@@ -443,15 +444,15 @@ async fn recover_existing_snapshot(
     // Check if we already have a Mithril snapshot downloaded, and IF we do validate it is
     // intact.
     if let Some(active_snapshot) =
-        get_latest_validated_mithril_snapshot(cfg.chain, &client, cfg).await
+        get_latest_validated_mithril_snapshot(&cfg.chain, &client, cfg).await
     {
         // Read the actual TIP block from the Mithril chain.
-        match get_mithril_tip(cfg.chain, &active_snapshot.path()).await {
+        match get_mithril_tip(&cfg.chain, &active_snapshot.path()).await {
             Ok(tip_block) => {
                 // Validate the Snapshot ID matches the true TIP.
                 if active_snapshot.tip() == tip_block.point() {
                     current_snapshot = Some(active_snapshot.clone());
-                    update_latest_mithril_snapshot(cfg.chain, active_snapshot);
+                    update_latest_mithril_snapshot(&cfg.chain, active_snapshot);
 
                     // Tell the live sync service the current Mithril TIP.
                     let update = MithrilUpdateMessage {
@@ -481,9 +482,9 @@ async fn recover_existing_snapshot(
     }
 
     if current_snapshot.is_none() {
-        mithril_validation_state(cfg.chain, stats::MithrilValidationState::Failed);
+        mithril_validation_state(&cfg.chain, stats::MithrilValidationState::Failed);
     } else {
-        mithril_validation_state(cfg.chain, stats::MithrilValidationState::Finish);
+        mithril_validation_state(&cfg.chain, stats::MithrilValidationState::Finish);
     }
 
     // Explicitly free the resources claimed by the Mithril Client and Downloader.
@@ -504,7 +505,7 @@ enum SnapshotStatus {
 
 /// Check if we have a new snapshot to download, and if so, return its details.
 async fn check_snapshot_to_download(
-    chain: Network,
+    chain: &Network,
     client: &Client,
     current_snapshot: Option<&SnapshotId>,
 ) -> SnapshotStatus {
@@ -553,16 +554,16 @@ fn background_validate_mithril_snapshot(
     tmp_path: PathBuf,
 ) -> tokio::task::JoinHandle<bool> {
     tokio::spawn(async move {
-        stats::start_thread(chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT, true);
+        stats::start_thread(&chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT, true);
         debug!(
             "Mithril Snapshot background updater for: {} : Check Certificate.",
             chain
         );
 
-        stats::mithril_validation_state(chain, stats::MithrilValidationState::Start);
+        stats::mithril_validation_state(&chain, stats::MithrilValidationState::Start);
 
-        if !validate_mithril_snapshot(chain, &certificate, &tmp_path).await {
-            stats::mithril_validation_state(chain, stats::MithrilValidationState::Failed);
+        if !validate_mithril_snapshot(&chain, &certificate, &tmp_path).await {
+            stats::mithril_validation_state(&chain, stats::MithrilValidationState::Failed);
             // If we couldn't build the message then assume its a transient error.
             error!(
                 chain = %chain,
@@ -570,14 +571,14 @@ fn background_validate_mithril_snapshot(
             );
             return false;
         }
-        stats::mithril_validation_state(chain, stats::MithrilValidationState::Finish);
+        stats::mithril_validation_state(&chain, stats::MithrilValidationState::Finish);
 
         debug!(
             "Mithril Snapshot background updater for: {} : Certificate Validated OK.",
             chain
         );
 
-        stats::stop_thread(chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT);
+        stats::stop_thread(&chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT);
         true
     })
 }
@@ -664,7 +665,7 @@ async fn download_and_validate_snapshot(
     trim_chunk_list(&chunk_list, max_chunk);
 
     let validate_handle =
-        background_validate_mithril_snapshot(cfg.chain, certificate, cfg.tmp_path());
+        background_validate_mithril_snapshot(cfg.chain.clone(), certificate, cfg.tmp_path());
 
     if !validate_handle.await.unwrap_or(false) {
         error!("Failed to validate for {}", cfg.chain);
@@ -748,14 +749,19 @@ pub(crate) async fn background_mithril_update(
 
         let (client, downloader) = connect_client(&cfg).await;
 
-        let (snapshot, certificate) =
-            match check_snapshot_to_download(cfg.chain, &client, current_snapshot.as_ref()).await {
-                SnapshotStatus::Sleep(sleep) => {
-                    next_sleep = sleep;
-                    next_iteration!(client, downloader);
-                },
-                SnapshotStatus::Updated(update) => update,
-            };
+        let (snapshot, certificate) = match check_snapshot_to_download(
+            &cfg.chain,
+            &client,
+            current_snapshot.as_ref(),
+        )
+        .await
+        {
+            SnapshotStatus::Sleep(sleep) => {
+                next_sleep = sleep;
+                next_iteration!(client, downloader);
+            },
+            SnapshotStatus::Updated(update) => update,
+        };
 
         if !download_and_validate_snapshot(
             &client,
@@ -767,13 +773,13 @@ pub(crate) async fn background_mithril_update(
         .await
         {
             error!("Failed to Download or Validate a snapshot.");
-            mithril_sync_failure(cfg.chain, stats::MithrilSyncFailures::DownloadOrValidation);
+            mithril_sync_failure(&cfg.chain, stats::MithrilSyncFailures::DownloadOrValidation);
 
             next_iteration!(client, downloader);
         }
 
         // Download was A-OK - Update the new immutable tip.
-        let tip = match get_mithril_tip(cfg.chain, &cfg.tmp_path()).await {
+        let tip = match get_mithril_tip(&cfg.chain, &cfg.tmp_path()).await {
             Ok(tip) => tip,
             Err(error) => {
                 // If we couldn't get the tip then assume its a transient error.
@@ -781,7 +787,7 @@ pub(crate) async fn background_mithril_update(
                     "Failed to Get Tip from Snapshot for {}:  {error}",
                     cfg.chain
                 );
-                mithril_sync_failure(cfg.chain, stats::MithrilSyncFailures::FailedToGetTip);
+                mithril_sync_failure(&cfg.chain, stats::MithrilSyncFailures::FailedToGetTip);
 
                 next_iteration!(client, downloader);
             },
@@ -796,7 +802,7 @@ pub(crate) async fn background_mithril_update(
                     "New Tip is not more advanced than the old tip for: {}",
                     cfg.chain
                 );
-                mithril_sync_failure(cfg.chain, stats::MithrilSyncFailures::TipDidNotAdvance);
+                mithril_sync_failure(&cfg.chain, stats::MithrilSyncFailures::TipDidNotAdvance);
                 next_iteration!(client, downloader);
             }
         }
@@ -812,7 +818,7 @@ pub(crate) async fn background_mithril_update(
 
                 if let Some(latest_snapshot) = current_snapshot.clone() {
                     // Update the latest snapshot data record
-                    update_latest_mithril_snapshot(cfg.chain, latest_snapshot);
+                    update_latest_mithril_snapshot(&cfg.chain, latest_snapshot);
 
                     // Tell the live updater that the Immutable TIP has updated.
                     if let Err(error) = tx
@@ -827,7 +833,7 @@ pub(crate) async fn background_mithril_update(
                             cfg.chain
                         );
                         mithril_sync_failure(
-                            cfg.chain,
+                            &cfg.chain,
                             stats::MithrilSyncFailures::TipFailedToSendToUpdater,
                         );
                         next_iteration!(client, downloader);
@@ -840,7 +846,7 @@ pub(crate) async fn background_mithril_update(
                     "Failed to activate new snapshot : {err}"
                 );
                 mithril_sync_failure(
-                    cfg.chain,
+                    &cfg.chain,
                     stats::MithrilSyncFailures::FailedToActivateNewSnapshot,
                 );
                 next_iteration!(client, downloader);
