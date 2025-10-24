@@ -119,7 +119,7 @@ impl DocumentOwnershipRule {
                     doc.report().missing_field("ref", REPORT_CONTEXT);
                     return Ok(false);
                 };
-                let &[ref doc_ref] = doc_ref.as_slice() else {
+                let [doc_ref] = doc_ref.as_slice() else {
                     doc.report()
                         .other("'ref' field cannot have multiple values", REPORT_CONTEXT);
                     return Ok(false);

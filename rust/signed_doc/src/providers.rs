@@ -105,6 +105,7 @@ pub mod tests {
         }
 
         /// Returns a reference to the corresponding `SigningKey`.
+        #[must_use]
         pub fn get_sk(
             &self,
             kid: &CatalystId,

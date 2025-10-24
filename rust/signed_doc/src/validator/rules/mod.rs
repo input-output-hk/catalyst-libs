@@ -126,17 +126,17 @@ impl Rules {
             ver: VerRule,
             content_type: ContentTypeRule::new(&doc_spec.headers.content_type)?,
             content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
-            template: TemplateRule::new(&all_docs_specs, &doc_spec.metadata.template)?,
-            parameters: ParametersRule::new(&all_docs_specs, &doc_spec.metadata.parameters)?,
+            template: TemplateRule::new(all_docs_specs, &doc_spec.metadata.template)?,
+            parameters: ParametersRule::new(all_docs_specs, &doc_spec.metadata.parameters)?,
             chain: ChainRule::new(&doc_spec.metadata.chain),
-            doc_ref: RefRule::new(&all_docs_specs, &doc_spec.metadata.doc_ref)?,
-            reply: ReplyRule::new(&all_docs_specs, &doc_spec.metadata.reply)?,
+            doc_ref: RefRule::new(all_docs_specs, &doc_spec.metadata.doc_ref)?,
+            reply: ReplyRule::new(all_docs_specs, &doc_spec.metadata.reply)?,
             section: SectionRule::NotSpecified,
             collaborators: CollaboratorsRule::new(&doc_spec.metadata.collaborators),
             content: ContentRule::new(&doc_spec.payload)?,
             kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
             signature: SignatureRule,
-            ownership: DocumentOwnershipRule::new(&doc_spec.signers.update, &doc_spec)?,
+            ownership: DocumentOwnershipRule::new(&doc_spec.signers.update, doc_spec)?,
         })
     }
 
