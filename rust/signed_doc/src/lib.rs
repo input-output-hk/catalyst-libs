@@ -30,7 +30,7 @@ pub use metadata::{
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
-use crate::{builder::SignaturesBuilder, metadata::SupportedLabel};
+use crate::{builder::SignaturesBuilder, metadata::SupportedLabel, signature::Signature};
 
 /// `COSE_Sign` object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
 const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
@@ -167,7 +167,7 @@ impl CatalystSignedDocument {
         self.inner
             .signatures
             .iter()
-            .map(|s| s.kid())
+            .map(Signature::kid)
             .cloned()
             .collect()
     }
