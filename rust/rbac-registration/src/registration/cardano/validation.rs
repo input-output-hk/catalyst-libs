@@ -86,7 +86,6 @@ pub struct RbacValidationSuccess {
 pub async fn update_chain<Provider>(
     reg: Cip509,
     previous_txn: TransactionId,
-    is_persistent: bool,
     provider: &Provider,
 ) -> RbacValidationResult
 where
@@ -96,15 +95,12 @@ where
     let report = reg.report().to_owned();
 
     // Find a chain this registration belongs to.
-    let Some(catalyst_id) = provider
-        .catalyst_id_from_txn_id(previous_txn, is_persistent)
-        .await?
-    else {
+    let Some(catalyst_id) = provider.catalyst_id_from_txn_id(previous_txn).await? else {
         // We are unable to determine a Catalyst ID, so there is no sense to update the problem
         // report because we would be unable to store this registration anyway.
         return Err(RbacValidationError::UnknownCatalystId);
     };
-    let chain = provider.chain(catalyst_id.clone(), is_persistent).await?
+    let chain = provider.chain(catalyst_id.clone()).await?
         .context("{catalyst_id} is present in 'catalyst_id_for_txn_id' table, but not in 'rbac_registration'")?;
 
     // Check that addresses from the new registration aren't used in other chains.
@@ -112,10 +108,7 @@ where
     let reg_addresses = cip509_stake_addresses(&reg);
     let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
     for address in &new_addresses {
-        match provider
-            .catalyst_id_from_stake_address(address, is_persistent)
-            .await?
-        {
+        match provider.catalyst_id_from_stake_address(address).await? {
             None => {
                 // All good: the address wasn't used before.
             },
@@ -141,7 +134,7 @@ where
     })?;
 
     // Check that new public keys aren't used by other chains.
-    let public_keys = validate_public_keys(&new_chain, is_persistent, &report, provider).await?;
+    let public_keys = validate_public_keys(&new_chain, &report, provider).await?;
 
     // Return an error if any issues were recorded in the report.
     if report.is_problematic() {
@@ -177,7 +170,6 @@ where
 ///   address conflict, or public key duplication occurs.
 pub async fn start_new_chain<Provider>(
     reg: Cip509,
-    is_persistent: bool,
     provider: &Provider,
 ) -> RbacValidationResult
 where
@@ -202,10 +194,7 @@ where
 
     // Verify that a Catalyst ID of this chain is unique.
     let catalyst_id = new_chain.catalyst_id().as_short_id();
-    if provider
-        .is_chain_known(catalyst_id.clone(), is_persistent)
-        .await?
-    {
+    if provider.is_chain_known(catalyst_id.clone()).await? {
         report.functional_validation(
             &format!("{catalyst_id} is already used"),
             "It isn't allowed to use same Catalyst ID (certificate subject public key) in multiple registration chains",
@@ -221,13 +210,10 @@ where
     let new_addresses = new_chain.stake_addresses();
     let mut updated_chains: HashMap<_, HashSet<StakeAddress>> = HashMap::new();
     for address in &new_addresses {
-        if let Some(id) = provider
-            .catalyst_id_from_stake_address(address, is_persistent)
-            .await?
-        {
+        if let Some(id) = provider.catalyst_id_from_stake_address(address).await? {
             // If an address is used in existing chain then a new chain must have different role 0
             // signing key.
-            let previous_chain = provider.chain(id.clone(), is_persistent)
+            let previous_chain = provider.chain(id.clone())
                 .await?
                 .context("{id} is present in 'catalyst_id_for_stake_address', but not in 'rbac_registration'")?;
             if previous_chain.get_latest_signing_pk_for_role(&RoleId::Role0)
@@ -253,7 +239,7 @@ where
     }
 
     // Check that new public keys aren't used by other chains.
-    let public_keys = validate_public_keys(&new_chain, is_persistent, &report, provider).await?;
+    let public_keys = validate_public_keys(&new_chain, &report, provider).await?;
 
     if report.is_problematic() {
         return Err(RbacValidationError::InvalidRegistration {
@@ -285,7 +271,6 @@ where
 ///   (e.g., database lookup failures).
 pub async fn validate_public_keys<Provider>(
     chain: &RegistrationChain,
-    is_persistent: bool,
     report: &ProblemReport,
     provider: &Provider,
 ) -> Result<HashSet<VerifyingKey>>
@@ -300,10 +285,7 @@ where
     for role in roles {
         if let Some((key, _)) = chain.get_latest_signing_pk_for_role(role) {
             keys.insert(key);
-            if let Some(previous) = provider
-                .catalyst_id_from_public_key(key, is_persistent)
-                .await?
-            {
+            if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
                 if previous != catalyst_id {
                     report.functional_validation(
                         &format!("An update to {catalyst_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
