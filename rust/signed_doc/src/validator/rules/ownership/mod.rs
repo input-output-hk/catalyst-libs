@@ -11,7 +11,6 @@ use catalyst_signed_doc_spec::{
     signers::update::{Update, UpdatersType},
     DocSpec,
 };
-use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
@@ -105,13 +104,7 @@ impl DocumentOwnershipRule {
                         "A latest version of the document must exist if a first version exists"
                     ))?;
 
-                    allowed_authors.extend(
-                        last_doc
-                            .doc_meta()
-                            .collaborators()
-                            .iter()
-                            .map(CatalystId::as_short_id),
-                    );
+                    allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
                 }
             },
             Self::RefFieldBased => {
@@ -141,13 +134,7 @@ impl DocumentOwnershipRule {
                             "A latest version of the document must exist if a first version exists"
                         ))?;
 
-                allowed_authors.extend(
-                    last_doc
-                        .doc_meta()
-                        .collaborators()
-                        .iter()
-                        .map(CatalystId::as_short_id),
-                );
+                allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
             },
         }
 

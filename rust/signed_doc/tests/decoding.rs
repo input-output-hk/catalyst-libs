@@ -583,7 +583,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
@@ -673,7 +673,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_meta().reply() == Some(&refs));
                 anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
@@ -1138,7 +1138,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 Ok(())
             }
         })),
@@ -1197,7 +1197,7 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 0);
+                anyhow::ensure!(doc.authors().len() == 0);
                 Ok(())
             }
         })),
@@ -1265,7 +1265,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 Ok(())
             }
         })),

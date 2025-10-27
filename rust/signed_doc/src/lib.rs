@@ -30,7 +30,7 @@ pub use metadata::{
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
-use crate::{builder::SignaturesBuilder, metadata::SupportedLabel};
+use crate::{builder::SignaturesBuilder, metadata::SupportedLabel, signature::Signature};
 
 /// `COSE_Sign` object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
 const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
@@ -69,8 +69,8 @@ impl Display for CatalystSignedDocument {
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
         } else {
-            for kid in &self.kids() {
-                writeln!(f, "  Signature Key ID: {kid}")?;
+            for kid in &self.authors() {
+                writeln!(f, "  Author ID: {kid}")?;
             }
         }
         Ok(())
@@ -161,23 +161,14 @@ impl CatalystSignedDocument {
         &self.inner.signatures
     }
 
-    /// Return a list of Document's Catalyst IDs.
-    #[must_use]
-    pub fn kids(&self) -> Vec<CatalystId> {
-        self.inner
-            .signatures
-            .iter()
-            .map(|s| s.kid().clone())
-            .collect()
-    }
-
-    /// Return a list of Document's author IDs (short form of Catalyst IDs).
+    /// Return a list of Document's Signer's Catalyst IDs,
     #[must_use]
     pub fn authors(&self) -> Vec<CatalystId> {
         self.inner
             .signatures
             .iter()
-            .map(|s| s.kid().as_short_id())
+            .map(Signature::kid)
+            .cloned()
             .collect()
     }
 
