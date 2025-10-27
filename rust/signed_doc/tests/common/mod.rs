@@ -33,7 +33,7 @@ pub fn get_doc_kid_and_sk(
     doc: &CatalystSignedDocument,
     i: usize,
 ) -> anyhow::Result<(ed25519_dalek::SigningKey, CatalystId)> {
-    let doc_kids = doc.kids();
+    let doc_kids = doc.authors();
     let kid = doc_kids
         .get(i)
         .ok_or(anyhow::anyhow!("does not have a kid at index '{i}'"))?;

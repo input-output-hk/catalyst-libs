@@ -56,7 +56,7 @@ impl SignatureKidRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        let contains_exp_role = doc.kids().iter().enumerate().all(|(i, kid)| {
+        let contains_exp_role = doc.authors().iter().enumerate().all(|(i, kid)| {
             let (role_index, _) = kid.role_and_rotation();
             let res = self.allowed_roles.contains(&role_index);
             if !res {
