@@ -2,23 +2,18 @@
 
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{Context, Result};
-use cardano_blockchain_types::{hashes::TransactionId, StakeAddress};
+use anyhow::Context;
+use cardano_blockchain_types::StakeAddress;
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
-use ed25519_dalek::VerifyingKey;
 
 use crate::{
-    cardano::cip509::{Cip0134UriSet, Cip509},
-    providers::RbacRegistrationProvider,
+    cardano::cip509::Cip509, providers::RbacRegistrationProvider,
     registration::cardano::RegistrationChain,
 };
-
-/// A return value of the `validate_rbac_registration` method.
-pub type RbacValidationResult = Result<RbacValidationSuccess, RbacValidationError>;
 
 /// An error returned from the `validate_rbac_registration` method.
 #[allow(clippy::large_enum_variant)]
@@ -51,109 +46,6 @@ impl From<anyhow::Error> for RbacValidationError {
     fn from(e: anyhow::Error) -> Self {
         RbacValidationError::Fatal(e)
     }
-}
-
-/// Represents the result yielded by `update_chain` or `start_new_chain` upon successful
-/// execution.
-pub struct RbacValidationSuccess {
-    /// A Catalyst ID of the chain this registration belongs to.
-    pub catalyst_id: CatalystId,
-    /// A list of stake addresses that were added to the chain.
-    pub stake_addresses: HashSet<StakeAddress>,
-    /// A list of role public keys used in this registration.
-    pub public_keys: HashSet<VerifyingKey>,
-    /// A list of updates to other chains containing Catalyst IDs and removed stake
-    /// addresses.
-    ///
-    /// A new RBAC registration can take ownership of stake addresses of other chains.
-    pub modified_chains: Vec<(CatalystId, HashSet<StakeAddress>)>,
-    /// An updated registration chain.
-    pub chain: RegistrationChain,
-}
-
-/// Attempts to update an existing RBAC registration chain
-/// with a new CIP-509 registration, validating address and key usage consistency.
-///
-/// # Returns
-/// - `Ok((new_chain, validation_result))` if the chain was successfully updated and
-///   validated.
-///
-/// # Errors
-/// - Returns [`RbacValidationError::UnknownCatalystId`] if no Catalyst chain is found for
-///   `previous_txn`.
-/// - Returns [`RbacValidationError::InvalidRegistration`] if address/key duplication or
-///   validation inconsistencies are detected.
-pub async fn update_chain<Provider>(
-    reg: Cip509,
-    previous_txn: TransactionId,
-    provider: &Provider,
-) -> RbacValidationResult
-where
-    Provider: RbacRegistrationProvider,
-{
-    let purpose = reg.purpose();
-    let report = reg.report().to_owned();
-
-    // Find a chain this registration belongs to.
-    let Some(catalyst_id) = provider.catalyst_id_from_txn_id(previous_txn).await? else {
-        // We are unable to determine a Catalyst ID, so there is no sense to update the problem
-        // report because we would be unable to store this registration anyway.
-        return Err(RbacValidationError::UnknownCatalystId);
-    };
-    let chain = provider.chain(catalyst_id.clone()).await?
-        .context("{catalyst_id} is present in 'catalyst_id_for_txn_id' table, but not in 'rbac_registration'")?;
-
-    // Check that addresses from the new registration aren't used in other chains.
-    let previous_addresses = chain.stake_addresses();
-    let reg_addresses = cip509_stake_addresses(&reg);
-    let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
-    for address in &new_addresses {
-        match provider.catalyst_id_from_stake_address(address).await? {
-            None => {
-                // All good: the address wasn't used before.
-            },
-            Some(_) => {
-                report.functional_validation(
-                    &format!("{address} stake addresses is already used"),
-                    "It isn't allowed to use same stake address in multiple registration chains",
-                );
-            },
-        }
-    }
-
-    // Store values before consuming the registration.
-    let stake_addresses = cip509_stake_addresses(&reg);
-
-    // Try to add a new registration to the chain.
-    let new_chain = chain.update(reg.clone()).ok_or_else(|| {
-        RbacValidationError::InvalidRegistration {
-            catalyst_id: catalyst_id.clone(),
-            purpose,
-            report: report.clone(),
-        }
-    })?;
-
-    // Check that new public keys aren't used by other chains.
-    let public_keys = validate_public_keys(&new_chain, &report, provider).await?;
-
-    // Return an error if any issues were recorded in the report.
-    if report.is_problematic() {
-        return Err(RbacValidationError::InvalidRegistration {
-            catalyst_id,
-            purpose,
-            report,
-        });
-    }
-
-    Ok(RbacValidationSuccess {
-        catalyst_id,
-        stake_addresses,
-        public_keys,
-        // Only new chains can take ownership of stake addresses of existing chains, so in this
-        // case other chains aren't affected.
-        modified_chains: Vec::new(),
-        chain: new_chain,
-    })
 }
 
 /// Attempts to initialize a new RBAC registration chain
@@ -239,7 +131,7 @@ where
     }
 
     // Check that new public keys aren't used by other chains.
-    let public_keys = validate_public_keys(&new_chain, &report, provider).await?;
+    let public_keys = new_chain.validate_public_keys(&report, provider).await?;
 
     if report.is_problematic() {
         return Err(RbacValidationError::InvalidRegistration {
@@ -256,53 +148,4 @@ where
         modified_chains: updated_chains.into_iter().collect(),
         chain: new_chain,
     })
-}
-
-/// Validates that none of the signing keys in a given RBAC registration chain
-/// have been used by any other existing chain, ensuring global key uniqueness
-/// across all Catalyst registrations.
-///
-/// # Returns
-/// Returns a [`Result<HashSet<VerifyingKey>>`] containing all unique public keys
-/// extracted from the registration chain if validation passes successfully.
-///
-/// # Errors
-/// - Propagates any I/O or provider-level errors encountered while checking key ownership
-///   (e.g., database lookup failures).
-pub async fn validate_public_keys<Provider>(
-    chain: &RegistrationChain,
-    report: &ProblemReport,
-    provider: &Provider,
-) -> Result<HashSet<VerifyingKey>>
-where
-    Provider: RbacRegistrationProvider,
-{
-    let mut keys = HashSet::new();
-
-    let roles: Vec<_> = chain.role_data_history().keys().collect();
-    let catalyst_id = chain.catalyst_id().as_short_id();
-
-    for role in roles {
-        if let Some((key, _)) = chain.get_latest_signing_pk_for_role(role) {
-            keys.insert(key);
-            if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
-                if previous != catalyst_id {
-                    report.functional_validation(
-                        &format!("An update to {catalyst_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
-                        "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
-                    );
-                }
-            }
-        }
-    }
-
-    Ok(keys)
-}
-
-/// Returns a set of stake addresses in the given registration.
-pub fn cip509_stake_addresses(cip509: &Cip509) -> HashSet<StakeAddress> {
-    cip509
-        .certificate_uris()
-        .map(Cip0134UriSet::stake_addresses)
-        .unwrap_or_default()
 }

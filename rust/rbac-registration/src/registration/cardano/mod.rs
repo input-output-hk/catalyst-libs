@@ -23,9 +23,13 @@ use update_rbac::{
 };
 use x509_cert::certificate::Certificate as X509Certificate;
 
-use crate::cardano::cip509::{
-    CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
-    RoleDataRecord, ValidationSignature,
+use crate::{
+    cardano::cip509::{
+        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
+        RoleDataRecord, ValidationSignature,
+    },
+    providers::RbacRegistrationProvider,
+    registration::cardano::validation::RbacValidationError,
 };
 
 /// Registration chains.
@@ -82,6 +86,47 @@ impl RegistrationChain {
         Some(Self {
             inner: Arc::new(new_inner),
         })
+    }
+
+    /// Validates that none of the signing keys in a given RBAC registration chain
+    /// have been used by any other existing chain, ensuring global key uniqueness
+    /// across all Catalyst registrations.
+    ///
+    /// # Returns
+    /// Returns a [`Result<HashSet<VerifyingKey>>`] containing all unique public keys
+    /// extracted from the registration chain if validation passes successfully.
+    ///
+    /// # Errors
+    /// - Propagates any I/O or provider-level errors encountered while checking key
+    ///   ownership (e.g., database lookup failures).
+    pub async fn validate_public_keys<Provider>(
+        &self,
+        report: &ProblemReport,
+        provider: &Provider,
+    ) -> Result<HashSet<VerifyingKey>, RbacValidationError>
+    where
+        Provider: RbacRegistrationProvider,
+    {
+        let mut keys = HashSet::new();
+
+        let roles: Vec<_> = self.role_data_history().keys().collect();
+        let catalyst_id = self.catalyst_id().as_short_id();
+
+        for role in roles {
+            if let Some((key, _)) = self.get_latest_signing_pk_for_role(role) {
+                keys.insert(key);
+                if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
+                    if previous != catalyst_id {
+                        report.functional_validation(
+                        &format!("An update to {catalyst_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
+                        "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
+                        );
+                    }
+                }
+            }
+        }
+
+        Ok(keys)
     }
 
     /// Returns a Catalyst ID.
@@ -254,6 +299,14 @@ impl RegistrationChain {
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.inner.certificate_uris.stake_addresses()
+    }
+}
+
+impl From<RegistrationChainInner> for RegistrationChain {
+    fn from(value: RegistrationChainInner) -> Self {
+        Self {
+            inner: Arc::new(value),
+        }
     }
 }
 
@@ -490,6 +543,84 @@ impl RegistrationChainInner {
         );
 
         Some(new_inner)
+    }
+
+    /// Attempts to update an existing RBAC registration chain
+    /// with a new CIP-509 registration, validating address and key usage consistency.
+    ///
+    /// # Returns
+    /// - `Ok((new_chain, validation_result))` if the chain was successfully updated and
+    ///   validated.
+    ///
+    /// # Errors
+    /// - Returns [`RbacValidationError::UnknownCatalystId`] if no Catalyst chain is found
+    ///   for `previous_txn`.
+    /// - Returns [`RbacValidationError::InvalidRegistration`] if address/key duplication
+    ///   or validation inconsistencies are detected.
+    pub async fn update_from_previous_txn<Provider>(
+        &self,
+        reg: Cip509,
+        previous_txn: TransactionId,
+        provider: &Provider,
+    ) -> Result<RegistrationChain, RbacValidationError>
+    where
+        Provider: RbacRegistrationProvider,
+    {
+        let purpose = reg.purpose();
+        let report = reg.report().to_owned();
+
+        // Find a chain this registration belongs to.
+        let Some(catalyst_id) = provider.catalyst_id_from_txn_id(previous_txn).await? else {
+            // We are unable to determine a Catalyst ID, so there is no sense to update the problem
+            // report because we would be unable to store this registration anyway.
+            return Err(RbacValidationError::UnknownCatalystId);
+        };
+        let chain = provider.chain(catalyst_id.clone()).await?
+        .context("{catalyst_id} is present in 'catalyst_id_for_txn_id' table, but not in 'rbac_registration'")?;
+
+        // Check that addresses from the new registration aren't used in other chains.
+        let previous_addresses = chain.stake_addresses();
+        let reg_addresses = reg.stake_addresses();
+        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
+        for address in &new_addresses {
+            match provider.catalyst_id_from_stake_address(address).await? {
+                None => {
+                    // All good: the address wasn't used before.
+                },
+                Some(_) => {
+                    report.functional_validation(
+                    &format!("{address} stake addresses is already used"),
+                    "It isn't allowed to use same stake address in multiple registration chains",
+                );
+                },
+            }
+        }
+
+        // Store values before consuming the registration.
+        let stake_addresses = reg.stake_addresses();
+
+        // Try to add a new registration to the chain.
+        let new_chain = chain.update(reg.clone()).ok_or_else(|| {
+            RbacValidationError::InvalidRegistration {
+                catalyst_id: catalyst_id.clone(),
+                purpose,
+                report: report.clone(),
+            }
+        })?;
+
+        // Check that new public keys aren't used by other chains.
+        let public_keys = new_chain.validate_public_keys(&report, provider).await?;
+
+        // Return an error if any issues were recorded in the report.
+        if report.is_problematic() {
+            return Err(RbacValidationError::InvalidRegistration {
+                catalyst_id,
+                purpose,
+                report,
+            });
+        }
+
+        Ok(new_chain)
     }
 }
 
