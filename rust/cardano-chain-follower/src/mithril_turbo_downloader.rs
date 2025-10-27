@@ -104,7 +104,7 @@ impl Inner {
         };
 
         let tmp_dir = self.cfg.tmp_path();
-        let latest_snapshot = latest_mithril_snapshot_data(self.cfg.chain);
+        let latest_snapshot = latest_mithril_snapshot_data(&self.cfg.chain);
 
         for entry in entries {
             let mut entry = match entry {
@@ -200,7 +200,7 @@ impl Inner {
 
         debug!(chain = %self.cfg.chain, "Download {} bytes", dl_handler.dl_size());
 
-        stats::mithril_dl_finished(self.cfg.chain, Some(dl_handler.dl_size()));
+        stats::mithril_dl_finished(&self.cfg.chain, Some(dl_handler.dl_size()));
 
         Ok(())
     }
@@ -347,18 +347,18 @@ impl MithrilTurboDownloader {
         // This is fully synchronous IO, so do it on a sync thread.
         let result = spawn_blocking(move || {
             stats::start_thread(
-                inner.cfg.chain,
+                &inner.cfg.chain,
                 stats::thread::name::MITHRIL_DL_DEDUP,
                 false,
             );
             let result = inner.dl_and_dedup(&location, &target_dir);
-            stats::stop_thread(inner.cfg.chain, stats::thread::name::MITHRIL_DL_DEDUP);
+            stats::stop_thread(&inner.cfg.chain, stats::thread::name::MITHRIL_DL_DEDUP);
             result
         })
         .await;
 
         // Must always be called when download ends, regardless of the reason.
-        stats::mithril_dl_finished(self.inner.cfg.chain, None);
+        stats::mithril_dl_finished(&self.inner.cfg.chain, None);
 
         if let Ok(result) = result {
             return result;
@@ -415,7 +415,7 @@ impl FileDownloader for MithrilTurboDownloader {
         let new_files = self.inner.new_files.load(Ordering::SeqCst);
 
         stats::mithril_extract_finished(
-            self.inner.cfg.chain,
+            &self.inner.cfg.chain,
             Some(self.inner.ext_size.load(Ordering::SeqCst)),
             self.inner.dedup_size.load(Ordering::SeqCst),
             tot_files
@@ -441,13 +441,13 @@ impl MithrilTurboDownloader {
         debug!("Probe Snapshot location='{location}'.");
         let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
         let dl_processor =
-            ParallelDownloadProcessor::new(location, dl_config, self.inner.cfg.chain).await?;
+            ParallelDownloadProcessor::new(location, dl_config, &self.inner.cfg.chain).await?;
 
         // Decompress and extract and de-dupe each file in the archive.
-        stats::mithril_extract_started(self.inner.cfg.chain);
+        stats::mithril_extract_started(&self.inner.cfg.chain);
 
         // We also immediately start downloading now.
-        stats::mithril_dl_started(self.inner.cfg.chain);
+        stats::mithril_dl_started(&self.inner.cfg.chain);
 
         // Save the DownloadProcessor in the inner struct for use to process the downloaded data.
         if let Err(_error) = self.inner.dl_handler.set(dl_processor) {

@@ -86,7 +86,7 @@ impl MithrilSnapshotIterator {
 
     /// Try and probe to establish the iterator from the desired point.
     async fn try_fuzzy_iterator(
-        chain: Network,
+        chain: &Network,
         path: &Path,
         from: &Point,
         search_interval: u64,
@@ -141,7 +141,7 @@ impl MithrilSnapshotIterator {
         Some(MithrilSnapshotIterator {
             path: path.to_path_buf(),
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
-                chain,
+                chain: chain.clone(),
                 start: this,
                 previous: previous?,
                 inner: iterator,
@@ -154,7 +154,7 @@ impl MithrilSnapshotIterator {
     #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
     async fn fuzzy_iterator(
-        chain: Network,
+        chain: &Network,
         path: &Path,
         from: &Point,
     ) -> MithrilSnapshotIterator {
@@ -182,7 +182,7 @@ impl MithrilSnapshotIterator {
     #[allow(clippy::indexing_slicing)]
     #[logcall(ok = "debug", err = "error")]
     pub(crate) async fn new(
-        chain: Network,
+        chain: &Network,
         path: &Path,
         from: &Point,
         previous_point: Option<Point>,
@@ -207,7 +207,7 @@ impl MithrilSnapshotIterator {
         Ok(MithrilSnapshotIterator {
             path: path.to_path_buf(),
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
-                chain,
+                chain: chain.clone(),
                 start: from.clone(),
                 previous,
                 inner: iterator,
@@ -241,7 +241,12 @@ impl Iterator for MithrilSnapshotIteratorInner {
             if let Ok(block) = maybe_block {
                 if !self.previous.is_unknown() {
                     // We can safely fully decode this block.
-                    match MultiEraBlock::new(self.chain, block, &self.previous, Fork::IMMUTABLE) {
+                    match MultiEraBlock::new(
+                        self.chain.clone(),
+                        block,
+                        &self.previous,
+                        Fork::IMMUTABLE,
+                    ) {
                         Ok(block_data) => {
                             // Update the previous point
                             // debug!("Pre Previous update 1 : {:?}", self.previous);

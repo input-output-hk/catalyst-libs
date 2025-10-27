@@ -71,10 +71,10 @@ impl MithrilSnapshotConfig {
     #[must_use]
     pub fn default_for(chain: Network) -> Self {
         Self {
-            chain,
             path: chain.default_mithril_path(),
             aggregator_url: chain.default_mithril_aggregator(),
             genesis_key: chain.default_mithril_genesis_key(),
+            chain,
             dl_config: None,
         }
     }
@@ -122,7 +122,7 @@ impl MithrilSnapshotConfig {
         }
 
         if latest_immutable_file > 0 {
-            return SnapshotId::try_new(self.chain, &latest_path).await;
+            return SnapshotId::try_new(&self.chain, &latest_path).await;
         }
 
         None
@@ -135,7 +135,7 @@ impl MithrilSnapshotConfig {
         snapshot_number: u64,
     ) -> io::Result<PathBuf> {
         let new_path = self.mithril_path(snapshot_number);
-        let latest_id = latest_mithril_snapshot_id(self.chain);
+        let latest_id = latest_mithril_snapshot_id(&self.chain);
 
         debug!(
             "Activating snapshot: {} {} {:?}",
@@ -189,7 +189,7 @@ impl MithrilSnapshotConfig {
             },
             Ok(mut entries) => {
                 // Get latest mithril snapshot path and number.
-                let latest_snapshot = latest_mithril_snapshot_id(self.chain);
+                let latest_snapshot = latest_mithril_snapshot_id(&self.chain);
 
                 loop {
                     // Get the next entry, stop on any error, or no entries left.
@@ -337,7 +337,9 @@ impl MithrilSnapshotConfig {
         // hex.
         let vkey = remove_whitespace(&self.genesis_key);
         if !is_hex(&vkey) {
-            return Err(Error::MithrilGenesisVKeyNotHex(Box::new(self.chain)));
+            return Err(Error::MithrilGenesisVKeyNotHex(Box::new(
+                self.chain.clone(),
+            )));
         }
 
         Ok(())
@@ -354,25 +356,30 @@ impl MithrilSnapshotConfig {
         // We do this by trying to use it to get a list of snapshots.
         let client = mithril_client::ClientBuilder::aggregator(&url, &key)
             .build()
-            .map_err(|e| Error::MithrilClient(Box::new(self.chain), url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(Box::new(self.chain.clone()), url.clone(), e))?;
 
         let snapshots = client
             .cardano_database()
             .list()
             .await
-            .map_err(|e| Error::MithrilClient(Box::new(self.chain), url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(Box::new(self.chain.clone()), url.clone(), e))?;
 
         // Check we have a snapshot, and its for our network.
         match snapshots.first() {
             Some(snapshot_info) => {
                 if snapshot_info.network != self.chain.to_string() {
                     Err(Error::MithrilClientNetworkMismatch(
-                        Box::new(self.chain),
+                        Box::new(self.chain.clone()),
                         snapshot_info.network.clone(),
                     ))?;
                 }
             },
-            None => return Err(Error::MithrilClientNoSnapshots(Box::new(self.chain), url)),
+            None => {
+                return Err(Error::MithrilClientNoSnapshots(
+                    Box::new(self.chain.clone()),
+                    url,
+                ))
+            },
         }
 
         Ok(())
@@ -399,7 +406,7 @@ impl MithrilSnapshotConfig {
 
         // Start the Mithril Sync - IFF its not already running.
         let lock_entry = SYNC_JOIN_HANDLE_MAP
-            .entry(self.chain)
+            .entry(self.chain.clone())
             .or_insert_with(|| Mutex::new(None));
 
         let mut locked_handle = lock_entry.value().lock().await;
@@ -407,7 +414,7 @@ impl MithrilSnapshotConfig {
         if (*locked_handle).is_some() {
             debug!("Mithril Already Running for {}", self.chain);
             return Err(Error::MithrilSnapshotSyncAlreadyRunning(Box::new(
-                self.chain,
+                self.chain.clone(),
             )));
         }
 
@@ -423,12 +430,12 @@ impl MithrilSnapshotConfig {
         let config = self.clone();
         *locked_handle = Some(tokio::spawn(async move {
             stats::start_thread(
-                config.chain,
+                &config.chain,
                 stats::thread::name::MITHRIL_SNAPSHOT_UPDATER,
                 true,
             );
             background_mithril_update(config.clone(), tx).await;
-            stats::stop_thread(config.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
+            stats::stop_thread(&config.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
         }));
 
         // sync_map.insert(chain, handle);
@@ -505,7 +512,7 @@ mod tests {
     #[tokio::test]
     async fn test_default_for() {
         let network = Network::Preprod;
-        let config = MithrilSnapshotConfig::default_for(network);
+        let config = MithrilSnapshotConfig::default_for(network.clone());
 
         assert_eq!(config.chain, network);
         assert_eq!(config.path, network.default_mithril_path());
