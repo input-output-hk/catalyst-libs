@@ -86,6 +86,57 @@ impl RegistrationChain {
         })
     }
 
+    /// Attempts to update an existing RBAC registration chain
+    /// with a new CIP-509 registration, validating address and key usage consistency.
+    ///
+    /// # Returns
+    /// - `Ok((new_chain, validation_result))` if the chain was successfully updated and
+    ///   validated.
+    ///
+    /// # Errors
+    /// - Returns [`RbacValidationError::UnknownCatalystId`] if no Catalyst chain is found
+    ///   for `previous_txn`.
+    /// - Returns [`RbacValidationError::InvalidRegistration`] if address/key duplication
+    ///   or validation inconsistencies are detected.
+    #[must_use]
+    pub async fn update_from_previous_txn<Provider>(
+        &self,
+        reg: Cip509,
+        previous_txn: TransactionId,
+        provider: &Provider,
+    ) -> Result<RegistrationChain, RbacValidationError>
+    where
+        Provider: RbacRegistrationProvider,
+    {
+        self.inner
+            .update_from_previous_txn(reg, previous_txn, provider)
+            .await
+    }
+
+    /// Attempts to initialize a new RBAC registration chain
+    /// from a given CIP-509 registration, ensuring uniqueness of Catalyst ID, stake
+    /// addresses, and associated public keys.
+    ///
+    /// # Returns
+    /// - `Ok((new_chain, validation_result))` if the chain was successfully initialized
+    ///   and validated.
+    ///
+    /// # Errors
+    /// - [`RbacValidationError::UnknownCatalystId`]: if `reg` lacks a valid Catalyst ID.
+    /// - [`RbacValidationError::InvalidRegistration`]: if any functional validation,
+    ///   stake address conflict, or public key duplication occurs.
+    #[must_use]
+    pub async fn start_from_provider<Provider>(
+        &self,
+        reg: Cip509,
+        provider: &Provider,
+    ) -> Result<RegistrationChain, RbacValidationError>
+    where
+        Provider: RbacRegistrationProvider,
+    {
+        self.inner.start_from_provider(reg, provider).await
+    }
+
     /// Validates that none of the signing keys in a given RBAC registration chain
     /// have been used by any other existing chain, ensuring global key uniqueness
     /// across all Catalyst registrations.
@@ -297,14 +348,6 @@ impl RegistrationChain {
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.inner.certificate_uris.stake_addresses()
-    }
-}
-
-impl From<RegistrationChainInner> for RegistrationChain {
-    fn from(value: RegistrationChainInner) -> Self {
-        Self {
-            inner: Arc::new(value),
-        }
     }
 }
 
@@ -678,7 +721,7 @@ impl RegistrationChainInner {
         let report = reg.report().to_owned();
 
         // Try to start a new chain.
-        let new_chain = RegistrationChain::new(reg.clone()).ok_or_else(|| {
+        let new_chain = RegistrationChain::new(reg).ok_or_else(|| {
             if let Some(catalyst_id) = catalyst_id {
                 RbacValidationError::InvalidRegistration {
                     catalyst_id,
