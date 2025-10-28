@@ -134,14 +134,11 @@ impl RegistrationChain {
     where
         Provider: RbacRegistrationProvider,
     {
-        let mut keys = HashSet::new();
-
         let roles: Vec<_> = self.role_data_history().keys().collect();
         let catalyst_id = self.catalyst_id().as_short_id();
 
         for role in roles {
             if let Some((key, _)) = self.get_latest_signing_pk_for_role(role) {
-                keys.insert(key);
                 if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
                     if previous != catalyst_id {
                         report.functional_validation(
