@@ -112,6 +112,8 @@ impl RegistrationChain {
                 RegistrationChainInner::update_from_previous_txn(reg, previous_txn, provider)
                     .await?;
 
+            // Only new chains can take ownership of stake addresses of existing chains, so in this
+            // case other chains aren't affected.
             Ok((result, Vec::new()))
         } else {
             RegistrationChainInner::start_from_provider(reg, provider).await
