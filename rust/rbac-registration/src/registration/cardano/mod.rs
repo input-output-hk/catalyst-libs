@@ -89,7 +89,7 @@ impl RegistrationChain {
     /// Creates or updates an RBAC registration chain from a CIP-509 registration.
     ///
     /// If the given registration references a previous transaction, it attempts
-    /// to update the existing chain using that previous transaction.  
+    /// to update the existing chain using that previous transaction.
     /// Otherwise, it starts a new chain from the provided registration.
     ///
     /// # Returns
@@ -100,16 +100,19 @@ impl RegistrationChain {
     ///   inferred.
     /// - [`RbacValidationError::InvalidRegistration`] if any validation, address, or key
     ///   duplication inconsistencies are detected.
-    #[must_use]
     pub async fn update_from_previous_txn<Provider>(
         reg: Cip509,
         provider: &Provider,
-    ) -> Result<Self, RbacValidationError>
+    ) -> Result<(Self, Vec<(CatalystId, HashSet<StakeAddress>)>), RbacValidationError>
     where
         Provider: RbacRegistrationProvider,
     {
         if let Some(previous_txn) = reg.previous_transaction() {
-            RegistrationChainInner::update_from_previous_txn(reg, previous_txn, provider).await
+            let result =
+                RegistrationChainInner::update_from_previous_txn(reg, previous_txn, provider)
+                    .await?;
+
+            Ok((result, Vec::new()))
         } else {
             RegistrationChainInner::start_from_provider(reg, provider).await
         }
@@ -606,7 +609,6 @@ impl RegistrationChainInner {
     ///   for `previous_txn`.
     /// - Returns [`RbacValidationError::InvalidRegistration`] if address/key duplication
     ///   or validation inconsistencies are detected.
-    #[must_use]
     pub async fn update_from_previous_txn<Provider>(
         reg: Cip509,
         previous_txn: TransactionId,
@@ -681,11 +683,10 @@ impl RegistrationChainInner {
     /// - [`RbacValidationError::UnknownCatalystId`]: if `reg` lacks a valid Catalyst ID.
     /// - [`RbacValidationError::InvalidRegistration`]: if any functional validation,
     ///   stake address conflict, or public key duplication occurs.
-    #[must_use]
     pub async fn start_from_provider<Provider>(
         reg: Cip509,
         provider: &Provider,
-    ) -> Result<RegistrationChain, RbacValidationError>
+    ) -> Result<(RegistrationChain, Vec<(CatalystId, HashSet<StakeAddress>)>), RbacValidationError>
     where
         Provider: RbacRegistrationProvider,
     {
@@ -763,7 +764,7 @@ impl RegistrationChainInner {
             });
         }
 
-        Ok(new_chain)
+        Ok((new_chain, updated_chains.into_iter().collect()))
     }
 }
 
