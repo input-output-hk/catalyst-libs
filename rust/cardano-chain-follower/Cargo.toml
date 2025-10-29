@@ -16,7 +16,7 @@ mithril-client = { version = "=0.12.2", default-features = false, features = [
     "num-integer-backend",
 ] }
 
-cardano-blockchain-types = { version = "0.0.7", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types/v0.0.7" }
+cardano-blockchain-types = { version = "0.0.8", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types/v0.0.8" }
 catalyst-types = { version = "0.0.9",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.9" }
 
 thiserror = "1.0.69"
