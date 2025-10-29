@@ -819,7 +819,7 @@ mod tests {
 
     use super::CatalystId;
 
-    const CATALYST_ID_TEST_VECTOR: [&str; 9] = [
+    const CATALYST_ID_TEST_VECTOR: [&str; 13] = [
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
@@ -829,6 +829,11 @@ mod tests {
         "id.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",
+        // Admin types
+        "admin.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
+        "admin.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
+        "admin.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
+        "admin.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",
     ];
 
     #[test]
@@ -870,6 +875,22 @@ mod tests {
         let short_id = expected_id.parse::<CatalystId>().unwrap();
 
         assert_eq!(uri_id.as_short_id().inner, short_id.inner);
+    }
+
+    #[test]
+    fn catalyst_id_type_test() {
+        for id_string in &CATALYST_ID_TEST_VECTOR[0..5] {
+            let id = id_string.parse::<CatalystId>().unwrap();
+            assert!(id.is_id());
+        }
+        for id_string in &CATALYST_ID_TEST_VECTOR[5..9] {
+            let id = id_string.parse::<CatalystId>().unwrap();
+            assert!(id.is_uri());
+        }
+        for id_string in &CATALYST_ID_TEST_VECTOR[9..13] {
+            let id = id_string.parse::<CatalystId>().unwrap();
+            assert!(id.is_admin());
+        }
     }
 
     #[test_case(0, 1, true, false, false; "base vs user")]
