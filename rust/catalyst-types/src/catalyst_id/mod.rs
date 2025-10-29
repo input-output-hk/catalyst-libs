@@ -63,7 +63,7 @@ struct CatalystIdInner {
     /// - `true`: The key is used for encryption.
     /// - `false`: The key is used for signing (signature key).
     encryption: bool,
-    /// Catalys ID type (URI, ID or AdminURI)
+    /// Catalyst ID type (URI, ID or AdminURI)
     r#type: CatalystIdType,
 }
 
