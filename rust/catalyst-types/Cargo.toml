@@ -1,6 +1,6 @@
 [package]
 name = "catalyst-types"
-version = "0.0.9"
+version = "0.0.10"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -24,7 +24,7 @@ num-traits = "0.2.19"
 orx-concurrent-vec = { version = "3.6.0", features = ["serde"] }
 serde = { version = "1.0.217", features = ["derive", "rc"] }
 thiserror = "2.0.11"
-base64-url = "3.0.0"
+base64-url = "=3.0.0"
 uuid = { version = "1.12.0", features = ["v4", "v7", "serde"] }
 chrono = "0.4.39"
 tracing = "0.1.41"
