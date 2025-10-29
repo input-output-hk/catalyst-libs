@@ -19,7 +19,7 @@ impl SignatureKidRule {
     /// Generating `SignatureKidRule` from specs
     pub(crate) fn new(spec: &Roles) -> anyhow::Result<Self> {
         anyhow::ensure!(
-            spec.user.is_empty() == !spec.admin.is_empty(),
+            spec.user.is_empty() != spec.admin.is_empty(),
             "If 'admin' is not empty 'user' roles cannot been specified'.
             And vice versa, if 'user' is not empty 'admin' roles cannot been specified'"
         );
