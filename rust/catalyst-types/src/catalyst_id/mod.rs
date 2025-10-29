@@ -63,15 +63,12 @@ struct CatalystIdInner {
     /// - `true`: The key is used for encryption.
     /// - `false`: The key is used for signing (signature key).
     encryption: bool,
-    /// Indicates if this is an `id` type, or a `uri` type o.
-    /// Used by the serialization functions.
-    /// `true` = format as an `Id`
-    /// `false` = format as a `Uri`
-    r#type: CatalysIdType,
+    /// Catalys ID type (URI, ID or AdminURI)
+    r#type: CatalystIdType,
 }
 
 #[derive(Debug, Clone, Default)]
-enum CatalysIdType {
+enum CatalystIdType {
     /// format as an `Id`
     Id,
     /// format as a `Uri`
@@ -153,7 +150,7 @@ impl CatalystId {
             role: RoleId::default(), // Defaulted, use `with_role()` to change it.
             rotation: KeyRotation::default(), // Defaulted, use `with_rotation()` to change it.
             encryption: false,       // Defaulted, use `with_encryption()` to change it.
-            r#type: CatalysIdType::default(), // Default to `URI` formatted.
+            r#type: CatalystIdType::default(), // Default to `URI` formatted.
         });
 
         Self { inner }
@@ -164,7 +161,7 @@ impl CatalystId {
     pub fn as_uri(self) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner {
-            r#type: CatalysIdType::Uri,
+            r#type: CatalystIdType::Uri,
             ..inner
         });
         Self { inner }
@@ -175,7 +172,7 @@ impl CatalystId {
     pub fn as_id(self) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner {
-            r#type: CatalysIdType::Id,
+            r#type: CatalystIdType::Id,
             ..inner
         });
         Self { inner }
@@ -186,7 +183,7 @@ impl CatalystId {
     pub fn as_admin(self) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner {
-            r#type: CatalysIdType::AdminUri,
+            r#type: CatalystIdType::AdminUri,
             ..inner
         });
         Self { inner }
@@ -195,19 +192,19 @@ impl CatalystId {
     /// Was `CatalystId` formatted as an id when it was parsed.
     #[must_use]
     pub fn is_id(&self) -> bool {
-        matches!(self.inner.r#type, CatalysIdType::Id)
+        matches!(self.inner.r#type, CatalystIdType::Id)
     }
 
     /// Is `CatalystId` formatted as an Admin.
     #[must_use]
     pub fn is_admin(&self) -> bool {
-        matches!(self.inner.r#type, CatalysIdType::AdminUri)
+        matches!(self.inner.r#type, CatalystIdType::AdminUri)
     }
 
     /// Was `CatalystId` formatted as an uri when it was parsed.
     #[must_use]
     pub fn is_uri(&self) -> bool {
-        matches!(self.inner.r#type, CatalysIdType::Uri)
+        matches!(self.inner.r#type, CatalystIdType::Uri)
     }
 
     /// Add or change the username in a Catalyst ID URI.
@@ -629,9 +626,9 @@ impl FromStr for CatalystId {
                 let uri = Uri::parse(s.to_owned())?;
                 // Check if its the correct scheme.
                 let r#type = if uri.scheme() == Self::SCHEME {
-                    CatalysIdType::Uri
+                    CatalystIdType::Uri
                 } else if uri.scheme() == Self::ADMIN_SCHEME {
-                    CatalysIdType::AdminUri
+                    CatalystIdType::AdminUri
                 } else {
                     return Err(errors::CatalystIdError::InvalidScheme);
                 };
@@ -639,7 +636,7 @@ impl FromStr for CatalystId {
             } else {
                 // It might be a RAW ID, so try and parse with the correct scheme.
                 let uri = Uri::parse(format!("{}://{}", Self::SCHEME, s))?;
-                let r#type = CatalysIdType::Id;
+                let r#type = CatalystIdType::Id;
                 (uri, r#type)
             }
         };
@@ -748,9 +745,9 @@ impl Display for CatalystId {
         f: &mut Formatter<'_>,
     ) -> Result<(), std::fmt::Error> {
         match self.inner.r#type {
-            CatalysIdType::Uri => write!(f, "{}://", Self::SCHEME.as_str())?,
-            CatalysIdType::AdminUri => write!(f, "{}://", Self::ADMIN_SCHEME.as_str())?,
-            CatalysIdType::Id => {},
+            CatalystIdType::Uri => write!(f, "{}://", Self::SCHEME.as_str())?,
+            CatalystIdType::AdminUri => write!(f, "{}://", Self::ADMIN_SCHEME.as_str())?,
+            CatalystIdType::Id => {},
         }
 
         let mut needs_at = false;
