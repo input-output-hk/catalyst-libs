@@ -63,14 +63,27 @@ struct CatalystIdInner {
     /// - `true`: The key is used for encryption.
     /// - `false`: The key is used for signing (signature key).
     encryption: bool,
-    /// Indicates if this is an `id` type, or a `uri` type.
+    /// Indicates if this is an `id` type, or a `uri` type o.
     /// Used by the serialization functions.
     /// `true` = format as an `Id`
     /// `false` = format as a `Uri`
-    id: bool,
+    r#type: CatalysIdType,
+}
+
+#[derive(Debug, Clone, Default)]
+enum CatalysIdType {
+    /// format as an `Id`
+    Id,
+    /// format as a `Uri`
+    #[default]
+    Uri,
+    /// format as a admin `Uri`
+    AdminUri,
 }
 
 impl CatalystId {
+    /// Admin URI scheme for Catalyst
+    pub const ADMIN_SCHEME: &Scheme = Scheme::new_or_panic("admin.catalyst");
     /// Encryption Key Identifier Fragment
     const ENCRYPTION_FRAGMENT: &EStr<Fragment> = EStr::new_or_panic("encrypt");
     /// Maximum allowable Nonce Value
@@ -140,7 +153,7 @@ impl CatalystId {
             role: RoleId::default(), // Defaulted, use `with_role()` to change it.
             rotation: KeyRotation::default(), // Defaulted, use `with_rotation()` to change it.
             encryption: false,       // Defaulted, use `with_encryption()` to change it.
-            id: false,               // Default to `URI` formatted.
+            r#type: CatalysIdType::default(), // Default to `URI` formatted.
         });
 
         Self { inner }
@@ -150,7 +163,10 @@ impl CatalystId {
     #[must_use]
     pub fn as_uri(self) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
-        let inner = Arc::new(CatalystIdInner { id: false, ..inner });
+        let inner = Arc::new(CatalystIdInner {
+            r#type: CatalysIdType::Uri,
+            ..inner
+        });
         Self { inner }
     }
 
@@ -158,20 +174,40 @@ impl CatalystId {
     #[must_use]
     pub fn as_id(self) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
-        let inner = Arc::new(CatalystIdInner { id: true, ..inner });
+        let inner = Arc::new(CatalystIdInner {
+            r#type: CatalysIdType::Id,
+            ..inner
+        });
+        Self { inner }
+    }
+
+    /// The `CatalystId` is formatted as a admin URI.
+    #[must_use]
+    pub fn as_admin(self) -> Self {
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner {
+            r#type: CatalysIdType::AdminUri,
+            ..inner
+        });
         Self { inner }
     }
 
     /// Was `CatalystId` formatted as an id when it was parsed.
     #[must_use]
     pub fn is_id(&self) -> bool {
-        self.inner.id
+        matches!(self.inner.r#type, CatalysIdType::Id)
+    }
+
+    /// Is `CatalystId` formatted as an Admin.
+    #[must_use]
+    pub fn is_admin(&self) -> bool {
+        matches!(self.inner.r#type, CatalysIdType::AdminUri)
     }
 
     /// Was `CatalystId` formatted as an uri when it was parsed.
     #[must_use]
     pub fn is_uri(&self) -> bool {
-        !self.inner.id
+        matches!(self.inner.r#type, CatalysIdType::Uri)
     }
 
     /// Add or change the username in a Catalyst ID URI.
@@ -588,26 +624,25 @@ impl FromStr for CatalystId {
     /// This will parse a URI or a RAW ID.\
     /// The only difference between them is a URI has the scheme, a raw ID does not.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // Did we serialize an ID?
-        let mut id = false;
-
-        // Check if we have a scheme, and if not default it to the catalyst ID scheme.
-        let raw_uri = {
+        let (uri, r#type) = {
             if s.contains("://") {
-                s.to_owned()
+                let uri = Uri::parse(s.to_owned())?;
+                // Check if its the correct scheme.
+                let r#type = if uri.scheme() == Self::SCHEME {
+                    CatalysIdType::Uri
+                } else if uri.scheme() == Self::ADMIN_SCHEME {
+                    CatalysIdType::AdminUri
+                } else {
+                    return Err(errors::CatalystIdError::InvalidScheme);
+                };
+                (uri, r#type)
             } else {
-                id = true;
                 // It might be a RAW ID, so try and parse with the correct scheme.
-                format!("{}://{}", CatalystId::SCHEME, s)
+                let uri = Uri::parse(format!("{}://{}", Self::SCHEME, s))?;
+                let r#type = CatalysIdType::Id;
+                (uri, r#type)
             }
         };
-
-        let uri = Uri::parse(raw_uri)?;
-
-        // Check if its the correct scheme.
-        if uri.scheme() != CatalystId::SCHEME {
-            return Err(errors::CatalystIdError::InvalidScheme);
-        }
 
         // Decode the network and subnet
         let auth = uri
@@ -684,36 +719,26 @@ impl FromStr for CatalystId {
             }
         };
 
-        let cat_id = {
-            let mut cat_id = Self::new(network, subnet, role0_pk)
-                .with_role(role_index)
-                .with_rotation(rotation);
-
-            if uri.has_fragment() {
-                if uri.fragment() == Some(Self::ENCRYPTION_FRAGMENT) {
-                    cat_id = cat_id.with_encryption();
-                } else {
-                    return Err(errors::CatalystIdError::InvalidEncryptionKeyFragment);
-                }
-            }
-
-            if let Some(username) = username {
-                cat_id = cat_id.with_username(&username);
-            }
-
-            if let Some(nonce) = nonce {
-                cat_id = cat_id.with_specific_nonce(nonce);
-            }
-
-            // Default to URI, so only set it as an ID if its not a URI.
-            if id {
-                cat_id = cat_id.as_id();
-            }
-
-            cat_id
+        let encryption = match uri.fragment() {
+            None => false,
+            Some(f) if f == Self::ENCRYPTION_FRAGMENT => true,
+            Some(_) => return Err(errors::CatalystIdError::InvalidEncryptionKeyFragment),
         };
 
-        Ok(cat_id)
+        let inner = CatalystIdInner {
+            network: network.to_string(),
+            subnet: subnet.map(ToString::to_string),
+            role0_pk,
+            r#type,
+            rotation,
+            role: role_index,
+            username,
+            nonce,
+            encryption,
+        }
+        .into();
+
+        Ok(Self { inner })
     }
 }
 
@@ -722,8 +747,10 @@ impl Display for CatalystId {
         &self,
         f: &mut Formatter<'_>,
     ) -> Result<(), std::fmt::Error> {
-        if !self.inner.id {
-            write!(f, "{}://", Self::SCHEME.as_str())?;
+        match self.inner.r#type {
+            CatalysIdType::Uri => write!(f, "{}://", Self::SCHEME.as_str())?,
+            CatalysIdType::AdminUri => write!(f, "{}://", Self::ADMIN_SCHEME.as_str())?,
+            CatalysIdType::Id => {},
         }
 
         let mut needs_at = false;
@@ -754,9 +781,9 @@ impl Display for CatalystId {
         )?;
 
         // Role and Rotation are only serialized if its NOT and ID or they are not the defaults.
-        if !self.inner.role.is_default() || !self.inner.rotation.is_default() || !self.inner.id {
+        if !self.inner.role.is_default() || !self.inner.rotation.is_default() || !self.is_id() {
             write!(f, "/{}", self.inner.role)?;
-            if !self.inner.rotation.is_default() || !self.inner.id {
+            if !self.inner.rotation.is_default() || !self.is_id() {
                 write!(f, "/{}", self.inner.rotation)?;
             }
         }
