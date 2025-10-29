@@ -8,8 +8,8 @@ pub fn brand_parameters_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(RoleId::BrandAdmin)
-        .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+    let (sk, kid) = create_dummy_key_pair(None);
+    provider.add_sk(kid.clone(), sk.clone());
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json,
