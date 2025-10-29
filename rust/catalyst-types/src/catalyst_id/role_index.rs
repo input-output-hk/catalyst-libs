@@ -37,24 +37,6 @@ pub enum RoleId {
     DelegatedRepresentative = 1,
     /// Proposer that enabling creation, collaboration, and submission of proposals.
     Proposer = 3,
-    /// Root Certificate Authority role.
-    RootCA = 100,
-    /// Brand Certificate Authority role.
-    BrandCA = 101,
-    /// Campaign Certificate Authority role.
-    CampaignCA = 102,
-    /// Category Certificate Authority role.
-    CategoryCA = 103,
-    /// Root Admin role.
-    RootAdmin = 104,
-    /// Brand Admin role.
-    BrandAdmin = 105,
-    /// Campaign Admin role.
-    CampaignAdmin = 106,
-    /// Category Admin role.
-    CategoryAdmin = 107,
-    /// Moderator role.
-    Moderator = 108,
     /// A custom role.
     Unknown(u8),
 }
@@ -73,15 +55,6 @@ impl RoleId {
             RoleId::Role0 => 0,
             RoleId::DelegatedRepresentative => 1,
             RoleId::Proposer => 3,
-            RoleId::RootCA => 100,
-            RoleId::BrandCA => 101,
-            RoleId::CampaignCA => 102,
-            RoleId::CategoryCA => 103,
-            RoleId::RootAdmin => 104,
-            RoleId::BrandAdmin => 105,
-            RoleId::CampaignAdmin => 106,
-            RoleId::CategoryAdmin => 107,
-            RoleId::Moderator => 108,
             RoleId::Unknown(b) => b,
         }
     }
@@ -93,15 +66,6 @@ impl From<u8> for RoleId {
             0 => Self::Role0,
             1 => Self::DelegatedRepresentative,
             3 => Self::Proposer,
-            100 => Self::RootCA,
-            101 => Self::BrandCA,
-            102 => Self::CampaignCA,
-            103 => Self::CategoryCA,
-            104 => Self::RootAdmin,
-            105 => Self::BrandAdmin,
-            106 => Self::CampaignAdmin,
-            107 => Self::CategoryAdmin,
-            108 => Self::Moderator,
             b => Self::Unknown(b),
         }
     }
