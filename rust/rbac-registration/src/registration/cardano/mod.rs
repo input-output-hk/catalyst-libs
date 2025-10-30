@@ -45,10 +45,6 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if data is invalid
     #[must_use]
     pub fn new_stateless(cip509: Cip509) -> Option<Self> {
         let inner = RegistrationChainInner::new_stateless(cip509)?;
@@ -62,10 +58,6 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if data is invalid
     #[must_use]
     pub fn update_stateless(
         &self,
@@ -312,10 +304,6 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if data is invalid
     #[must_use]
     fn new_stateless(cip509: Cip509) -> Option<Self> {
         let context = "Registration Chain new";
@@ -418,10 +406,6 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if data is invalid
     #[must_use]
     fn update_stateless(
         &self,
