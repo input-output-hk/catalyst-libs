@@ -373,7 +373,6 @@ impl ParallelDownloadProcessorInner {
         let range_size = range_end_inclusive
             .saturating_sub(range_start)
             .saturating_add(1);
-
         let mut bytes: Vec<u8> = Vec::with_capacity(range_size);
 
         let bytes_read = get_range_response
