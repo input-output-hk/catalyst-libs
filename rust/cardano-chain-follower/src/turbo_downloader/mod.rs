@@ -414,13 +414,10 @@ impl ParallelDownloadProcessor {
     pub(crate) async fn new(
         url: &str,
         mut cfg: DlConfig,
-        chain: Network,
+        chain: &Network,
     ) -> Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
-            bail!(
-                "Download chunk size must be at least {} bytes",
-                MIN_CHUNK_SIZE
-            );
+            bail!("Download chunk size must be at least {MIN_CHUNK_SIZE} bytes");
         }
         let file_size = get_content_length_async(url).await?;
 
@@ -466,7 +463,7 @@ impl ParallelDownloadProcessor {
     /// called, which happens immediately after they are started.
     fn start_workers(
         &self,
-        chain: Network,
+        chain: &Network,
     ) -> Result<()> {
         for worker in 0..self.0.cfg.workers {
             // The channel is unbounded, because work distribution is controlled to be at most
@@ -474,12 +471,13 @@ impl ParallelDownloadProcessor {
             // cause the processor to block.
             let (work_queue_tx, work_queue_rx) = crossbeam_channel::unbounded::<DlWorkOrder>();
             let params = self.0.clone();
+            let chain_ = chain.clone();
             thread::spawn(move || {
                 let worker_name = &format!("{}::{worker}", stats::thread::name::PARALLEL_DL_WORKER);
 
-                stats::start_thread(chain, worker_name, false);
-                Self::worker(&params, worker, worker_name, &work_queue_rx, chain);
-                stats::stop_thread(chain, worker_name);
+                stats::start_thread(&chain_, worker_name, false);
+                Self::worker(&params, worker, worker_name, &work_queue_rx, &chain_);
+                stats::stop_thread(&chain_, worker_name);
             });
 
             let _unused = self.0.work_queue.insert(worker, work_queue_tx);
@@ -491,7 +489,7 @@ impl ParallelDownloadProcessor {
     /// Call the work queue receiver.
     /// This is a helper function to pause and resume the stats thread.
     fn call_work_queue_receiver(
-        chain: Network,
+        chain: &Network,
         worker_name: &str,
         work_queue: &Receiver<usize>,
     ) -> Result<usize, RecvError> {
@@ -508,7 +506,7 @@ impl ParallelDownloadProcessor {
         worker_id: usize,
         worker_name: &str,
         work_queue: &crossbeam_channel::Receiver<DlWorkOrder>,
-        chain: Network,
+        chain: &Network,
     ) {
         debug!("Worker {worker_id} started");
 
@@ -595,7 +593,7 @@ impl ParallelDownloadProcessor {
                 let queue = worker_queue.value();
                 queue.send(order)?;
             } else {
-                bail!("Expected a work queue for worker: {:?}", this_worker);
+                bail!("Expected a work queue for worker: {this_worker:?}");
             }
         } else {
             // No more work, so remove the work queue from the map.
@@ -779,7 +777,7 @@ async fn get_content_length_async(url: &str) -> Result<usize> {
         Ok(result) => result,
         Err(error) => {
             error!("get_content_length failed");
-            Err(anyhow::anyhow!("get_content_length failed: {}", error))
+            Err(anyhow::anyhow!("get_content_length failed: {error}"))
         },
     }
 }
@@ -799,8 +797,7 @@ fn get_content_length(url: &str) -> Result<usize> {
     if let Some(accept_ranges) = response.header(ACCEPT_RANGES.as_str()) {
         if accept_ranges != "bytes" {
             bail!(
-                "Server doesn't support HTTP range byte requests (Accept-Ranges = {})",
-                accept_ranges
+                "Server doesn't support HTTP range byte requests (Accept-Ranges = {accept_ranges})",
             );
         }
     } else {

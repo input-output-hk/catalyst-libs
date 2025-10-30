@@ -7,10 +7,12 @@ use ed25519_dalek::VerifyingKey;
 
 use crate::{CatalystSignedDocument, DocumentRef};
 
-/// `VerifyingKey` Provider trait
-pub trait VerifyingKeyProvider: Send + Sync {
-    /// Try to get `VerifyingKey`
-    fn try_get_key(
+/// `CatalystId` Provider trait
+pub trait CatalystIdProvider: Send + Sync {
+    /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
+    /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
+    /// corresponding `RoleId` and `KeyRotation` has not been registered.
+    fn try_get_registered_key(
         &self,
         kid: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<Option<VerifyingKey>>> + Send;
@@ -31,6 +33,13 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
         id: UuidV7,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 
+    /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver`
+    /// are equal.
+    fn try_get_first_doc(
+        &self,
+        id: UuidV7,
+    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
     /// If `None` is returned, skips "too far in the future" validation.
@@ -47,9 +56,11 @@ pub mod tests {
 
     use std::{collections::HashMap, time::Duration};
 
+    use ed25519_dalek::SigningKey;
+
     use super::{
-        CatalystId, CatalystSignedDocument, CatalystSignedDocumentProvider, VerifyingKey,
-        VerifyingKeyProvider,
+        CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
+        VerifyingKey,
     };
     use crate::{DocLocator, DocumentRef};
 
@@ -59,7 +70,7 @@ pub mod tests {
         /// For `CatalystSignedDocumentProvider`.
         signed_doc: HashMap<DocumentRef, CatalystSignedDocument>,
         /// For `VerifyingKeyProvider`.
-        verifying_key: HashMap<CatalystId, VerifyingKey>,
+        secret_key: HashMap<CatalystId, SigningKey>,
     }
 
     impl TestCatalystProvider {
@@ -84,13 +95,22 @@ pub mod tests {
             Ok(())
         }
 
-        /// Inserts public key into the `TestVerifyingKeyProvider`
-        pub fn add_pk(
+        /// Inserts signing key into the `TestVerifyingKeyProvider`
+        pub fn add_sk(
             &mut self,
             kid: CatalystId,
-            pk: VerifyingKey,
+            sk: SigningKey,
         ) {
-            self.verifying_key.insert(kid, pk);
+            self.secret_key.insert(kid, sk);
+        }
+
+        /// Returns a reference to the corresponding `SigningKey`.
+        #[must_use]
+        pub fn get_sk(
+            &self,
+            kid: &CatalystId,
+        ) -> Option<&SigningKey> {
+            self.secret_key.get(kid)
         }
     }
 
@@ -114,6 +134,18 @@ pub mod tests {
                 .map(|(_, doc)| doc.clone()))
         }
 
+        async fn try_get_first_doc(
+            &self,
+            id: catalyst_types::uuid::UuidV7,
+        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+            Ok(self
+                .signed_doc
+                .iter()
+                .filter(|(doc_ref, _)| doc_ref.id() == &id)
+                .min_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
+                .map(|(_, doc)| doc.clone()))
+        }
+
         fn future_threshold(&self) -> Option<std::time::Duration> {
             Some(Duration::from_secs(5))
         }
@@ -123,12 +155,12 @@ pub mod tests {
         }
     }
 
-    impl VerifyingKeyProvider for TestCatalystProvider {
-        async fn try_get_key(
+    impl CatalystIdProvider for TestCatalystProvider {
+        async fn try_get_registered_key(
             &self,
             kid: &CatalystId,
         ) -> anyhow::Result<Option<VerifyingKey>> {
-            Ok(self.verifying_key.get(kid).copied())
+            Ok(self.secret_key.get(kid).map(SigningKey::verifying_key))
         }
     }
 }

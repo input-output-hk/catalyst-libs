@@ -2,10 +2,12 @@
 //! A [CBOR Encoded IPLD Content Identifier](https://github.com/ipld/cid-cbor/)
 //! or also known as [IPFS CID](https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid).
 
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref, str::FromStr};
 
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode};
+
+use crate::metadata::document_refs::DocRefError;
 
 /// CBOR tag of IPLD content identifiers (CIDs).
 const CID_TAG: u64 = 42;
@@ -20,23 +22,17 @@ const DOC_LOC_MAP_ITEM: u64 = 1;
 #[derive(Clone, Debug, Default, PartialEq, Hash, Eq)]
 pub struct DocLocator(Vec<u8>);
 
-impl DocLocator {
-    #[must_use]
-    /// Length of the document locator.
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
+impl Deref for DocLocator {
+    type Target = Vec<u8>;
 
-    #[must_use]
-    /// Is the document locator empty.
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
 impl From<Vec<u8>> for DocLocator {
     fn from(value: Vec<u8>) -> Self {
-        DocLocator(value)
+        Self(value)
     }
 }
 
@@ -46,6 +42,38 @@ impl Display for DocLocator {
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
         write!(f, "0x{}", hex::encode(self.0.as_slice()))
+    }
+}
+
+impl FromStr for DocLocator {
+    type Err = DocRefError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.strip_prefix("0x")
+            .map(hex::decode)
+            .ok_or(DocRefError::HexDecode("missing 0x prefix".to_string()))?
+            .map(Self)
+            .map_err(|e| DocRefError::HexDecode(e.to_string()))
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for DocLocator {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+        s.parse::<DocLocator>().map_err(serde::de::Error::custom)
+    }
+}
+
+impl serde::Serialize for DocLocator {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
     }
 }
 

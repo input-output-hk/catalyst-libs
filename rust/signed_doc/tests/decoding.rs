@@ -532,7 +532,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -583,7 +583,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
@@ -605,7 +605,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -632,10 +632,14 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 /* cspell:disable */
                 p_headers.str("collaborators")?;
                 p_headers.array(2)?;
-                p_headers.bytes(b"cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE")?;
+                p_headers.bytes(b"id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE")?;
                 p_headers.bytes(b"id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3")?;
                 /* cspell:enable */
                 p_headers.str("parameters")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("chain")?;
+                p_headers.array(2)?;
+                p_headers.int(0.into())?;
+                p_headers.encode_with(doc_ref.clone(), &mut ())?;
 
                 e.bytes(p_headers.into_writer().as_slice())?;
                 // empty unprotected headers
@@ -669,7 +673,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_meta().reply() == Some(&refs));
                 anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
@@ -976,7 +980,7 @@ fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
         name: "Catalyst Signed Doc with signatures non empty unprotected headers".to_string(),
         bytes_gen: Box::new({
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1029,7 +1033,7 @@ fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled strictly decoded rules, metadata field in the wrong order".to_string(),
         bytes_gen: Box::new({
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1083,7 +1087,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1134,7 +1138,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 Ok(())
             }
         })),
@@ -1193,7 +1197,7 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 0);
+                anyhow::ensure!(doc.authors().len() == 0);
                 Ok(())
             }
         })),
@@ -1209,7 +1213,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1261,7 +1265,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
                 anyhow::ensure!(
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
-                anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(doc.authors().len() == 1);
                 Ok(())
             }
         })),
@@ -1276,7 +1280,7 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
             .to_string(),
         bytes_gen: Box::new({
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1367,6 +1371,7 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_random_header_field_case("section"),
         signed_doc_with_random_header_field_case("collaborators"),
         signed_doc_with_random_header_field_case("parameters"),
+        signed_doc_with_random_header_field_case("chain"),
         signed_doc_with_random_header_field_case("content-encoding"),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "category_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "brand_id"]),

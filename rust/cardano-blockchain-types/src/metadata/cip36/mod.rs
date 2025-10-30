@@ -51,7 +51,7 @@ impl fmt::Display for Cip36 {
     ) -> fmt::Result {
         write!(
             f,
-            "Cip36 {{ network: {network}, slot: {slot:?}, txn_idx: {txn_idx:?}, is_catalyst_strict: {is_catalyst_strict}, key_registration: {key_registration:?}, registration_witness: {registration_witness:?}, validation: {{ signature: {is_valid_signature}, payment_address_network: {is_valid_payment_address_network}, voting_keys: {is_valid_voting_keys}, purpose: {is_valid_purpose} }}, err_report: {err_report} }}",
+            "Cip36 {{ network: {network}, slot: {slot:?}, txn_idx: {txn_idx:?}, is_catalyst_strict: {is_catalyst_strict}, key_registration: {key_registration:?}, registration_witness: {registration_witness:?}, validation: {{ signature: {is_valid_signature}, payment_address_network: {is_valid_payment_address_network}, voting_keys: {is_valid_voting_keys}, purpose: {is_valid_purpose} }}, problematic: {is_problematic} }}",
             key_registration = self.key_registration,
             registration_witness = self.registration_witness,
             network = self.network,
@@ -62,34 +62,7 @@ impl fmt::Display for Cip36 {
             is_valid_payment_address_network = self.is_valid_payment_address_network,
             is_valid_voting_keys = self.is_valid_voting_keys,
             is_valid_purpose = self.is_valid_purpose,
-            err_report = serde_json::to_string(&self.err_report)
-            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"))
-        )
-    }
-}
-
-/// CIP-36 Catalyst registration error
-#[allow(dead_code, clippy::module_name_repetitions)]
-#[derive(Debug)]
-pub struct Cip36Error {
-    /// The decoding error that make the code not able to process.
-    error: anyhow::Error,
-    /// The problem report that contains the errors found during decoding and validation.
-    report: ProblemReport,
-}
-
-impl fmt::Display for Cip36Error {
-    fn fmt(
-        &self,
-        fmt: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
-        let report_json = serde_json::to_string(&self.report)
-            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"));
-
-        write!(
-            fmt,
-            "Cip36Error {{ error: {}, report: {} }}",
-            self.error, report_json
+            is_problematic = self.err_report.is_problematic(),
         )
     }
 }
@@ -118,7 +91,7 @@ impl Cip36 {
         block: &MultiEraBlock,
         txn_idx: TxnIndex,
         is_catalyst_strict: bool,
-    ) -> Result<Option<Cip36>, Cip36Error> {
+    ) -> anyhow::Result<Option<Cip36>> {
         // Record of errors found during decoding and validation
         let mut err_report = ProblemReport::new("CIP36 Registration Decoding and Validation");
 
@@ -148,12 +121,7 @@ impl Cip36 {
                     metadata
                 },
                 Err(e) => {
-                    return Err(Cip36Error {
-                        error: anyhow::anyhow!(format!(
-                            "Failed to construct CIP-36 key registration, {e}"
-                        )),
-                        report: err_report,
-                    });
+                    anyhow::bail!("Failed to construct CIP-36 key registration, {e}");
                 },
             };
 
@@ -161,12 +129,7 @@ impl Cip36 {
             match Cip36RegistrationWitness::decode(&mut registration_witness, &mut err_report) {
                 Ok(metadata) => metadata,
                 Err(e) => {
-                    return Err(Cip36Error {
-                        error: anyhow::anyhow!(format!(
-                            "Failed to construct CIP-36 registration witness {e}"
-                        )),
-                        report: err_report,
-                    });
+                    anyhow::bail!("Failed to construct CIP-36 registration witness {e}");
                 },
             };
 
@@ -175,7 +138,7 @@ impl Cip36 {
         let mut cip36 = Cip36 {
             key_registration,
             registration_witness,
-            network,
+            network: network.clone(),
             slot: slot.into(),
             txn_idx,
             is_catalyst_strict,
@@ -210,7 +173,7 @@ impl Cip36 {
     pub fn cip36_from_block(
         block: &MultiEraBlock,
         is_catalyst_strict: bool,
-    ) -> Option<HashMap<TxnIndex, Result<Cip36, Cip36Error>>> {
+    ) -> Option<HashMap<TxnIndex, anyhow::Result<Cip36>>> {
         let mut cip36_map = HashMap::new();
 
         for (txn_idx, _tx) in block.decode().txs().iter().enumerate() {
@@ -298,8 +261,8 @@ impl Cip36 {
 
     /// Get the network of this CIP-36 registration.
     #[must_use]
-    pub fn network(&self) -> Network {
-        self.network
+    pub fn network(&self) -> &Network {
+        &self.network
     }
 
     /// Get the transaction index of this CIP-36 registration.
@@ -373,7 +336,7 @@ mod tests {
         let res = Cip36::new(&block_1(), 1.into(), true).unwrap().unwrap();
         assert!(!res.err_report().is_problematic());
         assert!(res.is_valid());
-        assert!(res.network() == Network::Preprod);
+        assert!(res.network() == &Network::Preprod);
         assert!(res.raw_nonce() == Some(55_076_993));
         assert!(res.nonce() == Some(55_076_993));
     }

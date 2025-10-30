@@ -99,7 +99,7 @@ async fn start_sync_for(
     network: &Network,
     matches: ArgMatches,
 ) -> Result<(), Box<dyn Error>> {
-    let mut cfg = ChainSyncConfig::default_for(*network);
+    let mut cfg = ChainSyncConfig::default_for(network.clone());
     let mut mithril_dl_connect_timeout = "Not Set".to_string();
     let mut mithril_dl_data_timeout = "Not Set".to_string();
 
@@ -290,7 +290,7 @@ async fn follow_for(
     let mut largest_aux_size: usize = 0;
     let mut found_transactions: usize = 0;
 
-    let mut follower = ChainFollower::new(network, origin, Point::TIP).await;
+    let mut follower = ChainFollower::new(&network, origin, Point::TIP).await;
 
     while let Some(chain_update) = follower.next().await {
         updates = updates.saturating_add(1);
@@ -343,7 +343,7 @@ async fn follow_for(
             || (chain_update.immutable() != last_immutable)
             || reached_tip
             || follow_all
-            || (updates % RUNNING_UPDATE_INTERVAL == 0)
+            || updates.is_multiple_of(RUNNING_UPDATE_INTERVAL)
             || (last_fork != chain_update.data.fork())
         {
             current_era = this_era;
@@ -382,7 +382,7 @@ async fn follow_for(
                 if largest_metadata {
                     update_largest_metadata(
                         block,
-                        network,
+                        &network,
                         txn_idx.into(),
                         &mut largest_metadata_size,
                     );
@@ -391,29 +391,29 @@ async fn follow_for(
                     let this_hash = format!("{}", tx.hash());
                     if check_txn_hashes(&this_hash, dump_txn_hash) {
                         found_transactions = found_transactions.saturating_add(1);
-                        log_transaction(network, block, txn_idx.into(), tx, &this_hash);
+                        log_transaction(&network, block, txn_idx.into(), tx, &this_hash);
                     }
                 }
             }
         }
         // Update and log the largest transaction auxiliary data.
         if largest_aux {
-            update_largest_aux(decoded_block, network, &mut largest_aux_size);
+            update_largest_aux(decoded_block, &network, &mut largest_aux_size);
         }
 
         // Log the raw auxiliary data.
         if log_raw_aux {
-            raw_aux_info(decoded_block, network);
+            raw_aux_info(decoded_block, &network);
         }
 
         // Illustrate how the chain-follower works with metadata.
         // Log bad CIP36.
         if log_bad_cip36 {
-            log_bad_cip36_info(block, network);
+            log_bad_cip36_info(block, &network);
         }
         // Log bad CIP509.
         if log_bad_cip509 {
-            log_bad_cip509_info(block, network);
+            log_bad_cip509_info(block, &network);
         }
 
         prev_hash = Some(decoded_block.hash());
@@ -433,7 +433,7 @@ async fn follow_for(
         if check_time.duration_since(last_metrics_time).as_secs() >= 60 {
             last_metrics_time = check_time;
 
-            let stats = Statistics::new(network);
+            let stats = Statistics::new(&network);
 
             if !inhibit_stats {
                 info!("Json Metrics:  {}", stats.as_json(true));
@@ -461,7 +461,7 @@ async fn follow_for(
     }
 
     if !inhibit_stats {
-        let stats = Statistics::new(network);
+        let stats = Statistics::new(&network);
         info!("Json Metrics:  {}", stats.as_json(true));
     }
 
@@ -472,7 +472,7 @@ async fn follow_for(
 /// interested metadata label.
 fn update_largest_metadata(
     block: &MultiEraBlock,
-    network: Network,
+    network: &Network,
     txn_idx: TxnIndex,
     largest_metadata_size: &mut usize,
 ) {
@@ -504,7 +504,7 @@ fn update_largest_metadata(
 /// Helper function for logging the raw box auxiliary data.
 fn raw_aux_info(
     block: &pallas_traverse::MultiEraBlock,
-    network: Network,
+    network: &Network,
 ) {
     match block {
         pallas_traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
@@ -532,7 +532,7 @@ fn raw_aux_info(
 /// Helper function for updating the largest auxiliary data.
 fn update_largest_aux(
     block: &pallas_traverse::MultiEraBlock,
-    network: Network,
+    network: &Network,
     largest_metadata_size: &mut usize,
 ) {
     match block {
@@ -578,7 +578,7 @@ fn compare_and_log_aux(
     aux_len: usize,
     block_no: u64,
     txn_idx: u32,
-    network: Network,
+    network: &Network,
     largest_metadata_size: &mut usize,
 ) {
     if aux_len > *largest_metadata_size {
@@ -599,7 +599,7 @@ fn compare_and_log_aux(
 /// - CIP36 that is invalid decoded.
 fn log_bad_cip36_info(
     block: &MultiEraBlock,
-    network: Network,
+    network: &Network,
 ) {
     if let Some(map) = Cip36::cip36_from_block(block, true) {
         for (key, value) in &map {
@@ -624,7 +624,7 @@ fn log_bad_cip36_info(
 /// Function for logging bad CIP509.
 fn log_bad_cip509_info(
     block: &MultiEraBlock,
-    network: Network,
+    network: &Network,
 ) {
     for cip509 in Cip509::from_block(block, &[]) {
         if cip509.report().is_problematic() {
@@ -648,7 +648,7 @@ fn get_cip509(
 
 /// Log a transactions details in full.
 fn log_transaction(
-    network: Network,
+    network: &Network,
     block: &MultiEraBlock,
     txn_idx: TxnIndex,
     tx: &MultiEraTx,
@@ -734,7 +734,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Make a follower for the network.
     let mut tasks = Vec::new();
     for network in &networks {
-        tasks.push(tokio::spawn(follow_for(*network, matches.clone())));
+        tasks.push(tokio::spawn(follow_for(network.clone(), matches.clone())));
     }
 
     // Wait for all followers to finish.

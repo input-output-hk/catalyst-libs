@@ -21,17 +21,18 @@ pub(crate) type ImmutableBlockIterator =
 pub(crate) async fn make_mithril_iterator(
     path: &Path,
     start: &Point,
-    chain: Network,
+    chain: &Network,
 ) -> Result<ImmutableBlockIterator> {
     let path = path.to_path_buf();
     let start = start.clone();
+    let chain = chain.clone();
     // Initial input
     let res = task::spawn_blocking(move || {
-        stats::start_thread(chain, stats::thread::name::MITHRIL_ITERATOR, false);
+        stats::start_thread(&chain, stats::thread::name::MITHRIL_ITERATOR, false);
         let result =
             pallas_hardano::storage::immutable::read_blocks_from_point(&path, start.clone().into())
                 .map_err(|error| Error::MithrilSnapshot(Some(error)));
-        stats::stop_thread(chain, stats::thread::name::MITHRIL_ITERATOR);
+        stats::stop_thread(&chain, stats::thread::name::MITHRIL_ITERATOR);
         result
     })
     .await;

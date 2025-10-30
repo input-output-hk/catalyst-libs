@@ -116,5 +116,20 @@ copyright: #copyrightNotice & {
 				* Fixed an invalid 'Presentation Template' JSON schema. 
 				"""
 		},
+		{
+			version:  "0.1.4"
+			modified: "2025-10-17"
+			changes: """
+				* Modified `collaborators` cddl definition, it must have at least one element in array.
+				"""
+		},
+		{
+			version:  "0.1.5"
+			modified: "2025-10-24"
+			changes: """
+				* Updated 'Proposal Submission Action' document, set `ref` metadata field `multiply` property to `false`.
+				* Changed spec `signers.update` property structure.
+				"""
+		},
 	]
 }

@@ -8,5 +8,6 @@ pub struct Ref {
     pub required: IsRequired,
     #[serde(rename = "type")]
     pub doc_type: DocTypes,
-    pub multiple: Option<bool>,
+    #[serde(default)]
+    pub multiple: bool,
 }

@@ -28,16 +28,15 @@ pub enum RoleIdError {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumIs)]
 #[repr(u8)]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum RoleId {
     /// Primary required role use for voting and commenting.
+    #[default]
     Role0 = 0,
-
     /// Delegated representative (dRep) that vote on behalf of delegators.
     DelegatedRepresentative = 1,
-
     /// Proposer that enabling creation, collaboration, and submission of proposals.
     Proposer = 3,
-
     /// A custom role.
     Unknown(u8),
 }
@@ -58,12 +57,6 @@ impl RoleId {
             RoleId::Proposer => 3,
             RoleId::Unknown(b) => b,
         }
-    }
-}
-
-impl Default for RoleId {
-    fn default() -> Self {
-        Self::Role0
     }
 }
 

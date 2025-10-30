@@ -1,6 +1,8 @@
 //! Catalyst Signed Document COSE signature `kid` (Catalyst Id) role validation
 
-use catalyst_signed_doc_spec::signers::roles::{Role, Roles};
+use std::collections::HashSet;
+
+use catalyst_signed_doc_spec::signers::roles::{Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
 use crate::CatalystSignedDocument;
@@ -8,25 +10,33 @@ use crate::CatalystSignedDocument;
 ///  COSE signature `kid` (Catalyst Id) role validation
 #[derive(Debug)]
 pub(crate) struct SignatureKidRule {
-    /// expected `RoleId` values for the `kid` field
-    pub(crate) allowed_roles: Vec<RoleId>,
+    /// expected `RoleId` values for the `kid` field.
+    /// if empty, document must be signed by admin kid
+    allowed_roles: HashSet<RoleId>,
 }
 
 impl SignatureKidRule {
     /// Generating `SignatureKidRule` from specs
-    pub(crate) fn new(spec: &Roles) -> Self {
-        let allowed_roles = spec
+    pub(crate) fn new(spec: &Roles) -> anyhow::Result<Self> {
+        anyhow::ensure!(
+            spec.user.is_empty() != spec.admin.is_empty(),
+            "If 'admin' is not empty 'user' roles cannot been specified'.
+            And vice versa, if 'user' is not empty 'admin' roles cannot been specified'"
+        );
+
+        let allowed_roles: HashSet<_> = spec
             .user
             .iter()
             .map(|v| {
                 match v {
-                    Role::Registered => RoleId::Role0,
-                    Role::Proposer => RoleId::Proposer,
-                    Role::Representative => RoleId::DelegatedRepresentative,
+                    UserRole::Registered => RoleId::Role0,
+                    UserRole::Proposer => RoleId::Proposer,
+                    UserRole::Representative => RoleId::DelegatedRepresentative,
                 }
             })
             .collect();
-        Self { allowed_roles }
+
+        Ok(Self { allowed_roles })
     }
 
     /// Field validation rule
@@ -35,21 +45,37 @@ impl SignatureKidRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        let contains_exp_role = doc.kids().iter().enumerate().all(|(i, kid)| {
-            let (role_index, _) = kid.role_and_rotation();
-            let res = self.allowed_roles.contains(&role_index);
-            if !res {
-                doc.report().invalid_value(
-                    "kid",
-                    role_index.to_string().as_str(),
-                    format!("{:?}", self.allowed_roles).as_str(),
-                    format!(
-                        "Invalid Catalyst Signed Document signature at position [{i}] `kid` Catalyst Role value"
-                    )
-                    .as_str(),
-                );
+        let contains_exp_role = doc.authors().iter().enumerate().all(|(i, kid)| {
+            if self.allowed_roles.is_empty() {
+                let res = kid.is_admin();
+                if !res {
+                    doc.report().invalid_value(
+                        "kid",
+                        &kid.to_string(),
+                        "Catalyst id must be in admin URI type.",
+                        format!(
+                            "Invalid Catalyst Signed Document signature at position [{i}] `kid` Catalyst Role value"
+                        )
+                        .as_str(),
+                    );
+                }
+                res
+            } else {
+                let (role_index, _) = kid.role_and_rotation();
+                let res = self.allowed_roles.contains(&role_index);
+                if !res {
+                    doc.report().invalid_value(
+                        "kid",
+                        role_index.to_string().as_str(),
+                        format!("{:?}", self.allowed_roles).as_str(),
+                        format!(
+                            "Invalid Catalyst Signed Document signature at position [{i}] `kid` Catalyst Role value"
+                        )
+                        .as_str(),
+                    );
+                }
+                res
             }
-            res
         });
         if !contains_exp_role {
             return Ok(false);
@@ -73,7 +99,9 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            allowed_roles: vec![RoleId::Role0, RoleId::DelegatedRepresentative],
+            allowed_roles: [RoleId::Role0, RoleId::DelegatedRepresentative]
+                .into_iter()
+                .collect(),
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
@@ -92,7 +120,7 @@ mod tests {
 
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.allowed_roles = vec![RoleId::Proposer];
+        rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
         assert!(!rule.check(&doc).await.unwrap());
     }
 }

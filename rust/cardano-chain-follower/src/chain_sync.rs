@@ -88,7 +88,7 @@ async fn retry_connect(
 /// Purge the live chain, and intersect with TIP.
 async fn purge_and_intersect_tip(
     client: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
 ) -> Result<Point> {
     if let Err(error) = purge_live_chain(chain, &Point::TIP) {
         // Shouldn't happen.
@@ -106,7 +106,7 @@ async fn purge_and_intersect_tip(
 /// Resynchronize to the live tip in memory.
 async fn resync_live_tip(
     client: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
 ) -> Result<Point> {
     let sync_points = get_intersect_points(chain);
     if sync_points.is_empty() {
@@ -128,7 +128,7 @@ async fn resync_live_tip(
 /// Fetch a single block from the Peer, and decode it.
 async fn fetch_block_from_peer(
     peer: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
     point: Point,
     previous_point: Point,
     fork_count: Fork,
@@ -140,7 +140,8 @@ async fn fetch_block_from_peer(
         .with_context(|| "Fetching block data")?;
 
     debug!("{chain}, {previous_point}, {fork_count:?}");
-    let live_block_data = MultiEraBlock::new(chain, block_data, &previous_point, fork_count)?;
+    let live_block_data =
+        MultiEraBlock::new(chain.clone(), block_data, &previous_point, fork_count)?;
 
     Ok(live_block_data)
 }
@@ -151,7 +152,7 @@ async fn fetch_block_from_peer(
 /// If its a real rollback, it will purge the chain ahead of the block automatically.
 async fn process_rollback_actual(
     peer: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
     point: Point,
     tip: &Tip,
     fork_count: &mut Fork,
@@ -199,7 +200,7 @@ async fn process_rollback_actual(
 /// Process a rollback detected from the peer.
 async fn process_rollback(
     peer: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
     point: Point,
     tip: &Tip,
     previous_point: &Point,
@@ -231,7 +232,7 @@ async fn process_rollback(
 /// Process a rollback detected from the peer.
 async fn process_next_block(
     peer: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
     header: HeaderContent,
     tip: &Tip,
     previous_point: &Point,
@@ -279,7 +280,7 @@ async fn process_next_block(
 /// We take ownership of the client because of that.
 async fn follow_chain(
     peer: &mut facades::PeerClient,
-    chain: Network,
+    chain: &Network,
     fork_count: &mut Fork,
 ) -> anyhow::Result<()> {
     let mut update_sender = get_chain_update_tx_queue(chain).await;
@@ -340,7 +341,7 @@ const PEER_FAILURE_RECONNECT_DELAY: Duration = Duration::from_secs(10);
 /// Do not return until we have a connection to the peer.
 async fn persistent_reconnect(
     addr: &str,
-    chain: Network,
+    chain: &Network,
 ) -> facades::PeerClient {
     // Not yet connected to the peer.
     stats::peer_connected(chain, false, addr);
@@ -376,15 +377,15 @@ async fn live_sync_backfill(
     cfg: &ChainSyncConfig,
     update: &MithrilUpdateMessage,
 ) -> anyhow::Result<()> {
-    stats::backfill_started(cfg.chain);
+    stats::backfill_started(&cfg.chain);
 
-    let (fill_to, _oldest_fork) = get_fill_to_point(cfg.chain).await;
+    let (fill_to, _oldest_fork) = get_fill_to_point(&cfg.chain).await;
     let range = (update.tip.clone().into(), fill_to.clone().into());
     let mut previous_point = update.previous.clone();
 
     let range_msg = format!("{range:?}");
 
-    let mut peer = persistent_reconnect(&cfg.relay_address, cfg.chain).await;
+    let mut peer = persistent_reconnect(&cfg.relay_address, &cfg.chain).await;
 
     // Request the range of blocks from the Peer.
     peer.blockfetch()
@@ -396,12 +397,15 @@ async fn live_sync_backfill(
 
     while let Some(block_data) = peer.blockfetch().recv_while_streaming().await? {
         // Backfilled blocks get placed in the oldest fork currently on the live-chain.
-        let block = MultiEraBlock::new(cfg.chain, block_data, &previous_point, Fork::BACKFILL)
-            .with_context(|| {
-                format!(
-                    "Failed to decode block data. previous: {previous_point:?}, range: {range_msg}"
-                )
-            })?;
+        let block = MultiEraBlock::new(
+            cfg.chain.clone(),
+            block_data,
+            &previous_point,
+            Fork::BACKFILL,
+        )
+        .with_context(|| {
+            format!("Failed to decode block data. previous: {previous_point:?}, range: {range_msg}")
+        })?;
 
         // Check we get the first block in the range properly.
         if backfill_blocks.is_empty() && !block.point().strict_eq(&update.tip) {
@@ -430,9 +434,9 @@ async fn live_sync_backfill(
     let backfill_size = backfill_blocks.len() as u64;
 
     // Try and backfill, if anything doesn't work, or the chain integrity would break, fail.
-    live_chain_backfill(cfg.chain, &backfill_blocks)?;
+    live_chain_backfill(&cfg.chain, &backfill_blocks)?;
 
-    stats::backfill_ended(cfg.chain, backfill_size);
+    stats::backfill_ended(&cfg.chain, backfill_size);
 
     debug!("Backfilled Range OK: {}", range_msg);
 
@@ -451,11 +455,11 @@ async fn live_sync_backfill_and_purge(
         return;
     };
 
-    stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+    stats::new_mithril_update(&cfg.chain, update.tip.slot_or_default());
 
     debug!(
         "Before Backfill: Size of the Live Chain is: {} Blocks",
-        live_chain_length(cfg.chain)
+        live_chain_length(&cfg.chain)
     );
 
     loop {
@@ -467,20 +471,20 @@ async fn live_sync_backfill_and_purge(
             sleep(Duration::from_secs(10)).await;
         }
 
-        if get_live_head_point(cfg.chain).is_some() {
+        if get_live_head_point(&cfg.chain).is_some() {
             break;
         }
     }
 
-    let new_live_chain_length = live_chain_length(cfg.chain);
-    stats::new_live_total_blocks(cfg.chain, new_live_chain_length as u64);
+    let new_live_chain_length = live_chain_length(&cfg.chain);
+    stats::new_live_total_blocks(&cfg.chain, new_live_chain_length as u64);
 
     debug!("After Backfill: Size of the Live Chain is: {new_live_chain_length} Blocks",);
 
     // Once Backfill is completed OK we can use the Blockchain data for Syncing and Querying
     sync_ready.signal();
 
-    let mut update_sender = get_chain_update_tx_queue(cfg.chain).await;
+    let mut update_sender = get_chain_update_tx_queue(&cfg.chain).await;
 
     loop {
         let Some(update) = rx.recv().await else {
@@ -490,22 +494,22 @@ async fn live_sync_backfill_and_purge(
 
         // We can't get an update sender until the sync is released.
         if update_sender.is_none() {
-            update_sender = get_chain_update_tx_queue(cfg.chain).await;
+            update_sender = get_chain_update_tx_queue(&cfg.chain).await;
         }
 
-        stats::new_mithril_update(cfg.chain, update.tip.slot_or_default());
+        stats::new_mithril_update(&cfg.chain, update.tip.slot_or_default());
 
         debug!("Mithril Tip has advanced to: {update:?} : PURGE NEEDED");
 
         let update_point: Point = update.tip.clone();
 
-        if let Err(error) = purge_live_chain(cfg.chain, &update_point) {
+        if let Err(error) = purge_live_chain(&cfg.chain, &update_point) {
             // This should actually never happen.
             error!("Mithril Purge Failed: {}", error);
         }
 
-        let new_live_chain_length = live_chain_length(cfg.chain);
-        stats::new_live_total_blocks(cfg.chain, new_live_chain_length as u64);
+        let new_live_chain_length = live_chain_length(&cfg.chain);
+        stats::new_live_total_blocks(&cfg.chain, new_live_chain_length as u64);
 
         debug!(
             "After Purge: Size of the Live Chain is: {new_live_chain_length} Blocks: Triggering Sleeping Followers.",
@@ -513,7 +517,7 @@ async fn live_sync_backfill_and_purge(
 
         // Trigger any sleeping followers that data has changed.
         notify_follower(
-            cfg.chain,
+            &cfg.chain,
             update_sender.as_ref(),
             &chain_update::Kind::ImmutableBlockRollForward,
         );
@@ -551,19 +555,20 @@ pub(crate) async fn chain_sync(
     );
 
     // Start the SYNC_READY unlock task.
-    let sync_waiter = wait_for_sync_ready(cfg.chain);
+    let sync_waiter = wait_for_sync_ready(cfg.chain.clone());
 
     let backfill_cfg = cfg.clone();
 
     // Start the Live chain backfill task.
+    let chain = cfg.chain.clone();
     let _backfill_join_handle = spawn(async move {
         stats::start_thread(
-            cfg.chain,
+            &chain,
             stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE,
             true,
         );
         live_sync_backfill_and_purge(backfill_cfg.clone(), rx, sync_waiter).await;
-        stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
+        stats::stop_thread(&chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
     });
 
     // Live Fill data starts at fork 1.
@@ -573,8 +578,8 @@ pub(crate) async fn chain_sync(
 
     loop {
         // We never have a connection if we end up around the loop, so make a new one.
-        let mut peer = persistent_reconnect(&cfg.relay_address, cfg.chain).await;
-        match resync_live_tip(&mut peer, cfg.chain).await {
+        let mut peer = persistent_reconnect(&cfg.relay_address, &cfg.chain).await;
+        match resync_live_tip(&mut peer, &cfg.chain).await {
             Ok(tip) => debug!("Tip Resynchronized to {tip}"),
             Err(error) => {
                 error!(
@@ -586,7 +591,7 @@ pub(crate) async fn chain_sync(
         }
 
         // Note: This can ONLY return with an error, otherwise it will sync indefinitely.
-        if let Err(error) = follow_chain(&mut peer, cfg.chain, &mut fork_count).await {
+        if let Err(error) = follow_chain(&mut peer, &cfg.chain, &mut fork_count).await {
             error!(
                 "Cardano Client {} failed to follow chain: {:?}: Reconnecting.",
                 cfg.relay_address, error
@@ -601,7 +606,7 @@ pub(crate) async fn chain_sync(
 
 /// Is the current point aligned with what we know as tip.
 pub(crate) async fn point_at_tip(
-    chain: Network,
+    chain: &Network,
     point: &Point,
 ) -> bool {
     let tip = get_peer_tip(chain);

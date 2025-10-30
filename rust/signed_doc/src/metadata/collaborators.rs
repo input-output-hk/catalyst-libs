@@ -17,22 +17,26 @@ impl Deref for Collaborators {
     }
 }
 
+impl From<Vec<CatalystId>> for Collaborators {
+    fn from(value: Vec<CatalystId>) -> Self {
+        Self(value)
+    }
+}
+
 impl minicbor::Encode<()> for Collaborators {
     fn encode<W: minicbor::encode::Write>(
         &self,
         e: &mut minicbor::Encoder<W>,
         _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        if !self.0.is_empty() {
-            e.array(
-                self.0
-                    .len()
-                    .try_into()
-                    .map_err(minicbor::encode::Error::message)?,
-            )?;
-            for c in &self.0 {
-                e.bytes(&c.to_string().into_bytes())?;
-            }
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
+        for c in &self.0 {
+            e.bytes(&c.to_string().into_bytes())?;
         }
         Ok(())
     }
@@ -43,15 +47,35 @@ impl minicbor::Decode<'_, ()> for Collaborators {
         d: &mut minicbor::Decoder<'_>,
         _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        Array::decode(d, &mut DecodeCtx::Deterministic)?
+        Array::decode(d, &mut DecodeCtx::Deterministic)
+            .and_then(|arr| {
+                if arr.is_empty() {
+                    Err(minicbor::decode::Error::message(
+                        "collaborators array must have at least one element",
+                    ))
+                } else {
+                    Ok(arr)
+                }
+            })?
             .iter()
             .map(|item| minicbor::Decoder::new(item).bytes())
             .collect::<Result<Vec<_>, _>>()?
             .into_iter()
-            .map(CatalystId::try_from)
+            .map(|id| {
+                CatalystId::try_from(id)
+                    .map_err(minicbor::decode::Error::custom)
+                    .and_then(|id| {
+                        if id.is_uri() {
+                            Ok(id)
+                        } else {
+                            Err(minicbor::decode::Error::message(format!(
+                            "provided CatalystId {id} must in URI format for collaborators field"
+                        )))
+                        }
+                    })
+            })
             .collect::<Result<_, _>>()
             .map(Self)
-            .map_err(minicbor::decode::Error::custom)
     }
 }
 
@@ -60,10 +84,21 @@ impl<'de> serde::Deserialize<'de> for Collaborators {
     where D: serde::Deserializer<'de> {
         Vec::<String>::deserialize(deserializer)?
             .into_iter()
-            .map(|id| CatalystId::from_str(&id))
+            .map(|id| {
+                CatalystId::from_str(&id)
+                    .map_err(serde::de::Error::custom)
+                    .and_then(|id| {
+                        if id.is_uri() {
+                            Ok(id)
+                        } else {
+                            Err(serde::de::Error::custom(format!(
+                            "provided CatalystId {id} must in ID format for collaborators field"
+                        )))
+                        }
+                    })
+            })
             .collect::<Result<_, _>>()
             .map(Self)
-            .map_err(serde::de::Error::custom)
     }
 }
 
@@ -77,5 +112,44 @@ impl serde::Serialize for Collaborators {
     {
         let iter = self.0.iter().map(ToString::to_string);
         serializer.collect_seq(iter)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use minicbor::{Decode, Decoder, Encoder};
+    use test_case::test_case;
+
+    use super::*;
+
+    #[test_case(
+        {
+            Encoder::new(Vec::new())
+        } ;
+        "Invalid empty CBOR bytes"
+    )]
+    #[test_case(
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(0).unwrap();
+            e
+        } ;
+        "Empty CBOR array"
+    )]
+    #[test_case(
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap();
+            /* cspell:disable */
+            e.bytes(b"preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3").unwrap();
+            /* cspell:enable */
+            e
+        } ;
+        "CatalystId not in ID form"
+    )]
+    fn test_invalid_cbor_decode(e: Encoder<Vec<u8>>) {
+        assert!(
+            Collaborators::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut ()).is_err()
+        );
     }
 }

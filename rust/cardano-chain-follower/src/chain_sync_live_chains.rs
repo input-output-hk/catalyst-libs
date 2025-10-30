@@ -38,16 +38,19 @@ const INITIAL_SLOT_PROBE_AGE: u64 = 40;
 
 /// Set the last TIP received from the peer.
 fn update_peer_tip(
-    chain: Network,
+    chain: &Network,
     tip: Point,
 ) {
-    PEER_TIP.insert(chain, tip);
+    PEER_TIP.insert(chain.clone(), tip);
 }
 
 /// Get the last TIP received from the peer.
 /// If the peer tip doesn't exist, get the UNKNOWN point.
-pub(crate) fn get_peer_tip(chain: Network) -> Point {
-    (*PEER_TIP.get_or_insert(chain, Point::UNKNOWN).value()).clone()
+pub(crate) fn get_peer_tip(chain: &Network) -> Point {
+    (*PEER_TIP
+        .get_or_insert(chain.clone(), Point::UNKNOWN)
+        .value())
+    .clone()
 }
 
 /// Number of seconds to wait if we detect a `SyncReady` race condition.
@@ -152,7 +155,7 @@ impl ProtectedLiveChainBlockList {
     /// iteration will fail.
     fn backfill(
         &self,
-        chain: Network,
+        chain: &Network,
         blocks: &[MultiEraBlock],
     ) -> Result<()> {
         let live_chain = self.0.write().map_err(|_| Error::Internal)?;
@@ -215,7 +218,7 @@ impl ProtectedLiveChainBlockList {
     /// a proper "previous" point defined.
     fn add_block_to_tip(
         &self,
-        chain: Network,
+        chain: &Network,
         block: MultiEraBlock,
         fork_count: &mut Fork,
         tip: Point,
@@ -292,7 +295,7 @@ impl ProtectedLiveChainBlockList {
     /// Will refuse to purge if the point is not the TIP of the mithril chain.
     fn purge(
         &self,
-        chain: Network,
+        chain: &Network,
         point: &Point,
     ) -> Result<()> {
         // Make sure our first live block == the last mithril tip.
@@ -445,15 +448,15 @@ impl ProtectedLiveChainBlockList {
 }
 
 /// Get the `LiveChainBlockList` for a particular `Network`.
-fn get_live_chain(chain: Network) -> ProtectedLiveChainBlockList {
-    let entry = LIVE_CHAINS.get_or_insert_with(chain, ProtectedLiveChainBlockList::new);
+fn get_live_chain(chain: &Network) -> ProtectedLiveChainBlockList {
+    let entry = LIVE_CHAINS.get_or_insert_with(chain.clone(), ProtectedLiveChainBlockList::new);
 
     let value = entry.value();
     value.clone()
 }
 
 /// Get the head `Point` currently in the live chain.
-pub(crate) fn get_live_head_point(chain: Network) -> Option<Point> {
+pub(crate) fn get_live_head_point(chain: &Network) -> Option<Point> {
     let live_chain = get_live_chain(chain);
     live_chain.get_live_head_point()
 }
@@ -461,7 +464,7 @@ pub(crate) fn get_live_head_point(chain: Network) -> Option<Point> {
 /// Get the Live block relative to the specified point.
 /// The starting block must exist if the search is strict.
 pub(crate) fn get_live_block(
-    chain: Network,
+    chain: &Network,
     point: &Point,
     advance: i64,
     strict: bool,
@@ -476,7 +479,7 @@ pub(crate) fn get_live_block(
 ///
 /// Note: It MAY change between calling this function and actually backfilling.
 /// This is expected and normal behavior.
-pub(crate) async fn get_fill_to_point(chain: Network) -> (Point, u64) {
+pub(crate) async fn get_fill_to_point(chain: &Network) -> (Point, u64) {
     let live_chain = get_live_chain(chain);
 
     loop {
@@ -493,7 +496,7 @@ pub(crate) async fn get_fill_to_point(chain: Network) -> (Point, u64) {
 /// `rollback_count` should be set to 1 on the very first connection, after that,
 /// it is maintained by this function, and MUST not be modified elsewhere.
 pub(crate) fn live_chain_add_block_to_tip(
-    chain: Network,
+    chain: &Network,
     block: MultiEraBlock,
     fork: &mut Fork,
     tip: Point,
@@ -504,7 +507,7 @@ pub(crate) fn live_chain_add_block_to_tip(
 
 /// Backfill the live chain with the block set provided.
 pub(crate) fn live_chain_backfill(
-    chain: Network,
+    chain: &Network,
     blocks: &[MultiEraBlock],
 ) -> Result<()> {
     let live_chain = get_live_chain(chain);
@@ -513,7 +516,7 @@ pub(crate) fn live_chain_backfill(
 
 /// Get the length of the live chain.
 /// Probably used by debug code only, so its ok if this is not use.
-pub(crate) fn live_chain_length(chain: Network) -> usize {
+pub(crate) fn live_chain_length(chain: &Network) -> usize {
     let live_chain = get_live_chain(chain);
     live_chain.len()
 }
@@ -521,7 +524,7 @@ pub(crate) fn live_chain_length(chain: Network) -> usize {
 /// On an immutable update, purge the live-chain up to the new immutable tip.
 /// Will error if the point is not in the Live chain.
 pub(crate) fn purge_live_chain(
-    chain: Network,
+    chain: &Network,
     point: &Point,
 ) -> Result<()> {
     let live_chain = get_live_chain(chain);
@@ -530,14 +533,14 @@ pub(crate) fn purge_live_chain(
 
 /// Get intersection points to try and find best point to connect to the node on
 /// reconnect.
-pub(crate) fn get_intersect_points(chain: Network) -> Vec<pallas_primitives::types::point::Point> {
+pub(crate) fn get_intersect_points(chain: &Network) -> Vec<pallas_primitives::types::point::Point> {
     let live_chain = get_live_chain(chain);
     live_chain.get_intersect_points()
 }
 
 /// Find best block from a fork relative to a point.
 pub(crate) fn find_best_fork_block(
-    chain: Network,
+    chain: &Network,
     point: &Point,
     previous_point: &Point,
     fork: Fork,

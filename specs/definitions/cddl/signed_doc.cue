@@ -72,7 +72,7 @@ cddlDefinitions: #cddlDefinitions & {
 		comment: "Reference to a section in a referenced document."
 	}
 	collaborators: {
-		def: "[ * \(requires[0]) ]"
+		def: "[ + \(requires[0]) ]"
 		requires: ["catalyst_id_kid"]
 		comment: "Allowed Collaborators on the next subsequent version of a document."
 	}

@@ -1,5 +1,7 @@
 //! `metadata` field definition
 
+pub mod chain;
+pub mod collaborators;
 pub mod doc_ref;
 pub mod parameters;
 pub mod reply;
@@ -14,4 +16,6 @@ pub struct Metadata {
     pub doc_ref: doc_ref::Ref,
     pub reply: reply::Reply,
     pub parameters: parameters::Parameters,
+    pub chain: chain::Chain,
+    pub collaborators: collaborators::Collaborators,
 }
