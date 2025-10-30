@@ -548,12 +548,12 @@ impl RegistrationChainInner {
         }
 
         // Check that new public keys aren't used by other chains.
-        let valid_pks = new_chain
+        new_chain
             .validate_public_keys(&report, provider)
             .await
             .ok()?;
 
-        if report.is_problematic() || !valid_pks {
+        if report.is_problematic() {
             return None;
         }
 
@@ -608,13 +608,13 @@ impl RegistrationChainInner {
         let new_chain = chain.inner.update_stateless(reg.clone(), signing_pk)?;
 
         // Check that new public keys aren't used by other chains.
-        let valid_pks = new_chain
+        new_chain
             .validate_public_keys(&report, provider)
             .await
             .ok()?;
 
         // Return an error if any issues were recorded in the report.
-        if report.is_problematic() || !valid_pks {
+        if report.is_problematic() {
             return None;
         }
 
@@ -626,13 +626,14 @@ impl RegistrationChainInner {
     /// across all Catalyst registrations.
     ///
     /// # Returns
-    /// Returns a [`Result<HashSet<VerifyingKey>>`] containing all unique public keys
-    /// extracted from the registration chain if validation passes successfully.
+    /// Returns `Ok(true)` if all signing keys are unique and validation passes
+    /// successfully. Returns `Ok(false)` if any key conflict is detected, with the
+    /// issue recorded in the provided [`ProblemReport`].
     ///
     /// # Errors
     /// - Propagates any I/O or provider-level errors encountered while checking key
     ///   ownership (e.g., database lookup failures).
-    pub async fn validate_public_keys<Provider>(
+    async fn validate_public_keys<Provider>(
         &self,
         report: &ProblemReport,
         provider: &Provider,

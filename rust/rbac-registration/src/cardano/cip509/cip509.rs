@@ -337,7 +337,6 @@ impl Cip509 {
 }
 
 impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
-    #[allow(clippy::too_many_lines)]
     fn decode(
         d: &mut Decoder,
         decode_context: &mut DecodeContext,
