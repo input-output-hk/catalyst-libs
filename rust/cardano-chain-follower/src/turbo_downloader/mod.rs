@@ -365,13 +365,13 @@ impl ParallelDownloadProcessorInner {
         tracing::info!(range_size = range_size, url = self.url);
         // let addr = get_range_response.remote_addr();
         // debug!("Chunk {chunk} from {addr:?}");
-        if get_range_response.status() != StatusCode::PARTIAL_CONTENT {
-            bail!(
-                "Response to range request has an unexpected status code (expected {}, found {})",
-                StatusCode::PARTIAL_CONTENT,
-                get_range_response.status()
-            )
-        }
+        anyhow::ensure!(
+            (get_range_response.status() == StatusCode::PARTIAL_CONTENT)
+                || (get_range_response.status() == StatusCode::ACCEPTED),
+            "Response to range request has an unexpected status code (expected {:?}, found {})",
+            [StatusCode::PARTIAL_CONTENT, StatusCode::ACCEPTED,],
+            get_range_response.status()
+        );
 
         let mut bytes: Vec<u8> = Vec::with_capacity(range_size);
 
