@@ -531,7 +531,7 @@ impl ParallelDownloadProcessor {
                     error!("Next chunk delay overflow");
                 }
             }
-            let mut block;
+            let mut block = None;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
             for attempt in 0u8..3 {
                 block = match params.get_range(&http_agent, next_chunk) {
