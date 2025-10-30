@@ -367,9 +367,9 @@ impl ParallelDownloadProcessorInner {
         // debug!("Chunk {chunk} from {addr:?}");
         anyhow::ensure!(
             (get_range_response.status() == StatusCode::PARTIAL_CONTENT)
-                || (get_range_response.status() == StatusCode::ACCEPTED),
+                || (get_range_response.status() == StatusCode::OK),
             "Response to range request has an unexpected status code (expected {:?}, found {})",
-            [StatusCode::PARTIAL_CONTENT, StatusCode::ACCEPTED,],
+            [StatusCode::PARTIAL_CONTENT, StatusCode::OK,],
             get_range_response.status()
         );
 
