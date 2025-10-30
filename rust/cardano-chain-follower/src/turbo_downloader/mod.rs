@@ -538,8 +538,7 @@ impl ParallelDownloadProcessor {
                     Ok(block) => Some(block),
                     Err(error) => {
                         error!(
-                            "Error getting chunk: {:?}, error: {:?}, attempt: {attempt}",
-                            next_chunk, error
+                            "Error getting chunk: {next_chunk:?}, error: {error:?}, attempt: {attempt}",
                         );
                         None
                     },
