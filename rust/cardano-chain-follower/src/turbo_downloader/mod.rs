@@ -365,8 +365,12 @@ impl ParallelDownloadProcessorInner {
         anyhow::ensure!(
             (get_range_response.status() == StatusCode::PARTIAL_CONTENT)
                 || (get_range_response.status() == StatusCode::OK),
-            "Response to range request has an unexpected status code (expected {:?}, found {})",
-            [StatusCode::PARTIAL_CONTENT, StatusCode::OK],
+            "Response to range request has an unexpected status code (expected [{}], found {})",
+            [
+                StatusCode::PARTIAL_CONTENT.to_string(),
+                StatusCode::OK.to_string()
+            ]
+            .join(","),
             get_range_response.status()
         );
 
