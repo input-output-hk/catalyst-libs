@@ -637,14 +637,13 @@ impl RegistrationChainInner {
         &self,
         report: &ProblemReport,
         provider: &Provider,
-    ) -> anyhow::Result<bool>
+    ) -> anyhow::Result<()>
     where
         Provider: RbacRegistrationProvider,
     {
         let roles: Vec<_> = self.role_data_history.keys().collect();
         let catalyst_id = self.catalyst_id.as_short_id();
 
-        let mut result = true;
         for role in roles {
             if let Some((key, _)) = self.get_latest_signing_pk_for_role(*role) {
                 if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
@@ -653,14 +652,12 @@ impl RegistrationChainInner {
                         &format!("An update to {catalyst_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
                         "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
                         );
-
-                        result = false;
                     }
                 }
             }
         }
 
-        Ok(result)
+        Ok(())
     }
 
     /// Get the latest signing public key for a role.
