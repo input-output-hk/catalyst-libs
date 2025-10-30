@@ -363,7 +363,7 @@ impl ParallelDownloadProcessorInner {
         // debug!("Chunk {chunk} from {addr:?}");
         if get_range_response.status() != StatusCode::PARTIAL_CONTENT {
             bail!(
-                "Response to range request has an unexpected status code (expected {}, found {})",
+                "Response to range request has an unexpected status code (expected {}, found {}), range header: {range_header}",
                 StatusCode::PARTIAL_CONTENT,
                 get_range_response.status()
             )
