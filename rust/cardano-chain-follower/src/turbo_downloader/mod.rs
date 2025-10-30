@@ -533,7 +533,7 @@ impl ParallelDownloadProcessor {
             }
             let mut block = None;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
-            for attempt in 0u8..3 {
+            for attempt in 1u8..4 {
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {
