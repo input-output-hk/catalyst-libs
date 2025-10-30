@@ -531,23 +531,24 @@ impl ParallelDownloadProcessor {
                     error!("Next chunk delay overflow");
                 }
             }
-            let mut retries = 0u8;
             let mut block;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
-            loop {
+            for attempt in 0u8..3 {
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {
-                        error!("Error getting chunk: {:?}, error: {:?}", next_chunk, error);
+                        error!(
+                            "Error getting chunk: {:?}, error: {:?}, attempt: {attempt}",
+                            next_chunk, error
+                        );
                         None
                     },
                 };
 
                 // Quickly retry on error, in case its transient.
-                if block.is_some() || retries > 3 {
+                if block.is_some() {
                     break;
                 }
-                retries = retries.saturating_add(1);
             }
             // debug!("Worker {worker_id} DL chunk done {next_chunk}: {retries}");
 
