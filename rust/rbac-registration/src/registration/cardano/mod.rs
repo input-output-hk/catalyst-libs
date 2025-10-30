@@ -71,7 +71,7 @@ impl RegistrationChain {
         &self,
         cip509: Cip509,
     ) -> Option<Self> {
-        let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
+        let latest_signing_pk = self.get_latest_signing_pk_for_role(RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
             self.inner.update_stateless(cip509, signing_pk)?
         } else {
@@ -192,7 +192,7 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_latest_signing_pk_for_role(
         &self,
-        role: &RoleId,
+        role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.get_latest_signing_pk_for_role(role)
     }
@@ -202,7 +202,7 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_latest_encryption_pk_for_role(
         &self,
-        role: &RoleId,
+        role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.get_latest_encryption_pk_for_role(role)
     }
@@ -543,13 +543,13 @@ impl RegistrationChainInner {
                     report.functional_validation(
                     &format!("{address} stake addresses is already used"),
                     "It isn't allowed to use same stake address in multiple registration chains",
-                );
+                    );
                 },
             }
         }
 
         // Try to add a new registration to the chain.
-        let (signing_pk, _) = self.get_latest_signing_pk_for_role(&RoleId::Role0)?;
+        let (signing_pk, _) = self.get_latest_signing_pk_for_role(RoleId::Role0)?;
         let new_chain = chain.inner.update_stateless(reg.clone(), signing_pk)?;
 
         // Check that new public keys aren't used by other chains.
@@ -602,8 +602,8 @@ impl RegistrationChainInner {
                 // If an address is used in existing chain then a new chain must have different role
                 // 0 signing key.
                 let previous_chain = provider.chain(id.clone()).await.ok()??;
-                if previous_chain.get_latest_signing_pk_for_role(&RoleId::Role0)
-                    == new_chain.get_latest_signing_pk_for_role(&RoleId::Role0)
+                if previous_chain.get_latest_signing_pk_for_role(RoleId::Role0)
+                    == new_chain.get_latest_signing_pk_for_role(RoleId::Role0)
                 {
                     report.functional_validation(
                     &format!("A new registration ({catalyst_id}) uses the same public key as the previous one ({})",
@@ -661,7 +661,7 @@ impl RegistrationChainInner {
 
         let mut result = true;
         for role in roles {
-            if let Some((key, _)) = self.get_latest_signing_pk_for_role(role) {
+            if let Some((key, _)) = self.get_latest_signing_pk_for_role(*role) {
                 if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
                     if previous != catalyst_id {
                         report.functional_validation(
@@ -669,7 +669,7 @@ impl RegistrationChainInner {
                         "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
                         );
 
-                        result = false
+                        result = false;
                     }
                 }
             }
@@ -683,9 +683,9 @@ impl RegistrationChainInner {
     #[must_use]
     pub fn get_latest_signing_pk_for_role(
         &self,
-        role: &RoleId,
+        role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
-        self.role_data_record.get(role).and_then(|rdr| {
+        self.role_data_record.get(&role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
                 let rotation = KeyRotation::from_latest_rotation(rdr.signing_keys());
 
@@ -699,9 +699,9 @@ impl RegistrationChainInner {
     #[must_use]
     pub fn get_latest_encryption_pk_for_role(
         &self,
-        role: &RoleId,
+        role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
-        self.role_data_record.get(role).and_then(|rdr| {
+        self.role_data_record.get(&role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
                 let rotation = KeyRotation::from_latest_rotation(rdr.encryption_keys());
 
@@ -833,7 +833,7 @@ mod test {
         assert_eq!(role_0_data.extended_data().len(), 2);
 
         let (_k, r) = update
-            .get_latest_signing_pk_for_role(&RoleId::Role0)
+            .get_latest_signing_pk_for_role(RoleId::Role0)
             .unwrap();
         assert_eq!(r, KeyRotation::from(1));
         assert!(update
