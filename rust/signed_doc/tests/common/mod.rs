@@ -43,16 +43,17 @@ pub fn get_doc_kid_and_sk(
     Ok((sk.clone(), kid.clone()))
 }
 
+// If `None` make `CatalystId` as admin
 pub fn create_dummy_key_pair(
-    role_index: RoleId
-) -> anyhow::Result<(ed25519_dalek::SigningKey, CatalystId)> {
+    role_index: Option<RoleId>
+) -> (ed25519_dalek::SigningKey, CatalystId) {
     let sk = create_signing_key();
-    let kid = CatalystId::from_str(&format!(
-        "id.catalyst://cardano/{}/{role_index}/0",
-        base64_url::encode(sk.verifying_key().as_bytes())
-    ))?;
-
-    Ok((sk, kid))
+    let kid = if let Some(role_index) = role_index {
+        CatalystId::new("cardano", None, sk.verifying_key()).with_role(role_index)
+    } else {
+        CatalystId::new("cardano", None, sk.verifying_key()).as_admin()
+    };
+    (sk, kid)
 }
 
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {

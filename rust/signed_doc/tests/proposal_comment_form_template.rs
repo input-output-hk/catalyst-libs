@@ -56,8 +56,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
@@ -83,8 +83,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(RoleId::BrandAdmin)
-            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        let (sk, kid) = create_dummy_key_pair(None);
+        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
@@ -110,8 +110,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
         let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(RoleId::BrandAdmin)
-            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        let (sk, kid) = create_dummy_key_pair(None);
+        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
@@ -134,8 +134,8 @@ mod common;
 #[test_case(
     |provider| {
         let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(RoleId::Role0)
-            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+        let (sk, kid) = create_dummy_key_pair(None);
+        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
