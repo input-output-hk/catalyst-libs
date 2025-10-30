@@ -362,7 +362,7 @@ impl ParallelDownloadProcessorInner {
         let range_size = range_end_inclusive
             .saturating_sub(range_start)
             .saturating_add(1);
-        tracing::info!(range_size = range_size);
+        tracing::info!(range_size = range_size, url = self.url);
         // let addr = get_range_response.remote_addr();
         // debug!("Chunk {chunk} from {addr:?}");
         if get_range_response.status() != StatusCode::PARTIAL_CONTENT {
@@ -534,7 +534,7 @@ impl ParallelDownloadProcessor {
             }
             let mut block = None;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
-            for attempt in 1u8..4 {
+            for attempt in 1u8..6 {
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {
