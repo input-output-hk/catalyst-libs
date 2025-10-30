@@ -489,67 +489,6 @@ impl RegistrationChainInner {
         Some(new_inner)
     }
 
-    /// Attempts to update an existing RBAC registration chain
-    /// with a new CIP-509 registration, validating address and key usage consistency.
-    pub async fn update<Provider>(
-        &self,
-        reg: Cip509,
-        provider: &Provider,
-    ) -> Option<Self>
-    where
-        Provider: RbacRegistrationProvider,
-    {
-        let previous_txn = reg.previous_transaction()?;
-        let report = reg.report().to_owned();
-
-        // Find a chain this registration belongs to.
-        let Some(catalyst_id) = provider.catalyst_id_from_txn_id(previous_txn).await.ok()? else {
-            // We are unable to determine a Catalyst ID, so there is no sense to update the problem
-            // report because we would be unable to store this registration anyway.
-            return None;
-        };
-        let chain = provider.chain(catalyst_id.clone()).await.ok()??;
-
-        // Check that addresses from the new registration aren't used in other chains.
-        let previous_addresses = chain.stake_addresses();
-        let reg_addresses = reg.stake_addresses();
-        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
-        for address in &new_addresses {
-            match provider
-                .catalyst_id_from_stake_address(address)
-                .await
-                .ok()?
-            {
-                None => {
-                    // All good: the address wasn't used before.
-                },
-                Some(_) => {
-                    report.functional_validation(
-                    &format!("{address} stake addresses is already used"),
-                    "It isn't allowed to use same stake address in multiple registration chains",
-                    );
-                },
-            }
-        }
-
-        // Try to add a new registration to the chain.
-        let (signing_pk, _) = self.get_latest_signing_pk_for_role(RoleId::Role0)?;
-        let new_chain = chain.inner.update_stateless(reg.clone(), signing_pk)?;
-
-        // Check that new public keys aren't used by other chains.
-        let valid_pks = new_chain
-            .validate_public_keys(&report, provider)
-            .await
-            .ok()?;
-
-        // Return an error if any issues were recorded in the report.
-        if report.is_problematic() || !valid_pks {
-            return None;
-        }
-
-        Some(new_chain)
-    }
-
     /// Attempts to initialize a new RBAC registration chain
     /// from a given CIP-509 registration, ensuring uniqueness of Catalyst ID, stake
     /// addresses, and associated public keys.
@@ -614,6 +553,67 @@ impl RegistrationChainInner {
             .await
             .ok()?;
 
+        if report.is_problematic() || !valid_pks {
+            return None;
+        }
+
+        Some(new_chain)
+    }
+
+    /// Attempts to update an existing RBAC registration chain
+    /// with a new CIP-509 registration, validating address and key usage consistency.
+    pub async fn update<Provider>(
+        &self,
+        reg: Cip509,
+        provider: &Provider,
+    ) -> Option<Self>
+    where
+        Provider: RbacRegistrationProvider,
+    {
+        let previous_txn = reg.previous_transaction()?;
+        let report = reg.report().to_owned();
+
+        // Find a chain this registration belongs to.
+        let Some(catalyst_id) = provider.catalyst_id_from_txn_id(previous_txn).await.ok()? else {
+            // We are unable to determine a Catalyst ID, so there is no sense to update the problem
+            // report because we would be unable to store this registration anyway.
+            return None;
+        };
+        let chain = provider.chain(catalyst_id.clone()).await.ok()??;
+
+        // Check that addresses from the new registration aren't used in other chains.
+        let previous_addresses = chain.stake_addresses();
+        let reg_addresses = reg.stake_addresses();
+        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
+        for address in &new_addresses {
+            match provider
+                .catalyst_id_from_stake_address(address)
+                .await
+                .ok()?
+            {
+                None => {
+                    // All good: the address wasn't used before.
+                },
+                Some(_) => {
+                    report.functional_validation(
+                    &format!("{address} stake addresses is already used"),
+                    "It isn't allowed to use same stake address in multiple registration chains",
+                    );
+                },
+            }
+        }
+
+        // Try to add a new registration to the chain.
+        let (signing_pk, _) = self.get_latest_signing_pk_for_role(RoleId::Role0)?;
+        let new_chain = chain.inner.update_stateless(reg.clone(), signing_pk)?;
+
+        // Check that new public keys aren't used by other chains.
+        let valid_pks = new_chain
+            .validate_public_keys(&report, provider)
+            .await
+            .ok()?;
+
+        // Return an error if any issues were recorded in the report.
         if report.is_problematic() || !valid_pks {
             return None;
         }
