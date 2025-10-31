@@ -1,115 +1,65 @@
-# Contest Delegation
+# Contest Ballot Register
 
 ## Description
 
-Delegation by a Registered User to a Representative for
-a contest.
+Periodically as ballots are collected, a summary of all newly collected ballots will be
+published in a [Contest Ballot Register](contest_ballot_register.md) document.
+This document forms part of the bulletin boards complete Contest Ballot Register.
 
-This delegation allows votes cast by the Representative
-to use the voting power of the delegating User, in addition
-to their own personal voting power and that of all other Users
-who delegate to the same Representative.
+These documents are chained to each other, and the final document is specified as final
+in the [`chain`](../metadata.md#chain) metadata.
 
-Delegation is for a specific Contest.
-Multiple Delegations must be published if there are multiple
-Contests within a Brand/Campaign or Category.
+Typically each [Contest Ballot Register](contest_ballot_register.md) document is made immutable by referencing it on
+the blockchain most applicable to the Contest.
 
-This is because different Contests may have different rules.
-And not all Representatives will choose to (or be able to) nominate
-for every Contest.
+Different blockchains will have different mechanisms for referencing the individual
+[Contest Ballot Register](contest_ballot_register.md) documents.
 
-A Representative ***MAY NOT*** delegate to a different Representative
-for any contest they have nominated for.
-They ***MAY*** however nominate a Representative in any contest they
-have not nominated for.
+For example, Cardano will encode a `document_ref` in metadata, signed by the ballot box
+operator.
 
-A Representative is NOT required to delegate to themselves in a contest they are nominated for,
-and in fact, any self-delegation is invalid and ignored.
-A Representative has an implicit 100% voting power delegation to themselves in any contest
-they are nominated.
-The MAY not vote personally, and if they do, that vote will have Zero (0) voting power.
-100% of their voting power is assigned to their delegate vote and can not be split in any way.
-
-A voter MAY choose multiple delegates for a contest, in this case they are listed in priority
-order from highest priority to lowest.
-Priority only affects two aspects of the delegation.
-
-1. Any residual voting power after it is split among all delegates is given to the highest
-   priority delegate (first).
-2. If there is not enough voting power to distribute, then its distributed from highest
-   priority to lowest.
-   This may mean that low priority delegates get zero voting power.
-
-An example:  If a Voter has 100 raw voting power, after quadratic scaling, they have 10.
-If they delegated to 15 delegates equally, then only the first 10 would get 1 voting power
-each.
-Voting power is not fractionally assigned.
-
-The payload MAY contain a [json][RFC8259] document which consists of a single array which can adjust
-the ratio of the delegation.
-Voting power is divided based on the weight of a single delegate over the sum of all
-weights of all delegates.
-This is performed with integer division.
-As a special condition, 0 or any negative value is equivalent to a weight of 1.
-As explained above, if there is not enough voting power to distribute, low priority reps
-will receive 0 voting power from the delegation.
-And if there is any residual after integer division its applied to the representative
-with the highest priority.
+The blockchain record must be as close in time as practically possible to the creation of
+the [Contest Ballot Register](contest_ballot_register.md) document.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot contest_delegation.dot.svg
+```graphviz dot contest_ballot_register.dot.svg
 
-{{ include_file('./../diagrams/contest_delegation.dot', indent=4) }}
+{{ include_file('./../diagrams/contest_ballot_register.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
-* The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the same Contest as the
-    Nomination of the Representative.
-* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
-    IF there are multiple representatives, then any which are not pointing
-    to a valid `Representative Nomination` are excluded.
-    The nomination is only invalid if ALL references `Representative Nomination`
-    references are invalid.
-    This is to prevent a Representative changing their nomination invalidating a
-    delegation with multiple representatives.
-* The payload MUST be nil.
-
-A Representative *MUST* Delegate to their latest Nomination for a Category,
-otherwise their Nomination is invalid.
-
-This is because Delegation points to a *SPECIFIC* Nomination, and it
-*MUST* be the latest for the Representative on the Contest.
-As the Nomination contains information that the User relies on
-when choosing to delegate, changing that information could have a
-real and detrimental result in the Delegation choice.
-Therefore, for a Delegation to be valid, it *MUST* point to the
-latest Nomination for a Representative.
-
-Publishing a newer version of the Nomination Document to a specific contest will
-invalidate all pre-existing delegations, and all voters will need
-to re-delegate to affirm the delegates latest nomination.
-
-A Voter may withdraw their Delegation by revoking all delegation documents.
-[`revocations`](../metadata.md#revocations) must be set to `true` to withdraw a delegation, OR
-a later contest delegation may change the delegated representative without
-first revoking the prior delegation, as only the latest delegation is
-considered.
+* The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the Contest the ballot is being cast in.
+* The 'ref' metadata fields reference the Contest Ballots collected in the proceeding
+    period by the ballot box.
+    These are sorted from earliest `document_id`:`document_ver` regardless of the time
+    the individual ballot was received by the ballot box.
+* Ballot boxes will not accept ballots whose `document_id`:`document_ver` fall outside
+    the boundaries of the contest, or are not close in time to when the ballot box
+    received the ballot.
 
 ### Business Logic
 
 #### Front End
 
-* Allows a voter to select a Representative from a list of eligible candidates for a category.
-* The voter signs this document to confirm their delegation choice.
+* Always cast a ballot for all proposals in the contest.
+* Any proposal not explicitely selected by a user must have the default selection applied.
+    Typically, this would be `abstain`.
+* The voter signs this document to confirm their ballot.
+* Ballots can not be cast outside the time allowed for the casting of ballots.
+* The `document_id` and `document+ver` must be within the time of allowed casting
+    of ballots.  Any document_id of document_ver outside this time are invalid and will
+    not be counted.
 
 #### Back End
 
-* Verifies that the voter and Representative are valid and registered for the category.
-* Records the delegation of voting power from the voter to the Representative.
+* Verifies that the Contest is valid, and that the ballot is cast in the appropriate
+    time frame, and has a valid `document_id` and `document_ver` in that range.
+* Verify the payload lists all the eligible proposals which can be chosen in the contest.
+* Verify the proofs in the payload are correct.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -125,7 +75,7 @@ considered.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | 764f17fb-cc50-4979-b14a-b213dbac5994 |
+| Type | 58608925-bda3-47df-b39a-ae0d0a1dd6ed |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

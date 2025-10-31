@@ -9,7 +9,7 @@ import jsonschema
 import rich
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-from spec.example import JsonExample
+from spec.example import CborExample, JsonExample
 
 DRAFT7_SCHEMA = "https://json-schema.org/draft-07/schema"
 DRAFT202012_SCHEMA = "https://json-schema.org/draft/2020-12/schema"
@@ -24,8 +24,8 @@ class Payload(BaseModel):
 
     description: str
     nil: bool
-    doc_schema: HttpUrl | dict[str, Any] | None = Field(default=None, alias="schema")
-    examples: list[JsonExample] = Field(default_factory=JsonExample.default)
+    doc_schema: HttpUrl | dict[str, Any] | str | None = Field(default=None, alias="schema")
+    examples: list[JsonExample] | list[CborExample] = Field(default_factory=JsonExample.default)
 
     model_config = ConfigDict(extra="forbid")
 
@@ -57,6 +57,9 @@ class Payload(BaseModel):
                 )
 
         for example in self.examples:
+            if isinstance(example, CborExample):
+                # We don't validate CBOR examples. (We could)
+                continue
             if validator is None:
                 msg = "No schema to validate payload examples."
                 raise SchemaValidationError(msg)

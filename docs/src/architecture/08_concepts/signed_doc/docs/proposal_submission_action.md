@@ -211,22 +211,12 @@ States:
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
          `hide` is only actioned if sent by the author,
          for a collaborator it identified that they do not wish to be listed as a `collaborator`.
-
 ### Schema
 
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
 
-    The kind of action is controlled by this payload.
-    The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
 
-    States:
-
-    * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
-    * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
-    * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-             `hide` is only actioned if sent by the author,
-             for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 
     ```json

@@ -1,40 +1,25 @@
-digraph "Rep Nomination" {
+digraph "Contest Ballot Register" {
     rankdir="LR"
     graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
     node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
     edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
-    label="Rep Nomination Document
-Relationships"
+    label="Contest Ballot Register
+Document Relationships"
     fontcolor="#1d71b8"
     fontsize=50
     compound=true
 
 
 
-    "Rep Profile" [
-        id="Rep Profile";
+    "Rep Nomination" [
+        id="Rep Nomination";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_profile/">
-                    <FONT COLOR="#ffffff"><B> Rep Profile </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Rep Nomination Form Template" [
-        id="Rep Nomination Form Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_nomination_form_template/">
-                    <FONT COLOR="#ffffff"><B> Rep Nomination Form Template </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_nomination/">
+                    <FONT COLOR="#ffffff"><B> Rep Nomination </B></FONT>
                 </TD>
             </TR>
 
@@ -58,13 +43,13 @@ Relationships"
     ];
 
 
-    "Rep Nomination" [
-        id="Rep Nomination";
+    "Contest Ballot Register" [
+        id="Contest Ballot Register";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_nomination/">
-                    <FONT COLOR="#ffffff"><B> Rep Nomination </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_register/">
+                    <FONT COLOR="#ffffff"><B> Contest Ballot Register </B></FONT>
                 </TD>
             </TR>
             <TR>
@@ -82,7 +67,7 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>bf9abd97-5d1f-4429-8e80-740fea371a9c</I></B></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>58608925-bda3-47df-b39a-ae0d0a1dd6ed</I></B></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -112,23 +97,13 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ref</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Rep Profile</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Rep Nomination</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="template" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">template</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Rep Nomination Form Template</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">revocations</FONT></TD>
@@ -138,7 +113,7 @@ Relationships"
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
@@ -153,55 +128,6 @@ Relationships"
     ];
 
 
-    "Contest Ballot" [
-        id="Contest Ballot";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot/">
-                    <FONT COLOR="#ffffff"><B> Contest Ballot </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Contest Ballot Register" [
-        id="Contest Ballot Register";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_register/">
-                    <FONT COLOR="#ffffff"><B> Contest Ballot Register </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Contest Delegation" [
-        id="Contest Delegation";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_delegation/">
-                    <FONT COLOR="#ffffff"><B> Contest Delegation </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Rep Nomination":"ref":e -> "Rep Profile":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Rep Nomination":"template":e -> "Rep Nomination Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Rep Nomination":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Contest Ballot":"title":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Contest Ballot Register":"title":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Contest Delegation":"title":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Ballot Register":"ref":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Ballot Register":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

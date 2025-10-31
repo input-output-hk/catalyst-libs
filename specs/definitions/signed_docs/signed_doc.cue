@@ -59,9 +59,9 @@ import (
 		if list.Contains( media_types.jsonContentTypes, headers."content type".value) {
 			payload: #payload_json
 		}
-		//if list.Contains( media_types.cborContentTypes, headers."content type".value) {
-		//	payload: #payload_cbor
-		//}
+		if list.Contains( media_types.cborContentTypes, headers."content type".value) {
+			payload: #payload_cbor
+		}
 	}
 
 	// Required/Allowed Signers of a document

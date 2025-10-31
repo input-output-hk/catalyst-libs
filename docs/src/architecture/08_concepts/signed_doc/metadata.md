@@ -232,6 +232,8 @@ The document version must always be >= the document ID.
 |  | [Rep Nomination](./docs/rep_nomination.md) |
 |  | [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) |
 |  | [Contest Delegation](./docs/contest_delegation.md) |
+|  | [Contest Ballot](./docs/contest_ballot.md) |
+|  | [Contest Ballot Register](./docs/contest_ballot_register.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.

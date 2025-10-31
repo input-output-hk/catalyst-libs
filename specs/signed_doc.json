@@ -1442,6 +1442,334 @@
         }
       ]
     },
+    "Contest Ballot": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "* Verifies that the Contest is valid, and that the ballot is cast in the appropriate \n\ttime frame, and has a valid `document_id` and `document_ver` in that range.\n* Verify the payload lists all the eligible proposals which can be chosen in the contest.\n* Verify the proofs in the payload are correct.",
+        "front_end": "* Always cast a ballot for all proposals in the contest.\n* Any proposal not explicitely selected by a user must have the default selection applied.\n\tTypically, this would be `abstain`.\n* The voter signs this document to confirm their ballot.\n* Ballots can not be cast outside the time allowed for the casting of ballots.\n* The `document_id` and `document+ver` must be within the time of allowed casting\n    of ballots.  Any document_id of document_ver outside this time are invalid and will\n\tnot be counted."
+      },
+      "description": "An individual Ballot cast in a Contest by a registered user.\n\nEach ballot contains choices for all possible proposals eligible for the \ncontest.\n\nMultiple contest ballots can be cast by the same registered user in a contest, but\nonly the latest (by its document_version) will be counted.\n\nThe reason the ballot is cast in a contest is because there may be multiple contests in\na campaign, and they may be attached to either the brand, campaign or category level.\nEach level, (for example category) can in-theory have multiple contests.\n\nOnly eligible users can cast ballots in the respective contest.",
+      "draft": false,
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/cbor"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "yes",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": "Contest Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": true,
+          "required": "yes",
+          "type": "Rep Nomination",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The Payload is a JSON Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "examples": [
+          {
+            "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-crt-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-crt-encrypted-choices` is 0x123456789...",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+            "title": "Example Encrypted Contest Ballot Payload."
+          },
+          {
+            "description": "Example Shows:\n\n* Three Proposals\n* Two Choices",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBjbGVhciBiYWxsb3QuCg==",
+            "title": "Example Clear Ballot Payload."
+          }
+        ],
+        "nil": false,
+        "schema": "contest-ballot-payload"
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "description": "Only the original author can update and sign a new version of documents.",
+          "type": "author"
+        }
+      },
+      "type": "de1284b8-8533-4f7a-81cc-ff4bde5ef8d0",
+      "validation": "* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.\n* The 'ref' metadata fields within the ballot payload (not the headers) must point to \n\tALL the proposals eligible to be chosen in the contest.",
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        },
+        {
+          "changes": "* Allow Multi Delegation",
+          "modified": "2025-09-04",
+          "version": "0.1.2"
+        }
+      ]
+    },
+    "Contest Ballot Register": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "* Verifies that the Contest is valid, and that the ballot is cast in the appropriate \n\ttime frame, and has a valid `document_id` and `document_ver` in that range.\n* Verify the payload lists all the eligible proposals which can be chosen in the contest.\n* Verify the proofs in the payload are correct.",
+        "front_end": "* Always cast a ballot for all proposals in the contest.\n* Any proposal not explicitely selected by a user must have the default selection applied.\n\tTypically, this would be `abstain`.\n* The voter signs this document to confirm their ballot.\n* Ballots can not be cast outside the time allowed for the casting of ballots.\n* The `document_id` and `document+ver` must be within the time of allowed casting\n    of ballots.  Any document_id of document_ver outside this time are invalid and will\n\tnot be counted."
+      },
+      "description": "Periodically as ballots are collected, a summary of all newly collected ballots will be\npublished in a `Contest Ballot Register` document.\nThis document forms part of the bulletin boards complete Contest Ballot Register.\n\nThese documents are chained to each other, and the final document is specified as final\nin the `chain` metadata.\n\nTypically each `Contest Ballot Register` document is made immutable by referencing it on\nthe blockchain most applicable to the Contest.\n\nDifferent blockchains will have different mechanisms for referencing the individual \n`Contest Ballot Register` documents.\n\nFor example, Cardano will encode a `document_ref` in metadata, signed by the ballot box\noperator.\n\nThe blockchain record must be as close in time as practically possible to the creation of\nthe `Contest Ballot Register` document.",
+      "draft": false,
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "yes",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": "Contest Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": true,
+          "required": "yes",
+          "type": "Rep Nomination",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The Payload is a JSON Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "examples": [
+          {
+            "description": "If there are only 1 delegation, then the weights do not matter.\nIf there are two, then the first delegate has a weight of 10/30, and the second has 20/30.\nIf there are 5, then the weights are: `[10,20,30,1,1]`",
+            "example": {
+              "weights": [
+                10,
+                20,
+                30
+              ]
+            },
+            "title": "Three Delegation Weights"
+          }
+        ],
+        "nil": false,
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "description": "Structure of the payload of a Contest Delegation.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "weights": {
+              "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              "minItems": 0,
+              "type": "array"
+            }
+          },
+          "required": [
+            "weights"
+          ],
+          "title": "Contest Delegation Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-03-01": [
+              "First Version Created."
+            ]
+          }
+        }
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "description": "Only the original author can update and sign a new version of documents.",
+          "type": "author"
+        }
+      },
+      "type": "58608925-bda3-47df-b39a-ae0d0a1dd6ed",
+      "validation": "* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.\n* The 'ref' metadata fields reference the Contest Ballots collected in the proceeding\n\tperiod by the ballot box.\n\tThese are sorted from earliest `document_id`:`document_ver` regardless of the time\n\tthe individual ballot was received by the ballot box.\n* Ballot boxes will not accept ballots whose `document_id`:`document_ver` fall outside\n\tthe boundaries of the contest, or are not close in time to when the ballot box\n\treceived the ballot.",
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        },
+        {
+          "changes": "* Allow Multi Delegation",
+          "modified": "2025-09-04",
+          "version": "0.1.2"
+        }
+      ]
+    },
     "Contest Delegation": {
       "authors": {
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
@@ -9001,7 +9329,9 @@
           "Rep Profile Form Template",
           "Rep Nomination",
           "Rep Nomination Form Template",
-          "Contest Delegation"
+          "Contest Delegation",
+          "Contest Ballot",
+          "Contest Ballot Register"
         ],
         "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
       },

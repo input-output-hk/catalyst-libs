@@ -1,119 +1,59 @@
-# Contest Delegation
+# Contest Ballot
 
 ## Description
 
-Delegation by a Registered User to a Representative for
-a contest.
+An individual Ballot cast in a Contest by a registered user.
 
-This delegation allows votes cast by the Representative
-to use the voting power of the delegating User, in addition
-to their own personal voting power and that of all other Users
-who delegate to the same Representative.
+Each ballot contains choices for all possible proposals eligible for the
+contest.
 
-Delegation is for a specific Contest.
-Multiple Delegations must be published if there are multiple
-Contests within a Brand/Campaign or Category.
+Multiple contest ballots can be cast by the same registered user in a contest, but
+only the latest (by its document_version) will be counted.
 
-This is because different Contests may have different rules.
-And not all Representatives will choose to (or be able to) nominate
-for every Contest.
+The reason the ballot is cast in a contest is because there may be multiple contests in
+a campaign, and they may be attached to either the brand, campaign or category level.
+Each level, (for example category) can in-theory have multiple contests.
 
-A Representative ***MAY NOT*** delegate to a different Representative
-for any contest they have nominated for.
-They ***MAY*** however nominate a Representative in any contest they
-have not nominated for.
-
-A Representative is NOT required to delegate to themselves in a contest they are nominated for,
-and in fact, any self-delegation is invalid and ignored.
-A Representative has an implicit 100% voting power delegation to themselves in any contest
-they are nominated.
-The MAY not vote personally, and if they do, that vote will have Zero (0) voting power.
-100% of their voting power is assigned to their delegate vote and can not be split in any way.
-
-A voter MAY choose multiple delegates for a contest, in this case they are listed in priority
-order from highest priority to lowest.
-Priority only affects two aspects of the delegation.
-
-1. Any residual voting power after it is split among all delegates is given to the highest
-   priority delegate (first).
-2. If there is not enough voting power to distribute, then its distributed from highest
-   priority to lowest.
-   This may mean that low priority delegates get zero voting power.
-
-An example:  If a Voter has 100 raw voting power, after quadratic scaling, they have 10.
-If they delegated to 15 delegates equally, then only the first 10 would get 1 voting power
-each.
-Voting power is not fractionally assigned.
-
-The payload MAY contain a [json][RFC8259] document which consists of a single array which can adjust
-the ratio of the delegation.
-Voting power is divided based on the weight of a single delegate over the sum of all
-weights of all delegates.
-This is performed with integer division.
-As a special condition, 0 or any negative value is equivalent to a weight of 1.
-As explained above, if there is not enough voting power to distribute, low priority reps
-will receive 0 voting power from the delegation.
-And if there is any residual after integer division its applied to the representative
-with the highest priority.
+Only eligible users can cast ballots in the respective contest.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot contest_delegation.dot.svg
+```graphviz dot contest_ballot.dot.svg
 
-{{ include_file('./../diagrams/contest_delegation.dot', indent=4) }}
+{{ include_file('./../diagrams/contest_ballot.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
-* The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the same Contest as the
-    Nomination of the Representative.
-* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
-    IF there are multiple representatives, then any which are not pointing
-    to a valid `Representative Nomination` are excluded.
-    The nomination is only invalid if ALL references `Representative Nomination`
-    references are invalid.
-    This is to prevent a Representative changing their nomination invalidating a
-    delegation with multiple representatives.
-* The payload MUST be nil.
-
-A Representative *MUST* Delegate to their latest Nomination for a Category,
-otherwise their Nomination is invalid.
-
-This is because Delegation points to a *SPECIFIC* Nomination, and it
-*MUST* be the latest for the Representative on the Contest.
-As the Nomination contains information that the User relies on
-when choosing to delegate, changing that information could have a
-real and detrimental result in the Delegation choice.
-Therefore, for a Delegation to be valid, it *MUST* point to the
-latest Nomination for a Representative.
-
-Publishing a newer version of the Nomination Document to a specific contest will
-invalidate all pre-existing delegations, and all voters will need
-to re-delegate to affirm the delegates latest nomination.
-
-A Voter may withdraw their Delegation by revoking all delegation documents.
-[`revocations`](../metadata.md#revocations) must be set to `true` to withdraw a delegation, OR
-a later contest delegation may change the delegated representative without
-first revoking the prior delegation, as only the latest delegation is
-considered.
+* The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the Contest the ballot is being cast in.
+* The 'ref' metadata fields within the ballot payload (not the headers) must point to
+    ALL the proposals eligible to be chosen in the contest.
 
 ### Business Logic
 
 #### Front End
 
-* Allows a voter to select a Representative from a list of eligible candidates for a category.
-* The voter signs this document to confirm their delegation choice.
+* Always cast a ballot for all proposals in the contest.
+* Any proposal not explicitely selected by a user must have the default selection applied.
+    Typically, this would be `abstain`.
+* The voter signs this document to confirm their ballot.
+* Ballots can not be cast outside the time allowed for the casting of ballots.
+* The `document_id` and `document+ver` must be within the time of allowed casting
+    of ballots.  Any document_id of document_ver outside this time are invalid and will
+    not be counted.
 
 #### Back End
 
-* Verifies that the voter and Representative are valid and registered for the category.
-* Records the delegation of voting power from the voter to the Representative.
+* Verifies that the Contest is valid, and that the ballot is cast in the appropriate
+    time frame, and has a valid `document_id` and `document_ver` in that range.
+* Verify the payload lists all the eligible proposals which can be chosen in the contest.
+* Verify the proofs in the payload are correct.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
-* [content type](../spec.md#content-type) = `application/json`
+* [content type](../spec.md#content-type) = `application/cbor`
 * [content-encoding](../spec.md#content-encoding) = `[br]`
 
 ## Metadata
@@ -125,7 +65,7 @@ considered.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | 764f17fb-cc50-4979-b14a-b213dbac5994 |
+| Type | de1284b8-8533-4f7a-81cc-ff4bde5ef8d0 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -279,69 +219,7 @@ It consists of an array which defines the weights to be applied to the chosen de
 Each valid delegate gets the matching weight from this array.
 The total voting power is split proportionally based on these weights over the
 valid drep nominations.
-### Schema
-
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? abstract "Schema: Payload [JSON][RFC8259] Schema"
-
-
-
-
-    ```json
-    {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "maintainers": [
-        {
-          "name": "Catalyst Team",
-          "url": "https://projectcatalyst.io/"
-        }
-      ],
-      "title": "Contest Delegation Schema",
-      "description": "Structure of the payload of a Contest Delegation.",
-      "type": "object",
-      "properties": {
-        "weights": {
-          "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
-          "items": {
-            "exclusiveMinimum": 0,
-            "type": "integer"
-          },
-          "minItems": 0,
-          "type": "array"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "weights"
-      ],
-      "x-changelog": {
-        "2025-03-01": [
-          "First Version Created."
-        ]
-      }
-    }
-    ```
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
-
-### Example
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? example "Example: Three Delegation Weights"
-
-    If there are only 1 delegation, then the weights do not matter.
-    If there are two, then the first delegate has a weight of 10/30, and the second has 20/30.
-    If there are 5, then the weights are: `[10,20,30,1,1]`
-
-    ```json
-    {
-      "weights": [
-        10,
-        20,
-        30
-      ]
-    }
-    ```
-
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+[CBOR][RFC8949] Payload Documentation
 
 ## Signers
 
@@ -378,4 +256,5 @@ Only the original author can update and sign a new version of documents.
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
