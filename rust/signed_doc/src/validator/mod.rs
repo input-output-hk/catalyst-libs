@@ -3,12 +3,7 @@
 pub(crate) mod rules;
 pub(crate) mod utils;
 
-use std::{
-    collections::HashMap,
-    fmt,
-    sync::LazyLock,
-    time::{Duration, SystemTime},
-};
+use std::{collections::HashMap, fmt, ops::Neg, sync::LazyLock};
 
 use anyhow::Context;
 use catalyst_types::{
@@ -16,6 +11,7 @@ use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4},
 };
+use chrono::{DateTime, Utc};
 use coset::{CoseSign, CoseSignature};
 use rules::{
     ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
@@ -229,21 +225,23 @@ where
                 .ok_or(anyhow::anyhow!("Document ver field must be a UUIDv7"))?
                 .to_unix();
 
-            let Some(ver_time) =
-                SystemTime::UNIX_EPOCH.checked_add(Duration::new(ver_time_secs, ver_time_nanos))
+            let Some(ver_time) = i64::try_from(ver_time_secs)
+                .ok()
+                .and_then(|ver_time_secs| DateTime::from_timestamp(ver_time_secs, ver_time_nanos))
             else {
                 doc.report().invalid_value(
                     "ver",
                     &ver.to_string(),
-                    "Must a valid duration since `UNIX_EPOCH`",
-                    "Cannot instantiate a valid `SystemTime` value from the provided `ver` field timestamp.",
+                    "Must a valid UTC date time since `UNIX_EPOCH`",
+                    "Cannot instantiate a valid `DateTime<Utc>` value from the provided `ver` field timestamp.",
                 );
                 return Ok(false);
             };
 
-            let now = SystemTime::now();
+            let now = Utc::now();
+            let time_delta = ver_time.signed_duration_since(now);
 
-            if let Ok(version_age) = ver_time.duration_since(now) {
+            if let Ok(version_age) = time_delta.to_std() {
                 // `now` is earlier than `ver_time`
                 if let Some(future_threshold) = provider.future_threshold() {
                     if version_age > future_threshold {
@@ -251,16 +249,13 @@ where
                         "ver",
                         &ver.to_string(),
                         "ver < now + future_threshold",
-                        &format!("Document Version timestamp {id} cannot be too far in future (threshold: {future_threshold:?}) from now: {now:?}"),
+                        &format!("Document Version timestamp {id} cannot be too far in future (threshold: {future_threshold:?}) from now: {now}"),
                     );
                         is_valid = false;
                     }
                 }
             } else {
-                // `ver_time` is earlier than `now`
-                let version_age = now
-                    .duration_since(ver_time)
-                    .context("BUG! `ver_time` must be earlier than `now` at this place")?;
+                let version_age = time_delta.neg().to_std().context("BUG! Cannot fail, this condition branch already means that 'time_delta' is negative, so negating it makes it positive.")?;
 
                 if let Some(past_threshold) = provider.past_threshold() {
                     if version_age > past_threshold {
@@ -268,7 +263,7 @@ where
                         "ver",
                         &ver.to_string(),
                         "ver > now - past_threshold",
-                        &format!("Document Version timestamp {id} cannot be too far behind (threshold: {past_threshold:?}) from now: {now:?}",),
+                        &format!("Document Version timestamp {id} cannot be too far behind (threshold: {past_threshold:?}) from now: {now}",),
                     );
                         is_valid = false;
                     }
@@ -368,8 +363,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::time::SystemTime;
-
+    use chrono::Utc;
     use uuid::{Timestamp, Uuid};
 
     use crate::{
@@ -381,12 +375,22 @@ mod tests {
     #[test]
     fn document_id_and_ver_test() {
         let provider = TestCatalystSignedDocumentProvider::default();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+
+        let now: u64 = Utc::now().timestamp().try_into().unwrap();
 
         let uuid_v7 = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": uuid_v7.to_string(),
+                "ver": uuid_v7.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
+        assert!(is_valid);
+
+        let uuid_v7 = Uuid::new_v7(Timestamp::from_unix_time(now, 0, 0, 0));
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "id": uuid_v7.to_string(),
