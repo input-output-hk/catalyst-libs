@@ -57,7 +57,7 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Undefined</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/json</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>

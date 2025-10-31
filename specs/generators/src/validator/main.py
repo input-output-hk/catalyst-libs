@@ -5,7 +5,6 @@ import sys
 
 import rich
 from pydantic import ValidationError
-from rich.table import Table
 from rich_argparse import RichHelpFormatter
 
 from spec.signed_doc import SignedDoc
@@ -32,37 +31,7 @@ def main() -> None:
         _spec = SignedDoc.load(args.spec)
         rich.print("Architectural Specifications Validated Successfully.")
     except ValidationError as exc:
-        table = Table(
-            title=f"{exc.error_count()} Locations where Schema Data does not match the {exc.title} Model.",
-            caption="Model does not match Schema and needs updating.",
-        )
-        table.add_column("Key", no_wrap=True, style="yellow")
-        table.add_column("Error", no_wrap=True, style="red")
-        table.add_column("Input", no_wrap=True, max_width=30, style="grey37")
-
-        error_links: dict[str, str] = {}
-        errors = exc.errors()
-        errors.sort(key=lambda x: [x["loc"], x["type"]])
-        for error in errors:
-            error_links[error["msg"]] = error["url"]  # type: ignore  # noqa: PGH003
-
-            loc: list[str] = []
-            for x in error["loc"]:
-                if isinstance(x, int):
-                    loc.append(f"[{x}]")
-                else:
-                    loc.append(f"{x}")
-
-            table.add_row(
-                ".".join(loc),
-                error["msg"],
-                str(error["input"]).splitlines()[0],
-            )
-        rich.print(table)
-
-        for msg, url in error_links.items():
-            rich.print(f"* {msg} : {url}")
-
+        SignedDoc.validation_error(exc)
         sys.exit(1)
 
     except Exception:  # noqa: BLE001

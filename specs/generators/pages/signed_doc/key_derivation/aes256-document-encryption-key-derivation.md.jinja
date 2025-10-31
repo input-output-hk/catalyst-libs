@@ -1,0 +1,101 @@
+---
+Title: AES256 Document Encryption Keys Derivation
+Authors:
+    - Steven Johnson <steven.johnson@iohk.io>
+Created: 2024-11-29
+License: CC-BY-4.0
+---
+## Abstract
+
+Defines how AES256 Document Encryption Keys are derived using 
+[Catalyst HD Key Derivation](./hd-key-derivation.md).
+It goes on to explain how they are used.
+
+## Motivation: why is this CIP necessary?
+
+Users in Catalyst may wish to embed encrypted data within a signed document that only they can read.
+For this purpose we utilize AES256.
+This is a symmetric encryption algorithm, so only the user who encrypted the data can decrypt it
+unless they share their key.
+
+To do this securely, we need a method to derive AES256 keys that are unique to each document.
+
+## Specification
+
+The process of deriving an encryption key, and then using it follows the process:
+
+1. Derive the Root Master Key (Never used for encryption itself).
+2. Derive a PER Document AES256 key securely from the Root Master Key.
+3. Encrypt the data using the PER Document AES256 Key.
+
+### Deriving the Root Master Encryption Key from the Seed phrase
+
+We re-utilize the ED25519 Key derivation function, even though we will not use this for ED25519 signatures.
+
+For reference, see [Catalyst HD Key Derivation](./hd-key-derivation.md).
+
+Once derived, this will give us a 96 byte Extended Private Key, which will be used directly as a 96 byte
+Root Master Key.
+
+#### `usage'` 
+
+The AES256 Root Master Key is derived with `usage'` set to 1.
+
+#### `role` 
+
+Role maps 1:1 to the role the user will be under when using the key, and this maps to their on-chain registration.
+The registered public key for the Role, MUST match the derived key or documents will not be accepted as
+valid.
+
+#### `index` 
+
+Index maps 1:1 to the key rotation currently used for the role, and this maps to their on-chain registration.
+The registered public key for the Role+Rotation, MUST match the derived key or documents will not be accepted as
+valid.
+
+### Deriving the Per Document AES256 Encryption Key
+
+We utilize Blake3 Key Derivation to produce the AES256 Encryption Key from the Root Master Key.
+
+The simplified pseudo-code of the algorithm is as follows.
+
+```rust
+seed_phrase: list[str] = ["abandon", "abandon", "abandon", ... "zoo"];
+key_material: bytes[96] = path_derivation("m/508'/139'/1'/{role}/{index}", seed_phrase);
+context: bytes[] = cbor_encoded([document_type,document_id,document_ver]);
+aes_256_key: bytes[32] = blake3_derive_key(context, key_material);
+```
+
+1. The seed_phrase is turned into 96 bytes of `key material` as discussed above.
+2. A CBOR encoded array is created for the `context`, which contains the `document_type` UUIDv4, 
+    the `document_id` UUIDv7 and the `document_ver` UUIDv7.
+3. A aes256 key is derived using the blake3 `derive_key` function, using the `context` and `key_material`.
+
+This creates a *UNIQUE* encryption key for encrypting any content in the one document.
+
+Having derived the Private signing key, the public key can be obtained and posted on chain in an RBAC registration for the role.
+The private key can then be used to authoritatively sign documents for that registration under that role.
+
+## Reference Implementation
+
+The first implementation will be Catalyst Voices.
+
+*TODO: Generate a set of test vectors which conform to this specification.*
+
+## Rationale: how does this CIP achieve its goals?
+
+By leveraging known working Key Derivation techniques and simply modifying the path we inherit the properties of those methods.
+
+## Path to Active
+
+### Acceptance Criteria
+
+Working Implementation before Fund 14.
+
+### Implementation Plan
+
+Fund 16 project catalyst will deploy this scheme for Key derivation.
+
+## Copyright
+
+This document is licensed under CC-BY-4.0

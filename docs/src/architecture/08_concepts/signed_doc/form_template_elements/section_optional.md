@@ -111,7 +111,7 @@ The Section Optional form element takes the following parameters:
  #element_Section_Optional_parameters .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #element_Section_Optional_parameters .gt_row_group_first td { border-top-width: 2px; }
  #element_Section_Optional_parameters .gt_row_group_first th { border-top-width: 2px; }
- #element_Section_Optional_parameters .gt_striped { background-color: #EDF7FC; }
+ #element_Section_Optional_parameters .gt_striped { color: #333333; background-color: #EDF7FC; }
  #element_Section_Optional_parameters .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
  #element_Section_Optional_parameters .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #element_Section_Optional_parameters .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
