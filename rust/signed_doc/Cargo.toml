@@ -27,6 +27,7 @@ jsonschema = "0.28.3"
 jsonpath-rust = "0.7.5"
 futures = "0.3.31"
 ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
+chrono = "0.4.42"
 
 
 [dev-dependencies]
