@@ -513,6 +513,8 @@ impl ParallelDownloadProcessor {
         work_queue: &crossbeam_channel::Receiver<DlWorkOrder>,
         chain: &Network,
     ) {
+        const GET_RANGE_NUM_OF_TRIES: u8 = 5;
+
         debug!("Worker {worker_id} started");
 
         // Each worker has its own http_client, so there is no cross worker pathology
@@ -538,7 +540,7 @@ impl ParallelDownloadProcessor {
             }
             let mut block = None;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
-            for attempt in 1u8..6 {
+            for attempt in 1u8..=GET_RANGE_NUM_OF_TRIES {
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {
