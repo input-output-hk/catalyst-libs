@@ -117,7 +117,7 @@ Media Type/s allowed in the Payload
  #spec_content_type .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #spec_content_type .gt_row_group_first td { border-top-width: 2px; }
  #spec_content_type .gt_row_group_first th { border-top-width: 2px; }
- #spec_content_type .gt_striped { background-color: #EDF7FC; }
+ #spec_content_type .gt_striped { color: #333333; background-color: #EDF7FC; }
  #spec_content_type .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
  #spec_content_type .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #spec_content_type .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
@@ -355,7 +355,7 @@ If no compression or encoding is used, then this field must not be present.
  #spec_content-encoding .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #spec_content-encoding .gt_row_group_first td { border-top-width: 2px; }
  #spec_content-encoding .gt_row_group_first th { border-top-width: 2px; }
- #spec_content-encoding .gt_striped { background-color: #EDF7FC; }
+ #spec_content-encoding .gt_striped { color: #333333; background-color: #EDF7FC; }
  #spec_content-encoding .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
  #spec_content-encoding .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #spec_content-encoding .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
@@ -483,7 +483,7 @@ used to sign the protected portion of the document.
  #spec_kid .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #spec_kid .gt_row_group_first td { border-top-width: 2px; }
  #spec_kid .gt_row_group_first th { border-top-width: 2px; }
- #spec_kid .gt_striped { background-color: #EDF7FC; }
+ #spec_kid .gt_striped { color: #333333; background-color: #EDF7FC; }
  #spec_kid .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
  #spec_kid .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #spec_kid .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }

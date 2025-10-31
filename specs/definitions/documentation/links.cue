@@ -44,6 +44,8 @@ links: #docLinks & {
 	"text/plain":               "https://www.rfc-editor.org/rfc/rfc2046.html"
 	"text/css":                 "https://www.rfc-editor.org/rfc/rfc2318.html"
 	RFC6901:                    "https://datatracker.ietf.org/doc/html/rfc6901"
+	"CIP-1852":                 "https://cips.cardano.org/cip/CIP-1852"
+	"historical dates":         "https://www.oxfordreference.com/display/10.1093/acref/9780191737152.timeline.0001"
 }
 
 // Constrains the URLs being linked to be unique

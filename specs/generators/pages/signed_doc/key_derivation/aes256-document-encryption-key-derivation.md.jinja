@@ -1,19 +1,14 @@
 ---
 Title: AES256 Document Encryption Keys Derivation
-Category: Catalyst
-Status: Proposed
 Authors:
     - Steven Johnson <steven.johnson@iohk.io>
-Implementors: 
-    - Catalyst Fund 14
-Discussions: []
 Created: 2024-11-29
 License: CC-BY-4.0
 ---
-
 ## Abstract
 
-Defines how AES256 Document Encryption Keys are derived using [Catalyst HD Key Derivation](./hd-key-derivation.md).
+Defines how AES256 Document Encryption Keys are derived using 
+[Catalyst HD Key Derivation](./hd-key-derivation.md).
 It goes on to explain how they are used.
 
 ## Motivation: why is this CIP necessary?
@@ -33,7 +28,7 @@ The process of deriving an encryption key, and then using it follows the process
 2. Derive a PER Document AES256 key securely from the Root Master Key.
 3. Encrypt the data using the PER Document AES256 Key.
 
-### Deriving the Root Master Encryption Key from the Seed phrase.
+### Deriving the Root Master Encryption Key from the Seed phrase
 
 We re-utilize the ED25519 Key derivation function, even though we will not use this for ED25519 signatures.
 
@@ -64,7 +59,7 @@ We utilize Blake3 Key Derivation to produce the AES256 Encryption Key from the R
 
 The simplified pseudo-code of the algorithm is as follows.
 
-```
+```rust
 seed_phrase: list[str] = ["abandon", "abandon", "abandon", ... "zoo"];
 key_material: bytes[96] = path_derivation("m/508'/139'/1'/{role}/{index}", seed_phrase);
 context: bytes[] = cbor_encoded([document_type,document_id,document_ver]);
@@ -80,7 +75,6 @@ This creates a *UNIQUE* encryption key for encrypting any content in the one doc
 
 Having derived the Private signing key, the public key can be obtained and posted on chain in an RBAC registration for the role.
 The private key can then be used to authoritatively sign documents for that registration under that role.
-
 
 ## Reference Implementation
 
@@ -104,4 +98,4 @@ Fund 16 project catalyst will deploy this scheme for Key derivation.
 
 ## Copyright
 
-This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+This document is licensed under CC-BY-4.0

@@ -1,14 +1,9 @@
 ---
 Title: Catalyst HD Key Derivation for Off Chain Keys
-Category: Catalyst
-Status: Proposed
 Authors:
     - Steven Johnson <steven.johnson@iohk.io>
-Implementors: 
-    - Catalyst Fund 14
-Discussions: []
 Created: 2024-11-29
-License: CC-BY-4.0
+License: [CC-BY-4.0]
 ---
 
 ## Abstract
@@ -45,29 +40,31 @@ m / purpose' / type' / usage' / role / index
 
 ### `purpose'`
 
-Defines the purpose of the key, a distinct value from the one chosen for cardano is used to 
+Defines the purpose of the key, a distinct value from the one chosen for cardano is used to
 prevent collision with keys derived by wallets if the same seed phrase were to be used.
 Cardano uses a notable year that aligns with Cardano ecosystem philosophy,
-we maintain that practice but choose an alternative notable year.
+we maintain that practice but choose alternative [historical dates].
 
 * Value: `508`
 * Name in [CIP-1852]: `purpose'`
 * Hardened: YES
 * Represents: Taken from year 508 BCE, the first known instance of democracy in human history.
-    *"The Athenian Revolution, a revolt that overthrew the aristocratic oligarchy and established a participatory democracy in Athens"*.
+    *"The Athenian Revolution, a revolt that overthrew the aristocratic oligarchy and
+    established a participatory democracy in Athens"*.
 
 ### `type'`
 
-Defines the type of the key, a distinct value from the one chosen for cardano is used to 
+Defines the type of the key, a distinct value from the one chosen for cardano is used to
 prevent collision with keys derived by wallets if the same seed phrase were to be used.
 Cardano uses a notable year that aligns with Cardano ecosystem philosophy,
-we maintain that practice but choose an alternative notable year.
+we maintain that practice but choose alternative [historical dates].
 
 * Value: `139`
 * Name in [CIP-1852]: `coin_type'`
 * Hardened: YES
 * Represents: Taken from the year 139 BCE, the first known instance of secret voting.
-    *"A secret ballot is instituted for Roman citizens, who mark their vote on a tablet and place it in an urn."*
+    *"A secret ballot is instituted for Roman citizens, who mark their vote on a tablet and
+    place it in an urn."*
 
 ### `usage'`
 
@@ -103,7 +100,9 @@ This is mapped 1:1 to the `rotation` field in a Catalyst ID.
 
 ## Reference Implementation
 
-The first implementation will be for [ED25519 Document Signing Key](./ed25519-document-signing-key-derivation.md) in Catalyst Voices.
+The first implementation will be for
+[ED25519 Document Signing Key](./ed25519-document-signing-key-derivation.md)
+in Catalyst Voices.
 
 *TODO: Generate a set of test vectors which conform to this specification.*
 
@@ -123,7 +122,7 @@ Fund 14 project catalyst will deploy this scheme for Key derivation.>
 
 ## Copyright
 
-This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+This document is licensed under [CC-BY-4.0]
 
-[CIP-1852]: https://cips.cardano.org/cip/CIP-1852
 [historical dates]: https://www.oxfordreference.com/display/10.1093/acref/9780191737152.timeline.0001
+[CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

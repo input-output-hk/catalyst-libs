@@ -1,19 +1,15 @@
 ---
 Title: ED25519 Document Signature Keys Derivation
-Category: Catalyst
-Status: Proposed
 Authors:
     - Steven Johnson <steven.johnson@iohk.io>
-Implementors: 
-    - Catalyst Fund 14
-Discussions: []
 Created: 2024-11-29
-License: CC-BY-4.0
+License: [CC-BY-4.0]
 ---
 
 ## Abstract
 
-Defines how Document Signature Keys are derived using [Catalyst HD Key Derivation](./hd-key-derivation.md).
+Defines how Document Signature Keys are derived using
+[Catalyst HD Key Derivation](./hd-key-derivation.md).
 
 ## Motivation: why is this CIP necessary?
 
@@ -21,7 +17,7 @@ Users in Catalyst are required to sign various documents with various authoritie
 This is used as a way to authenticate not just the user acted to sign the document, but that they
 knowingly acted in the capacity of the role they are registered under.
 
-This helps clearly delineate actions, and also helps with organizational keys where certain 
+This helps clearly delineate actions, and also helps with organizational keys where certain
 parties may be trusted with a derived key for one role, but not others.
 
 For example, an organization may internally delegate writing and submitting of proposals to one person,
@@ -34,17 +30,17 @@ This scheme allows for that segregation of roles and responsibilities.
 For reference, see [Catalyst HD Key Derivation](./hd-key-derivation.md).
 This document defines how ED25519 document signing keys are derived from the master seed phrase.
 
-### `usage'` 
+### `usage'`
 
 The ED25519 private signing key is derived with `usage'` set to 0.
 
-### `role` 
+### `role`
 
 Role maps 1:1 to the role the user will be under when using the key, and this maps to their on-chain registration.
 The registered public key for the Role, MUST match the derived key or documents will not be accepted as
 valid.
 
-### `index` 
+### `index`
 
 Index maps 1:1 to the key rotation currently used for the role, and this maps to their on-chain registration.
 The registered public key for the Role+Rotation, MUST match the derived key or documents will not be accepted as
@@ -54,7 +50,6 @@ valid.
 
 Having derived the Private signing key, the public key can be obtained and posted on chain in an RBAC registration for the role.
 The private key can then be used to authoritatively sign documents for that registration under that role.
-
 
 ## Reference Implementation
 
@@ -78,4 +73,6 @@ Fund 14 project catalyst deployed this scheme for Key derivation.>
 
 ## Copyright
 
-This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+This document is licensed under [CC-BY-4.0]
+
+[CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

@@ -3532,6 +3532,7 @@
       "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
       "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
       "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "CIP-1852": "https://cips.cardano.org/cip/CIP-1852",
       "CSS": "https://www.w3.org/Style/CSS/",
       "CommonMark": "https://spec.commonmark.org/0.31.2/",
       "HTML5": "https://html.spec.whatwg.org/multipage/syntax.html#syntax",
@@ -3557,6 +3558,7 @@
       "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
       "application/json": "https://www.iana.org/assignments/media-types/application/json",
       "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br",
+      "historical dates": "https://www.oxfordreference.com/display/10.1093/acref/9780191737152.timeline.0001",
       "text/css": "https://www.rfc-editor.org/rfc/rfc2318.html",
       "text/plain": "https://www.rfc-editor.org/rfc/rfc2046.html"
     }
