@@ -359,15 +359,20 @@ impl ParallelDownloadProcessorInner {
             .set(RANGE.as_str(), &range_header)
             .call()
             .context("GET ranged request failed")?;
+
         // let addr = get_range_response.remote_addr();
         // debug!("Chunk {chunk} from {addr:?}");
-        if get_range_response.status() != StatusCode::PARTIAL_CONTENT {
-            bail!(
-                "Response to range request has an unexpected status code (expected {}, found {})",
-                StatusCode::PARTIAL_CONTENT,
-                get_range_response.status()
-            )
-        }
+        anyhow::ensure!(
+            (get_range_response.status() == StatusCode::PARTIAL_CONTENT)
+                || (get_range_response.status() == StatusCode::OK),
+            "Response to range request has an unexpected status code (expected [{}], found {})",
+            [
+                StatusCode::PARTIAL_CONTENT.to_string(),
+                StatusCode::OK.to_string()
+            ]
+            .join(","),
+            get_range_response.status()
+        );
 
         let range_size = range_end_inclusive
             .saturating_sub(range_start)
@@ -508,6 +513,8 @@ impl ParallelDownloadProcessor {
         work_queue: &crossbeam_channel::Receiver<DlWorkOrder>,
         chain: &Network,
     ) {
+        const GET_RANGE_NUM_OF_TRIES: u8 = 5;
+
         debug!("Worker {worker_id} started");
 
         // Each worker has its own http_client, so there is no cross worker pathology
@@ -531,23 +538,23 @@ impl ParallelDownloadProcessor {
                     error!("Next chunk delay overflow");
                 }
             }
-            let mut retries = 0u8;
-            let mut block;
+            let mut block = None;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
-            loop {
+            for attempt in 1u8..=GET_RANGE_NUM_OF_TRIES {
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {
-                        error!("Error getting chunk: {:?}, error: {:?}", next_chunk, error);
+                        error!(
+                            "Error getting chunk: {next_chunk:?}, error: {error:?}, attempt: {attempt}",
+                        );
                         None
                     },
                 };
 
                 // Quickly retry on error, in case its transient.
-                if block.is_some() || retries > 3 {
+                if block.is_some() {
                     break;
                 }
-                retries = retries.saturating_add(1);
             }
             // debug!("Worker {worker_id} DL chunk done {next_chunk}: {retries}");
 
