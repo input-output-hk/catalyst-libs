@@ -1,24 +1,5 @@
-; document_refs
+; document_locator
 
-
-; Reference to one or more Signed Documents
-document_refs = [ 1* document_ref ]
-
-; Reference to a single Signed Document
-document_ref = [
-  document_id,
-  document_ver,
-  document_locator
-]
-
-; Document ID
-document_id = uuid_v7
-
-; UUIDv7
-uuid_v7 = #6.37(bytes .size 16)
-
-; Document Version
-document_ver = uuid_v7
 
 ; Where a document can be located, must be a unique identifier.
 document_locator = {

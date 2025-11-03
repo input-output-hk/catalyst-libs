@@ -1,0 +1,12 @@
+; AES-CTR encrypted data.
+; The Nonce/IV is the UUIDv7 `document_ver`.
+; This is the correct size, and has the necessary randomness properties.
+; The first block uses the `document_ver` the second `document_ver+1` and so on.
+; The document_ver is interpreted as a Big Endian 128bit integer for the purpose
+; of the addition.
+;
+; As the CTR is predictable, the blocks can be decrypted in parallel for maximum performance.
+
+
+; AES-CTR Encrypted Data Block
+aes-ctr-encrypted-block = bytes .size 16

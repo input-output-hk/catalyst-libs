@@ -13,21 +13,6 @@ Relationships"
 
 
 
-    "Rep Nomination" [
-        id="Rep Nomination";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_nomination/">
-                    <FONT COLOR="#ffffff"><B> Rep Nomination </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
     "Contest Parameters" [
         id="Contest Parameters";
         label=<
@@ -93,17 +78,7 @@ Relationships"
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="ref" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ref</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Rep Nomination</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">revocations</FONT></TD>
@@ -113,7 +88,7 @@ Relationships"
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
@@ -128,6 +103,5 @@ Relationships"
     ];
 
 
-    "Contest Ballot":"ref":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Ballot":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

@@ -1,0 +1,21 @@
+; Proof that values in the matrix of all columns and rows have a required arrangement.
+; This is similar to the `row-proof` and `column-proof` but for all values in a
+; ballot taken together.
+;
+; There is a single `matrix-proof` but it may be chosen from a pre-defined
+; known set of valid proofs.
+;
+; Currently there are no `matrix-proof` defined, this value is
+; a placeholder for documentation purposes only.
+;
+; It is NOT to be implemented.
+; `matrix-proof` should be assumed to be missing until such time
+; as a concrete `matrix-proof` is defined.
+;
+; Similar to `row-proof` and `column-proof` there can be multiple matrix-proofs defined
+; which prove certain characteristics of the encrypted column values.
+; They are identified by the unsigned integer starting the proof.
+
+
+; Universal Encrypted Matrix Proof (Placeholder)
+matrix-proof = [ uint, undefined ]

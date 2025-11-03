@@ -557,6 +557,42 @@ class DocGenerator:
         self.json_schema_validate(new_data)
         return json.dumps(new_data, indent=indent)
 
+    def example_block(  # noqa: PLR0913
+        self,
+        example: str,
+        *,
+        label: str = "Example",
+        title: str = "",
+        description: str | None = None,
+        example_type: str = "json",
+        icon_type: typing.Literal[
+            "note",
+            "abstract",
+            "info",
+            "tip",
+            "success",
+            "question",
+            "warning",
+            "failure",
+            "danger",
+            "bug",
+            "example",
+            "quote",
+        ] = "example",
+    ) -> str:
+        """Get the example properly formatted as markdown."""
+        description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
+
+        return f"""
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? {icon_type} "{label}: {title}"
+{description}
+    ```{example_type}
+{textwrap.indent(example, "    ")}
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+""".strip()
+
     def json_example(
         self,
         data: dict[str, typing.Any],
@@ -587,17 +623,14 @@ class DocGenerator:
             # Reload the json, but now with sorted keys.
             example = self.json_schema_sort(example, indent=2)
 
-        description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
-
-        return f"""
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? {icon_type} "{label}: {title}"
-{description}
-    ```json
-{textwrap.indent(example, "    ")}
-    ```
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
-""".strip()
+        return self.example_block(
+            example,
+            label=label,
+            title=title,
+            description=description,
+            example_type="json",
+            icon_type=icon_type,
+        )
 
     @staticmethod
     def get_front_matter_yaml(path: Path) -> dict[str, typing.Any]:

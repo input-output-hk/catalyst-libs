@@ -94,16 +94,18 @@
         "COSE_Generic_Headers"
       ]
     },
-    "aes-crt-encrypted-block": {
+    "aes-ctr-encrypted-block": {
+      "comment": "AES-CTR Encrypted Data Block",
       "def": "bytes .size 16",
       "description": "AES-CTR encrypted data.\nThe Nonce/IV is the UUIDv7 `document_ver`.\nThis is the correct size, and has the necessary randomness properties.\nThe first block uses the `document_ver` the second `document_ver+1` and so on.\nThe document_ver is interpreted as a Big Endian 128bit integer for the purpose\nof the addition.\n\nAs the CTR is predictable, the blocks can be decrypted in parallel for maximum performance.",
       "requires": []
     },
-    "aes-crt-encrypted-choices": {
-      "def": "+/(requires[0])",
-      "description": "Choices are constructed as a CBOR multidimensional array of the form:\n`[ +[+choice] ]`\nreflecting the choices in the rows and columns as present 1:1 in the encrypted\nchoices.\n\nThis data is then compressed using `brotli` compression, and the result is encrypted \nusing AES-CTR and encoded as a sequence of blocks here.\n\nData needs to be pre-compressed before encryption as encryption will make the data\nincompressible.\n\nThe Encryption Key is to be derived from the Voters catalyst key-chain and not to be\npublished.\nDerivation *MUST* take include the contest Document ID and Version, so that the same\nencryption key is never used twice for different contests, but can still be re-derived\nby a voter that holds their catalyst key-chain recovery keys.",
+    "aes-ctr-encrypted-choices": {
+      "comment": "Encrypted Voter Choices",
+      "def": "+aes-ctr-encrypted-block",
+      "description": "Choices are constructed as a CBOR multidimensional array of the form:\n`[ +[+choice] ]`\nreflecting the choices in the rows and columns as present 1:1 in the encrypted\nchoices.\n\nThis data is then compressed using `brotli` compression, and the result is encrypted \nusing AES-CTR and encoded as a sequence of blocks here.\n\nData needs to be pre-compressed before encryption as encryption will make the data\nincompressible.\n\nThe Encryption Key is to be derived from the Voters catalyst key-chain and not to be\npublished.\nDerivation *MUST* include the contest Document ID and Version, so that the same\nencryption key is never used twice for different contests, but can still be re-derived\nby a voter that holds their catalyst key-chain recovery keys.",
       "requires": [
-        "aes-crt-encrypted-block"
+        "aes-ctr-encrypted-block"
       ]
     },
     "blake2b_256": {
@@ -115,6 +117,12 @@
     "catalyst_id_kid": {
       "comment": "UTF8 Catalyst ID URI encoded as a bytes string.",
       "def": "bytes",
+      "requires": []
+    },
+    "cbor-cid": {
+      "comment": "CIDv1 ABNF Constrained for SHA2-256",
+      "def": "'\n\tcid = cidv1 codec-cbor sha2-256 digest-32 digest\n\tcidv1 = %x00 %x01\n\tcodec-cbor = %x51\n\tsha2-256 = %x12\n\tdigest-32 = %x20\n\tdigest = 32(%x00-FF)\n'",
+      "description": "CIDv1 ABNF Constrained for SHA2-256",
       "requires": []
     },
     "chain": {
@@ -135,10 +143,12 @@
       ]
     },
     "cid": {
-      "comment": "IPLD content identifier\nTODO: add size limits if possible",
-      "def": "#6.42(bytes)",
-      "description": "IPLD content identifier.\nAlso known as an IPFS CID\nSee: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid\n     https://github.com/ipld/cid-cbor/",
-      "requires": []
+      "comment": "IPLD content identifier.\nCurrently limited to SHA2-256 based CIDs.",
+      "def": "#6.42(bytes .abnfb (\"cid\" .det cbor-cid ))",
+      "description": "IPLD content identifier.\nAlso known as an IPFS CID.\nCurrently limited to SHA2-256 based CIDs.\nSee: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid\n     https://github.com/ipld/cid-cbor/",
+      "requires": [
+        "cbor-cid"
+      ]
     },
     "clear-choice": {
       "comment": "Universal Unencrypted Choice",
@@ -147,7 +157,7 @@
       "requires": []
     },
     "clear-choices": {
-      "comment": "Universal Unencrypted Choice",
+      "comment": "Universal Unencrypted Set of Choices",
       "def": "( +clear-choice )",
       "description": "A Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
       "requires": [
@@ -162,17 +172,18 @@
       ]
     },
     "column-proof": {
+      "comment": "Universal Encrypted Column Proof (Placeholder)",
       "def": "[ uint, [ +undefined ] ]",
       "description": "Proof that values in a column have a required arrangement.\nThis is similar to the `row-proof` but for all values in a \nsingle column.\nIt is an array that matches the length of `choices`.\nIf it is a different length, then it is invalid.\n\nCurrently there are no `column-proof` defined, this value is\na placeholder for documentation purposes only.\n\nIt is NOT to be implemented.\n`column-proof` should be assumed to be missing until such time\nas a concrete `column-proof` is defined.\n\nSimilar to `row-proof` there can be multiple column-proofs defined which prove\ncertain characteristics of the encrypted column values.\nThey are identified by the unsigned integer starting the proof.",
       "requires": []
     },
     "contest-ballot-payload": {
       "comment": "Catalyst Vote Payload data object.",
-      "def": "{\n\t+ \"document_ref\" => choices,\n\t? \"column-proof\" : column-proof,\n\t? \"matrix-proof\" : matrix-proof,\n\t? \"voter-choice\" : voter-choice,\n}",
+      "def": "{\n\t+ document_ref => choices,\n\t? \"column-proof\" : column-proof,\n\t? \"matrix-proof\" : matrix-proof,\n\t? \"voter-choice\" : voter-choice,\n}",
       "description": "Catalyst Vote Payload data object.\n\nA vote payload that can hold both encrypted or unencrypted votes.",
       "examples": [
         {
-          "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-crt-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-crt-encrypted-choices` is 0x123456789...",
+          "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-ctr-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...",
           "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
           "title": "Example Encrypted Contest Ballot Payload."
         },
@@ -200,7 +211,7 @@
     },
     "document_locator": {
       "comment": "Where a document can be located, must be a unique identifier.",
-      "def": "{ \n  \"cid\" => cid\n}",
+      "def": "{ \n  \"cid\" : cid\n}",
       "requires": [
         "cid"
       ]
@@ -238,7 +249,7 @@
       ]
     },
     "elgamal-ristretto255-encrypted-choice": {
-      "comment": "Elgamal encrypted ciphertext.",
+      "comment": "The elgamal encrypted ciphertext `(c1, c2)`.",
       "def": "[\n  c1: elgamal-ristretto255-group-element, \n  c2: elgamal-ristretto255-group-element,\n]",
       "description": "The elgamal encrypted ciphertext `(c1, c2)`.",
       "requires": [
@@ -246,8 +257,8 @@
       ]
     },
     "elgamal-ristretto255-encrypted-choices": {
-      "comment": "Universal Encrypted Choices",
-      "def": "( \n  [+ elgamal-ristretto255-encrypted-choice], \n  ? row-proof \n)",
+      "comment": "elgamal/ristretto255 Encrypted Choices",
+      "def": "[ \n  [+ elgamal-ristretto255-encrypted-choice], \n  ? row-proof \n]",
       "description": "Encrypted Choices are a Vector (list) of encrypted items.\nThe size of the vector will depend on the cryptography used, \nand the number of choices.\n\nTypically, (but optionally) it has a proof attached which proves something\nabout the encrypted choices, without disclosing their contents.\n\nFor example, a ZKProof that there is only a single `1` in the choices, \nand all the rest are `0`.\n\nThe size/contents of the proof depend on what is being proved, and the \ncryptography underlying the proof.",
       "requires": [
         "elgamal-ristretto255-encrypted-choice",
@@ -255,9 +266,9 @@
       ]
     },
     "elgamal-ristretto255-group-element": {
-      "comment": "Elgamal group element that composes the elgamal cipher text.",
+      "comment": "An individual Elgamal group element that composes the elgamal cipher text.",
       "def": "bytes .size 32",
-      "description": "An individual elgamal ristretto255 group element.",
+      "description": "An individual Elgamal group element that composes the elgamal cipher text.",
       "requires": []
     },
     "height": {
@@ -276,6 +287,7 @@
       "requires": []
     },
     "matrix-proof": {
+      "comment": "Universal Encrypted Matrix Proof (Placeholder)",
       "def": "[ uint, undefined ]",
       "description": "Proof that values in the matrix of all columns and rows have a required arrangement.\nThis is similar to the `row-proof` and `column-proof` but for all values in a \nballot taken together.\n\nThere is a single `matrix-proof` but it may be chosen from a pre-defined\nknown set of valid proofs.\n\nCurrently there are no `matrix-proof` defined, this value is\na placeholder for documentation purposes only.\n\nIt is NOT to be implemented.\n`matrix-proof` should be assumed to be missing until such time\nas a concrete `matrix-proof` is defined.\n\nSimilar to `row-proof` and `column-proof` there can be multiple matrix-proofs defined \nwhich prove certain characteristics of the encrypted column values.\nThey are identified by the unsigned integer starting the proof.",
       "requires": []
@@ -328,47 +340,53 @@
       "requires": []
     },
     "voter-choice": {
-      "def": "[ 0, /(requires[0]) ]",
+      "comment": "Encrypted Voter Choice Payload",
+      "def": "[ 0, aes-ctr-encrypted-choices ]",
       "description": "This is an encrypted payload that a voter, and ONLY the voter can decrypt.\nIt allows the voter to recover their choices without needing to decrypt the\nencrypted votes used in the tally.\n\nThere is no way to associate this data with the encrypted choices directly, but\nit is created by the voter from the same data used to create the choices.",
       "requires": [
-        "aes-crt-encrypted-choices"
+        "aes-ctr-encrypted-choices"
       ]
     },
     "zkproof-ed25519-r-response": {
+      "comment": "ZK Proof Response values for Ed25519.",
       "def": "( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )",
-      "description": "???",
+      "description": "ZK Proof Response values for Ed25519.",
       "requires": [
         "zkproof-ed25519-scalar"
       ]
     },
     "zkproof-ed25519-scalar": {
+      "comment": "An individual Ed25519 scalar used in ZK Proofs.",
       "def": "bytes .size 32",
-      "description": "???",
+      "description": "An individual Ed25519 scalar used in ZK Proofs.",
       "requires": []
     },
     "zkproof-elgamal-announcement": {
+      "comment": "ZK Proof Announcement values for Elgamal.",
       "def": "( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )",
-      "description": "???",
+      "description": "ZK Proof Announcement values for Elgamal.",
       "requires": [
         "zkproof-elgamal-group-element"
       ]
     },
     "zkproof-elgamal-group-element": {
+      "comment": "An individual Elgamal group element used in ZK Proofs.",
       "def": "bytes .size 32",
-      "description": "???",
+      "description": "An individual Elgamal group element used in ZK Proofs.",
       "requires": []
     },
     "zkproof-elgamal-ristretto255-unit-vector-with-single-selection": {
-      "def": "( [ [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item ], zkproof-ed25519-scalar )",
-      "description": "???",
+      "def": "[ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]",
+      "description": "Proof that the choices form a unit vector with a single selection.",
       "requires": [
         "zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item",
         "zkproof-ed25519-scalar"
       ]
     },
     "zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item": {
+      "comment": "Proof that the row is a unit vector with a single selection.",
       "def": "( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )",
-      "description": "???",
+      "description": "Proof that the row is a unit vector with a single selection.",
       "requires": [
         "zkproof-elgamal-announcement",
         "elgamal-ristretto255-encrypted-choice",
@@ -1444,7 +1462,7 @@
     },
     "Contest Ballot": {
       "authors": {
-        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+        "Steven Johnson": "steven.johnson@iohk.io"
       },
       "business_logic": {
         "back_end": "* Verifies that the Contest is valid, and that the ballot is cast in the appropriate \n\ttime frame, and has a valid `document_id` and `document_ver` in that range.\n* Verify the payload lists all the eligible proposals which can be chosen in the contest.\n* Verify the proofs in the payload are correct.",
@@ -1503,10 +1521,7 @@
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": true,
-          "required": "yes",
-          "type": "Rep Nomination",
+          "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
@@ -1548,10 +1563,10 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Payload is a JSON Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "description": "The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.\n\nContents\n\n* `document_ref => choices`\n\t* The payload is a map keyed by a proposal `document_ref`.\n\t* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.\n\t* The value for each key is that voter’s `choices` for that proposal.\n\t* There is exactly one set of `choices` per referenced proposal (no duplicates).\n\n* `choices`\n\t* Discriminated union of unencrypted or encrypted choices.\n\n* `row-proof` (optional, inside encrypted choices)\n  \t* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.\n\n* `column-proof` (optional, top-level)\n\t* Placeholder for future column-level proofs across proposals.\n\t* Not defined at present; omit in implementations.\n\n* `matrix-proof` (optional, top-level)\n\t* Placeholder for future matrix-wide proofs across all proposals and positions.\n\t* Not defined at present; omit in implementations.\n\n* `voter-choice` (optional, top-level)\n\t* This is ONLY Not included when the vote is unencrypted.\n\t* Allows a voter to read back their ballot selections without decrypting the entire ballot.\n\nNotes\n\n* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.\n  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to\n  reflect an unwrapped COSE_Sign CBOR block.\n* The application defines the permissible range and semantics of `clear-choice` integers.\n* All CBOR must use core-deterministic encoding so that content addressing remains stable.\n",
         "examples": [
           {
-            "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-crt-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-crt-encrypted-choices` is 0x123456789...",
+            "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-ctr-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...",
             "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
             "title": "Example Encrypted Contest Ballot Payload."
           },
@@ -1579,14 +1594,9 @@
       "validation": "* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.\n* The 'ref' metadata fields within the ballot payload (not the headers) must point to \n\tALL the proposals eligible to be chosen in the contest.",
       "versions": [
         {
-          "changes": "* First Published Version",
-          "modified": "2025-06-19",
-          "version": "0.01"
-        },
-        {
-          "changes": "* Allow Multi Delegation",
-          "modified": "2025-09-04",
-          "version": "0.1.2"
+          "changes": "* Add Voting Ballots and Ballot Register Documents",
+          "modified": "2025-11-03",
+          "version": "0.1.5"
         }
       ]
     },

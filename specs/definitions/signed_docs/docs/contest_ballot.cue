@@ -6,7 +6,6 @@ import (
 	"github.com/input-output-hk/catalyst-libs/specs/cddl"
 )
 
-
 docs: "Contest Ballot": {
 	description: """
 		An individual Ballot cast in a Contest by a registered user.
@@ -24,10 +23,10 @@ docs: "Contest Ballot": {
 		Only eligible users can cast ballots in the respective contest.
 		"""
 	validation: """
-			* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.
-			* The 'ref' metadata fields within the ballot payload (not the headers) must point to 
-				ALL the proposals eligible to be chosen in the contest.
-			"""
+		* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.
+		* The 'ref' metadata fields within the ballot payload (not the headers) must point to 
+			ALL the proposals eligible to be chosen in the contest.
+		"""
 	business_logic: {
 		front_end: """
 			* Always cast a ballot for all proposals in the contest.
@@ -48,11 +47,6 @@ docs: "Contest Ballot": {
 	}
 
 	metadata: {
-		ref: {
-			required: "yes"
-			type:     "Rep Nomination"
-			multiple: true
-		}
 		parameters: {
 			required: "yes"
 			type:     "Contest Parameters"
@@ -66,36 +60,58 @@ docs: "Contest Ballot": {
 	headers: "content type": value: "application/cbor"
 
 	payload: {
-			description: """
-				The Payload is a JSON Document, and must conform to this schema.
+		description: """
+			The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.
 
-				It consists of an array which defines the weights to be applied to the chosen delegations.
+			Contents
+			
+			* `document_ref => choices`
+				* The payload is a map keyed by a proposal `document_ref`.
+				* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.
+				* The value for each key is that voter’s `choices` for that proposal.
+				* There is exactly one set of `choices` per referenced proposal (no duplicates).
 
-				Each valid delegate gets the matching weight from this array.
-				The total voting power is split proportionally based on these weights over the
-				valid drep nominations.
-				"""
-			schema: "contest-ballot-payload"
-			examples: cddl.cddlDefinitions["\(schema)"].examples
+			* `choices`
+				* Discriminated union of unencrypted or encrypted choices.
+
+			* `row-proof` (optional, inside encrypted choices)
+			  	* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.
+
+			* `column-proof` (optional, top-level)
+				* Placeholder for future column-level proofs across proposals.
+				* Not defined at present; omit in implementations.
+
+			* `matrix-proof` (optional, top-level)
+				* Placeholder for future matrix-wide proofs across all proposals and positions.
+				* Not defined at present; omit in implementations.
+
+			* `voter-choice` (optional, top-level)
+				* This is ONLY Not included when the vote is unencrypted.
+				* Allows a voter to read back their ballot selections without decrypting the entire ballot.
+
+			Notes
+			
+			* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.
+			  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to
+			  reflect an unwrapped COSE_Sign CBOR block.
+			* The application defines the permissible range and semantics of `clear-choice` integers.
+			* All CBOR must use core-deterministic encoding so that content addressing remains stable.
+
+			"""
+		schema:   "contest-ballot-payload"
+		examples: cddl.cddlDefinitions["\(schema)"].examples
 	}
 
 	signers: roles: user: [
 		"Registered",
 	]
-	authors: "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+	authors: "Steven Johnson": "steven.johnson@iohk.io"
 	versions: [
 		{
-			version:  "0.01"
-			modified: "2025-06-19"
+			version:  "0.1.5"
+			modified: "2025-11-03"
 			changes: """
-				* First Published Version
-				"""
-		},
-		{
-			version:  "0.1.2"
-			modified: "2025-09-04"
-			changes: """
-				* Allow Multi Delegation
+				* Add Voting Ballots and Ballot Register Documents
 				"""
 		},
 	]

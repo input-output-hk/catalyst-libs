@@ -53,6 +53,27 @@ class CDDLDefinitions(RootModel[dict[str, CDDLDefinition]]):
         for this_def in definition:
             self.root[this_def.name()] = this_def
 
+    def required_definitions(self, root: str) -> list[str]:
+        """Get all unique required definitions for a given root.
+
+        The returned list contains definition names in the order they are first
+        discovered via a depth-first traversal of the `requires` graph, without
+        duplicates. The `root` itself is not included in the result.
+        """
+        discovered: list[str] = []
+        seen: set[str] = set()
+
+        def dfs(name: str) -> None:
+            for req in self.get(name).requires:
+                if req in seen:
+                    continue
+                seen.add(req)
+                discovered.append(req)
+                dfs(req)
+
+        dfs(root)
+        return discovered
+
     @staticmethod
     def _add_cddl_comments(comment: str) -> tuple[str, bool]:
         """Add cddl comment markers to lines.

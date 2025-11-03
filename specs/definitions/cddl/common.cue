@@ -43,16 +43,38 @@ cddlDefinitions: #cddlDefinitions & {
 		comment:     "Blake2B-256"
 	}
 	cid: {
-		def:         "#6.42(bytes)"
+		requires: [
+			"cbor-cid",
+		]
+		def:         "#6.42(bytes .abnfb (\"cid\" .det \(requires[0]) ))"
 		description: """
 			IPLD content identifier.
-			Also known as an IPFS CID
+			Also known as an IPFS CID.
+			Currently limited to SHA2-256 based CIDs.
 			See: \(documentation.links."IPFS-CID")
 			     \(documentation.links."CBOR-TAG-42")
 			"""
 		comment: """
-			IPLD content identifier
-			TODO: add size limits if possible
+			IPLD content identifier.
+			Currently limited to SHA2-256 based CIDs.
+			"""
+	}
+	"cbor-cid": {
+		def: """
+			'
+				cid = cidv1 codec-cbor sha2-256 digest-32 digest
+				cidv1 = %x00 %x01
+				codec-cbor = %x51
+				sha2-256 = %x12
+				digest-32 = %x20
+				digest = 32(%x00-FF)
+			'
+			"""
+		description: """
+			CIDv1 ABNF Constrained for SHA2-256
+			"""
+		comment: """
+			\(description)
 			"""
 	}
 	json_pointer: {

@@ -22,23 +22,10 @@ cddlDefinitions: #cddlDefinitions & {
 		description: "Unique Chronological Document Version Identifier"
 		comment:     "Document Version"
 	}
-	cid: {
-		def:         "#6.42(bytes)"
-		description: """
-			IPLD content identifier.
-			Also known as an IPFS CID
-			See: \(documentation.links."IPFS-CID")
-			     \(documentation.links."CBOR-TAG-42")
-			"""
-		comment: """
-			IPLD content identifier
-			TODO: add size limits if possible
-			"""
-	}
 	document_locator: {
 		def: """
 			{ 
-			  \"cid\" => \(requires[0])
+			  \"cid\" : \(requires[0])
 			}
 			"""
 		requires: ["cid"]

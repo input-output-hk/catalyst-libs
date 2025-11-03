@@ -107,48 +107,6 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`ref`](../metadata.md#ref)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | yes |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Multiple References | True |
-| Valid References | [Rep Nomination](rep_nomination.md) |
-<!-- markdownlint-enable MD033 -->
-Reference to a Linked Document or Documents.
-This is the primary hierarchical reference to a related document.
-
-If a reference is defined as required, there must be at least 1 reference specified.
-Some documents allow multiple references, and they are documented as required.
-
-The document reference serves two purposes:
-
-1. It ensures that the document referenced by an ID/Version is not substituted.
-    In other words, that the document intended to be referenced, is actually referenced.
-2. It Allows the document to be unambiguously located in decentralized storage systems.
-
-There can be any number of Document Locations in any reference.
-The currently defined locations are:
-
-* `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
-* Others may be added when further storage mechanisms are defined.
-
-The document location does not guarantee that the document is actually stored.
-It only defines that if it were stored, this is the identifier
-that is required to retrieve it.
-Therefore it is required that Document References
-are unique and reproducible, given a documents contents.
-
-#### [`ref`](../metadata.md#ref) Validation
-
-The following must be true for a valid reference:
-
-* The Referenced Document **MUST** Exist
-* Every value in the `document_locator` must consistently reference the exact same document.
-* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
-
 ### [`revocations`](../metadata.md#revocations)
 
 <!-- markdownlint-disable MD033 -->
@@ -212,14 +170,304 @@ hierarchy they are all valid.
 
 ## Payload
 
-The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
+The Payload is a [CBOR][RFC8949] document that must conform to the `contest-ballot-payload` [CDDL][RFC8610].
 
-It consists of an array which defines the weights to be applied to the chosen delegations.
+Contents
 
-Each valid delegate gets the matching weight from this array.
-The total voting power is split proportionally based on these weights over the
-valid drep nominations.
-[CBOR][RFC8949] Payload Documentation
+* `document_ref => choices`
+    * The payload is a map keyed by a proposal `document_ref`.
+    * Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.
+    * The value for each key is that voter’s `choices` for that proposal.
+    * There is exactly one set of `choices` per referenced proposal (no duplicates).
+
+* `choices`
+    * Discriminated union of unencrypted or encrypted choices.
+
+* `row-proof` (optional, inside encrypted choices)
+    * Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.
+
+* `column-proof` (optional, top-level)
+    * Placeholder for future column-level proofs across proposals.
+    * Not defined at present; omit in implementations.
+
+* `matrix-proof` (optional, top-level)
+    * Placeholder for future matrix-wide proofs across all proposals and positions.
+    * Not defined at present; omit in implementations.
+
+* `voter-choice` (optional, top-level)
+    * This is ONLY Not included when the vote is unencrypted.
+    * Allows a voter to read back their ballot selections without decrypting the entire ballot.
+
+Notes
+
+* `document_locator` uses a [CBOR][RFC8949] Tag 42 `cid` to locate the referenced proposal in content-addressed storage.
+  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to
+  reflect an unwrapped COSE_Sign [CBOR][RFC8949] block.
+* The application defines the permissible range and semantics of `clear-choice` integers.
+* All [CBOR][RFC8949] must use core-deterministic encoding so that content addressing remains stable.
+
+### Schema
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Payload [CDDL][RFC8610] Schema"
+
+    * [contest_ballot_payload.cddl](../cddl/contest_ballot_payload.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/contest_ballot_payload.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+#### Sub-schemas
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: document_ref"
+
+    * [document_ref.cddl](../cddl/document_ref.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_ref.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: document_id"
+
+    * [document_id.cddl](../cddl/document_id.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_id.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: uuid_v7"
+
+    * [uuid_v7.cddl](../cddl/uuid_v7.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/uuid_v7.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: document_ver"
+
+    * [document_ver.cddl](../cddl/document_ver.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_ver.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: document_locator"
+
+    * [document_locator.cddl](../cddl/document_locator.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_locator.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: cid"
+
+    * [cid.cddl](../cddl/cid.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/cid.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: cbor-cid"
+
+    * [cbor_cid.cddl](../cddl/cbor_cid.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/cbor_cid.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: choices"
+
+    * [choices.cddl](../cddl/choices.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/choices.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: clear-choices"
+
+    * [clear_choices.cddl](../cddl/clear_choices.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/clear_choices.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: clear-choice"
+
+    * [clear_choice.cddl](../cddl/clear_choice.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/clear_choice.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: elgamal-ristretto255-encrypted-choices"
+
+    * [elgamal_ristretto255_encrypted_choices.cddl](../cddl/elgamal_ristretto255_encrypted_choices.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/elgamal_ristretto255_encrypted_choices.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: elgamal-ristretto255-encrypted-choice"
+
+    * [elgamal_ristretto255_encrypted_choice.cddl](../cddl/elgamal_ristretto255_encrypted_choice.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/elgamal_ristretto255_encrypted_choice.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: elgamal-ristretto255-group-element"
+
+    * [elgamal_ristretto255_group_element.cddl](../cddl/elgamal_ristretto255_group_element.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/elgamal_ristretto255_group_element.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: row-proof"
+
+    * [row_proof.cddl](../cddl/row_proof.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/row_proof.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: zkproof-elgamal-ristretto255-unit-vector-with-single-selection"
+
+    * [zkproof_elgamal_ristretto255_unit_vector_with_single_selection.cddl](../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item"
+
+    * [zkproof_elgamal_ristretto255_unit_vector_with_single_selection_item.cddl](../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection_item.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection_item.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: zkproof-elgamal-announcement"
+
+    * [zkproof_elgamal_announcement.cddl](../cddl/zkproof_elgamal_announcement.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/zkproof_elgamal_announcement.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: zkproof-elgamal-group-element"
+
+    * [zkproof_elgamal_group_element.cddl](../cddl/zkproof_elgamal_group_element.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/zkproof_elgamal_group_element.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: zkproof-ed25519-r-response"
+
+    * [zkproof_ed25519_r_response.cddl](../cddl/zkproof_ed25519_r_response.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/zkproof_ed25519_r_response.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: zkproof-ed25519-scalar"
+
+    * [zkproof_ed25519_scalar.cddl](../cddl/zkproof_ed25519_scalar.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/zkproof_ed25519_scalar.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: column-proof"
+
+    * [column_proof.cddl](../cddl/column_proof.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/column_proof.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: matrix-proof"
+
+    * [matrix_proof.cddl](../cddl/matrix_proof.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/matrix_proof.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: voter-choice"
+
+    * [voter_choice.cddl](../cddl/voter_choice.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/voter_choice.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: aes-ctr-encrypted-choices"
+
+    * [aes_ctr_encrypted_choices.cddl](../cddl/aes_ctr_encrypted_choices.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/aes_ctr_encrypted_choices.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: aes-ctr-encrypted-block"
+
+    * [aes_ctr_encrypted_block.cddl](../cddl/aes_ctr_encrypted_block.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/aes_ctr_encrypted_block.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Signers
 
@@ -235,7 +483,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-03 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -243,18 +491,12 @@ Only the original author can update and sign a new version of documents.
 
 ### Changelog
 
-#### 0.01 (2025-06-19)
+#### 0.1.5 (2025-11-03)
 
-* First Published Version
+* Add Voting Ballots and Ballot Register Documents
 
-#### 0.1.2 (2025-09-04)
-
-* Allow Multi Delegation
-
-[CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
-[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
-[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
+[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610

@@ -5,6 +5,7 @@ import typing
 
 from pydantic import HttpUrl
 
+from docs.cddl_file import CDDLFile
 from spec.payload import DRAFT7_SCHEMA, DRAFT202012_SCHEMA
 from spec.signed_doc import SignedDoc
 
@@ -92,7 +93,25 @@ This section will be included and updated in future iterations.
 
     def document_payload_cbor(self) -> str:
         """Generate Payload Documentation - CBOR."""
-        docs = "CBOR Payload Documentation\n"
+        docs = ""
+
+        cddl_def = CDDLFile(self._args, self._spec, self._doc.payload.doc_schema)
+        if not cddl_def.save_or_validate():
+            raise ValueError
+
+        docs += f"""\n### Schema
+{cddl_def.markdown_reference(title="Payload CDDL Schema", relative_doc=self)}
+
+#### Sub-schemas
+"""
+        reqs = self._spec.cddl_definitions.required_definitions(self._doc.payload.doc_schema)
+        for req in reqs:
+            cddl_req = CDDLFile(self._args, self._spec, req)
+            if not cddl_req.save_or_validate():
+                raise ValueError
+            docs += f"""
+{cddl_req.markdown_reference(title=f"Required Definition: {req}", relative_doc=self)}
+"""
 
         return docs.strip()
 

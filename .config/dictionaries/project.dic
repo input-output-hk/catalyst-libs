@@ -1,6 +1,7 @@
 aarch
 abcz
 ABNF
+abnfb
 addrr
 addrs
 adminer
@@ -43,6 +44,7 @@ childs
 Chotivichit
 chrono
 cids
+cidv
 ciphertext
 ciphertexts
 Coap
@@ -191,7 +193,9 @@ moka
 MPMC
 msvc
 Multiaddr
+multicodec
 multiera
+multihash
 mutlisig
 mypy
 nanos
@@ -252,6 +256,7 @@ REMOVEDIR
 renameat
 Replayability
 Repr
+reqs
 reqwest
 retriggering
 ristretto

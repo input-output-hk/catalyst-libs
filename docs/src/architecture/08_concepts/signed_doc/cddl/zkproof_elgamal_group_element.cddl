@@ -1,0 +1,5 @@
+; An individual Elgamal group element used in ZK Proofs.
+
+
+; An individual Elgamal group element used in ZK Proofs.
+zkproof-elgamal-group-element = bytes .size 32

@@ -1,0 +1,11 @@
+; The elgamal encrypted ciphertext `(c1, c2)`.
+
+
+; The elgamal encrypted ciphertext `(c1, c2)`.
+elgamal-ristretto255-encrypted-choice = [
+  c1: elgamal-ristretto255-group-element,
+  c2: elgamal-ristretto255-group-element,
+]
+
+; An individual Elgamal group element that composes the elgamal cipher text.
+elgamal-ristretto255-group-element = bytes .size 32

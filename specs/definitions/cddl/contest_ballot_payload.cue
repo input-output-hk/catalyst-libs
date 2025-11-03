@@ -16,7 +16,7 @@ cddlDefinitions: {
 		]
 		def: """
 			{
-				+ "\(requires[0])" => \(requires[1]),
+				+ \(requires[0]) => \(requires[1]),
 				? "\(requires[2])" : \(requires[2]),
 				? "\(requires[3])" : \(requires[3]),
 				? "\(requires[4])" : \(requires[4]),
@@ -39,11 +39,11 @@ cddlDefinitions: {
 					* Three Proposals
 					* Two Encrypted Choices
 					* Row Proofs for each proposal.
-					* `aes-crt-encrypted-choices` which reflects the choices.
+					* `aes-ctr-encrypted-choices` which reflects the choices.
 
 					The Contest Private Key was: 0x1234562343....
 					The Contest Public Key was: 0x1324354235...
-					The AES encryption key for the `aes-crt-encrypted-choices` is 0x123456789...
+					The AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...
 					"""
 				example: _ @embed(file=examples/contest_ballot_payload_encrypted.cbor,type=binary)
 			},
@@ -91,7 +91,7 @@ cddlDefinitions: {
 			constrained by the parameters of the contest.
 			"""
 		comment: """
-			Universal Unencrypted Choice
+			Universal Unencrypted Set of Choices
 			"""
 	}
 
@@ -117,10 +117,10 @@ cddlDefinitions: {
 			"row-proof",
 		]
 		def: """
-			( 
+			[ 
 			  [+ \(requires[0])], 
 			  ? \(requires[1]) 
-			)
+			]
 			"""
 		description: """
 			Encrypted Choices are a Vector (list) of encrypted items.
@@ -137,7 +137,7 @@ cddlDefinitions: {
 			cryptography underlying the proof.
 			"""
 		comment: """
-			Universal Encrypted Choices
+			elgamal/ristretto255 Encrypted Choices
 			"""
 	}
 
@@ -155,7 +155,7 @@ cddlDefinitions: {
 			The elgamal encrypted ciphertext `(c1, c2)`.
 			"""
 		comment: """
-			Elgamal encrypted ciphertext.
+			\(description)
 			"""
 	}
 
@@ -165,10 +165,10 @@ cddlDefinitions: {
 			bytes .size 32
 			"""
 		description: """
-			An individual elgamal ristretto255 group element.
+			An individual Elgamal group element that composes the elgamal cipher text.
 			"""
 		comment: """
-			Elgamal group element that composes the elgamal cipher text.
+			\(description)
 			"""
 	}
 
@@ -195,10 +195,10 @@ cddlDefinitions: {
 			"zkproof-ed25519-scalar",
 		]
 		def: """
-			( [ [ +\(requires[0]) ], \(requires[1]) )
+			[ +\(requires[0]), \(requires[1]) ]
 			"""
 		description: """
-			???
+			Proof that the choices form a unit vector with a single selection.
 			"""
 	}
 
@@ -212,7 +212,10 @@ cddlDefinitions: {
 			( \(requires[0]), ~\(requires[1]), \(requires[2]) )
 			"""
 		description: """
-			???
+			Proof that the row is a unit vector with a single selection.
+			"""
+		comment: """
+			\(description)
 			"""
 	}
 
@@ -222,7 +225,10 @@ cddlDefinitions: {
 			( \(requires[0]), \(requires[0]), \(requires[0]) )
 			"""
 		description: """
-			???
+			ZK Proof Announcement values for Elgamal.
+			"""
+		comment: """
+			\(description)
 			"""
 	}
 
@@ -232,7 +238,10 @@ cddlDefinitions: {
 			bytes .size 32
 			"""
 		description: """
-			???
+			An individual Elgamal group element used in ZK Proofs.
+			"""
+		comment: """
+			\(description)
 			"""
 	}
 
@@ -242,7 +251,10 @@ cddlDefinitions: {
 			( \(requires[0]), \(requires[0]), \(requires[0]) )
 			"""
 		description: """
-			???
+			ZK Proof Response values for Ed25519.
+			"""
+		comment: """
+			\(description)
 			"""
 	}
 
@@ -252,7 +264,10 @@ cddlDefinitions: {
 			bytes .size 32
 			"""
 		description: """
-			???
+			An individual Ed25519 scalar used in ZK Proofs.
+			"""
+		comment: """
+			\(description)
 			"""
 	}
 
@@ -278,6 +293,9 @@ cddlDefinitions: {
 			Similar to `row-proof` there can be multiple column-proofs defined which prove
 			certain characteristics of the encrypted column values.
 			They are identified by the unsigned integer starting the proof.
+			"""
+		comment: """
+			Universal Encrypted Column Proof (Placeholder)
 			"""
 	}
 
@@ -305,12 +323,15 @@ cddlDefinitions: {
 			which prove certain characteristics of the encrypted column values.
 			They are identified by the unsigned integer starting the proof.
 			"""
+		comment: """
+			Universal Encrypted Matrix Proof (Placeholder)
+			"""
 	}
 
 	"voter-choice": {
-		requires: ["aes-crt-encrypted-choices"]
+		requires: ["aes-ctr-encrypted-choices"]
 		def: """
-			[ 0, /(requires[0]) ]
+			[ 0, \(requires[0]) ]
 			"""
 		description: """
 			This is an encrypted payload that a voter, and ONLY the voter can decrypt.
@@ -320,12 +341,15 @@ cddlDefinitions: {
 			There is no way to associate this data with the encrypted choices directly, but
 			it is created by the voter from the same data used to create the choices.
 			"""
+		comment: """
+			Encrypted Voter Choice Payload
+			"""
 	}
 
-	"aes-crt-encrypted-choices": {
-		requires: ["aes-crt-encrypted-block"]
+	"aes-ctr-encrypted-choices": {
+		requires: ["aes-ctr-encrypted-block"]
 		def: """
-			+/(requires[0])
+			+\(requires[0])
 			"""
 		description: """
 			Choices are constructed as a CBOR multidimensional array of the form:
@@ -341,13 +365,16 @@ cddlDefinitions: {
 
 			The Encryption Key is to be derived from the Voters catalyst key-chain and not to be
 			published.
-			Derivation *MUST* take include the contest Document ID and Version, so that the same
+			Derivation *MUST* include the contest Document ID and Version, so that the same
 			encryption key is never used twice for different contests, but can still be re-derived
 			by a voter that holds their catalyst key-chain recovery keys.
 			"""
+		comment: """
+			Encrypted Voter Choices
+			"""
 	}
 
-	"aes-crt-encrypted-block": {
+	"aes-ctr-encrypted-block": {
 		requires: []
 		def: """
 			bytes .size 16
@@ -361,6 +388,9 @@ cddlDefinitions: {
 			of the addition.
 
 			As the CTR is predictable, the blocks can be decrypted in parallel for maximum performance.
+			"""
+		comment: """
+			AES-CTR Encrypted Data Block
 			"""
 	}
 
