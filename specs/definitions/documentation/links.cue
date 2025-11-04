@@ -46,6 +46,12 @@ links: #docLinks & {
 	RFC6901:                    "https://datatracker.ietf.org/doc/html/rfc6901"
 	"CIP-1852":                 "https://cips.cardano.org/cip/CIP-1852"
 	"historical dates":         "https://www.oxfordreference.com/display/10.1093/acref/9780191737152.timeline.0001"
+	"BLAKE2b-256":              "https://www.blake2.net/blake2.pdf"
+	"BLAKE2b-512":              "https://www.blake2.net/blake2.pdf"
+	"ristretto255":             "https://ristretto.group"
+	"treasury_system_paper":    "https://eprint.iacr.org/2018/435.pdf"
+	"treasury_system_spec":     "https://github.com/input-output-hk/treasury-crypto/blob/master/docs/voting_protocol_spec/Treasury_voting_protocol_spec.pdf"
+	"crypto_book":              "https://gnanavelrec.wordpress.com/wp-content/uploads/2019/06/2.understanding-cryptography-by-christof-paar-.pdf"
 }
 
 // Constrains the URLs being linked to be unique

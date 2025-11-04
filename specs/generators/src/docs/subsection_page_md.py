@@ -18,7 +18,7 @@ class SubSectionPageMd(DocGenerator):
         self._extra_ = page
         doc_name = page["front_matter"]["Title"]
         template = page["path"].name
-        filename = Path(page["path"].parent.name) / page["path"].stem
+        filename = str(Path(page["path"].parent.name) / page["path"].stem)
         super().__init__(args, spec, doc_name=doc_name, filename=filename, template=template)
 
     @classmethod
