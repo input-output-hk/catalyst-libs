@@ -149,7 +149,8 @@ The overall `path` specification is: `<initial role0 key>/<role>/<rotation>#encr
   disambiguates Encryption Public Keys from signing public keys.
     * Roles can have 1 active public signing key, and 1 active public encryption key.
     * By default, the URL is referencing the signing public key.
-    * If a public encryption key is being identified, then the fragment `#encrypt` is appended to the [Universal Resource Identifier].
+    * If a public encryption key is being identified, then the fragment `#encrypt`
+      is appended to the [Universal Resource Identifier].
 
 ## Reference Implementation
 

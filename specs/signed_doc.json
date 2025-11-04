@@ -1562,9 +1562,7 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": [
-            "ref"
-          ],
+          "linked_refs": null,
           "multiple": false,
           "required": "yes",
           "type": "Contest Parameters",
@@ -3916,16 +3914,16 @@
       "RFC9562": "https://www.rfc-editor.org/rfc/rfc9562.html",
       "RFC9562-V4": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4",
       "RFC9562-V7": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7",
+      "Understanding Cryptography Textbook": "https://gnanavelrec.wordpress.com/wp-content/uploads/2019/06/2.understanding-cryptography-by-christof-paar-.pdf",
       "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
       "application/json": "https://www.iana.org/assignments/media-types/application/json",
       "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br",
-      "crypto_book": "https://gnanavelrec.wordpress.com/wp-content/uploads/2019/06/2.understanding-cryptography-by-christof-paar-.pdf",
       "historical dates": "https://www.oxfordreference.com/display/10.1093/acref/9780191737152.timeline.0001",
       "ristretto255": "https://ristretto.group",
       "text/css": "https://www.rfc-editor.org/rfc/rfc2318.html",
       "text/plain": "https://www.rfc-editor.org/rfc/rfc2046.html",
-      "treasury_system_paper": "https://eprint.iacr.org/2018/435.pdf",
-      "treasury_system_spec": "https://github.com/input-output-hk/treasury-crypto/blob/master/docs/voting_protocol_spec/Treasury_voting_protocol_spec.pdf"
+      "treasury system paper": "https://eprint.iacr.org/2018/435.pdf",
+      "treasury system specification": "https://github.com/input-output-hk/treasury-crypto/blob/master/docs/voting_protocol_spec/Treasury_voting_protocol_spec.pdf"
     }
   },
   "encodingTypes": {

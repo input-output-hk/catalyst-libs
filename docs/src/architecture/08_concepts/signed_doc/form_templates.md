@@ -19,7 +19,7 @@ for data capture.
 
 The Base Form Template has the following format.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Form Template Base Schema"
 
     * [form_template.schema.json](schema/form_template.schema.json)
@@ -27,7 +27,7 @@ The Base Form Template has the following format.
     ``` json
     {{ include_file('./schema/form_template.schema.json', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### `"$schema"`
 
@@ -109,7 +109,7 @@ that are not present in the Form Template itself.
 This is an Example Form Template which has a property shown for every
 possible Form Element.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Form Template Example Schema"
 
     * [form_template_example.schema.json](schema/form_template_example.schema.json)
@@ -117,7 +117,7 @@ possible Form Element.
     ``` json
     {{ include_file('./schema/form_template_example.schema.json', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ## Dictionary of all defined Form Elements
 

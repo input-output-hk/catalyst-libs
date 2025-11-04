@@ -196,8 +196,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -211,13 +211,11 @@ States:
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
          `hide` is only actioned if sent by the author,
          for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+
 ### Schema
 
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
-
-
-
 
     ```json
     {

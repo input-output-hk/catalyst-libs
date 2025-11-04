@@ -50,9 +50,6 @@ docs: "Contest Ballot": {
 		parameters: {
 			required: "yes"
 			type:     "Contest Parameters"
-			linked_refs: [
-				"ref",
-			]
 		}
 		revocations: required: "optional"
 	}

@@ -10,7 +10,7 @@ License: CC-BY-4.0
 
 ## Abstract
 
-This voting protocol is based on this [paper][treasury_system_paper] and on this [specification][treasury_system_spec],
+This voting protocol is based on the treasury system paper and on the treasury system specification,
 so all formal definitions described in this document you can find there.
 It provides a fully anonymous, secured, verifiable schema of casting votes
 and performing tally process for executing "Catalyst" fund events.
@@ -266,7 +266,8 @@ and election secret key $sk$.
 
 To decrypt each calculated tally result from the previous [step](#homomorphic-tally),
 $TallyDec$ is used,
-which is technically a common $ElGamalDec$ algorithm described in [appendix B](#b-lifted-elgamal-encryptiondecryption).
+which is technically a common $ElGamalDec$ algorithm described in
+[appendix B](#b-lifted-elgamal-encryptiondecryption).
 It takes as an input the following:
 
 * $sk$ - an election private key held by voting committee.
@@ -331,7 +332,8 @@ It could be published using any public channel, e.g. blockchain, ipfs or through
 <!-- markdownlint-disable no-inline-html -->
 
 Important to note that some crypto algorithms, which are described below, are group $\mathbb{G}$ dependant.
-More detailed about groups you can find at section *8.2.1* section on this [book][crypto_book].
+More detailed about groups you can find at section *8.2.1* section on the
+Understanding Cryptography Textbook.
 <br/>
 Therefore, the generalized notation of the group operation used - $\circ$.
 And defined as follows:
@@ -442,7 +444,7 @@ to prove that the encrypted voting choice is exactly a some unit vector,
 which consists of **only one** is $1$ value and others are $0$.
 
 A more detailed and formal description
-you can find in the section *2.4* of this [paper][treasury_system_spec].
+you can find in the section *2.4* of the treasury system specification.
 
 It is assumed that the original encryption and decryption is performing by ElGamal scheme.
 It means that all described operations is also group dependent
@@ -598,7 +600,7 @@ which is corresponds to the some shared public key.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 It is a slightly modified version of the algorithm described in the sections
-*Fig. 10* and *2.1.5* of this [paper][treasury_system_spec].
+*Fig. 10* and *2.1.5* of the treasury system specification.
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 It is assumed that the original encryption and decryption is performing by ElGamal scheme.
@@ -659,15 +661,3 @@ verifier needs to perform the next steps:
 6. Verify $с == с2$.
 
 If step `6` returns `true` so the final result is `true` otherwise return `false`.
-
-## Rationale
-
-## Path to Active
-
-### Acceptance Criteria
-<!-- Describes what are the acceptance criteria whereby a proposal becomes 'Active' -->
-
-### Implementation Plan
-<!-- A plan to meet those criteria or `N/A` if an implementation plan is not applicable. -->
-
-<!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->

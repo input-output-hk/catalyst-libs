@@ -267,8 +267,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -279,13 +279,11 @@ It consists of an array which defines the weights to be applied to the chosen de
 Each valid delegate gets the matching weight from this array.
 The total voting power is split proportionally based on these weights over the
 valid drep nominations.
+
 ### Schema
 
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
-
-
-
 
     ```json
     {

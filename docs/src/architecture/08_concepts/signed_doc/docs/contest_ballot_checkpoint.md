@@ -185,8 +185,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ### [`chain`](../metadata.md#chain)
 
@@ -233,8 +233,9 @@ It consists of an array which defines the weights to be applied to the chosen de
 Each valid delegate gets the matching weight from this array.
 The total voting power is split proportionally based on these weights over the
 valid drep nominations.
+
 ### Schema
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Payload [CDDL][RFC8610] Schema"
 
     * [contest_ballot_checkpoint.cddl](../cddl/contest_ballot_checkpoint.cddl)
@@ -242,11 +243,11 @@ valid drep nominations.
     ``` cddl
     {{ include_file('./../cddl/contest_ballot_checkpoint.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### Sub-schemas
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: smt-root"
 
     * [smt_root.cddl](../cddl/smt_root.cddl)
@@ -254,9 +255,9 @@ valid drep nominations.
     ``` cddl
     {{ include_file('./../cddl/smt_root.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: blake3"
 
     * [blake3.cddl](../cddl/blake3.cddl)
@@ -264,9 +265,9 @@ valid drep nominations.
     ``` cddl
     {{ include_file('./../cddl/blake3.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: smt-entries"
 
     * [smt_entries.cddl](../cddl/smt_entries.cddl)
@@ -274,7 +275,7 @@ valid drep nominations.
     ``` cddl
     {{ include_file('./../cddl/smt_entries.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ## Signers
 

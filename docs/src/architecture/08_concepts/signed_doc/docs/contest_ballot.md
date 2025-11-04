@@ -41,7 +41,8 @@ Only eligible users can cast ballots in the respective contest.
 * The voter signs this document to confirm their ballot.
 * Ballots can not be cast outside the time allowed for the casting of ballots.
 * The `document_id` and `document+ver` must be within the time of allowed casting
-    of ballots.  Any document_id of document_ver outside this time are invalid and will
+    of ballots.
+   Any document_id of document_ver outside this time are invalid and will
     not be counted.
 
 #### Back End
@@ -143,7 +144,6 @@ Such documents may never be submitted.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Contest Parameters](contest_parameters.md) |
-| Linked Reference Metadata | [`ref`](#ref) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -163,10 +163,6 @@ The use case here is for Templates.
 The profile template, or proposal templates could be defined at any of these
 levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
-
-* The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -207,7 +203,7 @@ Notes
 * All [CBOR][RFC8949] must use core-deterministic encoding so that content addressing remains stable.
 
 ### Schema
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Payload [CDDL][RFC8610] Schema"
 
     * [contest_ballot_payload.cddl](../cddl/contest_ballot_payload.cddl)
@@ -215,11 +211,11 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/contest_ballot_payload.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### Sub-schemas
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: document_ref"
 
     * [document_ref.cddl](../cddl/document_ref.cddl)
@@ -227,9 +223,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/document_ref.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: document_id"
 
     * [document_id.cddl](../cddl/document_id.cddl)
@@ -237,9 +233,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/document_id.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: uuid_v7"
 
     * [uuid_v7.cddl](../cddl/uuid_v7.cddl)
@@ -247,9 +243,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/uuid_v7.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: document_ver"
 
     * [document_ver.cddl](../cddl/document_ver.cddl)
@@ -257,9 +253,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/document_ver.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: document_locator"
 
     * [document_locator.cddl](../cddl/document_locator.cddl)
@@ -267,9 +263,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/document_locator.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: cid"
 
     * [cid.cddl](../cddl/cid.cddl)
@@ -277,9 +273,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/cid.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: cbor-cid"
 
     * [cbor_cid.cddl](../cddl/cbor_cid.cddl)
@@ -287,9 +283,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/cbor_cid.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: choices"
 
     * [choices.cddl](../cddl/choices.cddl)
@@ -297,9 +293,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/choices.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: clear-choices"
 
     * [clear_choices.cddl](../cddl/clear_choices.cddl)
@@ -307,9 +303,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/clear_choices.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: clear-choice"
 
     * [clear_choice.cddl](../cddl/clear_choice.cddl)
@@ -317,9 +313,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/clear_choice.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: elgamal-ristretto255-encrypted-choices"
 
     * [elgamal_ristretto255_encrypted_choices.cddl](../cddl/elgamal_ristretto255_encrypted_choices.cddl)
@@ -327,9 +323,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/elgamal_ristretto255_encrypted_choices.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: elgamal-ristretto255-encrypted-choice"
 
     * [elgamal_ristretto255_encrypted_choice.cddl](../cddl/elgamal_ristretto255_encrypted_choice.cddl)
@@ -337,9 +333,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/elgamal_ristretto255_encrypted_choice.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: elgamal-ristretto255-group-element"
 
     * [elgamal_ristretto255_group_element.cddl](../cddl/elgamal_ristretto255_group_element.cddl)
@@ -347,9 +343,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/elgamal_ristretto255_group_element.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: row-proof"
 
     * [row_proof.cddl](../cddl/row_proof.cddl)
@@ -357,9 +353,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/row_proof.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: zkproof-elgamal-ristretto255-unit-vector-with-single-selection"
 
     * [zkproof_elgamal_ristretto255_unit_vector_with_single_selection.cddl](../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection.cddl)
@@ -367,9 +363,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item"
 
     * [zkproof_elgamal_ristretto255_unit_vector_with_single_selection_item.cddl](../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection_item.cddl)
@@ -377,9 +373,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/zkproof_elgamal_ristretto255_unit_vector_with_single_selection_item.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: zkproof-elgamal-announcement"
 
     * [zkproof_elgamal_announcement.cddl](../cddl/zkproof_elgamal_announcement.cddl)
@@ -387,9 +383,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/zkproof_elgamal_announcement.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: zkproof-elgamal-group-element"
 
     * [zkproof_elgamal_group_element.cddl](../cddl/zkproof_elgamal_group_element.cddl)
@@ -397,9 +393,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/zkproof_elgamal_group_element.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: zkproof-ed25519-r-response"
 
     * [zkproof_ed25519_r_response.cddl](../cddl/zkproof_ed25519_r_response.cddl)
@@ -407,9 +403,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/zkproof_ed25519_r_response.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: zkproof-ed25519-scalar"
 
     * [zkproof_ed25519_scalar.cddl](../cddl/zkproof_ed25519_scalar.cddl)
@@ -417,9 +413,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/zkproof_ed25519_scalar.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: column-proof"
 
     * [column_proof.cddl](../cddl/column_proof.cddl)
@@ -427,9 +423,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/column_proof.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: matrix-proof"
 
     * [matrix_proof.cddl](../cddl/matrix_proof.cddl)
@@ -437,9 +433,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/matrix_proof.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: voter-choice"
 
     * [voter_choice.cddl](../cddl/voter_choice.cddl)
@@ -447,9 +443,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/voter_choice.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: aes-ctr-encrypted-choices"
 
     * [aes_ctr_encrypted_choices.cddl](../cddl/aes_ctr_encrypted_choices.cddl)
@@ -457,9 +453,9 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/aes_ctr_encrypted_choices.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: aes-ctr-encrypted-block"
 
     * [aes_ctr_encrypted_block.cddl](../cddl/aes_ctr_encrypted_block.cddl)
@@ -467,7 +463,7 @@ Notes
     ``` cddl
     {{ include_file('./../cddl/aes_ctr_encrypted_block.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ## Signers
 

@@ -143,13 +143,11 @@ hierarchy they are all valid.
 
 The Presentation Template is defined by its schema.
 See `[presentation_templates.md](TODO)`
+
 ### Schema
 
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
-
-
-
 
     ```json
     {

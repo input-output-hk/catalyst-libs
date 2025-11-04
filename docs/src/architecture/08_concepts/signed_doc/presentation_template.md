@@ -28,7 +28,7 @@ which is defined by [JSON Schema version 2020-12][JSON Schema-2020-12].
 
 The Presentation template schema has the following format.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Presentation Template Schema"
 
     * [presentation_template.schema.json](schema/presentation_template.schema.json)
@@ -36,7 +36,7 @@ The Presentation template schema has the following format.
     ``` json
     {{ include_file('./schema/presentation_template.schema.json', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### `"$schema"`
 

@@ -459,7 +459,7 @@ class DocGenerator:
 
         return textwrap.indent(
             f"""
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "{title}"
 
     * [{file_name}]({file_path})
@@ -467,7 +467,7 @@ class DocGenerator:
     ``` {filetype}
     {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 """.strip(),
             " " * indent,
         )

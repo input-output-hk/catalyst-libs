@@ -82,8 +82,8 @@ to re-delegate to affirm the delegates latest nomination.
 
 * The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
 * The system will only consider Representatives as having valid Nominations if:
-  * Their latest Nomination in a Contest is not Revoked.
-  * Their latest Delegation in a Contest references their latest Nomination.
+    * Their latest Nomination in a Contest is not Revoked.
+    * Their latest Delegation in a Contest references their latest Nomination.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -256,8 +256,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`template`](../metadata.md#template)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 

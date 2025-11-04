@@ -61,7 +61,7 @@ The "length-first core deterministic encoding requirements" variant of determini
 
 ### Signed Document [CDDL][RFC8610] Definition
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [signed_document.cddl](cddl/signed_document.cddl)
@@ -69,7 +69,7 @@ The "length-first core deterministic encoding requirements" variant of determini
     ``` cddl
     {{ include_file('./cddl/signed_document.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### [COSE Header Parameters][RFC9052-HeaderParameters]
 
