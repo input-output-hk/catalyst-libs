@@ -41,8 +41,7 @@ Only eligible users can cast ballots in the respective contest.
 * The voter signs this document to confirm their ballot.
 * Ballots can not be cast outside the time allowed for the casting of ballots.
 * The `document_id` and `document+ver` must be within the time of allowed casting
-  of ballots.
-   Any document_id of document_ver outside this time are invalid and will
+  of ballots.  Any document_id of document_ver outside this time are invalid and will
   not be counted.
 
 #### Back End

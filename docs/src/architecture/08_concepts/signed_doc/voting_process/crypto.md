@@ -3,7 +3,6 @@ Title: Voting Protocol Cryptography Schema
 Authors:
     - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
 Created: 2024-09-06
-License: [CC-BY-4.0]
 ---
 
 <!-- cspell: words mathbf mathbb Gamal homomorphically ipfs -->
