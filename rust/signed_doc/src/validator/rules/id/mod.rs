@@ -3,7 +3,8 @@
 #[cfg(test)]
 mod tests;
 
-use chrono::{Duration, TimeZone, Utc};
+use anyhow::Context;
+use chrono::{DateTime, Utc};
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
@@ -43,46 +44,49 @@ impl IdRule {
             .ok_or(anyhow::anyhow!("Document `id` field must be a UUIDv7"))?
             .to_unix();
 
-        let id_time = Utc
-            .timestamp_opt(i64::try_from(id_time_secs).unwrap_or(0), id_time_nanos)
-            .single()
-            .ok_or_else(|| anyhow::anyhow!("Invalid timestamp in document `id` field"))?;
+        let Some(id_time) = i64::try_from(id_time_secs)
+            .ok()
+            .and_then(|id_time_secs| DateTime::from_timestamp(id_time_secs, id_time_nanos))
+        else {
+            doc.report().invalid_value(
+                    "id",
+                    &id.to_string(),
+                    "Must a valid UTC date time since `UNIX_EPOCH`",
+                    "Cannot instantiate a valid `DateTime<Utc>` value from the provided `id` field timestamp.",
+                );
+            return Ok(false);
+        };
 
         let now = Utc::now();
+        let time_delta = id_time.signed_duration_since(now);
 
-        let diff = id_time.signed_duration_since(now);
-
-        if diff.num_nanoseconds().unwrap_or(0) > 0 {
-            // id_time is in the future
+        if let Ok(id_age) = time_delta.to_std() {
+            // `now` is earlier than `id_time`
             if let Some(future_threshold) = provider.future_threshold() {
-                let threshold = Duration::from_std(future_threshold)?;
-                if diff > threshold {
+                if id_age > future_threshold {
                     doc.report().invalid_value(
                         "id",
                         &id.to_string(),
                         "id < now + future_threshold",
-                        &format!(
-                            "Document Version timestamp {id} cannot be too far in future (threshold: {threshold:?}) from now: {now:?}"
-                        ),
+                        &format!("Document ID timestamp {id} cannot be too far in future (threshold: {future_threshold:?}) from now: {now}"),
                     );
                     is_valid = false;
                 }
             }
         } else {
-            // id_time is in the past
-            // make positive duration
-            let id_age = diff.abs();
+            // `id_time` is earlier than `now`
+            let id_age = time_delta
+                .abs()
+                .to_std()
+                .context("BUG! `id_time` must be earlier than `now` at this place")?;
 
             if let Some(past_threshold) = provider.past_threshold() {
-                let threshold = Duration::from_std(past_threshold)?;
-                if id_age > threshold {
+                if id_age > past_threshold {
                     doc.report().invalid_value(
                         "id",
                         &id.to_string(),
                         "id > now - past_threshold",
-                        &format!(
-                            "Document Version timestamp {id} cannot be too far behind (threshold: {threshold:?}) from now: {now:?}"
-                        ),
+                        &format!("Document ID timestamp {id} cannot be too far behind (threshold: {past_threshold:?}) from now: {now:?}",),
                     );
                     is_valid = false;
                 }
