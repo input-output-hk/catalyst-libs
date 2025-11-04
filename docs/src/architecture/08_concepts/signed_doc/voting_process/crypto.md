@@ -1,10 +1,9 @@
 ---
-
 Title: Voting Protocol Cryptography Schema
 Authors:
     - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
 Created: 2024-09-06
-License: CC-BY-4.0
+License: [CC-BY-4.0]
 ---
 
 <!-- cspell: words mathbf mathbb Gamal homomorphically ipfs -->
@@ -677,3 +676,5 @@ If step `6` returns `true` so the final result is `true` otherwise return `false
 [treasury_system_spec]: https://github.com/input-output-hk/treasury-crypto/blob/master/docs/voting_protocol_spec/Treasury_voting_protocol_spec.pdf
 [crypto_book]: https://gnanavelrec.wordpress.com/wp-content/uploads/2019/06/2.understanding-cryptography-by-christof-paar-.pdf
 [BLAKE2b-512]: https://www.blake2.net/blake2.pdf
+
+[CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
