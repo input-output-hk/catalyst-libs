@@ -34,8 +34,9 @@ docs: "Contest Ballot": {
 			  Typically, this would be `abstain`.
 			* The voter signs this document to confirm their ballot.
 			* Ballots can not be cast outside the time allowed for the casting of ballots.
-			* The `document_id` and `document+ver` must be within the time of allowed casting
-			  of ballots.  Any document_id of document_ver outside this time are invalid and will
+			* The `document_id` and `document_ver` must be within the time of allowed casting
+			  of ballots.
+			  Any `document_id` or `document_ver` outside this time are invalid and will
 			  not be counted.
 			"""
 		back_end: """
