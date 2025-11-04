@@ -1,11 +1,11 @@
-digraph "Contest Ballot Register" {
+digraph "Contest Ballot Checkpoint" {
     rankdir="LR"
     graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
     node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
     edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
-    label="Contest Ballot Register
+    label="Contest Ballot Checkpoint
 Document Relationships"
     fontcolor="#1d71b8"
     fontsize=50
@@ -13,13 +13,13 @@ Document Relationships"
 
 
 
-    "Rep Nomination" [
-        id="Rep Nomination";
+    "Contest Ballot" [
+        id="Contest Ballot";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_nomination/">
-                    <FONT COLOR="#ffffff"><B> Rep Nomination </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot/">
+                    <FONT COLOR="#ffffff"><B> Contest Ballot </B></FONT>
                 </TD>
             </TR>
 
@@ -43,13 +43,13 @@ Document Relationships"
     ];
 
 
-    "Contest Ballot Register" [
-        id="Contest Ballot Register";
+    "Contest Ballot Checkpoint" [
+        id="Contest Ballot Checkpoint";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_register/">
-                    <FONT COLOR="#ffffff"><B> Contest Ballot Register </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_checkpoint/">
+                    <FONT COLOR="#ffffff"><B> Contest Ballot Checkpoint </B></FONT>
                 </TD>
             </TR>
             <TR>
@@ -57,7 +57,7 @@ Document Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/json</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/cbor</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -97,27 +97,27 @@ Document Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ref</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Rep Nomination</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Contest Ballot</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">revocations</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Version Revocations</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
                             <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Contest Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="chain" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">chain</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Chain Link</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -128,6 +128,6 @@ Document Relationships"
     ];
 
 
-    "Contest Ballot Register":"ref":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Contest Ballot Register":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Ballot Checkpoint":"ref":e -> "Contest Ballot":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Ballot Checkpoint":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

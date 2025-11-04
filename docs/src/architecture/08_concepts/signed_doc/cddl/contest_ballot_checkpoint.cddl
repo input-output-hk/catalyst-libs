@@ -1,0 +1,28 @@
+; Catalyst Ballot Checkpoint data object.
+;
+; This serves as a checkpoint that collects new `contest-ballot-payload` documents
+; that have been observed by a bulleting board.
+;
+; It will be created periodically during the voting period to allow proofs of inclusion
+; to be firmly anchored and repeatably verifiable, and to allow voters or auditors to confirm
+; a bulletin board acted honestly and included all valid ballots it detected.
+;
+; At another interval (which may be the same or different), a roll-up of the latest
+; checkpoint is submitted to a blockchain to provide an immutable anchor of the
+; ballots collected by a bulletin board up to that point in time.
+
+
+; Catalyst Ballot Checkpoint Payload data object.
+contest-ballot-checkpoint = {
+    "smt-root" : smt-root,
+    "smt-entries" : smt-entries,
+}
+
+; The SMT Root hash is a Blake 3 256bit digest Hash.
+smt-root = blake3
+
+; Blake3 Hash (Digest Size is determined by length of bytes)
+blake3 = #6.32781(bytes)
+
+; The Count of all Documents held by the SMT.
+smt-entries = uint

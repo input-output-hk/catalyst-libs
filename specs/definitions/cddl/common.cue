@@ -37,10 +37,20 @@ cddlDefinitions: #cddlDefinitions & {
 			"""
 		comment:     "UUIDv4"
 	}
-	blake2b_256: {
-		def:         "bytes .size 32"
-		description: "Blake2b Hash (256 bits)"
-		comment:     "Blake2B-256"
+	blake3: {
+		def:         "#6.32781(bytes)"
+		description: "Blake3 Hash (Digest Size is determined by length of bytes)"
+		comment:     "\(description)"
+	}
+	blake2b: {
+		def:         "#6.32782(bytes)"
+		description: "Blake2b Hash (Digest Size is determined by length of bytes)"
+		comment:     "\(description)"
+	}
+	blake2s: {
+		def:         "#6.32783(bytes)"
+		description: "Blake2s Hash (Digest Size is determined by length of bytes)"
+		comment:     "\(description)"
 	}
 	cid: {
 		requires: [

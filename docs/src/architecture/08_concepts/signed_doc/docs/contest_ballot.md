@@ -493,7 +493,7 @@ Only the original author can update and sign a new version of documents.
 
 #### 0.1.5 (2025-11-03)
 
-* Add Voting Ballots and Ballot Register Documents
+* Add Voting Ballots and Ballot Checkpoint Documents
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

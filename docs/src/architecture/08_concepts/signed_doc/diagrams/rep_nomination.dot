@@ -153,21 +153,6 @@ Relationships"
     ];
 
 
-    "Contest Ballot Register" [
-        id="Contest Ballot Register";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_register/">
-                    <FONT COLOR="#ffffff"><B> Contest Ballot Register </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
     "Contest Delegation" [
         id="Contest Delegation";
         label=<
@@ -186,6 +171,5 @@ Relationships"
     "Rep Nomination":"ref":e -> "Rep Profile":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Rep Nomination":"template":e -> "Rep Nomination Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Rep Nomination":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Contest Ballot Register":"title":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Delegation":"title":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

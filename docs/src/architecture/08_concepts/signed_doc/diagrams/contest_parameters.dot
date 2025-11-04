@@ -138,13 +138,13 @@ Relationships"
     ];
 
 
-    "Contest Ballot Register" [
-        id="Contest Ballot Register";
+    "Contest Ballot Checkpoint" [
+        id="Contest Ballot Checkpoint";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_register/">
-                    <FONT COLOR="#ffffff"><B> Contest Ballot Register </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_checkpoint/">
+                    <FONT COLOR="#ffffff"><B> Contest Ballot Checkpoint </B></FONT>
                 </TD>
             </TR>
 
@@ -252,7 +252,7 @@ Relationships"
     "Contest Parameters":"template":e -> "Contest Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Contest Ballot":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Contest Ballot Register":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Ballot Checkpoint":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Delegation":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Rep Nomination":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Rep Nomination Form Template":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]

@@ -1,31 +1,31 @@
-# Contest Ballot Register
+# Contest Ballot Checkpoint
 
 ## Description
 
 Periodically as ballots are collected, a summary of all newly collected ballots will be
-published in a [Contest Ballot Register](contest_ballot_register.md) document.
-This document forms part of the bulletin boards complete Contest Ballot Register.
+published in a [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document.
+This document forms part of the bulletin boards complete Contest Ballot Checkpoint.
 
 These documents are chained to each other, and the final document is specified as final
 in the [`chain`](../metadata.md#chain) metadata.
 
-Typically each [Contest Ballot Register](contest_ballot_register.md) document is made immutable by referencing it on
+Typically each [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document is made immutable by referencing it on
 the blockchain most applicable to the Contest.
 
 Different blockchains will have different mechanisms for referencing the individual
-[Contest Ballot Register](contest_ballot_register.md) documents.
+[Contest Ballot Checkpoint](contest_ballot_checkpoint.md) documents.
 
 For example, Cardano will encode a `document_ref` in metadata, signed by the ballot box
 operator.
 
 The blockchain record must be as close in time as practically possible to the creation of
-the [Contest Ballot Register](contest_ballot_register.md) document.
+the [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot contest_ballot_register.dot.svg
+```graphviz dot contest_ballot_checkpoint.dot.svg
 
-{{ include_file('./../diagrams/contest_ballot_register.dot', indent=4) }}
+{{ include_file('./../diagrams/contest_ballot_checkpoint.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -45,25 +45,21 @@ the [Contest Ballot Register](contest_ballot_register.md) document.
 
 #### Front End
 
-* Always cast a ballot for all proposals in the contest.
-* Any proposal not explicitely selected by a user must have the default selection applied.
-    Typically, this would be `abstain`.
-* The voter signs this document to confirm their ballot.
-* Ballots can not be cast outside the time allowed for the casting of ballots.
-* The `document_id` and `document+ver` must be within the time of allowed casting
-    of ballots.  Any document_id of document_ver outside this time are invalid and will
-    not be counted.
+* This document is not produced by the Front End.
+* The Front End may read the document to validate a given proof validates against a given
+  `smt-root` and `smt-entries`.
 
 #### Back End
 
-* Verifies that the Contest is valid, and that the ballot is cast in the appropriate
-    time frame, and has a valid `document_id` and `document_ver` in that range.
-* Verify the payload lists all the eligible proposals which can be chosen in the contest.
-* Verify the proofs in the payload are correct.
+* Validate the ballots being referenced exist and are valid for the contest.
+* Signed by an authoritative Ballot Box.
+* All referenced ballots are in the same contest as specified in the [`parameters`](../metadata.md#parameters) metadata.
+* The Chain is intact and this document is consistent with the metadata in the previous checkpoint document.
+* There is no previous checkpoint document which already references the same chained checkpoint document.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
-* [content type](../spec.md#content-type) = `application/json`
+* [content type](../spec.md#content-type) = `application/cbor`
 * [content-encoding](../spec.md#content-encoding) = `[br]`
 
 ## Metadata
@@ -125,7 +121,7 @@ The document version must always be >= the document ID.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Multiple References | True |
-| Valid References | [Rep Nomination](rep_nomination.md) |
+| Valid References | [Contest Ballot](contest_ballot.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -158,34 +154,6 @@ The following must be true for a valid reference:
 * The Referenced Document **MUST** Exist
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
-
-### [`revocations`](../metadata.md#revocations)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Version Revocations](../metadata.md#version-revocations) |
-<!-- markdownlint-enable MD033 -->
-A document may include a list of any prior versions which are considered to be revoked.
-Only the revocation list in the latest version of the document applies.
-Revoked documents are flagged as no longer valid, and should not be displayed.
-As a special case, if the revocations are set to `true` then all versions of the document
-are revoked, including the latest document.
-
-In this case, when the latest document is revoked, the payload may be `nil`.
-Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
-and its payload is to be assumed to be invalid.
-
-This allows for an entire document and any/all published versions to be revoked.
-A new version of the document that is published after this, may reinstate prior
-document versions, by not listing them as revoked.
-However, any document where revocations was set `true` can never be reinstated.
-
-#### [`revocations`](../metadata.md#revocations) Validation
-
-If the field is `true` the payload may be absent or invalid.
-Such documents may never be submitted.
 
 ### [`parameters`](../metadata.md#parameters)
 
@@ -220,9 +188,45 @@ hierarchy they are all valid.
   * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
   * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
+### [`chain`](../metadata.md#chain)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Chain Link](../metadata.md#chain-link) |
+<!-- markdownlint-enable MD033 -->
+An immutable link to the previous document in a chained sequence of documents.
+Because ID/Ver only defines values for the current document, and is not intended
+by itself to prevent insertion of documents in a sequence, the [`chain`](../metadata.md#chain)
+metadata allows for the latest document to directly point to its previous iteration.
+
+It also aids in discoverability, where the latest document may be pinned but prior
+documents can be discovered automatically by following the chain.
+
+#### [`chain`](../metadata.md#chain) Validation
+
+Chained Documents do not support collaborators.
+Any document which is attempted to be published in the sequence
+which is *NOT* published by the author of the first document in the
+sequence is fraudulent, and to be discarded.
+
+In addition, the chained document *MUST*:
+
+* Not have `collaborators`;
+* Have the same [`id`](../metadata.md#id) as the document being chained to;
+* Have a [`ver`](../metadata.md#ver) that is greater than the [`ver`](../metadata.md#ver) being chained to;
+* Have the same [`type`](../metadata.md#type) as the chained document;
+* Have [`parameters`](../metadata.md#parameters) match;
+* Have not be chaining to a document already chained to by another document;
+* Have its absolute `height` exactly one more than the `height` of the document being chained to.
+
+IF any of these validations fail, then the entire sequence of documents is INVALID.
+Not just the current document.
+
 ## Payload
 
-The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
+The Payload is a [CBOR][RFC8949] Document, and must conform to this schema.
 
 It consists of an array which defines the weights to be applied to the chosen delegations.
 
@@ -230,74 +234,53 @@ Each valid delegate gets the matching weight from this array.
 The total voting power is split proportionally based on these weights over the
 valid drep nominations.
 ### Schema
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Payload [CDDL][RFC8610] Schema"
 
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? abstract "Schema: Payload [JSON][RFC8259] Schema"
+    * [contest_ballot_checkpoint.cddl](../cddl/contest_ballot_checkpoint.cddl)
 
-
-
-
-    ```json
-    {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "maintainers": [
-        {
-          "name": "Catalyst Team",
-          "url": "https://projectcatalyst.io/"
-        }
-      ],
-      "title": "Contest Delegation Schema",
-      "description": "Structure of the payload of a Contest Delegation.",
-      "type": "object",
-      "properties": {
-        "weights": {
-          "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
-          "items": {
-            "exclusiveMinimum": 0,
-            "type": "integer"
-          },
-          "minItems": 0,
-          "type": "array"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "weights"
-      ],
-      "x-changelog": {
-        "2025-03-01": [
-          "First Version Created."
-        ]
-      }
-    }
+    ``` cddl
+    {{ include_file('./../cddl/contest_ballot_checkpoint.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
-### Example
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? example "Example: Three Delegation Weights"
+#### Sub-schemas
 
-    If there are only 1 delegation, then the weights do not matter.
-    If there are two, then the first delegate has a weight of 10/30, and the second has 20/30.
-    If there are 5, then the weights are: `[10,20,30,1,1]`
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: smt-root"
 
-    ```json
-    {
-      "weights": [
-        10,
-        20,
-        30
-      ]
-    }
+    * [smt_root.cddl](../cddl/smt_root.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/smt_root.cddl', indent=4) }}
     ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: blake3"
+
+    * [blake3.cddl](../cddl/blake3.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/blake3.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "Required Definition: smt-entries"
+
+    * [smt_entries.cddl](../cddl/smt_entries.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/smt_entries.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Signers
 
-The following User roles may sign documents of this type:
+The following Admin roles may sign documents of this type:
 
-* Registered
+* Bulletin Board Operator
 
 Only the original author can update and sign a new version of documents.
 
@@ -307,7 +290,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-03 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -315,17 +298,14 @@ Only the original author can update and sign a new version of documents.
 
 ### Changelog
 
-#### 0.01 (2025-06-19)
+#### 0.1.5 (2025-11-03)
 
-* First Published Version
-
-#### 0.1.2 (2025-09-04)
-
-* Allow Multi Delegation
+* Add Voting Ballots and Ballot Checkpoint Documents
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
+[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610

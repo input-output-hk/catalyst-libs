@@ -103,5 +103,21 @@ Relationships"
     ];
 
 
+    "Contest Ballot Checkpoint" [
+        id="Contest Ballot Checkpoint";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_ballot_checkpoint/">
+                    <FONT COLOR="#ffffff"><B> Contest Ballot Checkpoint </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
     "Contest Ballot":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Ballot Checkpoint":"title":e -> "Contest Ballot":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

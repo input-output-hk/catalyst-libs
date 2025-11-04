@@ -111,7 +111,7 @@ docs: "Contest Ballot": {
 			version:  "0.1.5"
 			modified: "2025-11-03"
 			changes: """
-				* Add Voting Ballots and Ballot Register Documents
+				* Add Voting Ballots and Ballot Checkpoint Documents
 				"""
 		},
 	]
