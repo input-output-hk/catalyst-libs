@@ -11,10 +11,10 @@ from rich_argparse import RichHelpFormatter
 
 from docs.doc_index import DocIndex
 from docs.presentation_template_md import PresentationTemplatesMd
+from docs.subsection_index import SubSectionIndex
 from spec.signed_doc import SignedDoc
 
 from .form_templates_md import FormTemplatesMd
-from .key_derivation_index import KeyDerivationIndex
 from .metadata_md import MetadataMd
 from .spec_index import SpecIndex
 from .spec_md import SpecMd
@@ -94,7 +94,8 @@ def main() -> None:
     good &= DocIndex(args, spec).save_or_validate()
     good &= FormTemplatesMd(args, spec).save_or_validate()
     good &= PresentationTemplatesMd(args, spec).save_or_validate()
-    good &= KeyDerivationIndex(args, spec).save_or_validate()
+    good &= SubSectionIndex(args, spec, template="key_derivation/.pages.jinja").save_or_validate()
+    good &= SubSectionIndex(args, spec, template="voting_process/.pages.jinja").save_or_validate()
 
     if not good:
         rich.print("File Comparisons Failed, Documentation is not current.")

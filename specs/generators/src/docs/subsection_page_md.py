@@ -4,26 +4,21 @@ import argparse
 from pathlib import Path
 from typing import Any
 
-import rich
-
 from spec.signed_doc import SignedDoc
 
 from .doc_generator import DocGenerator
 
 
-class KeyDerivationPageMd(DocGenerator):
+class SubSectionPageMd(DocGenerator):
     """Generate a single Key Derivation Page from its template."""
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, page: dict[str, Any]) -> None:
         """Initialise form templates Element documentation generator."""
         self._spec = spec
         self._extra_ = page
-        rich.print(page)
         doc_name = page["front_matter"]["Title"]
         template = page["path"].name
         filename = Path(page["path"].parent.name) / page["path"].stem
-        rich.print(f"Generating Key Derivation Page: {doc_name} -> {filename}")
-
         super().__init__(args, spec, doc_name=doc_name, filename=filename, template=template)
 
     @classmethod
