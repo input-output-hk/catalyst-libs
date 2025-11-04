@@ -65,9 +65,7 @@ docs: "Contest Ballot Checkpoint": {
 				"ref",
 			]
 		}
-		chain: {
-			required: "yes"
-		}
+		chain: required: "yes"
 	}
 
 	headers: "content type": value: "application/cbor"
