@@ -1,6 +1,7 @@
 //! Catalyst documents signing crate
 
 mod builder;
+mod cid_v1;
 mod content;
 pub mod decode_context;
 pub mod doc_types;
@@ -250,6 +251,45 @@ impl CatalystSignedDocument {
         mut policy: CompatibilityPolicy,
     ) -> anyhow::Result<Self> {
         Ok(minicbor::decode_with(bytes, &mut policy)?)
+    }
+
+    /// Generate a CID v1 (Content Identifier version 1) for this signed document.
+    ///
+    /// Creates an IPFS-compatible content identifier using:
+    /// - CID version 1
+    /// - CBOR multicodec (0x51)
+    /// - SHA2-256 multihash
+    ///
+    /// # Errors
+    ///  - CBOR serialization failure
+    ///  - Multihash construction failure
+    pub fn to_cid_v1(&self) -> anyhow::Result<cid::Cid> {
+        let cbor_bytes = self.to_bytes()?;
+        cid_v1::to_cid_v1(&cbor_bytes)
+    }
+
+    /// Generate a CID v1 and return it as a multibase-encoded string.
+    ///
+    /// Uses base32 encoding (CID v1 default). The resulting string starts with 'b'.
+    ///
+    /// # Errors
+    ///  - CBOR serialization failure
+    ///  - CID generation failure
+    pub fn to_cid_v1_string(&self) -> anyhow::Result<String> {
+        let cbor_bytes = self.to_bytes()?;
+        cid_v1::to_cid_v1_string(&cbor_bytes)
+    }
+
+    /// Generate a CID v1 and return it as raw bytes.
+    ///
+    /// Binary format: `<version><multicodec><multihash>` (36 bytes)
+    ///
+    /// # Errors
+    ///  - CBOR serialization failure
+    ///  - CID generation failure
+    pub fn to_cid_v1_bytes(&self) -> anyhow::Result<Vec<u8>> {
+        let cbor_bytes = self.to_bytes()?;
+        cid_v1::to_cid_v1_bytes(&cbor_bytes)
     }
 }
 
