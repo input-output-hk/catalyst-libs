@@ -74,9 +74,9 @@ to re-delegate to affirm the delegates latest nomination.
 * Allows a Representative to create or update their profile for a category.
 * The Representative sets their status to 'active' to be discoverable for delegation.
 * The Representative `revokes` the Nomination to signal they are no longer
-    participating in the category.
+  participating in the category.
 * Nominations are not valid if the latest Delegation by the Representative does NOT
-    reference their latest Nomination.
+  reference their latest Nomination.
 
 #### Back End
 

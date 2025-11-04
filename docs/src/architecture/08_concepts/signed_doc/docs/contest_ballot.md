@@ -29,7 +29,7 @@ Only eligible users can cast ballots in the respective contest.
 
 * The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the Contest the ballot is being cast in.
 * The 'ref' metadata fields within the ballot payload (not the headers) must point to
-    ALL the proposals eligible to be chosen in the contest.
+  ALL the proposals eligible to be chosen in the contest.
 
 ### Business Logic
 
@@ -37,18 +37,18 @@ Only eligible users can cast ballots in the respective contest.
 
 * Always cast a ballot for all proposals in the contest.
 * Any proposal not explicitely selected by a user must have the default selection applied.
-    Typically, this would be `abstain`.
+  Typically, this would be `abstain`.
 * The voter signs this document to confirm their ballot.
 * Ballots can not be cast outside the time allowed for the casting of ballots.
 * The `document_id` and `document+ver` must be within the time of allowed casting
-    of ballots.
+  of ballots.
    Any document_id of document_ver outside this time are invalid and will
-    not be counted.
+  not be counted.
 
 #### Back End
 
 * Verifies that the Contest is valid, and that the ballot is cast in the appropriate
-    time frame, and has a valid `document_id` and `document_ver` in that range.
+  time frame, and has a valid `document_id` and `document_ver` in that range.
 * Verify the payload lists all the eligible proposals which can be chosen in the contest.
 * Verify the proofs in the payload are correct.
 

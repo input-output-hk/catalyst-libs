@@ -82,7 +82,7 @@ This section will be included and updated in future iterations.
 
             docs += f"""\n### Schema
 
-{self.json_example(schema, label="Schema", title="Payload JSON Schema", description=docs.strip(), icon_type="abstract")}
+{self.json_example(schema, label="Schema", title="Payload JSON Schema", icon_type="abstract")}
 """
         if len(self._doc.payload.examples) > 0:
             docs += "\n### Example\n" if len(self._doc.payload.examples) < 2 else "\n### Examples\n"  # noqa: PLR2004
@@ -136,9 +136,9 @@ In this case, it *MUST* be encoded as a CBOR `null (0xf6)`.
 
         schema = self._doc.payload.doc_schema
         if schema is not None and isinstance(schema, str):
-            docs += self.document_payload_cbor()
+            docs += "\n" + self.document_payload_cbor()
         else:
-            docs += self.document_payload_json()
+            docs += "\n" + self.document_payload_json()
 
         return docs.strip()
 
