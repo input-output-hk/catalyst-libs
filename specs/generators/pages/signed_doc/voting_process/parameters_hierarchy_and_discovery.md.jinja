@@ -1,0 +1,173 @@
+---
+Title: Parameters Hierarchy and Pub/Sub Discovery
+Authors:
+    - Steven Johnson <steven.johnson@iohk.io>
+Created: 2025-11-05
+order: 1
+---
+
+## Abstract
+
+Explains how Brand, Campaign, Category, and Contest Parameters relate, 
+and how clients discover and validate them in a decentralized pub/sub network 
+using signed documents and content-addressed references.
+
+## Overview
+
+Parameters control the behavior, timelines, and branding for the system at different scopes:
+
+* Brand Parameters: global root for a brand. 
+  See docs: [Brand Parameters](../docs/brand_parameters.md).
+* Campaign Parameters: defined under a brand. 
+  See docs: [Campaign Parameters](../docs/campaign_parameters.md).
+* Category Parameters: defined under a campaign. 
+  See docs: [Category Parameters](../docs/category_parameters.md).
+* Contest Parameters: defined under a brand, campaign, or category. 
+  See docs: [Contest Parameters](../docs/contest_parameters.md).
+
+Each parameters document is a signed document that:
+
+* Uses COSE Sign with a Catalyst ID `kid`. 
+  See: [COSE Header Parameters](../spec.md#content-type).
+* Is content-addressed via a `document_ref` locator (CBOR Tag 42 `cid`). 
+  See: [Document Reference](../metadata.md#document-reference).
+* Links through `metadata.parameters` to its parent in the hierarchy. 
+  See: [Parameters metadata](../metadata.md#parameters).
+* Is validated by its referenced template. 
+  See: [Contest Parameters Form Template](../docs/contest_parameters_form_template.md) and related templates.
+
+## Relationships
+
+* Brand → Campaign → Category form a strict chain via `metadata.parameters`.
+* Contest Parameters link to one of the system-scoped parameters (brand/campaign/category) via 
+  `metadata.parameters` and are thus “anchored” to that chain.
+* Templates can be defined at any of these levels, provided their own `parameters` link transitive-up 
+  to the same brand root.
+  See the rules in [Parameters metadata](../metadata.md#parameters).
+
+```mermaid
+erDiagram
+    BRAND_PARAMETERS ||--o{ CAMPAIGN_PARAMETERS : parameters
+    CAMPAIGN_PARAMETERS ||--o{ CATEGORY_PARAMETERS : parameters
+    BRAND_PARAMETERS ||--o{ CONTEST_PARAMETERS : anchors
+    CAMPAIGN_PARAMETERS ||--o{ CONTEST_PARAMETERS : anchors
+    CATEGORY_PARAMETERS ||--o{ CONTEST_PARAMETERS : anchors
+
+    BRAND_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+    }
+    CAMPAIGN_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+      ref brand_parameters
+    }
+    CATEGORY_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+      ref campaign_parameters
+    }
+    CONTEST_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+      ref brand_or_campaign_or_category
+    }
+```
+
+## Document Identity and Versioning
+
+* `id` and `ver` are UUIDv7 values; 
+* `id` is created once;
+* `ver` increases over time as new versions of the same parameters document are issued.
+* See: [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver).
+
+For example a Brand has ONE Parameters `id`, but that document may have multiple versions
+over time as `ver` increases.
+This defines that specific brand identity while allowing updates to its parameters.
+
+Whereas Campaign, Category, and Contest Parameters each have their own `id` and `ver`,
+that is specific to that parameters document.
+Such that a Brand may have multiple old or concurrent Campaigns, each with their own `id` and `ver`, etc. 
+
+## Pub/Sub Discovery Model
+
+Documents are published in bound topics.
+Each Topic collects a subset of documents based on their anchoring parameters document, and optionally their type.
+
+### Global Root 
+
+The root of discovery is known as the Global root.
+The pub/sub system assumes that valid documents once published will be retained indefinitely.
+In order to prevent buildup and bloat the Global root will rotate through time.
+It is formed of the path:
+`catalyst/signed-docs/<start>/<end>`
+Where `<start>` and `<end>` are UTC Timestamps.
+
+* `<start>` is aligned to the UTC Calendar start of the current year, ie (01-01-XX 00:00:00).
+* `<end>` is aligned to the UTC Calendar start of the second consecutive year, ie (01-01-XX+1 00:00:00).
+
+Only ACTIVE `Brand` Parameters and associated Template documents are published to the Global root topic.
+Because the `<start` is incremented every year, there is a natural rotation of the Global root, and a ` year overlap between two consecutive Global roots.
+This means that ACTIVE Brand documents may be co-published in two consecutive Global root topics for a period of up to one year.
+
+This creates a natural sliding window which allows old, unused or revoked Brand documents to age out of the system over time.
+
+The **ONLY** Documents which may be validly published to the Global root topic are `Brand` Parameters documents, which are signed by the appropriate Administration Key.
+
+Any other document type, or documents signed by other keys, published to the Global root topic must be rejected by subscribers.
+
+### Sub Document Topics
+
+Beneath the Global Root exist a hierarchy of topics for each anchoring parameters document, and optionally by document type.
+
+The general format of these topics is:
+`catalyst/signed-docs/<doc-id>[/<doc-type>]`
+Where:
+* `<doc-id>` is the `id` of the anchoring parameters document.
+    * For Campaign Parameters, this is the Brand's `id`.
+    * For Category Parameters, this is the Campaign's `id`.
+    * For Contest Parameters, this is the Brand's, Campaign's, or Category's `id` as appropriate.
+    * Note this is ONLY the `id` value, NOT the `ver` this means that all versions of documents anchored to that parameters document are published to the same topic.
+* `<doc-type>` is optional, and if present only documents of that type may be published to the topic.
+
+Discovery Happens by subscribing to the Global root topic to find ACTIVE Brand Parameters documents.
+Once discovered, the subscriber can then subscribe to an appropriate brands topic, which allows discovery of all Campaign or Contest Parameters or any other document type anchored to that brand.
+From there, the subscriber can continue down the hierarchy by subscribing to Campaign topics to find Category or Contest Parameters documents anchored to that campaign, and so on.
+
+Producers publish COSE_Sign blobs plus their `document_ref` (CID) on these topics. Consumers:
+
+1. Verify signature (`kid`), content type, and deterministic CBOR/JSON as applicable.
+2. Verify `type`, `id`, `ver`, and that `ver ≥ id` (UUIDv7 ordering).
+3. Verify `template` exists and the payload validates against that template.
+4. Verify `parameters` links to the correct parent in the chain and is consistent transitively up to the brand.
+5. Verify the Document is published to the correct Topic according to its anchoring parameters document and type.
+6. Apply `revocations` and prefer the latest valid `ver` for each `id`.
+7. Optionally follow `chain` for lineage and completeness.
+
+### Entry Points
+
+- Known brand roots (e.g., published by the Brand CA) are typical bootstrap points. From a Brand Parameters `id`:
+  - Subscribe for its Campaign Parameters.
+  - For each campaign, subscribe for its Category Parameters.
+  - For each category, subscribe for any Contest Parameters.
+  - Also subscribe for Contest Parameters anchored directly to the brand or campaign.
+
+### Content Addressing
+
+- Every `document_ref` includes a CBOR-encoded CID for location in content-addressed storage. See: [CBOR Tag 42](../links.md#CBOR-TAG-42) and [IPFS CID](../links.md#IPFS-CID).
+- The locator does not guarantee availability; it guarantees identity. Pub/sub disseminates the bytes; content-addressed stores provide retrieval by CID.
+
+## Validation Summary per Parameters Level
+
+- Brand Parameters: root; template required; `parameters` is excluded at this level.
+- Campaign Parameters: must link `parameters` to a Brand Parameters document.
+- Category Parameters: must link `parameters` to a Campaign Parameters document.
+- Contest Parameters: must link `parameters` to one of Brand/Campaign/Category Parameters for the same chain.
+
+See the per-document pages for full rules and examples: [Brand](../docs/brand_parameters.md), [Campaign](../docs/campaign_parameters.md), [Category](../docs/category_parameters.md), [Contest](../docs/contest_parameters.md).
+
+## Operational Notes
+
+- Consistency: reject documents whose `parameters` do not align transitively to the same brand root as the referencing items (templates, child parameters).
+- Freshness: prefer the highest valid `ver` per `id`; handle `revocations` strictly.
+- Indexes: index by `(type, id, ver)` and by `(parameters-anchor, type)` to accelerate discovery.
