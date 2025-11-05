@@ -52,4 +52,7 @@ pub enum AdminRole {
     /// Moderator role.
     #[serde(rename = "Moderator")]
     Moderator,
+    /// Bulletin Board Operator role.
+    #[serde(rename = "Bulletin Board Operator")]
+    BulletinBoardOperator,
 }
