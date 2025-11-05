@@ -2,17 +2,22 @@
 
 /// Document's 'roles' fields definition
 #[derive(serde::Deserialize)]
-#[allow(clippy::missing_docs_in_private_items)]
 pub struct Roles {
     #[serde(default)]
+    /// A list of user roles that can post this document
+    /// Empty list == No user role can post.
     pub user: Vec<UserRole>,
     #[serde(default)]
+    /// A list of admin roles that can post this document
+    /// Empty list == No admin role can post.
+    /// Placeholder for future use.
+    /// Assume that any Admin Role is equivalent, so admin NOT empty means
+    /// Must be signed with the temporary admin key.
     pub admin: Vec<AdminRole>,
 }
 
 /// Role definition
 #[derive(serde::Deserialize)]
-#[allow(clippy::missing_docs_in_private_items)]
 pub enum UserRole {
     /// Role 0 - A registered User / Voter - Base Role
     Registered,
@@ -22,8 +27,12 @@ pub enum UserRole {
     Representative,
 }
 
+/// Admin Role definitions.
+/// Placeholder for future use.
+/// Assume that any Admin Role is equivalent,
+/// so admin NOT empty means
+/// Must be signed with the temporary admin key.
 #[derive(serde::Deserialize)]
-#[allow(clippy::missing_docs_in_private_items)]
 pub enum AdminRole {
     /// Root Certificate Authority role.
     #[serde(rename = "Root CA")]
