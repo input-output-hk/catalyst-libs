@@ -2,17 +2,19 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
+#![allow(unused, dead_code, deprecated)]
+
 use std::str::FromStr;
 
 use derive_more::{Display, From, Into};
+use futures::{pin_mut, stream::BoxStream, Stream, StreamExt};
 /// IPFS Content Identifier.
 pub use ipld_core::cid::Cid;
 /// IPLD
 pub use ipld_core::ipld::Ipld;
+use libp2p::gossipsub::{Message as PubsubMessage, MessageId as PubsubMessageId};
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
-/// libp2p re-exports.
-pub use rust_ipfs::libp2p::futures::{pin_mut, stream::BoxStream, FutureExt, StreamExt};
 /// Peer Info type.
 pub use rust_ipfs::p2p::PeerInfo;
 /// Enum for specifying paths in IPFS.
@@ -27,15 +29,9 @@ pub use rust_ipfs::Ipfs;
 pub use rust_ipfs::Multiaddr;
 /// Peer ID type.
 pub use rust_ipfs::PeerId;
-/// Stream for `PubSub` Topic Subscriptions.
-pub use rust_ipfs::SubscriptionStream;
-/// Builder type for IPFS Node configuration.
-use rust_ipfs::UninitializedIpfsDefault as UninitializedIpfs;
 use rust_ipfs::{
-    dag::ResolveError,
-    libp2p::gossipsub::{Message as PubsubMessage, MessageId as PubsubMessageId},
-    unixfs::AddOpt,
-    PubsubEvent, Quorum,
+    builder::UninitializedIpfs, dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
+    unixfs::AddOpt, PubsubEvent, Quorum, ToRecordKey,
 };
 
 #[derive(Debug, Display, From, Into)]
@@ -43,7 +39,7 @@ use rust_ipfs::{
 pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
-pub struct IpfsBuilder(UninitializedIpfs);
+pub struct IpfsBuilder(UninitializedIpfs<dummy::Behaviour>);
 
 impl IpfsBuilder {
     #[must_use]
@@ -78,25 +74,25 @@ impl IpfsBuilder {
         )
     }
 
-    #[must_use]
-    /// Set the transport configuration for the IPFS node.
-    pub fn set_transport_configuration(
-        self,
-        transport: rust_ipfs::p2p::TransportConfig,
-    ) -> Self {
-        Self(self.0.set_transport_configuration(transport))
-    }
+    // #[must_use]
+    // /// Set the transport configuration for the IPFS node.
+    // pub fn set_transport_configuration(
+    //     self,
+    //     transport: rust_ipfs::p2p::TransportConfig,
+    // ) -> Self {
+    //     Self(self.0.set_transport_configuration(transport))
+    // }
 
-    #[must_use]
-    /// Disable TLS for the IPFS node.
-    pub fn disable_tls(self) -> Self {
-        let transport = rust_ipfs::p2p::TransportConfig {
-            enable_quic: false,
-            enable_secure_websocket: false,
-            ..Default::default()
-        };
-        Self(self.0.set_transport_configuration(transport))
-    }
+    // #[must_use]
+    // /// Disable TLS for the IPFS node.
+    // pub fn disable_tls(self) -> Self {
+    //     let transport = rust_ipfs::p2p::TransportConfig {
+    //         enable_quic: false,
+    //         enable_secure_websocket: false,
+    //         ..Default::default()
+    //     };
+    //     Self(self.0.set_transport_configuration(transport))
+    // }
 
     /// Start the IPFS node.
     ///
@@ -134,7 +130,7 @@ impl HermesIpfs {
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
-            .disable_tls()
+            //.disable_tls()
             .start()
             .await?;
         Ok(HermesIpfs { node })
@@ -394,7 +390,7 @@ impl HermesIpfs {
         key: impl AsRef<[u8]>,
         value: impl Into<Vec<u8>>,
     ) -> anyhow::Result<()> {
-        self.node.dht_put(key, value, Quorum::One).await
+        self.node.dht_put(key, value.into(), Quorum::One).await
     }
 
     /// Get content from DHT.
@@ -412,7 +408,7 @@ impl HermesIpfs {
     /// Returns error if unable to get content from DHT
     pub async fn dht_get(
         &self,
-        key: impl AsRef<[u8]>,
+        key: impl AsRef<[u8]> + ToRecordKey,
     ) -> anyhow::Result<Vec<u8>> {
         let record_stream = self.node.dht_get(key).await?;
         pin_mut!(record_stream);
@@ -473,7 +469,8 @@ impl HermesIpfs {
         &self,
         topic: impl Into<Option<String>>,
     ) -> anyhow::Result<BoxStream<'static, PubsubEvent>> {
-        self.node.pubsub_events(topic).await
+        //self.node.pubsub_events(topic).await
+        todo!()
     }
 
     /// Subscribes to a pubsub topic.
@@ -489,12 +486,16 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns error if unable to subscribe to pubsub topic.
-    pub async fn pubsub_subscribe(
-        &self,
-        topic: impl Into<String>,
-    ) -> anyhow::Result<SubscriptionStream> {
-        self.node.pubsub_subscribe(topic).await
-    }
+    // pub async fn pubsub_subscribe(
+    // &self,
+    // topic: impl Into<String>,
+    // ) -> anyhow::Result<SubscriptionStream> {
+    // self.node.pubsub_subscribe(topic).await
+
+    // // TODO ?
+    // // self.node.pubsub_subscribe(topic.into()).await?;
+    // // let stream = self.node.pubsub_listener(topic.into()).await?;
+    // }
 
     /// Unsubscribes from a pubsub topic.
     ///
@@ -511,9 +512,10 @@ impl HermesIpfs {
     /// Returns error if unable to unsubscribe from pubsub topic.
     pub async fn pubsub_unsubscribe(
         &self,
-        topic: impl Into<String>,
+        topic: impl Into<String> + IntoGossipsubTopic,
     ) -> anyhow::Result<bool> {
-        self.node.pubsub_unsubscribe(topic).await
+        //self.node.pubsub_unsubscribe(topic).await
+        todo!()
     }
 
     /// Publishes a message to a pubsub topic.
@@ -535,10 +537,11 @@ impl HermesIpfs {
         topic: impl Into<String>,
         message: Vec<u8>,
     ) -> anyhow::Result<MessageId> {
-        self.node
-            .pubsub_publish(topic, message)
-            .await
-            .map(std::convert::Into::into)
+        // self.node
+        //     .pubsub_publish(topic, message)
+        //     .await
+        //     .map(std::convert::Into::into)
+        todo!()
     }
 
     /// Ban peer from node.
@@ -647,15 +650,15 @@ impl FromStr for GetIpfsFile {
     }
 }
 
-/// Handle stream of messages from the IPFS pubsub topic
-pub fn subscription_stream_task(
-    stream: SubscriptionStream,
-    handler: fn(PubsubMessage),
-) -> tokio::task::JoinHandle<()> {
-    tokio::spawn(async move {
-        pin_mut!(stream);
-        while let Some(msg) = stream.next().await {
-            handler(msg);
-        }
-    })
-}
+///// Handle stream of messages from the IPFS pubsub topic
+// pub fn subscription_stream_task(
+//     stream: SubscriptionStream,
+//     handler: fn(PubsubMessage),
+// ) -> tokio::task::JoinHandle<()> {
+//     tokio::spawn(async move {
+//         pin_mut!(stream);
+//         while let Some(msg) = stream.next().await {
+//             handler(msg);
+//         }
+//     })
+// }
