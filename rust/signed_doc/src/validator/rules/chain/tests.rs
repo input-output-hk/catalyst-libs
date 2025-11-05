@@ -8,19 +8,17 @@ use crate::{
 };
 
 mod helper {
-    use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
     use catalyst_types::uuid::UuidV7;
+    use chrono::{Duration, Utc};
     use uuid::{Timestamp, Uuid};
 
-    pub(super) fn get_now_plus_uuidv7(secs: u64) -> UuidV7 {
-        let future_time = SystemTime::now()
-            .checked_add(Duration::from_secs(secs))
-            .unwrap();
-        let duration_since_epoch = future_time.duration_since(UNIX_EPOCH).unwrap();
+    pub(super) fn get_now_plus_uuidv7(secs: i64) -> UuidV7 {
+        let future_time = Utc::now()
+            .checked_add_signed(Duration::seconds(secs))
+            .expect("time overflow in future_time calculation");
 
-        let unix_secs = duration_since_epoch.as_secs();
-        let nanos = duration_since_epoch.subsec_nanos();
+        let unix_secs = u64::try_from(future_time.timestamp()).unwrap_or(0);
+        let nanos = future_time.timestamp_subsec_nanos();
 
         let ts = Timestamp::from_unix(uuid::NoContext, unix_secs, nanos);
         let uuid = Uuid::new_v7(ts);
