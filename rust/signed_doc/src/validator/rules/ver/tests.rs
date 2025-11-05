@@ -1,5 +1,4 @@
-use std::time::SystemTime;
-
+use chrono::Utc;
 use test_case::test_case;
 use uuid::{Timestamp, Uuid};
 
@@ -24,13 +23,12 @@ use crate::{
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
         let doc_type = UuidV4::new();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         let first_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
@@ -38,9 +36,10 @@ use crate::{
             .build();
         provider.add_document(None, &first_doc).unwrap();
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
@@ -54,13 +53,12 @@ use crate::{
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
         let doc_type = UuidV4::new();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         let first_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
@@ -68,9 +66,10 @@ use crate::{
             .build();
         provider.add_document(None, &first_doc).unwrap();
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
@@ -84,13 +83,12 @@ use crate::{
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
         let doc_type = UuidV4::new();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
@@ -98,43 +96,42 @@ use crate::{
             .build();
         provider.add_document(None, &doc).unwrap();
 
-
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 3, 0, 0, 0))
+        let ver_1 = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 3).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(ver))
+            .with_metadata_field(SupportedField::Ver(ver_1))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build();
         provider.add_document(None, &doc).unwrap();
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 2, 0, 0, 0))
+        let ver_2 = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 2).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
-            .with_metadata_field(SupportedField::Ver(ver))
+            .with_metadata_field(SupportedField::Ver(ver_2))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build()
     }
     => false;
-    "`ver` less than `ver` field for of the latest known document"
+    "`ver` less than `ver` field for the latest known document"
 )]
 #[test_case(
     #[allow(clippy::arithmetic_side_effects)]
     |_| {
         let doc_type = UuidV4::new();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
@@ -148,13 +145,12 @@ use crate::{
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
         let doc_type = UuidV4::new();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         let first_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
@@ -162,9 +158,10 @@ use crate::{
             .build();
         provider.add_document(None, &first_doc).unwrap();
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
@@ -177,22 +174,22 @@ use crate::{
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
         let doc_type = UuidV4::new();
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         let first_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .build();
         provider.add_document(None, &first_doc).unwrap();
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
@@ -205,13 +202,12 @@ use crate::{
 #[test_case(
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+        let now = Utc::now().timestamp();
+
+        let id = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         let first_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
@@ -219,9 +215,10 @@ use crate::{
             .build();
         provider.add_document(None, &first_doc).unwrap();
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
+
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))

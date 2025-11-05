@@ -1,6 +1,6 @@
 [package]
 name = "cardano-chain-follower"
-version = "0.0.17"
+version = "0.0.18"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -16,8 +16,8 @@ mithril-client = { version = "=0.12.2", default-features = false, features = [
     "num-integer-backend",
 ] }
 
-cardano-blockchain-types = { version = "0.0.7", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types/v0.0.7" }
-catalyst-types = { version = "0.0.9",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.9" }
+cardano-blockchain-types = { version = "0.0.8", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types/v0.0.8" }
+catalyst-types = { version = "0.0.10",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.10" }
 
 thiserror = "1.0.69"
 tokio = { version = "1.45.0", features = [
@@ -60,7 +60,7 @@ test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.12", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "rbac-registration/v0.0.12" }
+rbac-registration = { version = "0.0.14", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "rbac-registration/v0.0.14" }
 minicbor = { version = "2.0.0", features = ["alloc", "half"] }
 
 # Note, these features are for support of features exposed by dependencies.

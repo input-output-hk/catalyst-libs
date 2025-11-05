@@ -33,6 +33,7 @@ futures = "0.3.31"
 ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
 tracing = "0.1.40"
 thiserror = "2.0.11"
+chrono = "0.4.42"
 
 [dev-dependencies]
 base64-url = "3.0.0"
