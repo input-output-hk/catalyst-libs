@@ -8,21 +8,31 @@ order: 2
 
 ## Abstract
 
-Shows how Proposal documents relate to their Templates, how submission state is determined, and how all artifacts are discovered and validated in a decentralized pub/sub network.
+Shows how Proposal documents relate to their Templates, how submission state is determined, 
+and how all artifacts are discovered and validated in a decentralized pub/sub network.
 
 ## Documents and Roles
 
-- Proposal: the authored content. See: [Proposal](../docs/proposal.md).
-- Proposal Form Template: defines schema and form hints. See: [Proposal Form Template](../docs/proposal_form_template.md).
-- Proposal Submission Action: signals `final`, `draft`, or `hide`. See: [Proposal Submission Action](../docs/proposal_submission_action.md).
-- Optional Comments/Moderation artifacts exist; see: [Proposal Comment](../docs/proposal_comment.md) and moderation docs where applicable.
+* [Proposal](../docs/proposal.md): the authored content.
+* [Proposal Form Template](../docs/proposal_form_template.md): defines schema and form hints.
+* [Proposal Submission Action](../docs/proposal_submission_action.md): signals `final`, `draft`, or `hide`.
+* *Optional [Proposal Comment](../docs/proposal_comment.md)* and 
+  *[Proposal Comment Form Template](../docs/proposal_comment_form_template.md)* artifacts exist;
+* *Optional [Proposal Moderation Action](../docs/proposal_moderation_action.md)* artifacts exist;
 
 ## Relationships
 
-- A Proposal references a Proposal Form Template via `metadata.template` and a system parameters anchor via `metadata.parameters`.
-  - The template’s own `parameters` must transitively align to the same Brand/Campaign/Category chain. See: [Parameters metadata](../metadata.md#parameters).
-- A Proposal Submission Action references the Proposal via `metadata.ref` and repeats `metadata.parameters`, linked to `ref` for consistency.
-  - Multiple collaborators may exist; all listed collaborators must submit equivalent `final` actions to be considered final by the deadline.
+* A Proposal references a Proposal Form Template via [`metadata.template`](../metadata.md#template)
+  and a system parameters anchor via [`metadata.parameters`](../metadata.md#parameters).
+   * The template’s own [`parameters`](../metadata.md#parameters) must transitively align to the 
+     same Brand/Campaign/Category chain. 
+* A Proposal Submission Action references the Proposal via `metadata.ref` and repeats `metadata.parameters`, 
+  linked to `ref` for consistency.
+   * Multiple collaborators may exist; all listed collaborators must submit equivalent `final` 
+     actions to be considered final by the deadline.
+
+The Deadline for a Proposal to be Final will be defined in the applicable parameters document(s),
+typically the Category Parameters document.
 
 ## Versioning and Collaboration
 
