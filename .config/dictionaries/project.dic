@@ -165,6 +165,9 @@ localizable
 logcall
 lookaside
 ltail
+ltdoc
+ltend
+ltstart
 maindbname
 mapref
 markdownlint

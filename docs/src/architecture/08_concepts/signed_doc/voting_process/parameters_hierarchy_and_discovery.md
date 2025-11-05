@@ -8,36 +8,36 @@ order: 1
 
 ## Abstract
 
-Explains how Brand, Campaign, Category, and Contest Parameters relate, 
-and how clients discover and validate them in a decentralized pub/sub network 
+Explains how Brand, Campaign, Category, and Contest Parameters relate,
+and how clients discover and validate them in a decentralized pub/sub network
 using signed documents and content-addressed references.
 
 ## Overview
 
 Parameters control the behavior, timelines, and branding for the system at different scopes:
 
-* [Brand Parameters](../docs/brand_parameters.md): global root for a brand. 
-* [Campaign Parameters](../docs/campaign_parameters.md): defined under a brand. 
-* [Category Parameters](../docs/category_parameters.md): defined under a campaign. 
-* [Contest Parameters](../docs/contest_parameters.md): defined under a brand, campaign, or category. 
+* [Brand Parameters](../docs/brand_parameters.md): global root for a brand.
+* [Campaign Parameters](../docs/campaign_parameters.md): defined under a brand.
+* [Category Parameters](../docs/category_parameters.md): defined under a campaign.
+* [Contest Parameters](../docs/contest_parameters.md): defined under a brand, campaign, or category.
 
 Each parameters document is a signed document that:
 
-* Uses COSE Sign with a Catalyst ID `kid`. 
+* Uses [COSE Sign][RFC9052-CoseSign] with a Catalyst ID `kid`.
   See: [COSE Header Parameters](../spec.md#content-type).
-* Is content-addressed via a `document_ref` locator (CBOR Tag 42 `cid`). 
+* Is content-addressed via a `document_ref` locator (CBOR Tag 42 `cid`).
   See: [Document Reference](../metadata.md#document-reference).
-* Links through `metadata.parameters` to its parent in the hierarchy. 
+* Links through `metadata.parameters` to its parent in the hierarchy.
   See: [Parameters metadata](../metadata.md#parameters).
-* Is validated by its referenced template. 
+* Is validated by its referenced template.
   See: [Contest Parameters Form Template](../docs/contest_parameters_form_template.md) and related templates.
 
 ## Relationships
 
 * Brand → Campaign → Category form a strict chain via [`metadata.parameters`](../metadata.md#parameters).
-* Contest Parameters link to one of the system-scoped parameters (brand/campaign/category) via 
+* Contest Parameters link to one of the system-scoped parameters (brand/campaign/category) via
   [`metadata.parameters`](../metadata.md#parameters) and are thus “anchored” to that chain.
-* Templates can be defined at any of these levels, provided their own 
+* Templates can be defined at any of these levels, provided their own
   [`parameters`](../metadata.md#parameters) link transitive-up to the same brand root.
 
 ```mermaid
@@ -71,26 +71,26 @@ erDiagram
 
 ## Document Identity and Versioning
 
-* [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are UUIDv7 values; 
+* [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are [UUIDv7][RFC9562-V7] values;
 * [`id`](../metadata.md#id) is created once;
 * [`ver`](../metadata.md#ver) increases over time as new versions of the same parameters document are issued.
 
-For example a Brand has ONE Parameters [`id`](../metadata.md#id), but that document may have 
+For example a Brand has ONE Parameters [`id`](../metadata.md#id), but that document may have
 multiple versions over time as [`ver`](../metadata.md#ver) increases.
 This defines that specific brand identity while allowing updates to its parameters.
 
-Whereas Campaign, Category, and Contest Parameters each have their own 
+Whereas Campaign, Category, and Contest Parameters each have their own
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver),
 that is specific to that parameters document.
-Such that a Brand may have multiple old or concurrent Campaigns, each with their own 
-[`id`](../metadata.md#id) and [`ver`](../metadata.md#ver), etc. 
+Such that a Brand may have multiple old or concurrent Campaigns, each with their own
+[`id`](../metadata.md#id) and [`ver`](../metadata.md#ver), etc.
 
 ## Pub/Sub Discovery Model
 
 Documents are published in bound topics.
 Each Topic collects a subset of documents based on their anchoring parameters document, and optionally their type.
 
-### Global Root 
+### Global Root
 
 The root of discovery is known as the Global root.
 The pub/sub system assumes that valid documents once published will be retained indefinitely.
@@ -114,7 +114,7 @@ unused or revoked Brand documents to age out of the system over time.
 The **ONLY** Documents which may be validly published to the Global root topic are `Brand` Parameters documents,
 which are signed by the appropriate Administration Key.
 
-Any other document type, or documents signed by other keys, 
+Any other document type, or documents signed by other keys,
 published to the Global root topic must be rejected by subscribers.
 
 #### Example
@@ -135,17 +135,17 @@ Where:
     * For Campaign Parameters, this is the Brand's [`id`](../metadata.md#id).
     * For Category Parameters, this is the Campaign's [`id`](../metadata.md#id).
     * For Contest Parameters, this is the Brand's, Campaign's, or Category's [`id`](../metadata.md#id) as appropriate.
-    * Note this is ONLY the [`id`](../metadata.md#id) value, NOT the [`ver`](../metadata.md#ver) this means that all 
+    * Note this is ONLY the [`id`](../metadata.md#id) value, NOT the [`ver`](../metadata.md#ver) this means that all
       versions of documents anchored to that parameters document are published to the same topic.
-* `<doc-type>` is optional, and if present only documents of that UUIDv4 type may be published to the topic.
+* `<doc-type>` is optional, and if present only documents of that [UUIDv4][RFC9562-V4] type may be published to the topic.
 
 Discovery Happens by subscribing to the Global root topic to find ACTIVE Brand Parameters documents.
-Once discovered, the subscriber can then subscribe to an appropriate brands' topic, 
+Once discovered, the subscriber can then subscribe to an appropriate brands' topic,
 which allows discovery of all Campaign or Contest Parameters or any other document type anchored to that brand.
-From there, the subscriber can continue down the hierarchy by subscribing to Campaign topics to find 
+From there, the subscriber can continue down the hierarchy by subscribing to Campaign topics to find
 Category or Contest Parameters documents anchored to that campaign, and so on.
 
-Producers publish COSE_Sign blobs plus their `document_ref` (CID) on these topics. 
+Producers publish COSE_Sign blobs plus their `document_ref` (CID) on these topics.
 
 Consumers:
 
@@ -156,7 +156,7 @@ Consumers:
 4. Verify [`parameters`](../metadata.md#parameters) links to the correct parent in the chain and is
    consistent transitively up to the brand.
 5. Verify the Document is published to the correct Topic according to its anchoring parameters document and type.
-6. Apply [`revocations`](../metadata.md#revocations) and prefer the latest valid 
+6. Apply [`revocations`](../metadata.md#revocations) and prefer the latest valid
    [`ver`](../metadata.md#ver) for each [`id`](../metadata.md#id).
 7. Optionally follow [`chain`](../metadata.md#chain) for lineage and completeness.
 
@@ -244,7 +244,7 @@ flowchart TD
 
     %% Note
     note@{ shape: flag, label: "Anchoring uses the parent parameters *id*.
-    All versions (*ver*) share the same topic for a given *id*." }    
+    All versions (*ver*) share the same topic for a given *id*." }
     TB -.- note```
 ```
 
@@ -266,23 +266,23 @@ flowchart TD
 
 ### Content Addressing
 
-* Every `document_ref` includes a CBOR encoded CID for location in content-addressed storage.
-  See: CBOR Tag 42 and IPFS CID.
-* The locator does not guarantee availability; 
-  it guarantees identity. 
+* Every `document_ref` includes a [CBOR][RFC8949] encoded CID for location in content-addressed storage.
+  See: [CBOR][RFC8949] Tag 42 and [IPFS CID][IPFS-CID].
+* The locator does not guarantee availability;
+  it guarantees identity.
 * Pub/sub disseminates the bytes; content-addressed stores provide retrieval by CID.
 
 ## Validation Summary per Parameters Level
 
 * Brand Parameters: root; template required; [`parameters`](../metadata.md#parameters) is excluded at this level.
-* Campaign Parameters: must link [`parameters`](../metadata.md#parameters) to a Brand Parameters document; 
+* Campaign Parameters: must link [`parameters`](../metadata.md#parameters) to a Brand Parameters document;
   template required.
-* Category Parameters: must link [`parameters`](../metadata.md#parameters) to a Campaign Parameters document; 
+* Category Parameters: must link [`parameters`](../metadata.md#parameters) to a Campaign Parameters document;
   template required.
-* Contest Parameters: must link [`parameters`](../metadata.md#parameters) to one of 
+* Contest Parameters: must link [`parameters`](../metadata.md#parameters) to one of
   Brand/Campaign/Category Parameters for the same chain; template required.
 
-See the per-document pages for full rules and examples: 
+See the per-document pages for full rules and examples:
 
 * [Brand](../docs/brand_parameters.md)
 * [Campaign](../docs/campaign_parameters.md)
@@ -291,8 +291,14 @@ See the per-document pages for full rules and examples:
 
 ## Operational Notes
 
-* **Consistency:** reject documents whose [`parameters`](../metadata.md#parameters) do not align transitively to the same 
+* **Consistency:** reject documents whose [`parameters`](../metadata.md#parameters) do not align transitively to the same
   brand root as the referencing items (templates, child parameters).
-* **Freshness:** prefer the highest valid [`ver`](../metadata.md#ver) per [`id`](../metadata.md#id); 
+* **Freshness:** prefer the highest valid [`ver`](../metadata.md#ver) per [`id`](../metadata.md#id);
   handle [`revocations`](../metadata.md#revocations) strictly.
 * **Indexes:** index by `(type, id, ver)` and by `(parameters-anchor, type)` to accelerate discovery.
+
+[RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
+[RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4
+[RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html

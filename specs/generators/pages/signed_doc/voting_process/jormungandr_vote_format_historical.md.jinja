@@ -3,6 +3,7 @@ Title: Jörmungandr Voting Transaction (Historical)
 Authors:
     - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
 Created: 2024-10-24
+order: 7
 ---
 
 ## Abstract
