@@ -1,5 +1,4 @@
-use std::time::SystemTime;
-
+use chrono::Utc;
 use test_case::test_case;
 use uuid::{Timestamp, Uuid};
 
@@ -22,46 +21,46 @@ use crate::{
 #[test_case(
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let to_far_in_past = Uuid::new_v7(Timestamp::from_unix_time(
-                now - provider.past_threshold().unwrap().as_secs() - 1,
-                0,
-                0,
-                0,
-            ))
-            .try_into()
-            .unwrap();
+        let now = Utc::now().timestamp();
+        let past_threshold_secs = i64::try_from(provider.past_threshold().unwrap().as_secs()).unwrap_or(0);
+
+        let too_far_in_past = Uuid::new_v7(Timestamp::from_unix_time(
+            u64::try_from(now - past_threshold_secs - 1).unwrap_or(0),
+            0,
+            0,
+            0,
+        ))
+        .try_into()
+        .unwrap();
+
         Builder::new()
-            .with_metadata_field(SupportedField::Id(to_far_in_past))
+            .with_metadata_field(SupportedField::Id(too_far_in_past))
             .build()
     }
     => false;
-    "`id` to far in past"
+    "`id` too far in past"
 )]
 #[test_case(
     #[allow(clippy::arithmetic_side_effects)]
     |provider| {
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let to_far_in_future = Uuid::new_v7(Timestamp::from_unix_time(
-                now + provider.future_threshold().unwrap().as_secs() + 1,
-                0,
-                0,
-                0,
-            ))
-            .try_into()
-            .unwrap();
+        let now = Utc::now().timestamp();
+        let future_threshold_secs = i64::try_from(provider.future_threshold().unwrap().as_secs()).unwrap_or(0);
+
+        let too_far_in_future = Uuid::new_v7(Timestamp::from_unix_time(
+            u64::try_from(now + future_threshold_secs + 1).unwrap_or(0),
+            0,
+            0,
+            0,
+        ))
+        .try_into()
+        .unwrap();
+
         Builder::new()
-            .with_metadata_field(SupportedField::Id(to_far_in_future))
+            .with_metadata_field(SupportedField::Id(too_far_in_future))
             .build()
     }
     => false;
-    "`id` to far in future"
+    "`id` too far in future"
 )]
 #[test_case(
     |_| {
