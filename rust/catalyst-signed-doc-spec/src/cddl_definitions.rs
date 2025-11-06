@@ -40,7 +40,7 @@ impl CddlDefinitions {
         cddl_type: &CddlType,
     ) -> anyhow::Result<&CddlDef> {
         self.0.get(cddl_type).ok_or(anyhow::anyhow!(
-            "Cannot find a cddl defition for the {cddl_type}"
+            "Cannot find a cddl definition for the {cddl_type}"
         ))
     }
 
