@@ -1,9 +1,8 @@
 //! A wrapper around a JSON Schema validator.
 
-use std::ops::Deref;
+use std::{ops::Deref, sync::Arc};
 
-use anyhow::anyhow;
-use jsonschema::{options, Draft, Validator};
+use jsonschema::{options, Draft, ValidationError, Validator};
 use serde_json::Value;
 
 /// Wrapper around a JSON Schema validator.
@@ -11,7 +10,21 @@ use serde_json::Value;
 /// Attempts to detect the draft version from the `$schema` field.
 /// If not specified, it tries Draft2020-12 first, then falls back to Draft7.
 /// Returns an error if schema is invalid for both.
-pub(crate) struct JsonSchema(Validator);
+#[derive(Clone)]
+pub struct JsonSchema(Arc<Validator>);
+
+/// `JsonSchema` building error type.
+#[derive(Debug, thiserror::Error)]
+pub enum SchemaBuildError {
+    /// Invalid JSON Schema error.
+    #[error("{0}")]
+    InvalidSchema(#[from] ValidationError<'static>),
+    /// Undetectable JSON schema version.
+    #[error(
+        "Could not detect draft version and schema is not valid against Draft2020-12 or Draft7"
+    )]
+    UndetectableDraft,
+}
 
 impl Deref for JsonSchema {
     type Target = Validator;
@@ -22,7 +35,7 @@ impl Deref for JsonSchema {
 }
 
 impl TryFrom<&Value> for JsonSchema {
-    type Error = anyhow::Error;
+    type Error = SchemaBuildError;
 
     fn try_from(schema: &Value) -> std::result::Result<Self, Self::Error> {
         let draft_version = if let Some(schema) = schema.get("$schema").and_then(|s| s.as_str()) {
@@ -38,27 +51,22 @@ impl TryFrom<&Value> for JsonSchema {
         };
 
         if let Some(draft) = draft_version {
-            let validator = options()
-                .with_draft(draft)
-                .build(schema)
-                .map_err(|e| anyhow!("Invalid JSON Schema: {e}"))?;
+            let validator = options().with_draft(draft).build(schema)?;
 
-            Ok(JsonSchema(validator))
+            Ok(JsonSchema(validator.into()))
         } else {
             // if draft not specified or not detectable:
             // try draft2020-12
             if let Ok(validator) = options().with_draft(Draft::Draft202012).build(schema) {
-                return Ok(JsonSchema(validator));
+                return Ok(JsonSchema(validator.into()));
             }
 
             // fallback to draft7
             if let Ok(validator) = options().with_draft(Draft::Draft7).build(schema) {
-                return Ok(JsonSchema(validator));
+                return Ok(JsonSchema(validator.into()));
             }
 
-            Err(anyhow!(
-                "Could not detect draft version and schema is not valid against Draft2020-12 or Draft7"
-            ))
+            Err(SchemaBuildError::UndetectableDraft)
         }
     }
 }

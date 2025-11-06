@@ -1,6 +1,5 @@
 //! Catalyst Signed Documents validation logic
 
-pub(crate) mod json_schema;
 pub(crate) mod rules;
 
 use std::{collections::HashMap, sync::LazyLock};

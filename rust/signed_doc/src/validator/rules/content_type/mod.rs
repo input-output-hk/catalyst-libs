@@ -3,7 +3,9 @@
 #[cfg(test)]
 mod tests;
 
-use crate::{metadata::ContentType, validator::json_schema::JsonSchema, CatalystSignedDocument};
+use catalyst_types::json_schema::JsonSchema;
+
+use crate::{metadata::ContentType, CatalystSignedDocument};
 
 /// `content-type` field validation rule
 #[derive(Debug)]
