@@ -5,7 +5,7 @@ use std::{collections::HashMap, fmt::Display};
 use cbork_cddl_parser::validate_cddl;
 
 #[derive(serde::Deserialize)]
-pub struct CddlDefitions(HashMap<CddlType, CddlDef>);
+pub struct CddlDefinitions(HashMap<CddlType, CddlDef>);
 
 #[derive(Clone, serde::Deserialize, PartialEq, Eq, Hash)]
 pub struct CddlType(String);
@@ -34,7 +34,7 @@ impl CddlDef {
     }
 }
 
-impl CddlDefitions {
+impl CddlDefinitions {
     fn find_cddl_def(
         &self,
         cddl_type: &CddlType,

@@ -6,7 +6,7 @@ mod tests;
 use std::fmt::Debug;
 
 use catalyst_signed_doc_spec::{
-    cddl_definitions::CddlDefitions,
+    cddl_definitions::CddlDefinitions,
     payload::{Payload, Schema},
 };
 use catalyst_types::json_schema::JsonSchema;
@@ -49,7 +49,7 @@ pub(crate) enum ContentRule {
 impl ContentRule {
     /// Generating `ContentRule` from specs
     pub(crate) fn new(
-        cddl_def: &CddlDefitions,
+        cddl_def: &CddlDefinitions,
         spec: &Payload,
     ) -> anyhow::Result<Self> {
         if spec.nil {

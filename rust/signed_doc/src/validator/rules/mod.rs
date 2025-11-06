@@ -2,7 +2,7 @@
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
 use anyhow::Context;
-use catalyst_signed_doc_spec::{cddl_definitions::CddlDefitions, DocSpec, DocSpecs};
+use catalyst_signed_doc_spec::{cddl_definitions::CddlDefinitions, DocSpec, DocSpecs};
 use futures::FutureExt;
 
 use crate::{
@@ -118,7 +118,7 @@ impl Rules {
 
     /// Creating a `Rules` instance from the provided specs.
     fn new(
-        cddl_defs: &CddlDefitions,
+        cddl_defs: &CddlDefinitions,
         all_docs_specs: &DocSpecs,
         doc_spec: &DocSpec,
     ) -> anyhow::Result<Self> {

@@ -16,7 +16,7 @@ use std::{collections::HashMap, fmt::Display, ops::Deref};
 use build_info as build_info_lib;
 
 use crate::{
-    cddl_definitions::CddlDefitions, copyright::Copyright, headers::Headers, metadata::Metadata,
+    cddl_definitions::CddlDefinitions, copyright::Copyright, headers::Headers, metadata::Metadata,
     payload::Payload, signers::Signers,
 };
 
@@ -26,7 +26,7 @@ build_info_lib::build_info!(pub(crate) fn build_info);
 #[derive(serde::Deserialize)]
 pub struct CatalystSignedDocSpec {
     #[serde(rename = "cddlDefinitions")]
-    pub cddl_definitions: CddlDefitions,
+    pub cddl_definitions: CddlDefinitions,
     copyright: Copyright,
     pub docs: DocSpecs,
 }
