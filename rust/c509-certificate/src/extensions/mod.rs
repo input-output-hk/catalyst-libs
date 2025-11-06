@@ -71,28 +71,28 @@ impl Encode<()> for Extensions {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // If there is only one extension and it is KeyUsage, encode as int
         // encoding as absolute value of the second int and the sign of the first int
-        if let Some(extension) = self.0.first() {
-            if self.0.len() == 1 && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID {
-                match extension.value() {
-                    ExtensionValue::Int(value) => {
-                        let ku_value = if extension.critical() {
-                            value
-                                .checked_neg()
-                                .ok_or_else(|| minicbor::encode::Error::message(format!("Invalid key usage value (will overflow during negation): {value}")))?
-                        } else {
-                            *value
-                        };
-                        encode_helper(e, "Extensions KeyUsage", ctx, &ku_value)?;
-                        return Ok(());
-                    },
-                    _ => {
-                        return Err(minicbor::encode::Error::message(
-                            "KeyUsage extension value should be an integer",
-                        ));
-                    },
+        if let Some(extension) = self.0.first()
+            && self.0.len() == 1 && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID {
+            match extension.value() {
+                ExtensionValue::Int(value) => {
+                    let ku_value = if extension.critical() {
+                        value
+                            .checked_neg()
+                            .ok_or_else(|| minicbor::encode::Error::message(format!("Invalid key usage value (will overflow during negation): {value}")))?
+                    } else {
+                        *value
+                    };
+                    encode_helper(e, "Extensions KeyUsage", ctx, &ku_value)?;
+                    return Ok(());
+                }
+                _ => {
+                    return Err(minicbor::encode::Error::message(
+                        "KeyUsage extension value should be an integer",
+                    ));
                 }
             }
         }
+
         // Else handle the array of `Extension`
         encode_array_len(e, "Extensions", self.0.len() as u64)?;
         for extension in &self.0 {

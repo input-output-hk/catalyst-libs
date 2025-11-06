@@ -7,8 +7,8 @@ use std::{
     path::{Path, PathBuf},
     // process::Stdio,
     sync::{
-        atomic::{AtomicU64, Ordering},
         Arc, OnceLock,
+        atomic::{AtomicU64, Ordering},
     },
 };
 
@@ -18,9 +18,9 @@ use catalyst_types::{conversion::from_saturating, mmap_file::MemoryMapFile};
 use dashmap::DashSet;
 use memx::memcmp;
 use mithril_client::{
+    MithrilResult,
     common::CompressionAlgorithm,
     file_downloader::{DownloadEvent, FileDownloader, FileDownloaderUri},
-    MithrilResult,
 };
 use tar::{Archive, EntryType};
 use tokio::{fs::create_dir_all, task::spawn_blocking};
@@ -254,17 +254,16 @@ impl Inner {
         // Can't dedup if the current file is not de-dupable (must be immutable)
         if rel_file.starts_with("immutable") {
             // Can't dedup if we don't have a previous file to dedup against.
-            if let Some(prev_file) = prev_file {
-                if let Some(current_size) = get_file_size_sync(prev_file) {
-                    // If the current file is not exactly the same as the previous file size, we
-                    // can't dedup.
-                    if file_size == current_size {
-                        if let Ok(pref_file_loaded) = Self::mmap_open_sync(prev_file) {
-                            if pref_file_loaded.size() == file_size {
-                                return Ok(pref_file_loaded);
-                            }
-                        }
-                    }
+            if let Some(prev_file) = prev_file
+                && let Some(current_size) = get_file_size_sync(prev_file)
+            {
+                // If the current file is not exactly the same as the previous file size, we
+                // can't dedup.
+                if file_size == current_size
+                    && let Ok(pref_file_loaded) = Self::mmap_open_sync(prev_file)
+                    && pref_file_loaded.size() == file_size
+                {
+                    return Ok(pref_file_loaded);
                 }
             }
         }
