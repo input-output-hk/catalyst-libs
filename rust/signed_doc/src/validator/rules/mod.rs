@@ -2,7 +2,7 @@
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
 use anyhow::Context;
-use catalyst_signed_doc_spec::{DocSpec, DocSpecs};
+use catalyst_signed_doc_spec::{cddl_definitions::CddlDefinitions, DocSpec, DocSpecs};
 use futures::FutureExt;
 
 use crate::{
@@ -118,6 +118,7 @@ impl Rules {
 
     /// Creating a `Rules` instance from the provided specs.
     fn new(
+        cddl_defs: &CddlDefinitions,
         all_docs_specs: &DocSpecs,
         doc_spec: &DocSpec,
     ) -> anyhow::Result<Self> {
@@ -133,7 +134,7 @@ impl Rules {
             reply: ReplyRule::new(all_docs_specs, &doc_spec.metadata.reply)?,
             section: SectionRule::NotSpecified,
             collaborators: CollaboratorsRule::new(&doc_spec.metadata.collaborators),
-            content: ContentRule::new(&doc_spec.payload)?,
+            content: ContentRule::new(cddl_defs, &doc_spec.payload)?,
             kid: SignatureKidRule::new(&doc_spec.signers.roles)?,
             signature: SignatureRule,
             ownership: DocumentOwnershipRule::new(&doc_spec.signers.update, doc_spec)?,
@@ -157,7 +158,7 @@ impl Rules {
                 continue;
             }
 
-            let rules = Self::new(&spec.docs, doc_spec)
+            let rules = Self::new(&spec.cddl_definitions, &spec.docs, doc_spec)
                 .context(format!("Fail to initializing document '{doc_name}'"))?;
             let doc_type = doc_spec.doc_type.parse()?;
 
