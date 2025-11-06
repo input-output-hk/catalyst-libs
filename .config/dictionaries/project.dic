@@ -179,6 +179,7 @@ MDLINTS
 mdns
 MEMMAP
 memx
+Merkle
 Metadatum
 metno
 mgrybyk
@@ -257,6 +258,7 @@ rankdir
 rapidoc
 readlinkat
 redoc
+rejectattr
 REMOVEDIR
 renameat
 Replayability
@@ -287,6 +289,7 @@ scanstatus
 Sched
 scrollability
 seckey
+selectattr
 Signdata
 sitedocs
 skiplist
