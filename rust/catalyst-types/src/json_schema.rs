@@ -2,7 +2,6 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use anyhow::anyhow;
 use jsonschema::{options, Draft, Validator};
 use serde_json::Value;
 
@@ -14,6 +13,19 @@ use serde_json::Value;
 #[derive(Clone)]
 pub struct JsonSchema(Arc<Validator>);
 
+/// `JsonSchema` building error type.
+#[derive(Debug, thiserror::Error)]
+pub enum SchemaBuildError {
+    /// Invalid JSON Schema error.
+    #[error("Invalid JSON Schema")]
+    InvalidSchema,
+    /// Undetectable JSON schema version.
+    #[error(
+        "Could not detect draft version and schema is not valid against Draft2020-12 or Draft7"
+    )]
+    UndetectableDraft,
+}
+
 impl Deref for JsonSchema {
     type Target = Validator;
 
@@ -23,7 +35,7 @@ impl Deref for JsonSchema {
 }
 
 impl TryFrom<&Value> for JsonSchema {
-    type Error = anyhow::Error;
+    type Error = SchemaBuildError;
 
     fn try_from(schema: &Value) -> std::result::Result<Self, Self::Error> {
         let draft_version = if let Some(schema) = schema.get("$schema").and_then(|s| s.as_str()) {
@@ -42,7 +54,7 @@ impl TryFrom<&Value> for JsonSchema {
             let validator = options()
                 .with_draft(draft)
                 .build(schema)
-                .map_err(|e| anyhow!("Invalid JSON Schema: {e}"))?;
+                .map_err(|_| SchemaBuildError::InvalidSchema)?;
 
             Ok(JsonSchema(validator.into()))
         } else {
@@ -57,9 +69,7 @@ impl TryFrom<&Value> for JsonSchema {
                 return Ok(JsonSchema(validator.into()));
             }
 
-            Err(anyhow!(
-                "Could not detect draft version and schema is not valid against Draft2020-12 or Draft7"
-            ))
+            Err(SchemaBuildError::UndetectableDraft)
         }
     }
 }
