@@ -1,18 +1,15 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.5.26 AS python-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.5.26 AS debian
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cue:v3.5.26 AS cue
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:feat/python-install-for-base AS python-ci
 
 IMPORT ../docs AS docs
 
 # builder - debian plus cue binary
 builder:
-    FROM python-ci+python-base
+    FROM python-ci+python-base2
 
-    # Always use Eval V3, as early evaluators have bugs that mask specifications issues.
-    ENV CUE_EXPERIMENT=evalv3=1
-    DO cue+INSTALL
+    # Eval V3 currently broken with our specifications.
+    ENV CUE_EXPERIMENT=evalv3=0
 
 # Copy all the source we need to build the docs
 src:
@@ -68,7 +65,12 @@ regenerate-local:
 # Check the the generated signed docs documentation matches the generated signed docs data
 check:
     FROM +src
-    RUN cue fmt --check -s --files ./definitions
+    RUN cue fmt --check --diff -s --files ./definitions
+
+    # Make sure we can regenerate the same signed doc json
+    COPY +regenerate/signed_doc.json signed_doc_regenerated.json
+    RUN diff -u signed_doc_regenerated.json signed_doc.json
+
     # RUN cd definitions; \
     #    cue vet ./cddl 
 
