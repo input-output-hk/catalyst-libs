@@ -42,7 +42,7 @@ impl minicbor::Decode<'_, ScriptType> for Script {
                 Err(error) => {
                     return Err(minicbor::decode::Error::message(format!(
                         "Error decoding plutus script data: {error}"
-                    )))
+                    )));
                 },
             };
             Ok(Self(Arc::new(script.to_vec())))

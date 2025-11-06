@@ -19,9 +19,9 @@ pub mod extension;
 
 use std::fmt::Debug;
 
-use asn1_rs::{oid, Oid};
+use asn1_rs::{Oid, oid};
 use extension::{Extension, ExtensionValue};
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{
@@ -29,7 +29,7 @@ use crate::helper::{
     encode::{encode_array_len, encode_helper},
 };
 /// OID of `KeyUsage` extension
-static KEY_USAGE_OID: Oid<'static> = oid!(2.5.29 .15);
+static KEY_USAGE_OID: Oid<'static> = oid!(2.5.29.15);
 
 /// A struct of C509 Extensions containing a vector of `Extension`.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -72,24 +72,28 @@ impl Encode<()> for Extensions {
         // If there is only one extension and it is KeyUsage, encode as int
         // encoding as absolute value of the second int and the sign of the first int
         if let Some(extension) = self.0.first()
-            && self.0.len() == 1 && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID {
+            && self.0.len() == 1
+            && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID
+        {
             match extension.value() {
                 ExtensionValue::Int(value) => {
                     let ku_value = if extension.critical() {
-                        value
-                            .checked_neg()
-                            .ok_or_else(|| minicbor::encode::Error::message(format!("Invalid key usage value (will overflow during negation): {value}")))?
+                        value.checked_neg().ok_or_else(|| {
+                            minicbor::encode::Error::message(format!(
+                                "Invalid key usage value (will overflow during negation): {value}"
+                            ))
+                        })?
                     } else {
                         *value
                     };
                     encode_helper(e, "Extensions KeyUsage", ctx, &ku_value)?;
                     return Ok(());
-                }
+                },
                 _ => {
                     return Err(minicbor::encode::Error::message(
                         "KeyUsage extension value should be an integer",
                     ));
-                }
+                },
             }
         }
 
@@ -151,7 +155,7 @@ mod test_extensions {
 
         let mut exts = Extensions::new();
         exts.add_extension(Extension::new(
-            oid!(2.5.29 .15),
+            oid!(2.5.29.15),
             ExtensionValue::Int(2),
             false,
         ));
@@ -174,7 +178,7 @@ mod test_extensions {
 
         let mut exts = Extensions::new();
         exts.add_extension(Extension::new(
-            oid!(2.5.29 .15),
+            oid!(2.5.29.15),
             ExtensionValue::Int(2),
             true,
         ));
@@ -197,13 +201,13 @@ mod test_extensions {
 
         let mut exts = Extensions::new();
         exts.add_extension(Extension::new(
-            oid!(2.5.29 .15),
+            oid!(2.5.29.15),
             ExtensionValue::Int(2),
             false,
         ));
 
         exts.add_extension(Extension::new(
-            oid!(2.5.29 .14),
+            oid!(2.5.29.14),
             ExtensionValue::Bytes([1, 2, 3, 4].to_vec()),
             false,
         ));

@@ -53,10 +53,12 @@ async fn single_signature_validation_test() {
     );
 
     // case: empty provider
-    assert!(!SignatureRule
-        .check(&signed_doc, &TestCatalystProvider::default())
-        .await
-        .unwrap());
+    assert!(
+        !SignatureRule
+            .check(&signed_doc, &TestCatalystProvider::default())
+            .await
+            .unwrap()
+    );
 
     // case: signed with different key
     let (another_sk, ..) = create_dummy_key_pair(RoleId::Role0);
@@ -127,10 +129,12 @@ async fn multiple_signatures_validation_test() {
     assert!(!SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: no valid signatures available
-    assert!(!SignatureRule
-        .check(&signed_doc, &TestCatalystProvider::default())
-        .await
-        .unwrap());
+    assert!(
+        !SignatureRule
+            .check(&signed_doc, &TestCatalystProvider::default())
+            .await
+            .unwrap()
+    );
 }
 
 fn content(

@@ -7,7 +7,7 @@ use std::{
 use minicbor::{Decode, Decoder, Encode};
 use uuid::Uuid;
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext};
+use super::{CborContext, decode_cbor_uuid, encode_cbor_uuid};
 
 /// Type representing a `UUIDv4`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, serde::Serialize)]

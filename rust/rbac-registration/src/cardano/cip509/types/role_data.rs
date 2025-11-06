@@ -3,15 +3,15 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use cardano_blockchain_types::{
+    TxnWitness,
     pallas_addresses::{Address, ShelleyAddress},
     pallas_primitives::conway,
     pallas_traverse::MultiEraTx,
-    TxnWitness,
 };
 use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 
 use crate::cardano::cip509::{
-    rbac::role_data::CborRoleData, utils::cip19::extract_key_hash, KeyLocalRef,
+    KeyLocalRef, rbac::role_data::CborRoleData, utils::cip19::extract_key_hash,
 };
 
 /// A role data.

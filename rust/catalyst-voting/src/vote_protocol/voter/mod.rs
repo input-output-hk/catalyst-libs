@@ -9,7 +9,7 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIter
 use super::committee::{ElectionPublicKey, ElectionSecretKey};
 use crate::crypto::{
     babystep_giantstep::BabyStepGiantStep,
-    elgamal::{decrypt, encrypt, Ciphertext},
+    elgamal::{Ciphertext, decrypt, encrypt},
     group::Scalar,
     rng::{default_rng, rand_core::CryptoRngCore},
 };
@@ -65,7 +65,10 @@ impl Vote {
         choice: usize,
         voting_options: usize,
     ) -> anyhow::Result<Vote> {
-        ensure!(choice < voting_options,"Invalid voting choice, the value of choice: {choice}, should be less than the number of voting options: {voting_options}." );
+        ensure!(
+            choice < voting_options,
+            "Invalid voting choice, the value of choice: {choice}, should be less than the number of voting options: {voting_options}."
+        );
 
         Ok(Vote {
             choice,
@@ -159,7 +162,7 @@ pub fn decrypt_vote(
 #[cfg(test)]
 mod arbitrary_impl {
     use proptest::{
-        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        prelude::{Arbitrary, BoxedStrategy, Strategy, any_with},
         sample::size_range,
     };
 

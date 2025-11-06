@@ -14,7 +14,7 @@
 
 use crate::crypto::{
     group::{GroupElement, Scalar},
-    hash::{digest::Digest, Blake2b512Hasher},
+    hash::{Blake2b512Hasher, digest::Digest},
 };
 
 /// DLEQ proof struct

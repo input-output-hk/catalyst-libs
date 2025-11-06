@@ -8,6 +8,7 @@ use std::borrow::Cow;
 
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{
+    Network, TxnWitness, VKeyHash,
     hashes::{Blake2b128Hash, Blake2b256Hash},
     pallas_addresses::Address,
     pallas_codec::{
@@ -16,20 +17,19 @@ use cardano_blockchain_types::{
     },
     pallas_primitives::conway,
     pallas_traverse::MultiEraTx,
-    Network, TxnWitness, VKeyHash,
 };
 use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
+    catalyst_id::{CatalystId, role_index::RoleId},
     problem_report::ProblemReport,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
-use x509_cert::{der::Encode as X509Encode, Certificate as X509};
+use x509_cert::{Certificate as X509, der::Encode as X509Encode};
 
 use crate::cardano::cip509::{
+    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, SimplePublicKeyType, X509DerCert,
     rbac::Cip509RbacMetadata,
     types::TxInputHash,
     utils::extract_key::{c509_key, x509_key},
-    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -103,7 +103,7 @@ pub fn validate_aux(
                 context,
             );
             return;
-        }
+        },
     };
 
     let hash = Blake2b256Hash::new(raw_aux_data);
@@ -131,7 +131,7 @@ pub fn validate_cert_addrs(
         Err(e) => {
             report.other(&format!("Failed to create TxWitness: {e:?}"), context);
             return;
-        }
+        },
     };
 
     let stake_addrs = extract_stake_addresses(uris);
@@ -197,13 +197,13 @@ fn extract_payment_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, Str
                         match a.to_bech32() {
                             Ok(bech32) => {
                                 hash.as_slice().try_into().ok().map(|hash| (hash, bech32))
-                            }
+                            },
                             Err(_) => None,
                         }
-                    }
+                    },
                     cardano_blockchain_types::pallas_addresses::ShelleyPaymentPart::Script(_) => {
                         None
-                    }
+                    },
                 }
             } else {
                 None
@@ -261,7 +261,7 @@ fn validate_c509_self_signed_cert(
                 context,
             );
             return;
-        }
+        },
     };
 
     let Some(sig) = c
@@ -291,7 +291,7 @@ fn validate_c509_self_signed_cert(
     };
     if pk.verify_strict(&tbs_cbor, &sig).is_err() {
         report.other(
-            &format!("Cannot verify C509 certificate signature at index {index}", ),
+            &format!("Cannot verify C509 certificate signature at index {index}",),
             context,
         );
     }
@@ -314,7 +314,7 @@ fn validate_x509_self_signed_cert(
                 context,
             );
             return;
-        }
+        },
     };
 
     let Some(sig) = c
@@ -342,7 +342,7 @@ fn validate_x509_self_signed_cert(
                 context,
             );
             return;
-        }
+        },
     };
 
     if pk.verify_strict(&tbs_der, &sig).is_err() {
@@ -446,7 +446,8 @@ pub fn validate_role_data(
             catalyst_id = validate_role_0(data, metadata, subnet, context, report);
         } else {
             if let Some(signing_key) = data.signing_key()
-                && signing_key.key_offset == 0 {
+                && signing_key.key_offset == 0
+            {
                 report.other(
                     &format!(
                         "Invalid signing key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
@@ -455,7 +456,8 @@ pub fn validate_role_data(
                 );
             }
             if let Some(encryption_key) = data.encryption_key()
-                && encryption_key.key_offset == 0 {
+                && encryption_key.key_offset == 0
+            {
                 report.other(
                     &format!(
                         "Invalid encryption key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
@@ -516,7 +518,7 @@ fn validate_role_0(
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
             }
-        }
+        },
         LocalRefInt::C509Certs => {
             match metadata.c509_certs.first() {
                 Some(C509Cert::C509Certificate(cert)) => {
@@ -526,7 +528,7 @@ fn validate_role_0(
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),
             }
-        }
+        },
         LocalRefInt::PubKeys => {
             report.invalid_value(
                 "(Role 0) RoleData::signing_key",
@@ -534,7 +536,7 @@ fn validate_role_0(
                 "Role signing key should reference certificate, not public key",
                 context,
             );
-        }
+        },
     }
     catalyst_id
 }
@@ -617,8 +619,11 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report
-            .contains("Role payment key reference index (1) is not found in transaction outputs"));
+        assert!(
+            report.contains(
+                "Role payment key reference index (1) is not found in transaction outputs"
+            )
+        );
     }
 
     #[test]

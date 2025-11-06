@@ -7,8 +7,8 @@ use anyhow::{anyhow, bail, ensure};
 use catalyst_voting::crypto::ed25519::{PublicKey, Signature};
 
 use crate::{
-    utils::{read_array, read_be_u32, read_be_u64, read_be_u8},
     EncryptedVote, Tx, VotePayload, VoterProof,
+    utils::{read_array, read_be_u8, read_be_u32, read_be_u64},
 };
 
 /// Jörmungandr tx fragment tag.
