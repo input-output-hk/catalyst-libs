@@ -7,7 +7,7 @@ use cbork_cddl_parser::validate_cddl;
 #[derive(serde::Deserialize)]
 pub struct CddlDefitions(HashMap<CddlType, CddlDef>);
 
-#[derive(serde::Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, serde::Deserialize, PartialEq, Eq, Hash)]
 pub struct CddlType(String);
 
 #[derive(serde::Deserialize)]
@@ -25,31 +25,56 @@ impl Display for CddlType {
     }
 }
 
+impl CddlDef {
+    fn get_cddl_spec(
+        &self,
+        cddl_type: &CddlType,
+    ) -> String {
+        self.requires
+            .iter()
+            .enumerate()
+            // replace `requires[i]` entries with the proper CDDL type names from the `requires`
+            // list
+            .fold(format!("{cddl_type}={}\n", self.def), |spec, (i, req)| {
+                spec.replace(&format!("requires[{i}]"), &req.0)
+            })
+    }
+}
+
 impl CddlDefitions {
+    fn find_cddl_def(
+        &self,
+        cddl_type: &CddlType,
+    ) -> anyhow::Result<&CddlDef> {
+        self.0.get(cddl_type).ok_or(anyhow::anyhow!(
+            "Cannot find a cddl defition for the {cddl_type}"
+        ))
+    }
+
     /// Returns a full CDDL specification schema.
     /// Performs
     pub fn get_cddl_spec(
         &self,
         cddl_type: &CddlType,
     ) -> anyhow::Result<String> {
-        let def = self.0.get(cddl_type).ok_or(anyhow::anyhow!(
-            "Cannot find a cddl defition for the {cddl_type}"
-        ))?;
+        let def = self.find_cddl_def(cddl_type)?;
 
-        let mut spec = def
-            .requires
-            .iter()
-            .enumerate()
-            // replace `requires[i]` entries with the proper CDDL type names from the `requires`
-            // list
-            .fold(def.def.clone(), |spec, (i, req)| {
-                spec.replace(&format!("requires[{i}]"), &req.0)
-            });
+        let spec = def.get_cddl_spec(&cddl_type);
+        let mut requires = def.requires.clone();
 
-        for req in &def.requires {
-            let req_spec = self.get_cddl_spec(req)?;
-            spec.push_str(&req_spec);
+        let mut imports = HashMap::new();
+        while let Some(req) = requires.pop() {
+            let req_def = self.find_cddl_def(&req)?;
+            let req_spec = req_def.get_cddl_spec(&req);
+            if imports.insert(req, req_spec).is_none() {
+                requires.extend(req_def.requires.clone());
+            }
         }
+
+        let mut spec = imports.values().fold(spec, |mut spec, import_spec| {
+            spec.push_str(import_spec);
+            spec
+        });
 
         validate_cddl(&mut spec, &cbork_cddl_parser::Extension::CDDL)?;
         Ok(spec)
