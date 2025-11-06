@@ -2,7 +2,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use jsonschema::{options, Draft, Validator};
+use jsonschema::{options, Draft, ValidationError, Validator};
 use serde_json::Value;
 
 /// Wrapper around a JSON Schema validator.
@@ -17,8 +17,8 @@ pub struct JsonSchema(Arc<Validator>);
 #[derive(Debug, thiserror::Error)]
 pub enum SchemaBuildError {
     /// Invalid JSON Schema error.
-    #[error("Invalid JSON Schema")]
-    InvalidSchema,
+    #[error("{0}")]
+    InvalidSchema(#[from] ValidationError<'static>),
     /// Undetectable JSON schema version.
     #[error(
         "Could not detect draft version and schema is not valid against Draft2020-12 or Draft7"
@@ -51,10 +51,7 @@ impl TryFrom<&Value> for JsonSchema {
         };
 
         if let Some(draft) = draft_version {
-            let validator = options()
-                .with_draft(draft)
-                .build(schema)
-                .map_err(|_| SchemaBuildError::InvalidSchema)?;
+            let validator = options().with_draft(draft).build(schema)?;
 
             Ok(JsonSchema(validator.into()))
         } else {
