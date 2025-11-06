@@ -4,7 +4,7 @@
 
 #![allow(unused, dead_code, deprecated)]
 
-use std::str::FromStr;
+use std::{convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
 use futures::{pin_mut, stream::BoxStream, Stream, StreamExt};
@@ -31,7 +31,7 @@ pub use rust_ipfs::Multiaddr;
 pub use rust_ipfs::PeerId;
 use rust_ipfs::{
     builder::UninitializedIpfs, dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
-    unixfs::AddOpt, GossipsubMessage, PubsubEvent, Quorum, ToRecordKey,
+    unixfs::AddOpt, GossipsubMessage, NetworkBehaviour, PubsubEvent, Quorum, ToRecordKey,
 };
 
 #[derive(Debug, Display, From, Into)]
@@ -39,9 +39,10 @@ use rust_ipfs::{
 pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
-pub struct IpfsBuilder(UninitializedIpfs<dummy::Behaviour>);
+pub struct IpfsBuilder<N>(UninitializedIpfs<N>)
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
-impl IpfsBuilder {
+impl<N> IpfsBuilder<N> where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync {
     #[must_use]
     /// Create a new` IpfsBuilder`.
     pub fn new() -> Self {
@@ -103,12 +104,6 @@ impl IpfsBuilder {
     }
 }
 
-impl Default for IpfsBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// Hermes IPFS Node.
 pub struct HermesIpfs {
     /// IPFS node
@@ -126,7 +121,7 @@ impl HermesIpfs {
     ///
     /// Returns an error if the IPFS daemon fails to start.
     pub async fn start() -> anyhow::Result<Self> {
-        let node: Ipfs = IpfsBuilder::new()
+        let node: Ipfs = IpfsBuilder::<dummy::Behaviour>::new()
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
