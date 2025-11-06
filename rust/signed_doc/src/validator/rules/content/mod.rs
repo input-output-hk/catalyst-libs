@@ -6,18 +6,16 @@ mod tests;
 use std::fmt::Debug;
 
 use catalyst_signed_doc_spec::payload::{Payload, Schema};
+use catalyst_types::json_schema::JsonSchema;
 use minicbor::Encode;
 
-use crate::{
-    validator::{json_schema, rules::utils::content_json_schema_check},
-    CatalystSignedDocument,
-};
+use crate::{validator::rules::utils::content_json_schema_check, CatalystSignedDocument};
 
 /// Enum represents different content schemas, against which documents content would be
 /// validated.
 pub(crate) enum ContentSchema {
     /// Draft 7 JSON schema
-    Json(json_schema::JsonSchema),
+    Json(JsonSchema),
     /// CDDL schema
     Cddl,
 }
@@ -57,10 +55,8 @@ impl ContentRule {
         }
 
         match &spec.schema {
-            Some(Schema::JsonSchema(schema)) => {
-                Ok(Self::StaticSchema(ContentSchema::Json(
-                    json_schema::JsonSchema::try_from(schema)?,
-                )))
+            Some(Schema::Json(schema)) => {
+                Ok(Self::StaticSchema(ContentSchema::Json(schema.clone())))
             },
             Some(Schema::Cddl(_)) => Ok(Self::StaticSchema(ContentSchema::Cddl)),
             None => Ok(Self::NotNil),
