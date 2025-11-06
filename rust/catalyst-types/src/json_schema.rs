@@ -1,6 +1,6 @@
 //! A wrapper around a JSON Schema validator.
 
-use std::ops::Deref;
+use std::{ops::Deref, sync::Arc};
 
 use anyhow::anyhow;
 use jsonschema::{options, Draft, Validator};
@@ -11,7 +11,8 @@ use serde_json::Value;
 /// Attempts to detect the draft version from the `$schema` field.
 /// If not specified, it tries Draft2020-12 first, then falls back to Draft7.
 /// Returns an error if schema is invalid for both.
-pub struct JsonSchema(Validator);
+#[derive(Clone)]
+pub struct JsonSchema(Arc<Validator>);
 
 impl Deref for JsonSchema {
     type Target = Validator;
@@ -43,17 +44,17 @@ impl TryFrom<&Value> for JsonSchema {
                 .build(schema)
                 .map_err(|e| anyhow!("Invalid JSON Schema: {e}"))?;
 
-            Ok(JsonSchema(validator))
+            Ok(JsonSchema(validator.into()))
         } else {
             // if draft not specified or not detectable:
             // try draft2020-12
             if let Ok(validator) = options().with_draft(Draft::Draft202012).build(schema) {
-                return Ok(JsonSchema(validator));
+                return Ok(JsonSchema(validator.into()));
             }
 
             // fallback to draft7
             if let Ok(validator) = options().with_draft(Draft::Draft7).build(schema) {
-                return Ok(JsonSchema(validator));
+                return Ok(JsonSchema(validator.into()));
             }
 
             Err(anyhow!(
