@@ -6,7 +6,7 @@ IMPORT ../docs AS docs
 
 # builder - debian plus cue binary
 builder:
-    FROM python-ci+python-base2
+    FROM python-ci+python-base
 
     # Eval V3 currently broken with our specifications.
     ENV CUE_EXPERIMENT=evalv3=0
