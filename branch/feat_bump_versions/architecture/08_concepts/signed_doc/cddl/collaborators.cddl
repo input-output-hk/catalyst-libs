@@ -1,0 +1,8 @@
+; collaborators
+
+
+; Allowed Collaborators on the next subsequent version of a document.
+collaborators = [ + catalyst_id_kid ]
+
+; UTF8 Catalyst ID URI encoded as a bytes string.
+catalyst_id_kid = bytes

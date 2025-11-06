@@ -1,0 +1,111 @@
+digraph "Proposal Meta Template" {
+    rankdir="LR"
+        graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+        node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+        edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+
+    labelloc="t"
+    label="Proposal Meta Template
+Document Relationships"
+    fontcolor="#1d71b8"
+    fontsize=50
+
+
+    "Category Parameters" [
+        id="Category Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                    <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Meta Template" [
+        id="Proposal Meta Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_meta_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Meta Template </B></FONT>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>application/schema+json</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>0ce8ab38-9258-4fbc-a62e-7faa6e58318f<BR />0ce8ab38-9258-4fbc-a62e-7faa6e58318f<BR />7808d2ba-d511-40af-84e8-c0d1625fdfdc</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Template" [
+        id="Proposal Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Meta Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Template":"title":e -> "Proposal Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+}

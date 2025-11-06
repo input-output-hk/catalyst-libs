@@ -1,0 +1,83 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "url": "https://projectcatalyst.io/"
+        }
+    ],
+    "title": "Presentation Template",
+    "description": "Presentation Templates define how data extracted from Form Data is to be presented.\nThey provide a way to parameterize the contents of a UI in response to the changing\nneeds of the Forms themselves.",
+    "$defs": {
+        "cardDescription": {
+            "description": "A long form description of the purpose of the card. Not used by the UI.",
+            "type": "string"
+        },
+        "cardName": {
+            "description": "A Card has to have one of the well known defined names.\nThese are the primary identifier which is used by the UI to determine\nwhere the UI will place the card.",
+            "enum": [
+                "draft-proposal-summary",
+                "proposal-contest-summary"
+            ],
+            "type": "string"
+        },
+        "cardTemplate": {
+            "contentType": "text/html; charset=utf-8; template=handlebars",
+            "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
+            "type": "string"
+        },
+        "cardTemplateCss": {
+            "contentType": "text/css; charset=utf-8; template=handlebars",
+            "description": "Optional styling that can be used by the HTML generated from the template for presentation.",
+            "type": "string"
+        },
+        "cardTitle": {
+            "description": "A title shown to the editor of the card.  Not used by the UI.",
+            "type": "string"
+        },
+        "layoutParameters": {
+            "description": "Parameters which help the front end layout the provided template. To be defined.",
+            "type": "object"
+        },
+        "requiredDocumentTypes": {
+            "description": "A list of the document types (UUIDs) the presentation template needs.",
+            "items": {
+                "format": "uuid",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        }
+    },
+    "type": "object",
+    "properties": {
+        "css": {
+            "$ref": "#/$defs/cardTemplateCss"
+        },
+        "description": {
+            "$ref": "#/$defs/cardDescription"
+        },
+        "layout": {
+            "$ref": "#/$defs/layoutParameters"
+        },
+        "name": {
+            "$ref": "#/$defs/cardName"
+        },
+        "requiredDocs": {
+            "$ref": "#/$defs/requiredDocumentTypes"
+        },
+        "template": {
+            "$ref": "#/$defs/cardTemplate"
+        },
+        "title": {
+            "$ref": "#/$defs/cardTitle"
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "cardName",
+        "requiredDocuments",
+        "layoutParameters",
+        "template"
+    ]
+}

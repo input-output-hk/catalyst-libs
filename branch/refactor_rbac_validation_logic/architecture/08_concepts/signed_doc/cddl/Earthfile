@@ -1,0 +1,21 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.5.27 AS cddl-ci
+
+check-cddl:
+    FROM cddl-ci+cddl-base
+
+    WORKDIR /cddl
+
+    COPY *.cddl .
+
+    RUN status=0; \
+        while IFS= read -r file; do \
+            echo "Processing: $file"; \
+            if ! output=$(cddlc -2 -v -r -u "$file" 2>&1); then \
+                echo "❌ Error processing: $file"; \
+                echo "$output"; \
+                status=1; \
+            fi; \
+        done < <(find . -type f -name '*.cddl'); \
+        exit $status

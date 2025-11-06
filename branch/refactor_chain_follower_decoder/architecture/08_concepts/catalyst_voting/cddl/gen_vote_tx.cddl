@@ -1,0 +1,33 @@
+gen-vote-tx<choice-t, proof-t, prop-id-t> = [
+    tx-body<choice-t, proof-t, prop-id-t>,
+    signature
+]
+
+tx-body<choice-t, proof-t, prop-id-t> = [
+    vote-type
+    event,
+    votes<choice-t, proof-t, prop-id-t>,
+    voter-data,
+]
+
+vote-type = UUID ; e.g. Public or Private vote
+event = { * event-key => any }
+event-key = int / text
+
+votes<choice-t, proof-t, prop-id-t> = [+ vote<choice-t, proof-t, prop-id-t>]
+vote<choice-t, proof-t, prop-id-t>  = [
+    choices<choice-t>,
+    proof<proof-t>,
+    prop-id<prop-id-t>,
+]
+choices<choice-t> = [+ choice<choice-t>]
+choice<choice-t> = #6.24(bytes .cbor choice-t) ; encoded-cbor
+proof<proof-t> = #6.24(bytes .cbor proof-t) ; encoded-cbor
+prop-id<prop-id-t> = #6.24(bytes .cbor prop-id-t) ; encoded-cbor
+
+voter-data = encoded-cbor
+
+UUID = #6.37(bytes) ; UUID type
+signature = #6.98(cose.COSE_Sign) ; COSE signature
+
+;# import rfc9052 as cose

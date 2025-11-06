@@ -1,0 +1,8 @@
+; Unique Document Identifier
+
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)

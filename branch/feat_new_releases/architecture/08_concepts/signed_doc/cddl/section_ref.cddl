@@ -1,0 +1,8 @@
+; section_ref
+
+
+; Reference to a section in a referenced document.
+section_ref = json_pointer
+
+; RFC6901 Standard JSON Pointer
+json_pointer = text
