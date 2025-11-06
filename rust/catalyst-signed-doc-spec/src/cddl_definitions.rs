@@ -30,14 +30,7 @@ impl CddlDef {
         &self,
         cddl_type: &CddlType,
     ) -> String {
-        self.requires
-            .iter()
-            .enumerate()
-            // replace `requires[i]` entries with the proper CDDL type names from the `requires`
-            // list
-            .fold(format!("{cddl_type}={}\n", self.def), |spec, (i, req)| {
-                spec.replace(&format!("requires[{i}]"), &req.0)
-            })
+        format!("{cddl_type}={}\n", self.def)
     }
 }
 
