@@ -1,18 +1,15 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.5.17 AS python-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.5.17 AS debian
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cue:v3.5.17 AS cue
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:feat/python-install-for-base AS python-ci
 
 IMPORT ../docs AS docs
 
 # builder - debian plus cue binary
 builder:
-    FROM python-ci+python-base
+    FROM python-ci+python-base2
 
     # Eval V3 currently broken with our specifications.
     ENV CUE_EXPERIMENT=evalv3=0
-    DO cue+INSTALL
 
 # Copy all the source we need to build the docs
 src:
