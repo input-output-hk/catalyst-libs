@@ -22,6 +22,7 @@ rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs"
 tokio = "1.46.0"
 futures = "0.3.31"
 libp2p = "0.56.0"
+connexa = { version = "0.4.1", features = ["identify", "dcutr", "gossipsub", "autonat", "relay", "kad", "keypair_base64_encoding", "ping", "request-response", "request-response-misc", "rendezvous", "mdns"] }
 
 [dev-dependencies]
 # Dependencies used by examples

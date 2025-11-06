@@ -31,7 +31,7 @@ pub use rust_ipfs::Multiaddr;
 pub use rust_ipfs::PeerId;
 use rust_ipfs::{
     builder::UninitializedIpfs, dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
-    unixfs::AddOpt, PubsubEvent, Quorum, ToRecordKey,
+    unixfs::AddOpt, GossipsubMessage, PubsubEvent, Quorum, ToRecordKey,
 };
 
 #[derive(Debug, Display, From, Into)]
@@ -481,21 +481,19 @@ impl HermesIpfs {
     ///
     /// ## Returns
     ///
-    /// * `SubscriptionStream`
+    /// * Stream of `GossipsubEvent`
     ///
     /// ## Errors
     ///
     /// Returns error if unable to subscribe to pubsub topic.
-    // pub async fn pubsub_subscribe(
-    // &self,
-    // topic: impl Into<String>,
-    // ) -> anyhow::Result<SubscriptionStream> {
-    // self.node.pubsub_subscribe(topic).await
-
-    // // TODO ?
-    // // self.node.pubsub_subscribe(topic.into()).await?;
-    // // let stream = self.node.pubsub_listener(topic.into()).await?;
-    // }
+    pub async fn pubsub_subscribe(
+        &self,
+        topic: impl Into<String>,
+    ) -> anyhow::Result<BoxStream<'static, connexa::prelude::GossipsubEvent>> {
+        let topic = topic.into();
+        self.node.pubsub_subscribe(&topic).await?;
+        self.node.pubsub_listener(&topic).await
+    }
 
     /// Unsubscribes from a pubsub topic.
     ///
@@ -650,15 +648,26 @@ impl FromStr for GetIpfsFile {
     }
 }
 
-///// Handle stream of messages from the IPFS pubsub topic
-// pub fn subscription_stream_task(
-//     stream: SubscriptionStream,
-//     handler: fn(PubsubMessage),
-// ) -> tokio::task::JoinHandle<()> {
-//     tokio::spawn(async move {
-//         pin_mut!(stream);
-//         while let Some(msg) = stream.next().await {
-//             handler(msg);
-//         }
-//     })
-// }
+/// Handle stream of messages from the IPFS pubsub topic
+pub fn subscription_stream_task<H>(
+    stream: BoxStream<'static, connexa::prelude::GossipsubEvent>,
+    handler: H,
+) -> tokio::task::JoinHandle<()>
+where
+    H: Fn(GossipsubMessage) + Send + 'static,
+{
+    tokio::spawn(async move {
+        pin_mut!(stream);
+        while let Some(msg) = stream.next().await {
+            match msg {
+                connexa::prelude::GossipsubEvent::Subscribed { peer_id } => {
+                    unimplemented!("GossipsubEvent::Subscribed")
+                },
+                connexa::prelude::GossipsubEvent::Unsubscribed { peer_id } => {
+                    unimplemented!("GossipsubEvent::Unsubscribed")
+                },
+                connexa::prelude::GossipsubEvent::Message { message } => handler(message),
+            };
+        }
+    })
+}
