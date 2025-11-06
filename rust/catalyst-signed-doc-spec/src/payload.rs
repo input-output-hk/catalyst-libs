@@ -11,6 +11,6 @@ pub struct Payload {
 #[derive(serde::Deserialize)]
 #[serde(untagged)]
 pub enum Schema {
-    JsonSchema(serde_json::Value),
     Cddl(String),
+    JsonSchema(serde_json::Value),
 }
