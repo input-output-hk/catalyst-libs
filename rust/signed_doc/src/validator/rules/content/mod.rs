@@ -5,19 +5,22 @@ mod tests;
 
 use std::fmt::Debug;
 
-use catalyst_signed_doc_spec::payload::Payload;
+use catalyst_signed_doc_spec::{
+    cddl_definitions::CddlDefinitions,
+    payload::{Payload, Schema},
+};
+use catalyst_types::json_schema::JsonSchema;
 use minicbor::Encode;
 
-use crate::{
-    validator::{json_schema, rules::utils::content_json_schema_check},
-    CatalystSignedDocument,
-};
+use crate::{validator::rules::utils::content_json_schema_check, CatalystSignedDocument};
 
 /// Enum represents different content schemas, against which documents content would be
 /// validated.
 pub(crate) enum ContentSchema {
     /// Draft 7 JSON schema
-    Json(json_schema::JsonSchema),
+    Json(JsonSchema),
+    /// CDDL schema
+    Cddl,
 }
 
 impl Debug for ContentSchema {
@@ -27,6 +30,7 @@ impl Debug for ContentSchema {
     ) -> std::fmt::Result {
         match self {
             Self::Json(_) => writeln!(f, "JsonSchema"),
+            Self::Cddl => writeln!(f, "CddlSchema"),
         }
     }
 }
@@ -44,7 +48,10 @@ pub(crate) enum ContentRule {
 
 impl ContentRule {
     /// Generating `ContentRule` from specs
-    pub(crate) fn new(spec: &Payload) -> anyhow::Result<Self> {
+    pub(crate) fn new(
+        cddl_def: &CddlDefinitions,
+        spec: &Payload,
+    ) -> anyhow::Result<Self> {
         if spec.nil {
             anyhow::ensure!(
             spec.schema.is_none(),
@@ -53,13 +60,16 @@ impl ContentRule {
             return Ok(Self::Nil);
         }
 
-        if let Some(schema) = &spec.schema {
-            let schema_str = schema.to_string();
-            Ok(Self::StaticSchema(ContentSchema::Json(
-                json_schema::JsonSchema::try_from(&serde_json::from_str(&schema_str)?)?,
-            )))
-        } else {
-            Ok(Self::NotNil)
+        match &spec.schema {
+            Some(Schema::Json(schema)) => {
+                Ok(Self::StaticSchema(ContentSchema::Json(schema.clone())))
+            },
+            Some(Schema::Cddl(cddl_type)) => {
+                cddl_def
+                    .get_cddl_spec(cddl_type)
+                    .map(|_| Self::StaticSchema(ContentSchema::Cddl))
+            },
+            None => Ok(Self::NotNil),
         }
     }
 
@@ -75,6 +85,7 @@ impl ContentRule {
                 ContentSchema::Json(json_schema) => {
                     return Ok(content_json_schema_check(doc, json_schema))
                 },
+                ContentSchema::Cddl => return Ok(true),
             }
         }
         if let Self::NotNil = self {
