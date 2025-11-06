@@ -5,7 +5,10 @@ mod tests;
 
 use std::fmt::Debug;
 
-use catalyst_signed_doc_spec::payload::{Payload, Schema};
+use catalyst_signed_doc_spec::{
+    cddl_definitions::CddlDefitions,
+    payload::{Payload, Schema},
+};
 use catalyst_types::json_schema::JsonSchema;
 use minicbor::Encode;
 
@@ -45,7 +48,10 @@ pub(crate) enum ContentRule {
 
 impl ContentRule {
     /// Generating `ContentRule` from specs
-    pub(crate) fn new(spec: &Payload) -> anyhow::Result<Self> {
+    pub(crate) fn new(
+        cddl_def: &CddlDefitions,
+        spec: &Payload,
+    ) -> anyhow::Result<Self> {
         if spec.nil {
             anyhow::ensure!(
             spec.schema.is_none(),
@@ -58,7 +64,11 @@ impl ContentRule {
             Some(Schema::Json(schema)) => {
                 Ok(Self::StaticSchema(ContentSchema::Json(schema.clone())))
             },
-            Some(Schema::Cddl(_)) => Ok(Self::StaticSchema(ContentSchema::Cddl)),
+            Some(Schema::Cddl(cddl_type)) => {
+                cddl_def
+                    .get_cddl_spec(cddl_type)
+                    .map(|_| Self::StaticSchema(ContentSchema::Cddl))
+            },
             None => Ok(Self::NotNil),
         }
     }

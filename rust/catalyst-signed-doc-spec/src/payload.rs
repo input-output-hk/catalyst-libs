@@ -3,6 +3,8 @@
 use catalyst_types::json_schema::JsonSchema;
 use serde::Deserialize;
 
+use crate::cddl_definitions::CddlType;
+
 /// `signed_doc.json` "payload" field JSON object
 #[derive(serde::Deserialize)]
 #[allow(clippy::missing_docs_in_private_items)]
@@ -12,7 +14,7 @@ pub struct Payload {
 }
 
 pub enum Schema {
-    Cddl(String),
+    Cddl(CddlType),
     Json(JsonSchema),
 }
 
@@ -22,17 +24,17 @@ impl<'de> Deserialize<'de> for Schema {
         #[derive(serde::Deserialize)]
         #[serde(untagged)]
         pub enum SchemaSerde {
-            Cddl(String),
+            Cddl(CddlType),
             Json(serde_json::Value),
         }
 
         match SchemaSerde::deserialize(deserializer)? {
-            SchemaSerde::Json(schema) => {
-                JsonSchema::try_from(&schema)
+            SchemaSerde::Json(json) => {
+                JsonSchema::try_from(&json)
                     .map(|v| Self::Json(v))
                     .map_err(|e| serde::de::Error::custom(e))
             },
-            SchemaSerde::Cddl(schema) => Ok(Self::Cddl(schema)),
+            SchemaSerde::Cddl(cddl_type) => Ok(Self::Cddl(cddl_type)),
         }
     }
 }

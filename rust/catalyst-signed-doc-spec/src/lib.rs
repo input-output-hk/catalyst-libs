@@ -2,7 +2,8 @@
 
 #![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
-pub mod copyright;
+pub mod cddl_definitions;
+mod copyright;
 pub mod doc_types;
 pub mod headers;
 pub mod is_required;
@@ -15,7 +16,8 @@ use std::{collections::HashMap, fmt::Display, ops::Deref};
 use build_info as build_info_lib;
 
 use crate::{
-    copyright::Copyright, headers::Headers, metadata::Metadata, payload::Payload, signers::Signers,
+    cddl_definitions::CddlDefitions, copyright::Copyright, headers::Headers, metadata::Metadata,
+    payload::Payload, signers::Signers,
 };
 
 build_info_lib::build_info!(pub(crate) fn build_info);
@@ -23,8 +25,10 @@ build_info_lib::build_info!(pub(crate) fn build_info);
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
 pub struct CatalystSignedDocSpec {
-    pub docs: DocSpecs,
+    #[serde(rename = "cddlDefinitions")]
+    pub cddl_definitions: CddlDefitions,
     copyright: Copyright,
+    pub docs: DocSpecs,
 }
 
 #[derive(serde::Deserialize)]
