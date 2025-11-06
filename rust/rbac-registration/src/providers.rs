@@ -10,7 +10,7 @@ use crate::registration::cardano::RegistrationChain;
 
 /// `RegistrationChain` Provider trait
 pub trait RbacRegistrationProvider {
-    /// Returns either persistent or "latest" (persistent + volatile) registration chain
+    /// Returns registration chain
     /// for the given Catalyst ID.
     fn chain(
         &self,
