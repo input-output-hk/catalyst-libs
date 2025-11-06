@@ -46,13 +46,17 @@ impl CddlDefinitions {
 
     /// Returns a full CDDL specification schema.
     /// Performs
+    ///
+    /// # Errors
+    /// - Cannot find a cddl definition
+    /// - Not a valid resulted CDDL spec
     pub fn get_cddl_spec(
         &self,
         cddl_type: &CddlType,
     ) -> anyhow::Result<String> {
         let def = self.find_cddl_def(cddl_type)?;
 
-        let spec = def.get_cddl_spec(&cddl_type);
+        let spec = def.get_cddl_spec(cddl_type);
         let mut requires = def.requires.clone();
 
         let mut imports = HashMap::new();

@@ -31,8 +31,8 @@ impl<'de> Deserialize<'de> for Schema {
         match SchemaSerde::deserialize(deserializer)? {
             SchemaSerde::Json(json) => {
                 JsonSchema::try_from(&json)
-                    .map(|v| Self::Json(v))
-                    .map_err(|e| serde::de::Error::custom(e))
+                    .map(Self::Json)
+                    .map_err(serde::de::Error::custom)
             },
             SchemaSerde::Cddl(cddl_type) => Ok(Self::Cddl(cddl_type)),
         }
