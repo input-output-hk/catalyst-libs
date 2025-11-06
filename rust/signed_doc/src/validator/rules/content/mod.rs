@@ -5,7 +5,7 @@ mod tests;
 
 use std::fmt::Debug;
 
-use catalyst_signed_doc_spec::payload::Payload;
+use catalyst_signed_doc_spec::payload::{Payload, Schema};
 use minicbor::Encode;
 
 use crate::{
@@ -18,6 +18,8 @@ use crate::{
 pub(crate) enum ContentSchema {
     /// Draft 7 JSON schema
     Json(json_schema::JsonSchema),
+    /// CDDL schema
+    Cddl,
 }
 
 impl Debug for ContentSchema {
@@ -27,6 +29,7 @@ impl Debug for ContentSchema {
     ) -> std::fmt::Result {
         match self {
             Self::Json(_) => writeln!(f, "JsonSchema"),
+            Self::Cddl => writeln!(f, "CddlSchema"),
         }
     }
 }
@@ -53,13 +56,14 @@ impl ContentRule {
             return Ok(Self::Nil);
         }
 
-        if let Some(schema) = &spec.schema {
-            let schema_str = schema.to_string();
-            Ok(Self::StaticSchema(ContentSchema::Json(
-                json_schema::JsonSchema::try_from(&serde_json::from_str(&schema_str)?)?,
-            )))
-        } else {
-            Ok(Self::NotNil)
+        match &spec.schema {
+            Some(Schema::JsonSchema(schema)) => {
+                Ok(Self::StaticSchema(ContentSchema::Json(
+                    json_schema::JsonSchema::try_from(schema)?,
+                )))
+            },
+            Some(Schema::Cddl(_)) => Ok(Self::StaticSchema(ContentSchema::Cddl)),
+            None => Ok(Self::NotNil),
         }
     }
 
@@ -75,6 +79,7 @@ impl ContentRule {
                 ContentSchema::Json(json_schema) => {
                     return Ok(content_json_schema_check(doc, json_schema))
                 },
+                ContentSchema::Cddl => return Ok(true),
             }
         }
         if let Self::NotNil = self {

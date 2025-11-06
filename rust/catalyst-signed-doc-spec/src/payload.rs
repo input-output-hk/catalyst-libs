@@ -5,5 +5,12 @@
 #[allow(clippy::missing_docs_in_private_items)]
 pub struct Payload {
     pub nil: bool,
-    pub schema: Option<serde_json::Value>,
+    pub schema: Option<Schema>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(untagged)]
+pub enum Schema {
+    JsonSchema(serde_json::Value),
+    Cddl(String),
 }
