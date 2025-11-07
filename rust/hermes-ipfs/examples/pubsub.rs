@@ -14,7 +14,7 @@
 //! * The task that reads lines from stdin and publishes them as either node.
 use std::io::Write;
 
-use futures::{pin_mut, FutureExt, StreamExt};
+use futures::{FutureExt, StreamExt, pin_mut};
 use hermes_ipfs::HermesIpfs;
 use rustyline_async::Readline;
 

@@ -5,7 +5,7 @@
 use std::{convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
-use futures::{pin_mut, stream::BoxStream, StreamExt};
+use futures::{StreamExt, pin_mut, stream::BoxStream};
 /// IPFS Content Identifier.
 pub use ipld_core::cid::Cid;
 /// IPLD
@@ -13,12 +13,6 @@ pub use ipld_core::ipld::Ipld;
 use libp2p::gossipsub::MessageId as PubsubMessageId;
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
-/// Peer Info type.
-pub use rust_ipfs::p2p::PeerInfo;
-/// Enum for specifying paths in IPFS.
-pub use rust_ipfs::path::IpfsPath;
-/// Storage type for IPFS node.
-pub use rust_ipfs::repo::StorageTypes;
 /// Server, Client, or Auto mode
 pub use rust_ipfs::DhtMode;
 /// Server, Client, or Auto mode
@@ -27,9 +21,15 @@ pub use rust_ipfs::Ipfs;
 pub use rust_ipfs::Multiaddr;
 /// Peer ID type.
 pub use rust_ipfs::PeerId;
+/// Peer Info type.
+pub use rust_ipfs::p2p::PeerInfo;
+/// Enum for specifying paths in IPFS.
+pub use rust_ipfs::path::IpfsPath;
+/// Storage type for IPFS node.
+pub use rust_ipfs::repo::StorageTypes;
 use rust_ipfs::{
-    builder::IpfsBuilder, dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
-    GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey,
+    GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
+    dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
 };
 
 #[derive(Debug, Display, From, Into)]
