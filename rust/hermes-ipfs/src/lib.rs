@@ -515,23 +515,15 @@ impl HermesIpfs {
     /// * `topic` - `impl Into<String>`
     /// * `message` - `Vec<u8>`
     ///
-    /// ## Returns
-    ///
-    /// * `Result<MessageId>`
-    ///
     /// ## Errors
     ///
     /// Returns error if unable to publish to a pubsub topic.
     pub async fn pubsub_publish(
         &self,
-        topic: impl Into<String>,
+        topic: impl IntoGossipsubTopic,
         message: Vec<u8>,
-    ) -> anyhow::Result<MessageId> {
-        // self.node
-        //     .pubsub_publish(topic, message)
-        //     .await
-        //     .map(std::convert::Into::into)
-        todo!()
+    ) -> anyhow::Result<()> {
+        self.node.pubsub_publish(topic, message).await
     }
 
     /// Ban peer from node.
