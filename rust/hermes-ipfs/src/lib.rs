@@ -77,26 +77,6 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
         )
     }
 
-    // #[must_use]
-    // /// Set the transport configuration for the IPFS node.
-    // pub fn set_transport_configuration(
-    //     self,
-    //     transport: rust_ipfs::p2p::TransportConfig,
-    // ) -> Self {
-    //     Self(self.0.set_transport_configuration(transport))
-    // }
-
-    // #[must_use]
-    // /// Disable TLS for the IPFS node.
-    // pub fn disable_tls(self) -> Self {
-    //     let transport = rust_ipfs::p2p::TransportConfig {
-    //         enable_quic: false,
-    //         enable_secure_websocket: false,
-    //         ..Default::default()
-    //     };
-    //     Self(self.0.set_transport_configuration(transport))
-    // }
-
     /// Start the IPFS node.
     ///
     /// ## Errors
@@ -127,7 +107,8 @@ impl HermesIpfs {
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
-            //.disable_tls()
+            // TODO(rafal-ch): TLS is disabled by default, we can enable it by calling
+            // `IpfsBuilder::enable_secure...()` .enable_secure_websocket()
             .start()
             .await?;
         Ok(HermesIpfs { node })
