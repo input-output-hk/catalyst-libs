@@ -2,13 +2,15 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
-use std::str::FromStr;
+use std::{convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
+use futures::{StreamExt, pin_mut, stream::BoxStream};
 /// IPFS Content Identifier.
 pub use ipld_core::cid::Cid;
 /// IPLD
 pub use ipld_core::ipld::Ipld;
+use libp2p::gossipsub::MessageId as PubsubMessageId;
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
 /// Server, Client, or Auto mode
@@ -19,12 +21,6 @@ pub use rust_ipfs::Ipfs;
 pub use rust_ipfs::Multiaddr;
 /// Peer ID type.
 pub use rust_ipfs::PeerId;
-/// Stream for `PubSub` Topic Subscriptions.
-pub use rust_ipfs::SubscriptionStream;
-/// Builder type for IPFS Node configuration.
-use rust_ipfs::UninitializedIpfsDefault as UninitializedIpfs;
-/// libp2p re-exports.
-pub use rust_ipfs::libp2p::futures::{FutureExt, StreamExt, pin_mut, stream::BoxStream};
 /// Peer Info type.
 pub use rust_ipfs::p2p::PeerInfo;
 /// Enum for specifying paths in IPFS.
@@ -32,10 +28,8 @@ pub use rust_ipfs::path::IpfsPath;
 /// Storage type for IPFS node.
 pub use rust_ipfs::repo::StorageTypes;
 use rust_ipfs::{
-    PubsubEvent, Quorum,
-    dag::ResolveError,
-    libp2p::gossipsub::{Message as PubsubMessage, MessageId as PubsubMessageId},
-    unixfs::AddOpt,
+    GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
+    dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
 };
 
 #[derive(Debug, Display, From, Into)]
@@ -43,13 +37,22 @@ use rust_ipfs::{
 pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
-pub struct IpfsBuilder(UninitializedIpfs);
+pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
-impl IpfsBuilder {
+impl Default for HermesIpfsBuilder<dummy::Behaviour> {
+    fn default() -> Self {
+        Self(IpfsBuilder::new())
+    }
+}
+
+impl<N> HermesIpfsBuilder<N>
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
+{
     #[must_use]
     /// Create a new` IpfsBuilder`.
     pub fn new() -> Self {
-        Self(UninitializedIpfs::new())
+        Self(IpfsBuilder::new())
     }
 
     #[must_use]
@@ -78,38 +81,12 @@ impl IpfsBuilder {
         )
     }
 
-    #[must_use]
-    /// Set the transport configuration for the IPFS node.
-    pub fn set_transport_configuration(
-        self,
-        transport: rust_ipfs::p2p::TransportConfig,
-    ) -> Self {
-        Self(self.0.set_transport_configuration(transport))
-    }
-
-    #[must_use]
-    /// Disable TLS for the IPFS node.
-    pub fn disable_tls(self) -> Self {
-        let transport = rust_ipfs::p2p::TransportConfig {
-            enable_quic: false,
-            enable_secure_websocket: false,
-            ..Default::default()
-        };
-        Self(self.0.set_transport_configuration(transport))
-    }
-
     /// Start the IPFS node.
     ///
     /// ## Errors
     /// Returns an error if the IPFS daemon fails to start.
     pub async fn start(self) -> anyhow::Result<Ipfs> {
         self.0.start().await
-    }
-}
-
-impl Default for IpfsBuilder {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -130,11 +107,13 @@ impl HermesIpfs {
     ///
     /// Returns an error if the IPFS daemon fails to start.
     pub async fn start() -> anyhow::Result<Self> {
-        let node: Ipfs = IpfsBuilder::new()
+        let node: Ipfs = HermesIpfsBuilder::<dummy::Behaviour>::new()
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
-            .disable_tls()
+            // TODO(rafal-ch): TLS is disabled by default, we can enable it by calling
+            // on of the `IpfsBuilder::enable_secure...()` flavors.
+            //.enable_secure_websocket()
             .start()
             .await?;
         Ok(HermesIpfs { node })
@@ -394,7 +373,7 @@ impl HermesIpfs {
         key: impl AsRef<[u8]>,
         value: impl Into<Vec<u8>>,
     ) -> anyhow::Result<()> {
-        self.node.dht_put(key, value, Quorum::One).await
+        self.node.dht_put(key, value.into(), Quorum::One).await
     }
 
     /// Get content from DHT.
@@ -412,7 +391,7 @@ impl HermesIpfs {
     /// Returns error if unable to get content from DHT
     pub async fn dht_get(
         &self,
-        key: impl AsRef<[u8]>,
+        key: impl AsRef<[u8]> + ToRecordKey,
     ) -> anyhow::Result<Vec<u8>> {
         let record_stream = self.node.dht_get(key).await?;
         pin_mut!(record_stream);
@@ -456,26 +435,6 @@ impl HermesIpfs {
         self.node.bootstrap().await
     }
 
-    /// Returns a stream of pubsub swarm events for a topic.
-    ///
-    /// ## Parameters
-    ///
-    /// * `topic` - `impl Into<Option<String>>`
-    ///
-    /// ## Returns
-    ///
-    /// * A result with `BoxStream<'static, PubsubEvent>`
-    ///
-    /// ## Errors
-    ///
-    /// Returns error if unable to retrieve pubsub swarm events.
-    pub async fn pubsub_events(
-        &self,
-        topic: impl Into<Option<String>>,
-    ) -> anyhow::Result<BoxStream<'static, PubsubEvent>> {
-        self.node.pubsub_events(topic).await
-    }
-
     /// Subscribes to a pubsub topic.
     ///
     /// ## Parameters
@@ -484,7 +443,7 @@ impl HermesIpfs {
     ///
     /// ## Returns
     ///
-    /// * `SubscriptionStream`
+    /// * Stream of `GossipsubEvent`
     ///
     /// ## Errors
     ///
@@ -492,8 +451,10 @@ impl HermesIpfs {
     pub async fn pubsub_subscribe(
         &self,
         topic: impl Into<String>,
-    ) -> anyhow::Result<SubscriptionStream> {
-        self.node.pubsub_subscribe(topic).await
+    ) -> anyhow::Result<BoxStream<'static, connexa::prelude::GossipsubEvent>> {
+        let topic = topic.into();
+        self.node.pubsub_subscribe(&topic).await?;
+        self.node.pubsub_listener(&topic).await
     }
 
     /// Unsubscribes from a pubsub topic.
@@ -502,17 +463,13 @@ impl HermesIpfs {
     ///
     /// * `topic` - `impl Into<String>`
     ///
-    /// ## Returns
-    ///
-    /// * `bool`
-    ///
     /// ## Errors
     ///
     /// Returns error if unable to unsubscribe from pubsub topic.
     pub async fn pubsub_unsubscribe(
         &self,
-        topic: impl Into<String>,
-    ) -> anyhow::Result<bool> {
+        topic: impl Into<String> + IntoGossipsubTopic,
+    ) -> anyhow::Result<()> {
         self.node.pubsub_unsubscribe(topic).await
     }
 
@@ -523,22 +480,15 @@ impl HermesIpfs {
     /// * `topic` - `impl Into<String>`
     /// * `message` - `Vec<u8>`
     ///
-    /// ## Returns
-    ///
-    /// * `Result<MessageId>`
-    ///
     /// ## Errors
     ///
     /// Returns error if unable to publish to a pubsub topic.
     pub async fn pubsub_publish(
         &self,
-        topic: impl Into<String>,
+        topic: impl IntoGossipsubTopic,
         message: Vec<u8>,
-    ) -> anyhow::Result<MessageId> {
-        self.node
-            .pubsub_publish(topic, message)
-            .await
-            .map(std::convert::Into::into)
+    ) -> anyhow::Result<()> {
+        self.node.pubsub_publish(topic, message).await
     }
 
     /// Ban peer from node.
@@ -647,15 +597,43 @@ impl FromStr for GetIpfsFile {
     }
 }
 
+/// `GossipsubEvents` related to subscription state
+#[derive(Display, Debug)]
+pub enum SubscriptionStatusEvent {
+    /// Peer has been subscribed
+    Subscribed {
+        /// Peer id
+        peer_id: PeerId,
+    },
+    /// Peer has been unsubscribed
+    Unsubscribed {
+        /// Peer id
+        peer_id: PeerId,
+    },
+}
+
 /// Handle stream of messages from the IPFS pubsub topic
-pub fn subscription_stream_task(
-    stream: SubscriptionStream,
-    handler: fn(PubsubMessage),
-) -> tokio::task::JoinHandle<()> {
+pub fn subscription_stream_task<MH, SH>(
+    stream: BoxStream<'static, connexa::prelude::GossipsubEvent>,
+    message_handler: MH,
+    subscription_handler: SH,
+) -> tokio::task::JoinHandle<()>
+where
+    MH: Fn(GossipsubMessage) + Send + 'static,
+    SH: Fn(SubscriptionStatusEvent) + Send + 'static,
+{
     tokio::spawn(async move {
         pin_mut!(stream);
         while let Some(msg) = stream.next().await {
-            handler(msg);
+            match msg {
+                connexa::prelude::GossipsubEvent::Subscribed { peer_id } => {
+                    subscription_handler(SubscriptionStatusEvent::Subscribed { peer_id });
+                },
+                connexa::prelude::GossipsubEvent::Unsubscribed { peer_id } => {
+                    subscription_handler(SubscriptionStatusEvent::Unsubscribed { peer_id });
+                },
+                connexa::prelude::GossipsubEvent::Message { message } => message_handler(message),
+            }
         }
     })
 }
