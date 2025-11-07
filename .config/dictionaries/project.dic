@@ -12,10 +12,12 @@ asyncio
 Attributes
 auditability
 Auliffe
+autonat
 auxdata
 babystep
 backpressure
 bech
+Behaviour
 bimap
 bindgen
 bkioshn
@@ -48,6 +50,7 @@ ciphertexts
 Coap
 codegen
 codepoints
+connexa
 coti
 coverallsapp
 cpus
@@ -62,6 +65,7 @@ Datelike
 DBSTATUS
 dbsync
 dcbor
+dcutr
 decompressor
 delegators
 devnet
@@ -141,6 +145,7 @@ jormungandr
 Jörmungandr
 jsonschema
 Justfile
+keypair
 kiduri
 labelloc
 lcov
@@ -245,6 +250,7 @@ pytype
 qpsg
 qrcode
 quic
+rafal
 rankdir
 rapidoc
 readlinkat
