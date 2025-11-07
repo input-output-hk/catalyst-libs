@@ -309,6 +309,12 @@
       "description": "An individual Elgamal group element that composes the elgamal cipher text.",
       "requires": []
     },
+    "encrypted_tally": {
+      "comment": "The Count of all Documents held by the SMT.",
+      "def": "uint",
+      "description": "The Count of all Documents held by the SMT.",
+      "requires": []
+    },
     "height": {
       "comment": "The consecutive sequence number of the current document \nin the chain.\nThe very first document in a sequence is numbered `0` and it\n*MUST ONLY* increment by one for each successive document in\nthe sequence.\n\nThe FINAL sequence number is encoded with the current height\nsequence value, negated. \n\nFor example the following values for height define a chain\nthat has 5 documents in the sequence 0-4, the final height \nis negated to indicate the end of the chain:\n`0, 1, 2, 3, -4`\n\nNo subsequent document can be chained to a sequence that has\na final chain height.",
       "def": "int",
@@ -333,6 +339,12 @@
     "media_type": {
       "comment": "Supported Content Media Types.\nIf the Media Type is supported by COAP, then the `uint` CoAP encoded\nversion of the media type must be used, in preference to the string.",
       "def": "(\n    (uint .eq (0 / 50 / 60 / 20000)) / \n    (tstr .eq (\n        \"application/cbor\" /\n        \"application/cddl\" /\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"text/css; charset=utf-8\" /\n        \"text/css; charset=utf-8; template=handlebars\" /\n        \"text/html; charset=utf-8\" /\n        \"text/html; charset=utf-8; template=handlebars\" /\n        \"text/markdown; charset=utf-8\" /\n        \"text/markdown; charset=utf-8; template=handlebars\" /\n        \"text/plain; charset=utf-8\" /\n        \"text/plain; charset=utf-8; template=handlebars\"\n    ))\n)",
+      "requires": []
+    },
+    "rejections": {
+      "comment": "The Count of all Documents held by the SMT.",
+      "def": "uint",
+      "description": "The Count of all Documents held by the SMT.",
       "requires": []
     },
     "revocations": {
