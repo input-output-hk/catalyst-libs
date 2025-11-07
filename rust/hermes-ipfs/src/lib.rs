@@ -2,17 +2,15 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
-#![allow(unused, dead_code, deprecated)]
-
 use std::{convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
-use futures::{pin_mut, stream::BoxStream, Stream, StreamExt};
+use futures::{pin_mut, stream::BoxStream, StreamExt};
 /// IPFS Content Identifier.
 pub use ipld_core::cid::Cid;
 /// IPLD
 pub use ipld_core::ipld::Ipld;
-use libp2p::gossipsub::{Message as PubsubMessage, MessageId as PubsubMessageId};
+use libp2p::gossipsub::MessageId as PubsubMessageId;
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
 /// Peer Info type.
@@ -30,8 +28,8 @@ pub use rust_ipfs::Multiaddr;
 /// Peer ID type.
 pub use rust_ipfs::PeerId;
 use rust_ipfs::{
-    builder::UninitializedIpfs, dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
-    unixfs::AddOpt, GossipsubMessage, NetworkBehaviour, PubsubEvent, Quorum, ToRecordKey,
+    builder::IpfsBuilder, dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
+    GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey,
 };
 
 #[derive(Debug, Display, From, Into)]
@@ -39,16 +37,16 @@ use rust_ipfs::{
 pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
-pub struct IpfsBuilder<N>(UninitializedIpfs<N>)
+pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
 where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
-impl<N> IpfsBuilder<N>
+impl<N> HermesIpfsBuilder<N>
 where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
 {
     #[must_use]
     /// Create a new` IpfsBuilder`.
     pub fn new() -> Self {
-        Self(UninitializedIpfs::new())
+        Self(IpfsBuilder::new())
     }
 
     #[must_use]
@@ -103,7 +101,7 @@ impl HermesIpfs {
     ///
     /// Returns an error if the IPFS daemon fails to start.
     pub async fn start() -> anyhow::Result<Self> {
-        let node: Ipfs = IpfsBuilder::<dummy::Behaviour>::new()
+        let node: Ipfs = HermesIpfsBuilder::<dummy::Behaviour>::new()
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
