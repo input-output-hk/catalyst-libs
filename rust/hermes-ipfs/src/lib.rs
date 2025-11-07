@@ -42,7 +42,9 @@ pub struct MessageId(pub PubsubMessageId);
 pub struct IpfsBuilder<N>(UninitializedIpfs<N>)
 where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
-impl<N> IpfsBuilder<N> where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync {
+impl<N> IpfsBuilder<N>
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
+{
     #[must_use]
     /// Create a new` IpfsBuilder`.
     pub fn new() -> Self {
@@ -496,19 +498,14 @@ impl HermesIpfs {
     ///
     /// * `topic` - `impl Into<String>`
     ///
-    /// ## Returns
-    ///
-    /// * `bool`
-    ///
     /// ## Errors
     ///
     /// Returns error if unable to unsubscribe from pubsub topic.
     pub async fn pubsub_unsubscribe(
         &self,
         topic: impl Into<String> + IntoGossipsubTopic,
-    ) -> anyhow::Result<bool> {
-        //self.node.pubsub_unsubscribe(topic).await
-        todo!()
+    ) -> anyhow::Result<()> {
+        self.node.pubsub_unsubscribe(topic).await
     }
 
     /// Publishes a message to a pubsub topic.
