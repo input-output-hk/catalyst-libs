@@ -73,6 +73,8 @@ impl RegistrationChain {
                     );
             }
 
+            // Checks that a new registration doesn't contain a signing key that was used by any
+            // other chain. Returns a list of public keys in the registration.
             for role in reg.all_roles() {
                 if let Some(key) = reg.signing_pk_for_role(role) {
                     if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
@@ -97,66 +99,68 @@ impl RegistrationChain {
         }))
     }
 
-    // /// Attempts to update an existing RBAC registration chain
-    // /// with a new CIP-509 registration, validating address and key usage consistency.
-    // ///
-    // /// # Errors
-    // ///  - Propagates any I/O or provider-level errors encountered while checking key
-    // ///   ownership (e.g., database lookup failures).
-    // pub async fn update<Provider>(
-    //     &self,
-    //     reg: Cip509,
-    //     provider: &Provider,
-    // ) -> anyhow::Result<Option<Self>>
-    // where
-    //     Provider: RbacRegistrationProvider,
-    // {
-    //     // Check that addresses from the new registration aren't used in other chains.
-    //     let previous_addresses = self.stake_addresses();
-    //     let reg_addresses = reg.stake_addresses();
-    //     let new_addresses: Vec<_> =
-    // reg_addresses.difference(&previous_addresses).collect();     for address in
-    // &new_addresses {         match provider.chain_from_stake_address(address).await? {
-    //             None => {
-    //                 // All good: the address wasn't used before.
-    //             },
-    //             Some(_) => {
-    //                 reg.report().functional_validation(
-    //                     &format!("{address} stake addresses is already used"),
-    //                     "It isn't allowed to use same stake address in multiple
-    // registration chains",                 );
-    //             },
-    //         }
-    //     }
+    /// Attempts to update an existing RBAC registration chain
+    /// with a new CIP-509 registration, validating address and key usage consistency.
+    ///
+    /// # Errors
+    ///  - Propagates any I/O or provider-level errors encountered while checking key
+    ///   ownership (e.g., database lookup failures).
+    pub async fn update<Provider>(
+        &self,
+        reg: Cip509,
+        provider: &Provider,
+    ) -> anyhow::Result<Option<Self>>
+    where
+        Provider: RbacRegistrationProvider,
+    {
+        // Check that addresses from the new registration aren't used in other chains.
+        let previous_addresses = self.stake_addresses();
+        let reg_addresses = reg.stake_addresses();
+        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
+        for address in &new_addresses {
+            if provider.chain_from_stake_address(address).await?.is_some() {
+                reg.report().functional_validation(
+                        &format!("{address} stake addresses is already used"),
+                        "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
+                    );
+            }
+        }
 
-    //     let latest_signing_pk = self.get_latest_signing_pk_for_role(RoleId::Role0);
-    //     let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
-    //         self.inner.update_stateless(reg, signing_pk)?
-    //     } else {
-    //         reg.report().missing_field(
-    //             "latest signing key for role 0",
-    //             "cannot perform signature validation during Registration Chain update",
-    //         );
-    //         return None;
-    //     };
+        // Checks that a new registration doesn't contain a signing key that was used by any
+        // other chain. Returns a list of public keys in the registration.
+        {
+            let cat_id = self.catalyst_id();
+            for role in reg.all_roles() {
+                if let Some(key) = reg.signing_pk_for_role(role) {
+                    if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
+                        if &previous != cat_id {
+                            reg.report().functional_validation(
+                                &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
+                                "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
+                            );
+                        }
+                    }
+                }
+            }
+        }
 
-    //     // Try to add a new registration to the chain.
-    //     let (signing_pk, _) = self.get_latest_signing_pk_for_role(RoleId::Role0)?;
-    //     let new_chain = chain.inner.update_stateless(reg.clone(), signing_pk)?;
+        let Some((latest_signing_pk, _)) = self.get_latest_signing_pk_for_role(RoleId::Role0)
+        else {
+            reg.report().missing_field(
+                "latest signing key for role 0",
+                "cannot perform signature validation during Registration Chain update",
+            );
+            return Ok(None);
+        };
 
-    //     // Check that new public keys aren't used by other chains.
-    //     new_chain
-    //         .validate_public_keys(&report, provider)
-    //         .await
-    //         .ok()?;
+        let Some(new_inner) = self.inner.update(reg, latest_signing_pk) else {
+            return Ok(None);
+        };
 
-    //     // Return an error if any issues were recorded in the report.
-    //     if report.is_problematic() {
-    //         return None;
-    //     }
-
-    //     Some(new_chain)
-    // }
+        Ok(Some(Self {
+            inner: new_inner.into(),
+        }))
+    }
 
     /// Update the registration chain.
     ///
@@ -169,7 +173,7 @@ impl RegistrationChain {
     ) -> Option<Self> {
         let latest_signing_pk = self.get_latest_signing_pk_for_role(RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
-            self.inner.update_stateless(cip509, signing_pk)?
+            self.inner.update(cip509, signing_pk)?
         } else {
             cip509.report().missing_field(
                 "latest signing key for role 0",
@@ -488,7 +492,7 @@ impl RegistrationChainInner {
     /// # Arguments
     /// - `cip509` - The CIP509.
     #[must_use]
-    fn update_stateless(
+    fn update(
         &self,
         cip509: Cip509,
         signing_pk: VerifyingKey,
@@ -594,7 +598,7 @@ impl RegistrationChainInner {
         role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.role_data_record.get(&role).and_then(|rdr| {
-            rdr.encryption_keys().last().and_then(|key| { 
+            rdr.encryption_keys().last().and_then(|key| {
                 let rotation = KeyRotation::from_latest_rotation(rdr.encryption_keys());
 
                 key.data().extract_pk().map(|pk| (pk, rotation))
