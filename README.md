@@ -1,5 +1,7 @@
 # Catalyst Libs
 
+[![Documentation](https://img.shields.io/badge/Documentation-read-blue)](https://docs.dev.projectcatalyst.io/libs/main/#)
+
 <!-- markdownlint-disable MD029 -->
 
 Welcome to the Catalyst Libs mono repo, where we manage and maintain the interconnected Rust crates,
