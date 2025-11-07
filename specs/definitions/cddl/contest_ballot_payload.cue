@@ -16,10 +16,10 @@ cddlDefinitions: {
 		]
 		def: """
 			{
-				+ \(requires[0]) => \(requires[1]),
-				? "\(requires[2])" : \(requires[2]),
-				? "\(requires[3])" : \(requires[3]),
-				? "\(requires[4])" : \(requires[4]),
+				+ \(requires[0]) => \(requires[1])
+				? "\(requires[2])" : \(requires[2])
+				? "\(requires[3])" : \(requires[3])
+				? "\(requires[4])" : \(requires[4])
 			}
 			"""
 		description: """
@@ -118,7 +118,7 @@ cddlDefinitions: {
 		]
 		def: """
 			[ 
-			  [+ \(requires[0])], 
+			  [+ \(requires[0])]
 			  ? \(requires[1]) 
 			]
 			"""
@@ -147,8 +147,8 @@ cddlDefinitions: {
 		]
 		def: """
 			[
-			  c1: \(requires[0]), 
-			  c2: \(requires[0]),
+			  c1: \(requires[0])
+			  c2: \(requires[0])
 			]
 			"""
 		description: """

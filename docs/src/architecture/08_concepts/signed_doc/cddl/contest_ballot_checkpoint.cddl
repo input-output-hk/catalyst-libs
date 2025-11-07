@@ -1,7 +1,7 @@
 ; Catalyst Ballot Checkpoint data object.
 ;
 ; This serves as a checkpoint that collects new `contest-ballot-payload` documents
-; that have been observed by a bulleting board.
+; that have been observed by a bulletin board.
 ;
 ; It will be created periodically during the voting period to allow proofs of inclusion
 ; to be firmly anchored and repeatably verifiable, and to allow voters or auditors to confirm
@@ -14,9 +14,21 @@
 
 ; Catalyst Ballot Checkpoint Payload data object.
 contest-ballot-checkpoint = {
-    "smt-root" : smt-root,
-    "smt-entries" : smt-entries,
+    "stage" : stage
+    "smt-root" : smt-root
+    "smt-entries" : smt-entries
+    ? "rejections" : rejections
+    ? "encrypted-tally" : encrypted-tally
+    ? "tally" : tally
+    ? "drep-encryption-key" : drep-encryption-key
 }
+
+; What stage in the ballot processing does this checkpoint represent.
+stage = (
+    "bulletin-board" /
+    "tally" /
+    "audit"
+)
 
 ; The SMT Root hash is a Blake 3 256bit digest Hash.
 smt-root = blake3
@@ -26,3 +38,74 @@ blake3 = #6.32781(bytes)
 
 ; The Count of all Documents held by the SMT.
 smt-entries = uint
+
+; List of documents rejected at this checkpoint, grouped by reason.
+rejections = {
+    + rejection-reason => [ + document_ref ]
+}
+
+; The reason a document was rejected at this checkpoint.
+rejection-reason = (
+    "already-voted" /  ; Used to indicate a voter already voted in another system (ie, Jormungandr)
+    "obsolete-vote"    ; Used to indicate a vote that was cast was replaced with a newer vote.
+)
+
+; Reference to a single Signed Document
+document_ref = [
+  document_id
+  document_ver
+  document_locator
+]
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)
+
+; Document Version
+document_ver = uuid_v7
+
+; Where a document can be located, must be a unique identifier.
+document_locator = {
+  "cid" : cid
+}
+
+; IPLD content identifier.
+; Currently limited to SHA2-256 based CIDs.
+cid = #6.42(bytes .abnfb ("cid" .det cbor-cid ))
+
+; CIDv1 ABNF Constrained for SHA2-256
+cbor-cid = '
+    cid = cidv1 codec-cbor sha2-256 digest-32 digest
+    cidv1 = %x00 %x01
+    codec-cbor = %x51
+    sha2-256 = %x12
+    digest-32 = %x20
+    digest = 32(%x00-FF)
+'
+
+; Placeholder of encrypted tally result.
+encrypted-tally = {
+    + document_ref => encrypted-tally-proposal-result
+}
+
+; Placeholder of encrypted tally result.
+encrypted-tally-proposal-result = [ 1, undefined ]
+
+; Placeholder of encrypted tally result.
+tally = {
+    + document_ref => tally-proposal-result
+}
+
+; Placeholder of encrypted tally result.
+tally-proposal-result = [ 0, { + clear-choice : voting-power } ]
+
+; Universal Unencrypted Choice
+clear-choice = int
+
+; Voting Power.
+voting-power = int
+
+; Placeholder of drep encryption key.
+drep-encryption-key = undefined

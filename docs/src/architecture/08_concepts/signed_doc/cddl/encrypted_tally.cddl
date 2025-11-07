@@ -1,5 +1,11 @@
-; document_ref
+; The Result of an encrypted tally.
+; Placeholder until formally defined.
 
+
+; Placeholder of encrypted tally result.
+encrypted-tally = {
+    + document_ref => encrypted-tally-proposal-result
+}
 
 ; Reference to a single Signed Document
 document_ref = [
@@ -35,3 +41,6 @@ cbor-cid = '
     digest-32 = %x20
     digest = 32(%x00-FF)
 '
+
+; Placeholder of encrypted tally result.
+encrypted-tally-proposal-result = [ 1, undefined ]

@@ -41,8 +41,8 @@ cddlDefinitions: #cddlDefinitions & {
 	document_ref: {
 		def: """
 			[
-			  \(requires[0]), 
-			  \(requires[1]), 
+			  \(requires[0])
+			  \(requires[1])
 			  \(requires[2])
 			]
 			"""

@@ -8,47 +8,64 @@ import (
 
 docs: "Contest Ballot Checkpoint": {
 	description: """
-		Periodically as ballots are collected, a summary of all newly collected ballots will be
+		Periodically, as ballots are collected, a summary of all newly collected ballots is
 		published in a `Contest Ballot Checkpoint` document.
-		This document forms part of the bulletin boards complete Contest Ballot Checkpoint.
+		Each checkpoint accumulates state over time,
+		committing to the current set of accepted ballots via an SMT root and entry
+		count,
+		and optionally listing any ballots rejected in the same interval.
 
-		These documents are chained to each other, and the final document is specified as final
-		in the `chain` metadata.
+		Checkpoint documents are chained together. 
+		The final document in the sequence is indicated by the `chain` metadata.
 
-		Typically each `Contest Ballot Checkpoint` document is made immutable by referencing it on
-		the blockchain most applicable to the Contest.
+		Typically each `Contest Ballot Checkpoint` is made immutable by referencing it on 
+		the	blockchain most applicable to the Contest.
 
-		Different blockchains will have different mechanisms for referencing the individual 
-		`Contest Ballot Checkpoint` documents.
+		Different blockchains will have different mechanisms for referencing checkpoint
+		documents.
+		For example, Cardano can encode a `document_ref` in on‑chain metadata,
+		signed by the ballot‑box (bulletin board) operator.
 
-		For example, Cardano will encode a `document_ref` in metadata, signed by the ballot box
-		operator.
-
-		The blockchain record must be as close in time as practically possible to the creation of
-		the `Contest Ballot Checkpoint` document.
+		The blockchain record should be as close in time as practically possible to the
+		creation of the `Contest Ballot Checkpoint` document to provide a reliable anchor for
+		proofs of inclusion and auditability.
 		"""
 	validation: """
-		* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.
-		* The 'ref' metadata fields reference the Contest Ballots collected in the proceeding
-			period by the ballot box.
-			These are sorted from earliest `document_id`:`document_ver` regardless of the time
-			the individual ballot was received by the ballot box.
-		* Ballot boxes will not accept ballots whose `document_id`:`document_ver` fall outside
-			the boundaries of the contest, or are not close in time to when the ballot box
-			received the ballot.
+		* `parameters` metadata MUST reference the Contest this checkpoint pertains to.
+		* `ref` metadata MUST reference the accepted Contest Ballots collected in the preceding
+		  interval by the bulletin board.
+		  Entries MUST be sorted by ascending `document_id`:`document_ver`,
+		  regardless of the arrival time at the bulletin board.
+		* Ballot boxes MUST reject ballots whose `document_id`:`document_ver` fall outside the
+		  contest’s allowed time window,
+		  or that are not close in time to when the ballot box received the ballot.
+		* When present, `rejections` MUST only contain recognized reasons and valid
+		  `document_ref` values of Contest Ballot documents;
+		  rejected ballots MUST NOT appear in `ref` for the same interval.
+		* `smt-root` MUST be the Blake3 root hash of the canonical SMT containing all accepted
+		  ballots up to and including this checkpoint;
+		* `smt-entries` MUST equal the total count of leaves in that SMT.
+		* `chain` MUST be intact and consistent: 
+		  the previous checkpoint referenced by `chain`
+		  MUST exist, match type, id, and parameters, and have a lower `ver` and height exactly
+		  one less than this checkpoint.
 		"""
 	business_logic: {
 		front_end: """
-			* This document is not produced by the Front End.
-			* The Front End may read the document to validate a given proof validates against a given
+			* Not produced by the Front End.
+			* May be read to verify that a proof of inclusion validates against the published
 			  `smt-root` and `smt-entries`.
 			"""
 		back_end: """
-			* Validate the ballots being referenced exist and are valid for the contest.
-			* Signed by an authoritative Ballot Box.
-			* All referenced ballots are in the same contest as specified in the `parameters` metadata.
-			* The Chain is intact and this document is consistent with the metadata in the previous checkpoint document.
-			* There is no previous checkpoint document which already references the same chained checkpoint document.
+			* Validate that all referenced ballots exist and are valid for the contest.
+			* Ensure the document is signed by an authoritative bulletin‑board operator.
+			* Ensure all referenced ballots are for the same contest as `parameters`.
+			* Compute and verify `smt-root` and `smt-entries` against the current SMT state.
+			* If present, validate `rejections` reasons and that rejected `document_ref`s are
+			  Contest Ballot documents.
+			* Ensure the chain is intact and consistent with the previous checkpoint.
+			* Ensure no previous checkpoint already chains to the same target (no forks within a
+			  single authoritative sequence).
 			"""
 	}
 
@@ -72,13 +89,47 @@ docs: "Contest Ballot Checkpoint": {
 
 	payload: {
 		description: """
-			The Payload is a CBOR Document, and must conform to this schema.
+			The Payload is a CBOR document that MUST conform to the
+			`contest-ballot-checkpoint` CDDL schema.
 
-			It consists of an array which defines the weights to be applied to the chosen delegations.
+			Contents
 
-			Each valid delegate gets the matching weight from this array.
-			The total voting power is split proportionally based on these weights over the
-			valid drep nominations.
+			* `stage` (required)
+				* Processing stage represented by this checkpoint.
+				* One of: `"bulletin-board" | "tally" | "audit"`.
+
+			* `smt-root` (required)
+				* Blake3 256‑bit digest of the root of the Sparse Merkle Tree (SMT)
+				  containing all accepted ballot `document_ref`s up to and including
+				  this checkpoint.
+
+			* `smt-entries` (required)
+				* The total number of documents (leaves) in the SMT at this checkpoint.
+
+			* `rejections` (optional)
+				* Map of `rejection-reason => [ document_ref, ... ]` listing ballots
+				  rejected during this checkpoint interval.
+				* Reasons are limited to: `"already-voted"`, `"obsolete-vote"`.
+
+			* `encrypted-tally` (optional)
+				* Placeholder map of `document_ref => encrypted-tally-proposal-result`.
+				* May appear at later stages to commit to encrypted tally snapshots.
+
+			* `tally` (optional)
+				* Placeholder map of `document_ref => tally-proposal-result` for clear tally
+				  snapshots.
+
+			* `drep-encryption-key` (optional)
+				* Placeholder for a DRep encryption key to allow decryption where required
+				  for audit or published results.
+
+			Notes
+
+			* The document `ref` metadata lists the accepted Contest Ballots collected during
+			  the interval covered by this checkpoint;
+			  rejected ballots are listed under `rejections` and are not included in `ref` for that interval.
+			* The SMT is cumulative across the chain; each checkpoint’s `smt-root` and
+			  `smt-entries` commit to all accepted ballots up to that point.
 			"""
 		schema:   "contest-ballot-checkpoint"
 		examples: cddl.cddlDefinitions["\(schema)"].examples

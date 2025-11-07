@@ -191,8 +191,8 @@
     },
     "contest-ballot-checkpoint": {
       "comment": "Catalyst Ballot Checkpoint Payload data object.",
-      "def": "{\n\t\"smt-root\" : smt-root,\n\t\"smt-entries\" : smt-entries,\n}",
-      "description": "Catalyst Ballot Checkpoint data object.\n\nThis serves as a checkpoint that collects new `contest-ballot-payload` documents\nthat have been observed by a bulleting board.\n\nIt will be created periodically during the voting period to allow proofs of inclusion\nto be firmly anchored and repeatably verifiable, and to allow voters or auditors to confirm\na bulletin board acted honestly and included all valid ballots it detected.\n\nAt another interval (which may be the same or different), a roll-up of the latest\ncheckpoint is submitted to a blockchain to provide an immutable anchor of the \nballots collected by a bulletin board up to that point in time.",
+      "def": "{\n\t\"stage\" : stage\n\t\"smt-root\" : smt-root\n\t\"smt-entries\" : smt-entries\n\t? \"rejections\" : rejections\n\t? \"encrypted-tally\" : encrypted-tally\n\t? \"tally\" : tally\n\t? \"drep-encryption-key\" : drep-encryption-key\n}",
+      "description": "Catalyst Ballot Checkpoint data object.\n\nThis serves as a checkpoint that collects new `contest-ballot-payload` documents\nthat have been observed by a bulletin board.\n\nIt will be created periodically during the voting period to allow proofs of inclusion\nto be firmly anchored and repeatably verifiable, and to allow voters or auditors to confirm\na bulletin board acted honestly and included all valid ballots it detected.\n\nAt another interval (which may be the same or different), a roll-up of the latest\ncheckpoint is submitted to a blockchain to provide an immutable anchor of the \nballots collected by a bulletin board up to that point in time.",
       "examples": [
         {
           "description": "Example Shows:\n\n* First Block in a chain\n* No proposals collected in the interval.\n* The root hash is of an empty SMT.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
@@ -211,13 +211,18 @@
         }
       ],
       "requires": [
+        "stage",
         "smt-root",
-        "smt-entries"
+        "smt-entries",
+        "rejections",
+        "encrypted-tally",
+        "tally",
+        "drep-encryption-key"
       ]
     },
     "contest-ballot-payload": {
       "comment": "Catalyst Vote Payload data object.",
-      "def": "{\n\t+ document_ref => choices,\n\t? \"column-proof\" : column-proof,\n\t? \"matrix-proof\" : matrix-proof,\n\t? \"voter-choice\" : voter-choice,\n}",
+      "def": "{\n\t+ document_ref => choices\n\t? \"column-proof\" : column-proof\n\t? \"matrix-proof\" : matrix-proof\n\t? \"voter-choice\" : voter-choice\n}",
       "description": "Catalyst Vote Payload data object.\n\nA vote payload that can hold both encrypted or unencrypted votes.",
       "examples": [
         {
@@ -256,7 +261,7 @@
     },
     "document_ref": {
       "comment": "Reference to a single Signed Document",
-      "def": "[\n  document_id, \n  document_ver, \n  document_locator\n]",
+      "def": "[\n  document_id\n  document_ver\n  document_locator\n]",
       "requires": [
         "document_id",
         "document_ver",
@@ -286,9 +291,15 @@
         "uuid_v7"
       ]
     },
+    "drep-encryption-key": {
+      "comment": "Placeholder of drep encryption key.",
+      "def": "undefined",
+      "description": "Placeholder to store the drep encryption key so drep votes can be decrypted if required.\nPlaceholder until formally defined.",
+      "requires": []
+    },
     "elgamal-ristretto255-encrypted-choice": {
       "comment": "The elgamal encrypted ciphertext `(c1, c2)`.",
-      "def": "[\n  c1: elgamal-ristretto255-group-element, \n  c2: elgamal-ristretto255-group-element,\n]",
+      "def": "[\n  c1: elgamal-ristretto255-group-element\n  c2: elgamal-ristretto255-group-element\n]",
       "description": "The elgamal encrypted ciphertext `(c1, c2)`.",
       "requires": [
         "elgamal-ristretto255-group-element"
@@ -296,7 +307,7 @@
     },
     "elgamal-ristretto255-encrypted-choices": {
       "comment": "elgamal/ristretto255 Encrypted Choices",
-      "def": "[ \n  [+ elgamal-ristretto255-encrypted-choice], \n  ? row-proof \n]",
+      "def": "[ \n  [+ elgamal-ristretto255-encrypted-choice]\n  ? row-proof \n]",
       "description": "Encrypted Choices are a Vector (list) of encrypted items.\nThe size of the vector will depend on the cryptography used, \nand the number of choices.\n\nTypically, (but optionally) it has a proof attached which proves something\nabout the encrypted choices, without disclosing their contents.\n\nFor example, a ZKProof that there is only a single `1` in the choices, \nand all the rest are `0`.\n\nThe size/contents of the proof depend on what is being proved, and the \ncryptography underlying the proof.",
       "requires": [
         "elgamal-ristretto255-encrypted-choice",
@@ -309,10 +320,19 @@
       "description": "An individual Elgamal group element that composes the elgamal cipher text.",
       "requires": []
     },
-    "encrypted_tally": {
-      "comment": "The Count of all Documents held by the SMT.",
-      "def": "uint",
-      "description": "The Count of all Documents held by the SMT.",
+    "encrypted-tally": {
+      "comment": "Placeholder of encrypted tally result.",
+      "def": "{\n\t+ document_ref => encrypted-tally-proposal-result\n}",
+      "description": "The Result of an encrypted tally.\nPlaceholder until formally defined.",
+      "requires": [
+        "document_ref",
+        "encrypted-tally-proposal-result"
+      ]
+    },
+    "encrypted-tally-proposal-result": {
+      "comment": "Placeholder of encrypted tally result.",
+      "def": "[ 1, undefined ]",
+      "description": "The Result of an encrypted tally.\nPlaceholder until formally defined.",
       "requires": []
     },
     "height": {
@@ -341,11 +361,20 @@
       "def": "(\n    (uint .eq (0 / 50 / 60 / 20000)) / \n    (tstr .eq (\n        \"application/cbor\" /\n        \"application/cddl\" /\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"text/css; charset=utf-8\" /\n        \"text/css; charset=utf-8; template=handlebars\" /\n        \"text/html; charset=utf-8\" /\n        \"text/html; charset=utf-8; template=handlebars\" /\n        \"text/markdown; charset=utf-8\" /\n        \"text/markdown; charset=utf-8; template=handlebars\" /\n        \"text/plain; charset=utf-8\" /\n        \"text/plain; charset=utf-8; template=handlebars\"\n    ))\n)",
       "requires": []
     },
-    "rejections": {
-      "comment": "The Count of all Documents held by the SMT.",
-      "def": "uint",
-      "description": "The Count of all Documents held by the SMT.",
+    "rejection-reason": {
+      "comment": "The reason a document was rejected at this checkpoint.",
+      "def": "(\n\t\"already-voted\" /  ; Used to indicate a voter already voted in another system (ie, Jormungandr)\n\t\"obsolete-vote\"    ; Used to indicate a vote that was cast was replaced with a newer vote.\n)",
+      "description": "The reason a document was rejected at this checkpoint.",
       "requires": []
+    },
+    "rejections": {
+      "comment": "List of documents rejected at this checkpoint, grouped by reason.",
+      "def": "{\n\t+ rejection-reason => [ + document_ref ]\n}",
+      "description": "For any documents that were rejected for a defined reason,\nthe list of document references which were rejected.",
+      "requires": [
+        "rejection-reason",
+        "document_ref"
+      ]
     },
     "revocations": {
       "comment": "List of revoked versions of this document.",
@@ -391,6 +420,30 @@
         "blake3"
       ]
     },
+    "stage": {
+      "comment": "What stage in the ballot processing does this checkpoint represent.",
+      "def": "(\n\t\"bulletin-board\" /\n\t\"tally\" /\n\t\"audit\"\n)",
+      "description": "What stage in the ballot processing does this checkpoint represent.",
+      "requires": []
+    },
+    "tally": {
+      "comment": "Placeholder of encrypted tally result.",
+      "def": "{\n\t+ document_ref => tally-proposal-result\n}",
+      "description": "The Result of an encrypted tally.\nPlaceholder until formally defined.",
+      "requires": [
+        "document_ref",
+        "tally-proposal-result"
+      ]
+    },
+    "tally-proposal-result": {
+      "comment": "Placeholder of encrypted tally result.",
+      "def": "[ 0, { + clear-choice : voting-power } ]",
+      "description": "The Result of an encrypted tally.\nPlaceholder until formally defined.",
+      "requires": [
+        "clear-choice",
+        "voting-power"
+      ]
+    },
     "uuid_v4": {
       "comment": "UUIDv4",
       "def": "#6.37(bytes .size 16)",
@@ -410,6 +463,12 @@
       "requires": [
         "aes-ctr-encrypted-choices"
       ]
+    },
+    "voting-power": {
+      "comment": "Voting Power.",
+      "def": "int",
+      "description": "The Voting Power.\nVoting Power is always an integer, any fractional voting power \nis represented as a fixed point, and not defined here.",
+      "requires": []
     },
     "zkproof-ed25519-r-response": {
       "comment": "ZK Proof Response values for Ed25519.",
@@ -1667,10 +1726,10 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "business_logic": {
-        "back_end": "* Validate the ballots being referenced exist and are valid for the contest.\n* Signed by an authoritative Ballot Box.\n* All referenced ballots are in the same contest as specified in the `parameters` metadata.\n* The Chain is intact and this document is consistent with the metadata in the previous checkpoint document.\n* There is no previous checkpoint document which already references the same chained checkpoint document.",
-        "front_end": "* This document is not produced by the Front End.\n* The Front End may read the document to validate a given proof validates against a given\n  `smt-root` and `smt-entries`."
+        "back_end": "* Validate that all referenced ballots exist and are valid for the contest.\n* Ensure the document is signed by an authoritative bulletin‑board operator.\n* Ensure all referenced ballots are for the same contest as `parameters`.\n* Compute and verify `smt-root` and `smt-entries` against the current SMT state.\n* If present, validate `rejections` reasons and that rejected `document_ref`s are\n  Contest Ballot documents.\n* Ensure the chain is intact and consistent with the previous checkpoint.\n* Ensure no previous checkpoint already chains to the same target (no forks within a\n  single authoritative sequence).",
+        "front_end": "* Not produced by the Front End.\n* May be read to verify that a proof of inclusion validates against the published\n  `smt-root` and `smt-entries`."
       },
-      "description": "Periodically as ballots are collected, a summary of all newly collected ballots will be\npublished in a `Contest Ballot Checkpoint` document.\nThis document forms part of the bulletin boards complete Contest Ballot Checkpoint.\n\nThese documents are chained to each other, and the final document is specified as final\nin the `chain` metadata.\n\nTypically each `Contest Ballot Checkpoint` document is made immutable by referencing it on\nthe blockchain most applicable to the Contest.\n\nDifferent blockchains will have different mechanisms for referencing the individual \n`Contest Ballot Checkpoint` documents.\n\nFor example, Cardano will encode a `document_ref` in metadata, signed by the ballot box\noperator.\n\nThe blockchain record must be as close in time as practically possible to the creation of\nthe `Contest Ballot Checkpoint` document.",
+      "description": "Periodically, as ballots are collected, a summary of all newly collected ballots is\npublished in a `Contest Ballot Checkpoint` document.\nEach checkpoint accumulates state over time,\ncommitting to the current set of accepted ballots via an SMT root and entry\ncount,\nand optionally listing any ballots rejected in the same interval.\n\nCheckpoint documents are chained together. \nThe final document in the sequence is indicated by the `chain` metadata.\n\nTypically each `Contest Ballot Checkpoint` is made immutable by referencing it on \nthe\tblockchain most applicable to the Contest.\n\nDifferent blockchains will have different mechanisms for referencing checkpoint\ndocuments.\nFor example, Cardano can encode a `document_ref` in on‑chain metadata,\nsigned by the ballot‑box (bulletin board) operator.\n\nThe blockchain record should be as close in time as practically possible to the\ncreation of the `Contest Ballot Checkpoint` document to provide a reliable anchor for\nproofs of inclusion and auditability.",
       "draft": false,
       "headers": {
         "content type": {
@@ -1768,7 +1827,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Payload is a CBOR Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "description": "The Payload is a CBOR document that MUST conform to the\n`contest-ballot-checkpoint` CDDL schema.\n\nContents\n\n* `stage` (required)\n\t* Processing stage represented by this checkpoint.\n\t* One of: `\"bulletin-board\" | \"tally\" | \"audit\"`.\n\n* `smt-root` (required)\n\t* Blake3 256‑bit digest of the root of the Sparse Merkle Tree (SMT)\n\t  containing all accepted ballot `document_ref`s up to and including\n\t  this checkpoint.\n\n* `smt-entries` (required)\n\t* The total number of documents (leaves) in the SMT at this checkpoint.\n\n* `rejections` (optional)\n\t* Map of `rejection-reason => [ document_ref, ... ]` listing ballots\n\t  rejected during this checkpoint interval.\n\t* Reasons are limited to: `\"already-voted\"`, `\"obsolete-vote\"`.\n\n* `encrypted-tally` (optional)\n\t* Placeholder map of `document_ref => encrypted-tally-proposal-result`.\n\t* May appear at later stages to commit to encrypted tally snapshots.\n\n* `tally` (optional)\n\t* Placeholder map of `document_ref => tally-proposal-result` for clear tally\n\t  snapshots.\n\n* `drep-encryption-key` (optional)\n\t* Placeholder for a DRep encryption key to allow decryption where required\n\t  for audit or published results.\n\nNotes\n\n* The document `ref` metadata lists the accepted Contest Ballots collected during\n  the interval covered by this checkpoint;\n  rejected ballots are listed under `rejections` and are not included in `ref` for that interval.\n* The SMT is cumulative across the chain; each checkpoint’s `smt-root` and\n  `smt-entries` commit to all accepted ballots up to that point.",
         "examples": [
           {
             "description": "Example Shows:\n\n* First Block in a chain\n* No proposals collected in the interval.\n* The root hash is of an empty SMT.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
@@ -1802,7 +1861,7 @@
         }
       },
       "type": "58608925-bda3-47df-b39a-ae0d0a1dd6ed",
-      "validation": "* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.\n* The 'ref' metadata fields reference the Contest Ballots collected in the proceeding\n\tperiod by the ballot box.\n\tThese are sorted from earliest `document_id`:`document_ver` regardless of the time\n\tthe individual ballot was received by the ballot box.\n* Ballot boxes will not accept ballots whose `document_id`:`document_ver` fall outside\n\tthe boundaries of the contest, or are not close in time to when the ballot box\n\treceived the ballot.",
+      "validation": "* `parameters` metadata MUST reference the Contest this checkpoint pertains to.\n* `ref` metadata MUST reference the accepted Contest Ballots collected in the preceding\n  interval by the bulletin board.\n  Entries MUST be sorted by ascending `document_id`:`document_ver`,\n  regardless of the arrival time at the bulletin board.\n* Ballot boxes MUST reject ballots whose `document_id`:`document_ver` fall outside the\n  contest’s allowed time window,\n  or that are not close in time to when the ballot box received the ballot.\n* When present, `rejections` MUST only contain recognized reasons and valid\n  `document_ref` values of Contest Ballot documents;\n  rejected ballots MUST NOT appear in `ref` for the same interval.\n* `smt-root` MUST be the Blake3 root hash of the canonical SMT containing all accepted\n  ballots up to and including this checkpoint;\n* `smt-entries` MUST equal the total count of leaves in that SMT.\n* `chain` MUST be intact and consistent: \n  the previous checkpoint referenced by `chain`\n  MUST exist, match type, id, and parameters, and have a lower `ver` and height exactly\n  one less than this checkpoint.",
       "versions": [
         {
           "changes": "* Add Voting Ballots and Ballot Checkpoint Documents",

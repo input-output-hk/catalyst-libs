@@ -1,5 +1,17 @@
-; document_ref
+; For any documents that were rejected for a defined reason,
+; the list of document references which were rejected.
 
+
+; List of documents rejected at this checkpoint, grouped by reason.
+rejections = {
+    + rejection-reason => [ + document_ref ]
+}
+
+; The reason a document was rejected at this checkpoint.
+rejection-reason = (
+    "already-voted" /  ; Used to indicate a voter already voted in another system (ie, Jormungandr)
+    "obsolete-vote"    ; Used to indicate a vote that was cast was replaced with a newer vote.
+)
 
 ; Reference to a single Signed Document
 document_ref = [

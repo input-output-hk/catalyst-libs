@@ -5,16 +5,16 @@
 
 ; Catalyst Vote Payload data object.
 contest-ballot-payload = {
-    + document_ref => choices,
-    ? "column-proof" : column-proof,
-    ? "matrix-proof" : matrix-proof,
-    ? "voter-choice" : voter-choice,
+    + document_ref => choices
+    ? "column-proof" : column-proof
+    ? "matrix-proof" : matrix-proof
+    ? "voter-choice" : voter-choice
 }
 
 ; Reference to a single Signed Document
 document_ref = [
-  document_id,
-  document_ver,
+  document_id
+  document_ver
   document_locator
 ]
 
@@ -58,14 +58,14 @@ clear-choice = int
 
 ; elgamal/ristretto255 Encrypted Choices
 elgamal-ristretto255-encrypted-choices = [
-  [+ elgamal-ristretto255-encrypted-choice],
+  [+ elgamal-ristretto255-encrypted-choice]
   ? row-proof
 ]
 
 ; The elgamal encrypted ciphertext `(c1, c2)`.
 elgamal-ristretto255-encrypted-choice = [
-  c1: elgamal-ristretto255-group-element,
-  c2: elgamal-ristretto255-group-element,
+  c1: elgamal-ristretto255-group-element
+  c2: elgamal-ristretto255-group-element
 ]
 
 ; An individual Elgamal group element that composes the elgamal cipher text.

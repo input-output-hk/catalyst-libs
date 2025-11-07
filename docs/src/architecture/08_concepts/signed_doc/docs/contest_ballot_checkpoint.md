@@ -2,24 +2,27 @@
 
 ## Description
 
-Periodically as ballots are collected, a summary of all newly collected ballots will be
+Periodically, as ballots are collected, a summary of all newly collected ballots is
 published in a [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document.
-This document forms part of the bulletin boards complete Contest Ballot Checkpoint.
+Each checkpoint accumulates state over time,
+committing to the current set of accepted ballots via an SMT root and entry
+count,
+and optionally listing any ballots rejected in the same interval.
 
-These documents are chained to each other, and the final document is specified as final
-in the [`chain`](../metadata.md#chain) metadata.
+Checkpoint documents are chained together.
+The final document in the sequence is indicated by the [`chain`](../metadata.md#chain) metadata.
 
-Typically each [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document is made immutable by referencing it on
+Typically each [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) is made immutable by referencing it on
 the blockchain most applicable to the Contest.
 
-Different blockchains will have different mechanisms for referencing the individual
-[Contest Ballot Checkpoint](contest_ballot_checkpoint.md) documents.
+Different blockchains will have different mechanisms for referencing checkpoint
+documents.
+For example, Cardano can encode a `document_ref` in on‑chain metadata,
+signed by the ballot‑box (bulletin board) operator.
 
-For example, Cardano will encode a `document_ref` in metadata, signed by the ballot box
-operator.
-
-The blockchain record must be as close in time as practically possible to the creation of
-the [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document.
+The blockchain record should be as close in time as practically possible to the
+creation of the [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document to provide a reliable anchor for
+proofs of inclusion and auditability.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -32,30 +35,44 @@ the [Contest Ballot Checkpoint](contest_ballot_checkpoint.md) document.
 
 ### Validation
 
-* The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the Contest the ballot is being cast in.
-* The 'ref' metadata fields reference the Contest Ballots collected in the proceeding
-    period by the ballot box.
-    These are sorted from earliest `document_id`:`document_ver` regardless of the time
-    the individual ballot was received by the ballot box.
-* Ballot boxes will not accept ballots whose `document_id`:`document_ver` fall outside
-    the boundaries of the contest, or are not close in time to when the ballot box
-    received the ballot.
+* [`parameters`](../metadata.md#parameters) metadata MUST reference the Contest this checkpoint pertains to.
+* [`ref`](../metadata.md#ref) metadata MUST reference the accepted Contest Ballots collected in the preceding
+  interval by the bulletin board.
+  Entries MUST be sorted by ascending `document_id`:`document_ver`,
+  regardless of the arrival time at the bulletin board.
+* Ballot boxes MUST reject ballots whose `document_id`:`document_ver` fall outside the
+  contest’s allowed time window,
+  or that are not close in time to when the ballot box received the ballot.
+* When present, `rejections` MUST only contain recognized reasons and valid
+  `document_ref` values of Contest Ballot documents;
+  rejected ballots MUST NOT appear in [`ref`](../metadata.md#ref) for the same interval.
+* `smt-root` MUST be the Blake3 root hash of the canonical SMT containing all accepted
+  ballots up to and including this checkpoint;
+* `smt-entries` MUST equal the total count of leaves in that SMT.
+* [`chain`](../metadata.md#chain) MUST be intact and consistent:
+  the previous checkpoint referenced by [`chain`](../metadata.md#chain)
+  MUST exist, match type, id, and parameters, and have a lower [`ver`](../metadata.md#ver) and height exactly
+  one less than this checkpoint.
 
 ### Business Logic
 
 #### Front End
 
-* This document is not produced by the Front End.
-* The Front End may read the document to validate a given proof validates against a given
+* Not produced by the Front End.
+* May be read to verify that a proof of inclusion validates against the published
   `smt-root` and `smt-entries`.
 
 #### Back End
 
-* Validate the ballots being referenced exist and are valid for the contest.
-* Signed by an authoritative Ballot Box.
-* All referenced ballots are in the same contest as specified in the [`parameters`](../metadata.md#parameters) metadata.
-* The Chain is intact and this document is consistent with the metadata in the previous checkpoint document.
-* There is no previous checkpoint document which already references the same chained checkpoint document.
+* Validate that all referenced ballots exist and are valid for the contest.
+* Ensure the document is signed by an authoritative bulletin‑board operator.
+* Ensure all referenced ballots are for the same contest as [`parameters`](../metadata.md#parameters).
+* Compute and verify `smt-root` and `smt-entries` against the current SMT state.
+* If present, validate `rejections` reasons and that rejected `document_ref`s are
+  Contest Ballot documents.
+* Ensure the chain is intact and consistent with the previous checkpoint.
+* Ensure no previous checkpoint already chains to the same target (no forks within a
+  single authoritative sequence).
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -226,13 +243,47 @@ Not just the current document.
 
 ## Payload
 
-The Payload is a [CBOR][RFC8949] Document, and must conform to this schema.
+The Payload is a [CBOR][RFC8949] document that MUST conform to the
+`contest-ballot-checkpoint` [CDDL][RFC8610] schema.
 
-It consists of an array which defines the weights to be applied to the chosen delegations.
+Contents
 
-Each valid delegate gets the matching weight from this array.
-The total voting power is split proportionally based on these weights over the
-valid drep nominations.
+* `stage` (required)
+    * Processing stage represented by this checkpoint.
+    * One of: `"bulletin-board" | "tally" | "audit"`.
+
+* `smt-root` (required)
+    * Blake3 256‑bit digest of the root of the Sparse Merkle Tree (SMT)
+      containing all accepted ballot `document_ref`s up to and including
+      this checkpoint.
+
+* `smt-entries` (required)
+    * The total number of documents (leaves) in the SMT at this checkpoint.
+
+* `rejections` (optional)
+    * Map of `rejection-reason => [ document_ref, ... ]` listing ballots
+      rejected during this checkpoint interval.
+    * Reasons are limited to: `"already-voted"`, `"obsolete-vote"`.
+
+* `encrypted-tally` (optional)
+    * Placeholder map of `document_ref => encrypted-tally-proposal-result`.
+    * May appear at later stages to commit to encrypted tally snapshots.
+
+* `tally` (optional)
+    * Placeholder map of `document_ref => tally-proposal-result` for clear tally
+      snapshots.
+
+* `drep-encryption-key` (optional)
+    * Placeholder for a DRep encryption key to allow decryption where required
+      for audit or published results.
+
+Notes
+
+* The document [`ref`](../metadata.md#ref) metadata lists the accepted Contest Ballots collected during
+  the interval covered by this checkpoint;
+  rejected ballots are listed under `rejections` and are not included in [`ref`](../metadata.md#ref) for that interval.
+* The SMT is cumulative across the chain; each checkpoint’s `smt-root` and
+  `smt-entries` commit to all accepted ballots up to that point.
 
 ### Schema
 <!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
@@ -246,6 +297,16 @@ valid drep nominations.
 <!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### Sub-schemas
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: stage"
+
+    * [stage.cddl](../cddl/stage.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/stage.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 <!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: smt-root"
@@ -274,6 +335,166 @@ valid drep nominations.
 
     ``` cddl
     {{ include_file('./../cddl/smt_entries.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: rejections"
+
+    * [rejections.cddl](../cddl/rejections.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/rejections.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: rejection-reason"
+
+    * [rejection_reason.cddl](../cddl/rejection_reason.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/rejection_reason.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: document_ref"
+
+    * [document_ref.cddl](../cddl/document_ref.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_ref.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: document_id"
+
+    * [document_id.cddl](../cddl/document_id.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_id.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: uuid_v7"
+
+    * [uuid_v7.cddl](../cddl/uuid_v7.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/uuid_v7.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: document_ver"
+
+    * [document_ver.cddl](../cddl/document_ver.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_ver.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: document_locator"
+
+    * [document_locator.cddl](../cddl/document_locator.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/document_locator.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: cid"
+
+    * [cid.cddl](../cddl/cid.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/cid.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: cbor-cid"
+
+    * [cbor_cid.cddl](../cddl/cbor_cid.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/cbor_cid.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: encrypted-tally"
+
+    * [encrypted_tally.cddl](../cddl/encrypted_tally.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/encrypted_tally.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: encrypted-tally-proposal-result"
+
+    * [encrypted_tally_proposal_result.cddl](../cddl/encrypted_tally_proposal_result.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/encrypted_tally_proposal_result.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: tally"
+
+    * [tally.cddl](../cddl/tally.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/tally.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: tally-proposal-result"
+
+    * [tally_proposal_result.cddl](../cddl/tally_proposal_result.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/tally_proposal_result.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: clear-choice"
+
+    * [clear_choice.cddl](../cddl/clear_choice.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/clear_choice.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: voting-power"
+
+    * [voting_power.cddl](../cddl/voting_power.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/voting_power.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
+
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
+??? note "Required Definition: drep-encryption-key"
+
+    * [drep_encryption_key.cddl](../cddl/drep_encryption_key.cddl)
+
+    ``` cddl
+    {{ include_file('./../cddl/drep_encryption_key.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
