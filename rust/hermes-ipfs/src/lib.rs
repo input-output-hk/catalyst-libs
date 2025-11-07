@@ -40,6 +40,12 @@ pub struct MessageId(pub PubsubMessageId);
 pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
 where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
+impl Default for HermesIpfsBuilder<dummy::Behaviour> {
+    fn default() -> Self {
+        Self(IpfsBuilder::new())
+    }
+}
+
 impl<N> HermesIpfsBuilder<N>
 where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
 {
@@ -591,7 +597,7 @@ impl FromStr for GetIpfsFile {
     }
 }
 
-/// GossipsubEvents related to subscription state
+/// `GossipsubEvents` related to subscription state
 #[derive(Display, Debug)]
 pub enum SubscriptionStatusEvent {
     /// Peer has been subscribed
@@ -621,13 +627,13 @@ where
         while let Some(msg) = stream.next().await {
             match msg {
                 connexa::prelude::GossipsubEvent::Subscribed { peer_id } => {
-                    subscription_handler(SubscriptionStatusEvent::Subscribed { peer_id })
+                    subscription_handler(SubscriptionStatusEvent::Subscribed { peer_id });
                 },
                 connexa::prelude::GossipsubEvent::Unsubscribed { peer_id } => {
-                    subscription_handler(SubscriptionStatusEvent::Unsubscribed { peer_id })
+                    subscription_handler(SubscriptionStatusEvent::Unsubscribed { peer_id });
                 },
                 connexa::prelude::GossipsubEvent::Message { message } => message_handler(message),
-            };
+            }
         }
     })
 }
