@@ -22,6 +22,7 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
+use ed25519_dalek::VerifyingKey;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
@@ -32,6 +33,7 @@ use uuid::Uuid;
 
 use crate::cardano::cip509::{
     decode_context::DecodeContext,
+    extract_key,
     rbac::Cip509RbacMetadata,
     types::{PaymentHistory, TxInputHash, ValidationSignature},
     utils::Cip0134UriSet,
@@ -40,7 +42,7 @@ use crate::cardano::cip509::{
         validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
-    Payment, PointTxnIdx, RoleData,
+    C509Cert, LocalRefInt, Payment, PointTxnIdx, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// A x509 metadata envelope.
@@ -225,6 +227,46 @@ impl Cip509 {
         role: RoleId,
     ) -> Option<&RoleData> {
         self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
+    }
+
+    /// Returns signing public key for a role.
+    #[must_use]
+    pub fn signing_pk_for_role(
+        &self,
+        role: RoleId,
+    ) -> Option<VerifyingKey> {
+        self.metadata.as_ref().and_then(|m| {
+            let key_ref = m.role_data.get(&role).and_then(|d| d.signing_key())?;
+            match key_ref.local_ref {
+                LocalRefInt::X509Certs => {
+                    m.x509_certs.get(key_ref.key_offset).and_then(|c| {
+                        if let X509DerCert::X509Cert(c) = c {
+                            extract_key::x509_key(&c).ok()
+                        } else {
+                            None
+                        }
+                    })
+                },
+                LocalRefInt::C509Certs => {
+                    m.c509_certs.get(key_ref.key_offset).and_then(|c| {
+                        if let C509Cert::C509Certificate(c) = c {
+                            extract_key::c509_key(&c).ok()
+                        } else {
+                            None
+                        }
+                    })
+                },
+                LocalRefInt::PubKeys => {
+                    m.pub_keys.get(key_ref.key_offset).and_then(|c| {
+                        if let SimplePublicKeyType::Ed25519(c) = c {
+                            Some(c.clone())
+                        } else {
+                            None
+                        }
+                    })
+                },
+            }
+        })
     }
 
     /// Returns a purpose of this registration.

@@ -14,7 +14,7 @@ pub trait RbacRegistrationProvider {
     /// for the given Catalyst ID.
     fn chain(
         &self,
-        id: CatalystId,
+        id: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<Option<RegistrationChain>>> + Send;
 
     /// Returns `true` if a chain with the given Catalyst ID already exists.
@@ -24,24 +24,25 @@ pub trait RbacRegistrationProvider {
     /// chain.
     fn is_chain_known(
         &self,
-        id: CatalystId,
+        id: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<bool>> + Send;
 
-    /// Returns a Catalyst ID corresponding to the given stake address.
-    fn catalyst_id_from_stake_address(
+    /// Returns a current valid registration chain corresponding to the given stake
+    /// address.
+    fn chain_from_stake_address(
         &self,
         address: &StakeAddress,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
+    ) -> impl Future<Output = anyhow::Result<Option<RegistrationChain>>> + Send;
 
     /// Returns a Catalyst ID corresponding to the given public key.
     fn catalyst_id_from_public_key(
         &self,
-        key: VerifyingKey,
+        key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
     /// Returns a Catalyst ID corresponding to the given transaction hash.
     fn catalyst_id_from_txn_id(
         &self,
-        txn_id: TransactionId,
+        txn_id: &TransactionId,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 }
