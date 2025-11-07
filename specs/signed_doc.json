@@ -94,15 +94,47 @@
         "COSE_Generic_Headers"
       ]
     },
-    "blake2b_256": {
-      "comment": "Blake2B-256",
-      "def": "bytes .size 32",
-      "description": "Blake2b Hash (256 bits)",
+    "aes-ctr-encrypted-block": {
+      "comment": "AES-CTR Encrypted Data Block",
+      "def": "bytes .size 16",
+      "description": "AES-CTR encrypted data.\nThe Nonce/IV is the UUIDv7 `document_ver`.\nThis is the correct size, and has the necessary randomness properties.\nThe first block uses the `document_ver` the second `document_ver+1` and so on.\nThe document_ver is interpreted as a Big Endian 128bit integer for the purpose\nof the addition.\n\nAs the CTR is predictable, the blocks can be decrypted in parallel for maximum performance.",
+      "requires": []
+    },
+    "aes-ctr-encrypted-choices": {
+      "comment": "Encrypted Voter Choices",
+      "def": "+aes-ctr-encrypted-block",
+      "description": "Choices are constructed as a CBOR multidimensional array of the form:\n`[ +[+choice] ]`\nreflecting the choices in the rows and columns as present 1:1 in the encrypted\nchoices.\n\nThis data is then compressed using `brotli` compression, and the result is encrypted \nusing AES-CTR and encoded as a sequence of blocks here.\n\nData needs to be pre-compressed before encryption as encryption will make the data\nincompressible.\n\nThe Encryption Key is to be derived from the Voters catalyst key-chain and not to be\npublished.\nDerivation *MUST* include the contest Document ID and Version, so that the same\nencryption key is never used twice for different contests, but can still be re-derived\nby a voter that holds their catalyst key-chain recovery keys.",
+      "requires": [
+        "aes-ctr-encrypted-block"
+      ]
+    },
+    "blake2b": {
+      "comment": "Blake2b Hash (Digest Size is determined by length of bytes)",
+      "def": "#6.32782(bytes)",
+      "description": "Blake2b Hash (Digest Size is determined by length of bytes)",
+      "requires": []
+    },
+    "blake2s": {
+      "comment": "Blake2s Hash (Digest Size is determined by length of bytes)",
+      "def": "#6.32783(bytes)",
+      "description": "Blake2s Hash (Digest Size is determined by length of bytes)",
+      "requires": []
+    },
+    "blake3": {
+      "comment": "Blake3 Hash (Digest Size is determined by length of bytes)",
+      "def": "#6.32781(bytes)",
+      "description": "Blake3 Hash (Digest Size is determined by length of bytes)",
       "requires": []
     },
     "catalyst_id_kid": {
       "comment": "UTF8 Catalyst ID URI encoded as a bytes string.",
       "def": "bytes",
+      "requires": []
+    },
+    "cbor-cid": {
+      "comment": "CIDv1 ABNF Constrained for SHA2-256",
+      "def": "'\n\tcid = cidv1 codec-cbor sha2-256 digest-32 digest\n\tcidv1 = %x00 %x01\n\tcodec-cbor = %x51\n\tsha2-256 = %x12\n\tdigest-32 = %x20\n\tdigest = 32(%x00-FF)\n'",
+      "description": "CIDv1 ABNF Constrained for SHA2-256",
       "requires": []
     },
     "chain": {
@@ -113,17 +145,98 @@
         "document_ref"
       ]
     },
+    "choices": {
+      "comment": "Voters Choices.",
+      "def": "[ 0, clear-choices ] /\n[ 1, elgamal-ristretto255-encrypted-choices ]",
+      "description": "Choices are an array of encrypted  or unencrypted choices.",
+      "requires": [
+        "clear-choices",
+        "elgamal-ristretto255-encrypted-choices"
+      ]
+    },
     "cid": {
-      "comment": "IPLD content identifier\nTODO: add size limits if possible",
-      "def": "#6.42(bytes)",
-      "description": "IPLD content identifier.\nAlso known as an IPFS CID\nSee: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid\n     https://github.com/ipld/cid-cbor/",
+      "comment": "IPLD content identifier.\nCurrently limited to SHA2-256 based CIDs.",
+      "def": "#6.42(bytes .abnfb (\"cid\" .det cbor-cid ))",
+      "description": "IPLD content identifier.\nAlso known as an IPFS CID.\nCurrently limited to SHA2-256 based CIDs.\nSee: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid\n     https://github.com/ipld/cid-cbor/",
+      "requires": [
+        "cbor-cid"
+      ]
+    },
+    "clear-choice": {
+      "comment": "Universal Unencrypted Choice",
+      "def": "int",
+      "description": "An Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
       "requires": []
+    },
+    "clear-choices": {
+      "comment": "Universal Unencrypted Set of Choices",
+      "def": "( +clear-choice )",
+      "description": "A Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
+      "requires": [
+        "clear-choice"
+      ]
     },
     "collaborators": {
       "comment": "Allowed Collaborators on the next subsequent version of a document.",
       "def": "[ + catalyst_id_kid ]",
       "requires": [
         "catalyst_id_kid"
+      ]
+    },
+    "column-proof": {
+      "comment": "Universal Encrypted Column Proof (Placeholder)",
+      "def": "[ uint, [ +undefined ] ]",
+      "description": "Proof that values in a column have a required arrangement.\nThis is similar to the `row-proof` but for all values in a \nsingle column.\nIt is an array that matches the length of `choices`.\nIf it is a different length, then it is invalid.\n\nCurrently there are no `column-proof` defined, this value is\na placeholder for documentation purposes only.\n\nIt is NOT to be implemented.\n`column-proof` should be assumed to be missing until such time\nas a concrete `column-proof` is defined.\n\nSimilar to `row-proof` there can be multiple column-proofs defined which prove\ncertain characteristics of the encrypted column values.\nThey are identified by the unsigned integer starting the proof.",
+      "requires": []
+    },
+    "contest-ballot-checkpoint": {
+      "comment": "Catalyst Ballot Checkpoint Payload data object.",
+      "def": "{\n\t\"smt-root\" : smt-root,\n\t\"smt-entries\" : smt-entries,\n}",
+      "description": "Catalyst Ballot Checkpoint data object.\n\nThis serves as a checkpoint that collects new `contest-ballot-payload` documents\nthat have been observed by a bulleting board.\n\nIt will be created periodically during the voting period to allow proofs of inclusion\nto be firmly anchored and repeatably verifiable, and to allow voters or auditors to confirm\na bulletin board acted honestly and included all valid ballots it detected.\n\nAt another interval (which may be the same or different), a roll-up of the latest\ncheckpoint is submitted to a blockchain to provide an immutable anchor of the \nballots collected by a bulletin board up to that point in time.",
+      "examples": [
+        {
+          "description": "Example Shows:\n\n* First Block in a chain\n* No proposals collected in the interval.\n* The root hash is of an empty SMT.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
+          "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+          "title": "Example Catalyst Ballot Checkpoint Genesis Payload."
+        },
+        {
+          "description": "Example Shows:\n\n* Intermediate Block in a chain\n* Six proposals collected in the interval.\n* The root hash is the SMT including these new documents.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
+          "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+          "title": "Example Catalyst Ballot Checkpoint Intermediate Payload."
+        },
+        {
+          "description": "Example Shows:\n\n* Final Block in a chain\n* Two proposals collected in the interval.\n* The root hash is the SMT including these new documents.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
+          "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+          "title": "Example Catalyst Ballot Checkpoint Final Payload."
+        }
+      ],
+      "requires": [
+        "smt-root",
+        "smt-entries"
+      ]
+    },
+    "contest-ballot-payload": {
+      "comment": "Catalyst Vote Payload data object.",
+      "def": "{\n\t+ document_ref => choices,\n\t? \"column-proof\" : column-proof,\n\t? \"matrix-proof\" : matrix-proof,\n\t? \"voter-choice\" : voter-choice,\n}",
+      "description": "Catalyst Vote Payload data object.\n\nA vote payload that can hold both encrypted or unencrypted votes.",
+      "examples": [
+        {
+          "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-ctr-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...",
+          "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+          "title": "Example Encrypted Contest Ballot Payload."
+        },
+        {
+          "description": "Example Shows:\n\n* Three Proposals\n* Two Choices",
+          "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBjbGVhciBiYWxsb3QuCg==",
+          "title": "Example Clear Ballot Payload."
+        }
+      ],
+      "requires": [
+        "document_ref",
+        "choices",
+        "column-proof",
+        "matrix-proof",
+        "voter-choice"
       ]
     },
     "document_id": {
@@ -136,7 +249,7 @@
     },
     "document_locator": {
       "comment": "Where a document can be located, must be a unique identifier.",
-      "def": "{ \n  \"cid\" => cid\n}",
+      "def": "{ \n  \"cid\" : cid\n}",
       "requires": [
         "cid"
       ]
@@ -173,6 +286,35 @@
         "uuid_v7"
       ]
     },
+    "elgamal-ristretto255-encrypted-choice": {
+      "comment": "The elgamal encrypted ciphertext `(c1, c2)`.",
+      "def": "[\n  c1: elgamal-ristretto255-group-element, \n  c2: elgamal-ristretto255-group-element,\n]",
+      "description": "The elgamal encrypted ciphertext `(c1, c2)`.",
+      "requires": [
+        "elgamal-ristretto255-group-element"
+      ]
+    },
+    "elgamal-ristretto255-encrypted-choices": {
+      "comment": "elgamal/ristretto255 Encrypted Choices",
+      "def": "[ \n  [+ elgamal-ristretto255-encrypted-choice], \n  ? row-proof \n]",
+      "description": "Encrypted Choices are a Vector (list) of encrypted items.\nThe size of the vector will depend on the cryptography used, \nand the number of choices.\n\nTypically, (but optionally) it has a proof attached which proves something\nabout the encrypted choices, without disclosing their contents.\n\nFor example, a ZKProof that there is only a single `1` in the choices, \nand all the rest are `0`.\n\nThe size/contents of the proof depend on what is being proved, and the \ncryptography underlying the proof.",
+      "requires": [
+        "elgamal-ristretto255-encrypted-choice",
+        "row-proof"
+      ]
+    },
+    "elgamal-ristretto255-group-element": {
+      "comment": "An individual Elgamal group element that composes the elgamal cipher text.",
+      "def": "bytes .size 32",
+      "description": "An individual Elgamal group element that composes the elgamal cipher text.",
+      "requires": []
+    },
+    "encrypted_tally": {
+      "comment": "The Count of all Documents held by the SMT.",
+      "def": "uint",
+      "description": "The Count of all Documents held by the SMT.",
+      "requires": []
+    },
     "height": {
       "comment": "The consecutive sequence number of the current document \nin the chain.\nThe very first document in a sequence is numbered `0` and it\n*MUST ONLY* increment by one for each successive document in\nthe sequence.\n\nThe FINAL sequence number is encoded with the current height\nsequence value, negated. \n\nFor example the following values for height define a chain\nthat has 5 documents in the sequence 0-4, the final height \nis negated to indicate the end of the chain:\n`0, 1, 2, 3, -4`\n\nNo subsequent document can be chained to a sequence that has\na final chain height.",
       "def": "int",
@@ -184,8 +326,14 @@
       "requires": []
     },
     "json_pointer": {
-      "comment": "RFC6901 Standard JSON Pointer",
+      "comment": "RFC6901 Standard JSON Pointer\nSee: https://datatracker.ietf.org/doc/html/rfc6901",
       "def": "text",
+      "requires": []
+    },
+    "matrix-proof": {
+      "comment": "Universal Encrypted Matrix Proof (Placeholder)",
+      "def": "[ uint, undefined ]",
+      "description": "Proof that values in the matrix of all columns and rows have a required arrangement.\nThis is similar to the `row-proof` and `column-proof` but for all values in a \nballot taken together.\n\nThere is a single `matrix-proof` but it may be chosen from a pre-defined\nknown set of valid proofs.\n\nCurrently there are no `matrix-proof` defined, this value is\na placeholder for documentation purposes only.\n\nIt is NOT to be implemented.\n`matrix-proof` should be assumed to be missing until such time\nas a concrete `matrix-proof` is defined.\n\nSimilar to `row-proof` and `column-proof` there can be multiple matrix-proofs defined \nwhich prove certain characteristics of the encrypted column values.\nThey are identified by the unsigned integer starting the proof.",
       "requires": []
     },
     "media_type": {
@@ -193,11 +341,25 @@
       "def": "(\n    (uint .eq (0 / 50 / 60 / 20000)) / \n    (tstr .eq (\n        \"application/cbor\" /\n        \"application/cddl\" /\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"text/css; charset=utf-8\" /\n        \"text/css; charset=utf-8; template=handlebars\" /\n        \"text/html; charset=utf-8\" /\n        \"text/html; charset=utf-8; template=handlebars\" /\n        \"text/markdown; charset=utf-8\" /\n        \"text/markdown; charset=utf-8; template=handlebars\" /\n        \"text/plain; charset=utf-8\" /\n        \"text/plain; charset=utf-8; template=handlebars\"\n    ))\n)",
       "requires": []
     },
+    "rejections": {
+      "comment": "The Count of all Documents held by the SMT.",
+      "def": "uint",
+      "description": "The Count of all Documents held by the SMT.",
+      "requires": []
+    },
     "revocations": {
       "comment": "List of revoked versions of this document.",
       "def": "[ * document_ver ] / true ",
       "requires": [
         "document_ver"
+      ]
+    },
+    "row-proof": {
+      "comment": "Universal Encrypted Row Proof",
+      "def": "[0, zkproof-elgamal-ristretto255-unit-vector-with-single-selection ]",
+      "description": "A proof that the choices conform to a required set of properties.\nIt is defined by the configured cryptography used for encrypted choices.\nThis format is universal over all encrypted choice encoding.",
+      "requires": [
+        "zkproof-elgamal-ristretto255-unit-vector-with-single-selection"
       ]
     },
     "section_ref": {
@@ -215,6 +377,20 @@
         "COSE_Sign"
       ]
     },
+    "smt-entries": {
+      "comment": "The Count of all Documents held by the SMT.",
+      "def": "uint",
+      "description": "The Count of all Documents held by the SMT.",
+      "requires": []
+    },
+    "smt-root": {
+      "comment": "The SMT Root hash is a Blake 3 256bit digest Hash.",
+      "def": "blake3",
+      "description": "The SMT Root hash is a Blake 3 256bit digest Hash.",
+      "requires": [
+        "blake3"
+      ]
+    },
     "uuid_v4": {
       "comment": "UUIDv4",
       "def": "#6.37(bytes .size 16)",
@@ -226,6 +402,60 @@
       "def": "#6.37(bytes .size 16)",
       "description": "Version 7 UUID\nSee: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7\n     https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
       "requires": []
+    },
+    "voter-choice": {
+      "comment": "Encrypted Voter Choice Payload",
+      "def": "[ 0, aes-ctr-encrypted-choices ]",
+      "description": "This is an encrypted payload that a voter, and ONLY the voter can decrypt.\nIt allows the voter to recover their choices without needing to decrypt the\nencrypted votes used in the tally.\n\nThere is no way to associate this data with the encrypted choices directly, but\nit is created by the voter from the same data used to create the choices.",
+      "requires": [
+        "aes-ctr-encrypted-choices"
+      ]
+    },
+    "zkproof-ed25519-r-response": {
+      "comment": "ZK Proof Response values for Ed25519.",
+      "def": "( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )",
+      "description": "ZK Proof Response values for Ed25519.",
+      "requires": [
+        "zkproof-ed25519-scalar"
+      ]
+    },
+    "zkproof-ed25519-scalar": {
+      "comment": "An individual Ed25519 scalar used in ZK Proofs.",
+      "def": "bytes .size 32",
+      "description": "An individual Ed25519 scalar used in ZK Proofs.",
+      "requires": []
+    },
+    "zkproof-elgamal-announcement": {
+      "comment": "ZK Proof Announcement values for Elgamal.",
+      "def": "( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )",
+      "description": "ZK Proof Announcement values for Elgamal.",
+      "requires": [
+        "zkproof-elgamal-group-element"
+      ]
+    },
+    "zkproof-elgamal-group-element": {
+      "comment": "An individual Elgamal group element used in ZK Proofs.",
+      "def": "bytes .size 32",
+      "description": "An individual Elgamal group element used in ZK Proofs.",
+      "requires": []
+    },
+    "zkproof-elgamal-ristretto255-unit-vector-with-single-selection": {
+      "def": "[ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]",
+      "description": "Proof that the choices form a unit vector with a single selection.",
+      "requires": [
+        "zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item",
+        "zkproof-ed25519-scalar"
+      ]
+    },
+    "zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item": {
+      "comment": "Proof that the row is a unit vector with a single selection.",
+      "def": "( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )",
+      "description": "Proof that the row is a unit vector with a single selection.",
+      "requires": [
+        "zkproof-elgamal-announcement",
+        "elgamal-ristretto255-encrypted-choice",
+        "zkproof-ed25519-r-response"
+      ]
     }
   },
   "contentTypes": {
@@ -367,7 +597,7 @@
         "coseLabel": "content-encoding",
         "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
         "format": "HTTP Content Encoding",
-        "required": "optional",
+        "required": "yes",
         "value": [
           "br"
         ]
@@ -415,7 +645,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -459,7 +689,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -540,7 +770,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -584,7 +814,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -669,7 +899,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -716,7 +946,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -797,7 +1027,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -846,7 +1076,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -931,7 +1161,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -978,7 +1208,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1059,7 +1289,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -1108,7 +1338,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1190,7 +1420,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -1239,7 +1469,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1294,6 +1524,293 @@
         }
       ]
     },
+    "Contest Ballot": {
+      "authors": {
+        "Steven Johnson": "steven.johnson@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "* Verifies that the Contest is valid, and that the ballot is cast in the appropriate \n  time frame, and has a valid `document_id` and `document_ver` in that range.\n* Verify the payload lists all the eligible proposals which can be chosen in the contest.\n* Verify the proofs in the payload are correct.",
+        "front_end": "* Always cast a ballot for all proposals in the contest.\n* Any proposal not explicitely selected by a user must have the default selection applied.\n  Typically, this would be `abstain`.\n* The voter signs this document to confirm their ballot.\n* Ballots can not be cast outside the time allowed for the casting of ballots.\n* The `document_id` and `document_ver` must be within the time of allowed casting\n  of ballots.\n  Any `document_id` or `document_ver` outside this time are invalid and will\n  not be counted."
+      },
+      "description": "An individual Ballot cast in a Contest by a registered user.\n\nEach ballot contains choices for all possible proposals eligible for the \ncontest.\n\nMultiple contest ballots can be cast by the same registered user in a contest, but\nonly the latest (by its document_version) will be counted.\n\nThe reason the ballot is cast in a contest is because there may be multiple contests in\na campaign, and they may be attached to either the brand, campaign or category level.\nEach level, (for example category) can in-theory have multiple contests.\n\nOnly eligible users can cast ballots in the respective contest.",
+      "draft": false,
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/cbor"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "yes",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Contest Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.\n\nContents\n\n* `document_ref => choices`\n\t* The payload is a map keyed by a proposal `document_ref`.\n\t* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.\n\t* The value for each key is that voter’s `choices` for that proposal.\n\t* There is exactly one set of `choices` per referenced proposal (no duplicates).\n\n* `choices`\n\t* Discriminated union of unencrypted or encrypted choices.\n\n* `row-proof` (optional, inside encrypted choices)\n  \t* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.\n\n* `column-proof` (optional, top-level)\n\t* Placeholder for future column-level proofs across proposals.\n\t* Not defined at present; omit in implementations.\n\n* `matrix-proof` (optional, top-level)\n\t* Placeholder for future matrix-wide proofs across all proposals and positions.\n\t* Not defined at present; omit in implementations.\n\n* `voter-choice` (optional, top-level)\n\t* This is ONLY Not included when the vote is unencrypted.\n\t* Allows a voter to read back their ballot selections without decrypting the entire ballot.\n\nNotes\n\n* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.\n  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to\n  reflect an unwrapped COSE_Sign CBOR block.\n* The application defines the permissible range and semantics of `clear-choice` integers.\n* All CBOR must use core-deterministic encoding so that content addressing remains stable.",
+        "examples": [
+          {
+            "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-ctr-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+            "title": "Example Encrypted Contest Ballot Payload."
+          },
+          {
+            "description": "Example Shows:\n\n* Three Proposals\n* Two Choices",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBjbGVhciBiYWxsb3QuCg==",
+            "title": "Example Clear Ballot Payload."
+          }
+        ],
+        "nil": false,
+        "schema": "contest-ballot-payload"
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "description": "Only the original author can update and sign a new version of documents.",
+          "type": "author"
+        }
+      },
+      "type": "de1284b8-8533-4f7a-81cc-ff4bde5ef8d0",
+      "validation": "* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.\n* The 'ref' metadata fields within the ballot payload (not the headers) must point to \n  ALL the proposals eligible to be chosen in the contest.",
+      "versions": [
+        {
+          "changes": "* Add Voting Ballots and Ballot Checkpoint Documents",
+          "modified": "2025-11-03",
+          "version": "0.1.5"
+        }
+      ]
+    },
+    "Contest Ballot Checkpoint": {
+      "authors": {
+        "Steven Johnson": "steven.johnson@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "* Validate the ballots being referenced exist and are valid for the contest.\n* Signed by an authoritative Ballot Box.\n* All referenced ballots are in the same contest as specified in the `parameters` metadata.\n* The Chain is intact and this document is consistent with the metadata in the previous checkpoint document.\n* There is no previous checkpoint document which already references the same chained checkpoint document.",
+        "front_end": "* This document is not produced by the Front End.\n* The Front End may read the document to validate a given proof validates against a given\n  `smt-root` and `smt-entries`."
+      },
+      "description": "Periodically as ballots are collected, a summary of all newly collected ballots will be\npublished in a `Contest Ballot Checkpoint` document.\nThis document forms part of the bulletin boards complete Contest Ballot Checkpoint.\n\nThese documents are chained to each other, and the final document is specified as final\nin the `chain` metadata.\n\nTypically each `Contest Ballot Checkpoint` document is made immutable by referencing it on\nthe blockchain most applicable to the Contest.\n\nDifferent blockchains will have different mechanisms for referencing the individual \n`Contest Ballot Checkpoint` documents.\n\nFor example, Cardano will encode a `document_ref` in metadata, signed by the ballot box\noperator.\n\nThe blockchain record must be as close in time as practically possible to the creation of\nthe `Contest Ballot Checkpoint` document.",
+      "draft": false,
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/cbor"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "yes",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "yes",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": "Contest Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": true,
+          "required": "yes",
+          "type": "Contest Ballot",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The Payload is a CBOR Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "examples": [
+          {
+            "description": "Example Shows:\n\n* First Block in a chain\n* No proposals collected in the interval.\n* The root hash is of an empty SMT.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+            "title": "Example Catalyst Ballot Checkpoint Genesis Payload."
+          },
+          {
+            "description": "Example Shows:\n\n* Intermediate Block in a chain\n* Six proposals collected in the interval.\n* The root hash is the SMT including these new documents.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+            "title": "Example Catalyst Ballot Checkpoint Intermediate Payload."
+          },
+          {
+            "description": "Example Shows:\n\n* Final Block in a chain\n* Two proposals collected in the interval.\n* The root hash is the SMT including these new documents.\n\nNOTE: This example is of the entire Signed Document structure including the Payload.",
+            "example": "UmVwbGFjZSB0aGlzIGZpbGUgd2l0aCBDQk9SIEVuY29kZWQgZXhhbXBsZSBlbmNyeXB0ZWQgYmFsbG90Lgo=",
+            "title": "Example Catalyst Ballot Checkpoint Final Payload."
+          }
+        ],
+        "nil": false,
+        "schema": "contest-ballot-checkpoint"
+      },
+      "signers": {
+        "roles": {
+          "admin": [
+            "Bulletin Board Operator"
+          ],
+          "user": []
+        },
+        "update": {
+          "description": "Only the original author can update and sign a new version of documents.",
+          "type": "author"
+        }
+      },
+      "type": "58608925-bda3-47df-b39a-ae0d0a1dd6ed",
+      "validation": "* The `parameters` metadata *MUST* point to the Contest the ballot is being cast in.\n* The 'ref' metadata fields reference the Contest Ballots collected in the proceeding\n\tperiod by the ballot box.\n\tThese are sorted from earliest `document_id`:`document_ver` regardless of the time\n\tthe individual ballot was received by the ballot box.\n* Ballot boxes will not accept ballots whose `document_id`:`document_ver` fall outside\n\tthe boundaries of the contest, or are not close in time to when the ballot box\n\treceived the ballot.",
+      "versions": [
+        {
+          "changes": "* Add Voting Ballots and Ballot Checkpoint Documents",
+          "modified": "2025-11-03",
+          "version": "0.1.5"
+        }
+      ]
+    },
     "Contest Delegation": {
       "authors": {
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
@@ -1302,20 +1819,24 @@
         "back_end": "* Verifies that the voter and Representative are valid and registered for the category.\n* Records the delegation of voting power from the voter to the Representative.",
         "front_end": "* Allows a voter to select a Representative from a list of eligible candidates for a category.\n* The voter signs this document to confirm their delegation choice."
       },
-      "description": "Delegation by a Registered User to a Representative for\na contest.\n\nThis delegation allows votes cast by the Representative\nto use the voting power of the delegating User, in addition\nto their own personal voting power and that of all other Users \nwho delegate to the same Representative.\n\nDelegation is for a specific Contest.\nMultiple Delegations must be published if there are multiple\nContests within a Brand/Campaign or Category.\n\nThis is because different Contests may have different rules.\nAnd not all Representatives will choose to nominate\nfor every Contest.\n\nA Representative ***MAY NOT*** delegate to a different Representative\nfor any contest they have nominated for.\nThey ***MAY*** however nominate a Representative in any contest they\nhave not nominated for.",
+      "description": "Delegation by a Registered User to a Representative for\na contest.\n\nThis delegation allows votes cast by the Representative\nto use the voting power of the delegating User, in addition\nto their own personal voting power and that of all other Users \nwho delegate to the same Representative.\n\nDelegation is for a specific Contest.\nMultiple Delegations must be published if there are multiple\nContests within a Brand/Campaign or Category.\n\nThis is because different Contests may have different rules.\nAnd not all Representatives will choose to (or be able to) nominate\nfor every Contest.\n\nA Representative ***MAY NOT*** delegate to a different Representative\nfor any contest they have nominated for.\nThey ***MAY*** however nominate a Representative in any contest they\nhave not nominated for.\n\nA Representative is NOT required to delegate to themselves in a contest they are nominated for,\nand in fact, any self-delegation is invalid and ignored.\nA Representative has an implicit 100% voting power delegation to themselves in any contest \nthey are nominated.\nThe MAY not vote personally, and if they do, that vote will have Zero (0) voting power.\n100% of their voting power is assigned to their delegate vote and can not be split in any way.\n\nA voter MAY choose multiple delegates for a contest, in this case they are listed in priority \norder from highest priority to lowest.\nPriority only affects two aspects of the delegation.\n\n1. Any residual voting power after it is split among all delegates is given to the highest \n   priority delegate (first).\n2. If there is not enough voting power to distribute, then its distributed from highest \n   priority to lowest.\n   This may mean that low priority delegates get zero voting power.\n\nAn example:  If a Voter has 100 raw voting power, after quadratic scaling, they have 10.\nIf they delegated to 15 delegates equally, then only the first 10 would get 1 voting power\neach.\nVoting power is not fractionally assigned.\n\nThe payload MAY contain a json document which consists of a single array which can adjust \nthe ratio of the delegation.\nVoting power is divided based on the weight of a single delegate over the sum of all \nweights of all delegates.\nThis is performed with integer division.\nAs a special condition, 0 or any negative value is equivalent to a weight of 1.\nAs explained above, if there is not enough voting power to distribute, low priority reps \nwill receive 0 voting power from the delegation.\nAnd if there is any residual after integer division its applied to the representative \nwith the highest priority.",
       "draft": false,
       "headers": {
         "content type": {
           "coseLabel": 3,
           "description": "Media Type/s allowed in the Payload",
           "format": "Media Type",
-          "required": "excluded"
+          "required": "yes",
+          "value": "application/json"
         },
         "content-encoding": {
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "excluded"
+          "required": "yes",
+          "value": [
+            "br"
+          ]
         }
       },
       "metadata": {
@@ -1352,7 +1873,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "linked_refs": null,
-          "multiple": false,
+          "multiple": true,
           "required": "yes",
           "type": "Rep Nomination",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
@@ -1364,7 +1885,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1396,8 +1917,53 @@
       },
       "notes": [],
       "payload": {
-        "description": "  There is no payload.",
-        "nil": true
+        "description": "The Payload is a JSON Document, and must conform to this schema.\n\nIt consists of an array which defines the weights to be applied to the chosen delegations.\n\nEach valid delegate gets the matching weight from this array.\nThe total voting power is split proportionally based on these weights over the\nvalid drep nominations.",
+        "examples": [
+          {
+            "description": "If there are only 1 delegation, then the weights do not matter.\nIf there are two, then the first delegate has a weight of 10/30, and the second has 20/30.\nIf there are 5, then the weights are: `[10,20,30,1,1]`",
+            "example": {
+              "weights": [
+                10,
+                20,
+                30
+              ]
+            },
+            "title": "Three Delegation Weights"
+          }
+        ],
+        "nil": false,
+        "schema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "description": "Structure of the payload of a Contest Delegation.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "weights": {
+              "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              "minItems": 0,
+              "type": "array"
+            }
+          },
+          "required": [
+            "weights"
+          ],
+          "title": "Contest Delegation Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-03-01": [
+              "First Version Created."
+            ]
+          }
+        }
       },
       "signers": {
         "roles": {
@@ -1411,12 +1977,17 @@
         }
       },
       "type": "764f17fb-cc50-4979-b14a-b213dbac5994",
-      "validation": "* The `parameters` metadata *MUST* point to the same Contest as the \n\tNomination of the Representative.\n* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.\n* The payload MUST be nil.\n\nA Representative *MUST* Delegate to their latest Nomination for a Category,\notherwise their Nomination is invalid.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.\n\nA Voter may withdraw their Delegation by revoking all delegation documents.\n`revocations` must be set to `true` to withdraw a delegation, OR\na later contest delegation may change the delegated representative without\nfirst revoking the prior delegation, as only the latest delegation is\nconsidered.",
+      "validation": "* The `parameters` metadata *MUST* point to the same Contest as the \n\tNomination of the Representative.\n* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.\n    IF there are multiple representatives, then any which are not pointing\n    to a valid `Representative Nomination` are excluded.  \n    The nomination is only invalid if ALL references `Representative Nomination` \n    references are invalid.\n    This is to prevent a Representative changing their nomination invalidating a\n    delegation with multiple representatives.\n* The payload MUST be nil.\n\nA Representative *MUST* Delegate to their latest Nomination for a Category,\notherwise their Nomination is invalid.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.\n\nA Voter may withdraw their Delegation by revoking all delegation documents.\n`revocations` must be set to `true` to withdraw a delegation, OR\na later contest delegation may change the delegated representative without\nfirst revoking the prior delegation, as only the latest delegation is\nconsidered.",
       "versions": [
         {
           "changes": "* First Published Version",
           "modified": "2025-06-19",
           "version": "0.01"
+        },
+        {
+          "changes": "* Allow Multi Delegation",
+          "modified": "2025-09-04",
+          "version": "0.1.2"
         }
       ]
     },
@@ -1439,7 +2010,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -1490,7 +2061,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1571,7 +2142,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -1622,7 +2193,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1704,7 +2275,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -1755,7 +2326,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -1922,7 +2493,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -1975,7 +2546,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2059,7 +2630,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2119,7 +2690,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2199,7 +2770,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2250,7 +2821,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2332,7 +2903,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2383,7 +2954,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2465,7 +3036,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2512,7 +3083,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2587,7 +3158,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2643,7 +3214,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2770,8 +3341,8 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "business_logic": {
-        "back_end": "* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n* The system will only consider Representatives as having valid Nominations if:\n  * Their latest Nomination in a Contest is not Revoked.\n  * Their latest Delegation in a Contest references their latest Nomination.",
-        "front_end": "* Allows a Representative to create or update their profile for a category.\n* The Representative sets their status to 'active' to be discoverable for delegation.\n* The Representative `revokes` the Nomination to signal they are no longer \n\tparticipating in the category.\n* Nominations are not valid if the latest Delegation by the Representative does NOT\n\treference their latest Nomination."
+        "back_end": "* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n* The system will only consider Representatives as having valid Nominations if:\n\t* Their latest Nomination in a Contest is not Revoked.\n\t* Their latest Delegation in a Contest references their latest Nomination.",
+        "front_end": "* Allows a Representative to create or update their profile for a category.\n* The Representative sets their status to 'active' to be discoverable for delegation.\n* The Representative `revokes` the Nomination to signal they are no longer \n  participating in the category.\n* Nominations are not valid if the latest Delegation by the Representative does NOT\n  reference their latest Nomination."
       },
       "description": "A Representative Nomination Document is created to opt\nin as a Representative Voter for a specific Contest on a Brand/Campaign or Category.\n\nThis Document is a kind of `Profile` that is primarily used to\nhelp justify the Representatives Nomination to prospective delegators.\n\nThe user must have registered as a Representative.\nThe presence of this document signifies the user's intent to participate in that \ncontest as a Representative.\n\nThe document's structure is defined by the associated \nRep Nomination Form Template.\nThis allows an Admin to specify contest-specific requirements.\n\nThe Representative can retract their nomination by using the `revoke` metadata to\nrevoke this Nomination document.\n\nIt is an extension of all other profiles attached to the same Catalyst ID.\n\nProfiles themselves are intentionally general, however they may be\nlinked to a Brand/Campaign/Category via the template used by the profile.\n\nThe payload of a profile is controlled by its template.",
       "draft": false,
@@ -2787,7 +3358,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2839,7 +3410,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -2914,7 +3485,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -2961,7 +3532,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -3050,7 +3621,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -3101,7 +3672,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -3176,7 +3747,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "optional",
+          "required": "yes",
           "value": [
             "br"
           ]
@@ -3225,7 +3796,7 @@
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
@@ -3326,10 +3897,13 @@
       "text/plain;": "text/plain"
     },
     "links": {
+      "BLAKE2b-256": "https://www.blake2.net/blake2.pdf",
+      "BLAKE2b-512": "https://www.blake2.net/blake2.pdf",
       "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
       "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
       "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
       "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "CIP-1852": "https://cips.cardano.org/cip/CIP-1852",
       "CSS": "https://www.w3.org/Style/CSS/",
       "CommonMark": "https://spec.commonmark.org/0.31.2/",
       "HTML5": "https://html.spec.whatwg.org/multipage/syntax.html#syntax",
@@ -3340,6 +3914,7 @@
       "Mustache": "https://mustache.github.io/mustache.5.html",
       "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
       "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
+      "RFC6901": "https://datatracker.ietf.org/doc/html/rfc6901",
       "RFC7932": "https://www.rfc-editor.org/rfc/rfc7932",
       "RFC8259": "https://www.rfc-editor.org/rfc/rfc8259.html",
       "RFC8610": "https://www.rfc-editor.org/rfc/rfc8610",
@@ -3351,11 +3926,16 @@
       "RFC9562": "https://www.rfc-editor.org/rfc/rfc9562.html",
       "RFC9562-V4": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4",
       "RFC9562-V7": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7",
+      "Understanding Cryptography Textbook": "https://gnanavelrec.wordpress.com/wp-content/uploads/2019/06/2.understanding-cryptography-by-christof-paar-.pdf",
       "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
       "application/json": "https://www.iana.org/assignments/media-types/application/json",
       "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br",
+      "historical dates": "https://www.oxfordreference.com/display/10.1093/acref/9780191737152.timeline.0001",
+      "ristretto255": "https://ristretto.group",
       "text/css": "https://www.rfc-editor.org/rfc/rfc2318.html",
-      "text/plain": "https://www.rfc-editor.org/rfc/rfc2046.html"
+      "text/plain": "https://www.rfc-editor.org/rfc/rfc2046.html",
+      "treasury system paper": "https://eprint.iacr.org/2018/435.pdf",
+      "treasury system specification": "https://github.com/input-output-hk/treasury-crypto/blob/master/docs/voting_protocol_spec/Treasury_voting_protocol_spec.pdf"
     }
   },
   "encodingTypes": {
@@ -3655,7 +4235,6 @@
             "type": "string"
           },
           "enum": {
-            "contentMediaType": "text/plain",
             "description": "Sorted array of string values from which a single value can be selected.\nValues must be presented in the order they appear in the array.\nNo value that is not in the array may be listed or presented.\nEach item in the array **MUST** be  unique.",
             "example": [
               "option 1",
@@ -3663,6 +4242,7 @@
               "option 3"
             ],
             "items": {
+              "contentMediaType": "text/plain",
               "description": "An element of the Enum.",
               "required": "yes",
               "type": "string"
@@ -5313,7 +5893,6 @@
               "type": "string"
             },
             "enum": {
-              "contentMediaType": "text/plain",
               "description": "Sorted array of string values from which a single value can be selected.\nValues must be presented in the order they appear in the array.\nNo value that is not in the array may be listed or presented.\nEach item in the array **MUST** be  unique.",
               "example": [
                 "option 1",
@@ -5321,6 +5900,7 @@
                 "option 3"
               ],
               "items": {
+                "contentMediaType": "text/plain",
                 "description": "An element of the Enum.",
                 "required": "yes",
                 "type": "string"
@@ -5939,7 +6519,6 @@
             "type": "string"
           },
           "enum": {
-            "contentMediaType": "text/plain",
             "description": "Sorted array of string values from which a single value can be selected.\nValues must be presented in the order they appear in the array.\nNo value that is not in the array may be listed or presented.\nEach item in the array **MUST** be  unique.",
             "example": [
               "Hot FM",
@@ -5947,6 +6526,7 @@
               "Silence"
             ],
             "items": {
+              "contentMediaType": "text/plain",
               "description": "An element of the Enum.",
               "required": "yes",
               "type": "string"
@@ -6910,11 +7490,11 @@
             "description": "A set of tags with a group selector.",
             "items": {
               "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"$def/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"$def/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
-              "required": "excluded",
+              "required": "yes",
               "type": "object"
             },
             "property": "oneOf",
-            "required": "excluded",
+            "required": "yes",
             "type": "array"
           },
           "title": {
@@ -8287,7 +8867,6 @@
             "type": "string"
           },
           "enum": {
-            "contentMediaType": "text/plain",
             "description": "Sorted array of string values from which a single value can be selected.\nValues must be presented in the order they appear in the array.\nNo value that is not in the array may be listed or presented.\nEach item in the array **MUST** be  unique.",
             "example": [
               "option 1",
@@ -8295,6 +8874,7 @@
               "option 3"
             ],
             "items": {
+              "contentMediaType": "text/plain",
               "description": "An element of the Enum.",
               "required": "yes",
               "type": "string"
@@ -8796,7 +9376,9 @@
           "Rep Profile Form Template",
           "Rep Nomination",
           "Rep Nomination Form Template",
-          "Contest Delegation"
+          "Contest Delegation",
+          "Contest Ballot",
+          "Contest Ballot Checkpoint"
         ],
         "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
       },
@@ -8812,7 +9394,7 @@
         "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
       },
       "revocations": {
-        "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+        "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
         "format": "Version Revocations",
         "required": "excluded",
         "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."

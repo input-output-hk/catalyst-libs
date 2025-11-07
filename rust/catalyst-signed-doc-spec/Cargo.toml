@@ -12,15 +12,15 @@ workspace = true
 
 [dependencies]
 catalyst-types = { version = "0.0.11", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.11" }
-cbork-cddl-parser = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-cddl-parser/v0.0.3" }
+#cbork-cddl-parser = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-cddl-parser/v0.0.3" }
 
-serde_json = "1.0.142"
-anyhow = "1.0.99"
-serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.145"
+anyhow = "1.0.100"
+serde = { version = "1.0.228", features = ["derive"] }
 
 quote = "1.0"
 proc-macro2 = "1.0"
-build-info = "0.0.39"
+build-info = "0.0.42"
 
 [build-dependencies]
-build-info-build = "0.0.39"
+build-info-build = "0.0.42"

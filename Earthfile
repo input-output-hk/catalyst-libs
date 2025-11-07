@@ -1,9 +1,9 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.5.27 AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.5.27 AS cspell-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.5.27 AS python-ci
-IMPORT github.com/input-output-hk/catalyst-ci:v3.5.27 AS cat-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:feat/python-install-for-base AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/python-install-for-base AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:feat/python-install-for-base AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci:feat/python-install-for-base AS cat-ci
 
 FROM debian:stable-slim
 
@@ -48,6 +48,8 @@ repo-docs:
 # are linted equally.
 # Its also fast.
 check-python:
+    FROM python-ci+python-base
+
     DO python-ci+LINT_PYTHON    
 
 # Sync standard configs.

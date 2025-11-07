@@ -24,7 +24,7 @@ import (
 #parameter: {
 	property?:   #properties // Name of the property, IF its not the same as the parameter.
 	description: string
-	required:    optional.#field
+	required:    optional.#field_default_yes
 
 	// The following constrain the value of the parameter
 	// within a template.

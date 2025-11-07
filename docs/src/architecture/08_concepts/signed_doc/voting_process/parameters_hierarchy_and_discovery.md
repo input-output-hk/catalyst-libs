@@ -1,0 +1,304 @@
+---
+Title: Parameters Hierarchy and Pub/Sub Discovery
+Authors:
+    - Steven Johnson <steven.johnson@iohk.io>
+Created: 2025-11-05
+order: 1
+---
+
+## Abstract
+
+Explains how Brand, Campaign, Category, and Contest Parameters relate,
+and how clients discover and validate them in a decentralized pub/sub network
+using signed documents and content-addressed references.
+
+## Overview
+
+Parameters control the behavior, timelines, and branding for the system at different scopes:
+
+* [Brand Parameters](../docs/brand_parameters.md): global root for a brand.
+* [Campaign Parameters](../docs/campaign_parameters.md): defined under a brand.
+* [Category Parameters](../docs/category_parameters.md): defined under a campaign.
+* [Contest Parameters](../docs/contest_parameters.md): defined under a brand, campaign, or category.
+
+Each parameters document is a signed document that:
+
+* Uses [COSE Sign][RFC9052-CoseSign] with a Catalyst ID `kid`.
+  See: [COSE Header Parameters](../spec.md#content-type).
+* Is content-addressed via a `document_ref` locator (CBOR Tag 42 `cid`).
+  See: [Document Reference](../metadata.md#document-reference).
+* Links through `metadata.parameters` to its parent in the hierarchy.
+  See: [Parameters metadata](../metadata.md#parameters).
+* Is validated by its referenced template.
+  See: [Contest Parameters Form Template](../docs/contest_parameters_form_template.md) and related templates.
+
+## Relationships
+
+* Brand → Campaign → Category form a strict chain via [`metadata.parameters`](../metadata.md#parameters).
+* Contest Parameters link to one of the system-scoped parameters (brand/campaign/category) via
+  [`metadata.parameters`](../metadata.md#parameters) and are thus “anchored” to that chain.
+* Templates can be defined at any of these levels, provided their own
+  [`parameters`](../metadata.md#parameters) link transitive-up to the same brand root.
+
+```mermaid
+erDiagram
+    BRAND_PARAMETERS ||--o{ CAMPAIGN_PARAMETERS : parameters
+    CAMPAIGN_PARAMETERS ||--o{ CATEGORY_PARAMETERS : parameters
+    BRAND_PARAMETERS ||--o{ CONTEST_PARAMETERS : anchors
+    CAMPAIGN_PARAMETERS ||--o{ CONTEST_PARAMETERS : anchors
+    CATEGORY_PARAMETERS ||--o{ CONTEST_PARAMETERS : anchors
+
+    BRAND_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+    }
+    CAMPAIGN_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+      ref brand_parameters
+    }
+    CATEGORY_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+      ref campaign_parameters
+    }
+    CONTEST_PARAMETERS {
+      uuidv7 id
+      uuidv7 ver
+      ref brand_or_campaign_or_category
+    }
+```
+
+## Document Identity and Versioning
+
+* [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are [UUIDv7][RFC9562-V7] values;
+* [`id`](../metadata.md#id) is created once;
+* [`ver`](../metadata.md#ver) increases over time as new versions of the same parameters document are issued.
+
+For example a Brand has ONE Parameters [`id`](../metadata.md#id), but that document may have
+multiple versions over time as [`ver`](../metadata.md#ver) increases.
+This defines that specific brand identity while allowing updates to its parameters.
+
+Whereas Campaign, Category, and Contest Parameters each have their own
+[`id`](../metadata.md#id) and [`ver`](../metadata.md#ver),
+that is specific to that parameters document.
+Such that a Brand may have multiple old or concurrent Campaigns, each with their own
+[`id`](../metadata.md#id) and [`ver`](../metadata.md#ver), etc.
+
+## Pub/Sub Discovery Model
+
+Documents are published in bound topics.
+Each Topic collects a subset of documents based on their anchoring parameters document, and optionally their type.
+
+### Global Root
+
+The root of discovery is known as the Global root.
+The pub/sub system assumes that valid documents once published will be retained indefinitely.
+In order to prevent buildup and bloat the Global root will rotate through time.
+It is formed of the path:
+`catalyst/signed-docs/<start>/<end>`
+Where `<start>` and `<end>` are Unix Epoch Timestamps (UTC).
+
+* `<start>` is aligned to the UTC Calendar start of the current year, i.e. (01-01-XX 00:00:00).
+* `<end>` is aligned to the UTC Calendar start of the second consecutive year, i.e. (01-01-XX+2 00:00:00).
+
+Only ACTIVE `Brand` Parameters and associated Template documents are published to the Global root topic.
+Because `<start>` is incremented every year, there is a natural rotation of the Global root,
+and a 1-year overlap between two consecutive Global roots.
+This means that ACTIVE Brand documents may be co-published in two consecutive Global root topics
+for a period of up to one year.
+
+This creates a natural sliding window which allows old,
+unused or revoked Brand documents to age out of the system over time.
+
+The **ONLY** Documents which may be validly published to the Global root topic are `Brand` Parameters documents,
+which are signed by the appropriate Administration Key.
+
+Any other document type, or documents signed by other keys,
+published to the Global root topic must be rejected by subscribers.
+
+#### Example
+
+A Global Root that starts on January 1st, 2025 and ends on January 1st, 2027 would have the path:
+`catalyst/signed-docs/1735689600/1798761600`
+
+### Sub Document Topics
+
+Beneath the Global Root exists a hierarchy of topics for each anchoring parameters document,
+and optionally by document type.
+
+The general format of these topics is:
+`catalyst/signed-docs/<doc-id>[/<doc-type>]`
+Where:
+
+* `<doc-id>` is the [`id`](../metadata.md#id) of the anchoring parameters document.
+    * For Campaign Parameters, this is the Brand's [`id`](../metadata.md#id).
+    * For Category Parameters, this is the Campaign's [`id`](../metadata.md#id).
+    * For Contest Parameters, this is the Brand's, Campaign's, or Category's [`id`](../metadata.md#id) as appropriate.
+    * Note this is ONLY the [`id`](../metadata.md#id) value, NOT the [`ver`](../metadata.md#ver) this means that all
+      versions of documents anchored to that parameters document are published to the same topic.
+* `<doc-type>` is optional, and if present only documents of that [UUIDv4][RFC9562-V4] type may be published to the topic.
+
+Discovery Happens by subscribing to the Global root topic to find ACTIVE Brand Parameters documents.
+Once discovered, the subscriber can then subscribe to an appropriate brands' topic,
+which allows discovery of all Campaign or Contest Parameters or any other document type anchored to that brand.
+From there, the subscriber can continue down the hierarchy by subscribing to Campaign topics to find
+Category or Contest Parameters documents anchored to that campaign, and so on.
+
+Producers publish COSE_Sign blobs plus their `document_ref` (CID) on these topics.
+
+Consumers:
+
+1. Verify signature (`kid`), content type, and deterministic CBOR/JSON as applicable.
+2. Verify [`type`](../metadata.md#type), [`id`](../metadata.md#id), [`ver`](../metadata.md#ver),
+   and that `ver ≥ id` (UUIDv7 ordering).
+3. Verify [`template`](../metadata.md#template) exists and the payload validates against that template.
+4. Verify [`parameters`](../metadata.md#parameters) links to the correct parent in the chain and is
+   consistent transitively up to the brand.
+5. Verify the Document is published to the correct Topic according to its anchoring parameters document and type.
+6. Apply [`revocations`](../metadata.md#revocations) and prefer the latest valid
+   [`ver`](../metadata.md#ver) for each [`id`](../metadata.md#id).
+7. Optionally follow [`chain`](../metadata.md#chain) for lineage and completeness.
+
+#### Global Root and Sub-document Topics Hierarchy (Mermaid)
+
+```mermaid
+---
+config:
+  flowchart:
+    htmlLabels: false
+---
+flowchart TD
+    %% Styles
+    classDef topic fill:#e8f2ff,stroke:#1d71b8,color:#0b2b4b,border-radius:6px
+    classDef doc fill:#f7f7f7,stroke:#888,border-radius:6px
+
+    id@{ shape: notch-rect, label: "Document IDs
+    *B*=**019a52a2-9b9c-7c7e-90bf-ab025ed5451f**
+    *C*=**019a52a8-058e-7e50-92e4-e097da29cef5**
+    *K*=**019a52a8-058e-7e50-92e4-e097da29cef5**
+    *V1*=**019a52a8-058e-7e50-92e4-e097da29cef5**
+    *V2*=**019a52a8-058e-7e50-92e4-e097da29cef5**
+    " }
+
+    %% Global Root window
+    GR@{ shape: docs, label: "catalyst/signed-docs/&ltstart>/&ltend>
+    (**Global Root**)" }
+    class GR topic
+
+    %% Discover active Brand Parameters from Global Root
+    B@{ shape: tag-doc, label: "Brand Parameters (id=*B*)" }
+    class B doc
+    GR --Discover--> B
+
+    %% Brand-anchored topic (all docs anchored to B; optional filtering by doc-type)
+    TB@{ shape: docs, label: "catalyst/signed-docs/*B*
+    (**Brand Parameter Anchored Documents**)" }
+    class TB topic
+    B --Subscribe--> TB
+
+    %% Discover active Campaign Parameters under Brand
+    C@{ shape: tag-doc, label: "Campaign Parameters (id=*C*)" }
+    class C doc
+    TB --Discover--> C
+
+
+    %% Campaign under Brand B
+    TCB@{ shape: docs, label: "catalyst/signed-docs/*C*
+    (**Campaign Parameter Anchored Documents**)" }
+    class TCB topic
+    C --Subscribe--> TCB
+
+    %% Discover active Categories under Campaign
+    K@{ shape: tag-doc, label: "Category Parameters (id=*K*)" }
+    class K doc
+    TCB --Discover--> K
+
+    %% Category under Campaign
+    KC@{ shape: docs, label: "catalyst/signed-docs/*K*
+    (**Category Parameter Anchored Documents**)" }
+    class KC topic
+    K --Subscribe--> KC
+
+    %% Discover active Contests under Campaign
+    CT1@{ shape: tag-doc, label: "Contest Parameters (id=*V1*)" }
+    class CT1 doc
+    TCB --Discover--> CT1
+
+    %% Contest under Campaign
+    CTv1@{ shape: docs, label: "catalyst/signed-docs/*V1*
+    (**Contest Anchored Documents - Campaign**)" }
+    CT1 --Subscribe--> CTv1
+    class CTv1 topic
+
+    %% Discover active Contests under Campaign
+    CT2@{ shape: tag-doc, label: "Contest Parameters (id=*V2*)" }
+    class CT2 doc
+    KC --Discover--> CT2
+
+    %% Contest under Category
+    CTv2@{ shape: docs, label: "catalyst/signed-docs/*V1*
+    (**Contest Anchored Documents - Category**)" }
+    CT2 --Subscribe--> CTv2
+    class CTv2 topic
+
+    %% Note
+    note@{ shape: flag, label: "Anchoring uses the parent parameters *id*.
+    All versions (*ver*) share the same topic for a given *id*." }
+    TB -.- note```
+```
+
+##### Discovery Steps
+
+1. Bootstrap by subscribing to the Global Root window: `catalyst/signed-docs/<start>/<end>` to discover ACTIVE Brand Parameters.
+2. For each discovered Brand, subscribe to the brand-anchored topic:
+    * All docs: `catalyst/signed-docs/B`
+3. For each discovered Campaign or Contest, subscribe to:
+    * (Campaign Parameters) @ `catalyst/signed-docs/C`
+    * (Contest Parameters) @ `catalyst/signed-docs/V`
+4. For each discovered Category or Contest, subscribe to:
+    * (Category Parameters) @ `catalyst/signed-docs/K`
+    * (Contest Parameters) @ `catalyst/signed-docs/V1`
+5. For each discovered Contest, subscribe to:
+    * (Contest Parameters) @ `catalyst/signed-docs/V2`
+
+**Note:** *Contest Parameters may be anchored directly to B, C, or K — subscribe to the corresponding topics as shown above.*
+
+### Content Addressing
+
+* Every `document_ref` includes a [CBOR][RFC8949] encoded CID for location in content-addressed storage.
+  See: [CBOR][RFC8949] Tag 42 and [IPFS CID][IPFS-CID].
+* The locator does not guarantee availability;
+  it guarantees identity.
+* Pub/sub disseminates the bytes; content-addressed stores provide retrieval by CID.
+
+## Validation Summary per Parameters Level
+
+* Brand Parameters: root; template required; [`parameters`](../metadata.md#parameters) is excluded at this level.
+* Campaign Parameters: must link [`parameters`](../metadata.md#parameters) to a Brand Parameters document;
+  template required.
+* Category Parameters: must link [`parameters`](../metadata.md#parameters) to a Campaign Parameters document;
+  template required.
+* Contest Parameters: must link [`parameters`](../metadata.md#parameters) to one of
+  Brand/Campaign/Category Parameters for the same chain; template required.
+
+See the per-document pages for full rules and examples:
+
+* [Brand](../docs/brand_parameters.md)
+* [Campaign](../docs/campaign_parameters.md)
+* [Category](../docs/category_parameters.md)
+* [Contest](../docs/contest_parameters.md)
+
+## Operational Notes
+
+* **Consistency:** reject documents whose [`parameters`](../metadata.md#parameters) do not align transitively to the same
+  brand root as the referencing items (templates, child parameters).
+* **Freshness:** prefer the highest valid [`ver`](../metadata.md#ver) per [`id`](../metadata.md#id);
+  handle [`revocations`](../metadata.md#revocations) strictly.
+* **Indexes:** index by `(type, id, ver)` and by `(parameters-anchor, type)` to accelerate discovery.
+
+[RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
+[RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4
+[RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html

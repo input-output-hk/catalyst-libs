@@ -6,10 +6,10 @@ Welcome to the Catalyst Libs mono repo, where we manage and maintain the interco
 Dart and Flutter packages, and other libraries that make up the Catalyst project.
 
 * [Catalyst Libs](#catalyst-libs)
-  * [Overview](#overview)
-  * [Getting Started](#getting-started)
-  * [Contributing](#contributing)
-  * [License](#license)
+    * [Overview](#overview)
+    * [Getting Started](#getting-started)
+    * [Contributing](#contributing)
+    * [License](#license)
 
 ## Overview
 

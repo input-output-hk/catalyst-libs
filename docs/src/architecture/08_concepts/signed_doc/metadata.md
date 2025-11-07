@@ -9,7 +9,7 @@ All Metadata fields use one of these types.
 
 A link to a previous document in a chained sequence.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [chain.cddl](cddl/chain.cddl)
@@ -17,13 +17,13 @@ A link to a previous document in a chained sequence.
     ``` cddl
     {{ include_file('./cddl/chain.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Collaborators Reference List
 
 A list of collaborators who can participate in drafting and submitting a document
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [collaborators.cddl](cddl/collaborators.cddl)
@@ -31,13 +31,13 @@ A list of collaborators who can participate in drafting and submitting a documen
     ``` cddl
     {{ include_file('./cddl/collaborators.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Id
 
 A unique document identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_id.cddl](cddl/document_id.cddl)
@@ -45,13 +45,13 @@ A unique document identifier
     ``` cddl
     {{ include_file('./cddl/document_id.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Reference
 
 A document reference identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_refs.cddl](cddl/document_refs.cddl)
@@ -59,13 +59,13 @@ A document reference identifier
     ``` cddl
     {{ include_file('./cddl/document_refs.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Type
 
 A document type identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_type.cddl](cddl/document_type.cddl)
@@ -73,13 +73,13 @@ A document type identifier
     ``` cddl
     {{ include_file('./cddl/document_type.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Ver
 
 A unique chronological document version
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_ver.cddl](cddl/document_ver.cddl)
@@ -87,13 +87,13 @@ A unique chronological document version
     ``` cddl
     {{ include_file('./cddl/document_ver.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Section Reference
 
 A document section reference identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [section_ref.cddl](cddl/section_ref.cddl)
@@ -101,13 +101,13 @@ A document section reference identifier
     ``` cddl
     {{ include_file('./cddl/section_ref.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### [UUIDv4][RFC9562-V4]
 
 Version 4 formatted [UUID][RFC9562]
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [uuid_v4.cddl](cddl/uuid_v4.cddl)
@@ -115,13 +115,13 @@ Version 4 formatted [UUID][RFC9562]
     ``` cddl
     {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### [UUIDv7][RFC9562-V7]
 
 Version 7 formatted [UUID][RFC9562]
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [uuid_v7.cddl](cddl/uuid_v7.cddl)
@@ -129,13 +129,13 @@ Version 7 formatted [UUID][RFC9562]
     ``` cddl
     {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Version Revocations
 
 A list of all versions of this document which are 'revoked'.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [revocations.cddl](cddl/revocations.cddl)
@@ -143,7 +143,7 @@ A list of all versions of this document which are 'revoked'.
     ``` cddl
     {{ include_file('./cddl/revocations.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ## Individual Metadata field definitions
 
@@ -232,6 +232,8 @@ The document version must always be >= the document ID.
 |  | [Rep Nomination](./docs/rep_nomination.md) |
 |  | [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) |
 |  | [Contest Delegation](./docs/contest_delegation.md) |
+|  | [Contest Ballot](./docs/contest_ballot.md) |
+|  | [Contest Ballot Checkpoint](./docs/contest_ballot_checkpoint.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.

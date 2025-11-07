@@ -149,10 +149,6 @@ See `[presentation_templates.md](TODO)`
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
 
-    The Presentation Template is defined by its schema.
-    See `[presentation_templates.md](TODO)`
-
-
     ```json
     {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

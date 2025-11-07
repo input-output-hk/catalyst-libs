@@ -1,0 +1,5 @@
+title: Voting Process
+nav:
+  - Parameters Hierarchy and Pub/Sub Discovery: parameters_hierarchy_and_discovery.md
+  - Voting Protocol Cryptography Schema: crypto.md
+  - Jörmungandr Voting Transaction (Historical): jormungandr_vote_format_historical.md
