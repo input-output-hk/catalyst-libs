@@ -108,7 +108,8 @@ impl HermesIpfs {
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
             // TODO(rafal-ch): TLS is disabled by default, we can enable it by calling
-            // `IpfsBuilder::enable_secure...()` .enable_secure_websocket()
+            // on of the `IpfsBuilder::enable_secure...()` flavors.
+            //.enable_secure_websocket()
             .start()
             .await?;
         Ok(HermesIpfs { node })
