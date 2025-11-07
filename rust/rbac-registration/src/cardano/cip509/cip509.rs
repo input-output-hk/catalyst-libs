@@ -13,7 +13,7 @@ use cardano_blockchain_types::{
     pallas_addresses::{Address, ShelleyAddress},
     pallas_primitives::{conway, Nullable},
     pallas_traverse::MultiEraTx,
-    MetadatumLabel, MultiEraBlock, TxnIndex,
+    MetadatumLabel, MultiEraBlock, StakeAddress, TxnIndex,
 };
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
@@ -303,6 +303,14 @@ impl Cip509 {
     #[must_use]
     pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
         self.metadata.as_ref()
+    }
+
+    /// Returns a set of stake addresses.
+    #[must_use]
+    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
+        self.certificate_uris()
+            .map(Cip0134UriSet::stake_addresses)
+            .unwrap_or_default()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
