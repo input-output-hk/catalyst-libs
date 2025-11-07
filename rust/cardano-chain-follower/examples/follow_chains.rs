@@ -6,8 +6,8 @@
 //#![allow(clippy::unwrap_used)]
 
 use cardano_blockchain_types::{
-    hashes::TransactionId, pallas_crypto, pallas_traverse, Cip36, Fork, MetadatumLabel,
-    MultiEraBlock, Network, Point, Slot, TxnIndex,
+    Cip36, Fork, MetadatumLabel, MultiEraBlock, Network, Point, Slot, TxnIndex,
+    hashes::TransactionId, pallas_crypto, pallas_traverse,
 };
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
@@ -22,7 +22,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 use std::{env, error::Error, time::Duration};
 
 use cardano_chain_follower::{ChainFollower, ChainSyncConfig, ChainUpdate, Kind, Statistics};
-use clap::{arg, ArgAction, ArgMatches, Command};
+use clap::{ArgAction, ArgMatches, Command, arg};
 use tokio::time::Instant;
 use tracing::{error, info, level_filters::LevelFilter, warn};
 use tracing_subscriber::EnvFilter;
@@ -338,15 +338,14 @@ async fn follow_for(
             || (chain_update.immutable() != last_immutable)
             || (last_fork != chain_update.data.fork()))
             && !last_update_shown
+            && let Some(last_update) = last_update.clone()
         {
-            if let Some(last_update) = last_update.clone() {
-                info!(
-                    chain = network.to_string(),
-                    "Chain Update {}:{}",
-                    updates.saturating_sub(1),
-                    last_update
-                );
-            }
+            info!(
+                chain = network.to_string(),
+                "Chain Update {}:{}",
+                updates.saturating_sub(1),
+                last_update
+            );
         }
 
         // If these become true, we will show all blocks from the follower.
@@ -472,10 +471,8 @@ async fn follow_for(
         }
     }
 
-    if !last_update_shown {
-        if let Some(last_update) = last_update.clone() {
-            info!(chain = network.to_string(), "Last Update: {}", last_update);
-        }
+    if !last_update_shown && let Some(last_update) = last_update.clone() {
+        info!(chain = network.to_string(), "Last Update: {}", last_update);
     }
 
     if !inhibit_stats {
@@ -554,7 +551,7 @@ fn update_largest_aux(
     largest_metadata_size: &mut usize,
 ) {
     match block {
-        pallas_traverse::MultiEraBlock::AlonzoCompatible(ref b, _) => {
+        pallas_traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),
@@ -565,7 +562,7 @@ fn update_largest_aux(
                 );
             });
         },
-        pallas_traverse::MultiEraBlock::Babbage(ref b) => {
+        pallas_traverse::MultiEraBlock::Babbage(b) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),
@@ -576,7 +573,7 @@ fn update_largest_aux(
                 );
             });
         },
-        pallas_traverse::MultiEraBlock::Conway(ref b) => {
+        pallas_traverse::MultiEraBlock::Conway(b) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),

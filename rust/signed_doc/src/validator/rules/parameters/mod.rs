@@ -4,14 +4,14 @@
 mod tests;
 
 use catalyst_signed_doc_spec::{
-    is_required::IsRequired, metadata::parameters::Parameters, DocSpecs,
+    DocSpecs, is_required::IsRequired, metadata::parameters::Parameters,
 };
 use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
-    CatalystSignedDocument, DocType, DocumentRefs,
+    CatalystSignedDocument, DocType, DocumentRefs, providers::CatalystSignedDocumentProvider,
+    validator::rules::doc_ref::doc_refs_check,
 };
 
 /// `parameters` field validation rule
@@ -46,7 +46,10 @@ impl ParametersRule {
             },
         };
 
-        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'parameters' metadata definition");
+        anyhow::ensure!(
+            !spec.doc_type.is_empty(),
+            "'type' field should exists and has at least one entry for the required 'parameters' metadata definition"
+        );
         anyhow::ensure!(
             !spec.multiple,
             "'multiple' field should be only set to false for the required 'parameters' metadata definition"
@@ -157,15 +160,15 @@ impl ParametersRule {
                 return Ok(false);
             }
         }
-        if let Self::NotSpecified = self {
-            if let Some(parameters) = doc.doc_meta().parameters() {
-                doc.report().unknown_field(
-                    "parameters",
-                    &parameters.to_string(),
-                    &format!("{context}, document does not expect to have a parameters field"),
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = self
+            && let Some(parameters) = doc.doc_meta().parameters()
+        {
+            doc.report().unknown_field(
+                "parameters",
+                &parameters.to_string(),
+                &format!("{context}, document does not expect to have a parameters field"),
+            );
+            return Ok(false);
         }
 
         Ok(true)

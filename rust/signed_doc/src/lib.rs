@@ -27,7 +27,7 @@ pub use metadata::{
     Chain, ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, DocumentRefs, Metadata,
     Section,
 };
-use minicbor::{decode, encode, Decode, Decoder, Encode};
+use minicbor::{Decode, Decoder, Encode, decode, encode};
 pub use signature::{CatalystId, Signatures};
 
 use crate::{builder::SignaturesBuilder, metadata::SupportedLabel, signature::Signature};
@@ -277,7 +277,12 @@ impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
         let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
         let signed_doc = match arr.as_slice() {
-            [metadata_bytes, headers_bytes, content_bytes, signatures_bytes] => {
+            [
+                metadata_bytes,
+                headers_bytes,
+                content_bytes,
+                signatures_bytes,
+            ] => {
                 let metadata_bytes = minicbor::Decoder::new(metadata_bytes).bytes()?;
                 let metadata = WithCborBytes::<Metadata>::decode(
                     &mut minicbor::Decoder::new(metadata_bytes),

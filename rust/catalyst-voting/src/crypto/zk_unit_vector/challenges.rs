@@ -3,7 +3,7 @@
 use crate::crypto::{
     elgamal::Ciphertext,
     group::GroupElement,
-    hash::{digest::Digest, Blake2b512Hasher},
+    hash::{Blake2b512Hasher, digest::Digest},
     zk_unit_vector::randomness_announcements::Announcement,
 };
 

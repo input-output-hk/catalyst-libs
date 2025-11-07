@@ -1,6 +1,6 @@
 //! Helper functions for decoding CBOR data.
 
-use minicbor::{decode, Decoder};
+use minicbor::{Decoder, decode};
 
 /// Generic helper function for decoding different types.
 pub(crate) fn decode_helper<'a, T, C>(

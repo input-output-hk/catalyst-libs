@@ -2,7 +2,7 @@
 // cspell: words aname groupsocket typesocket groupsocket
 
 mod common;
-use common::{identifiers::*, Rule};
+use common::{Rule, identifiers::*};
 
 /// Check if the name components pass properly.
 #[test]

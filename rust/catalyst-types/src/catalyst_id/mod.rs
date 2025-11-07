@@ -17,12 +17,12 @@ use std::{
 use chrono::{DateTime, Duration, Utc};
 use ed25519_dalek::VerifyingKey;
 use fluent_uri::{
+    Uri,
     component::Scheme,
     encoding::{
-        encoder::{Fragment, Path},
         EStr,
+        encoder::{Fragment, Path},
     },
-    Uri,
 };
 use key_rotation::KeyRotation;
 use role_index::RoleId;
@@ -402,7 +402,7 @@ impl CatalystId {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::catalyst_id::{role_index::RoleId, CatalystId};
+    /// use catalyst_types::catalyst_id::{CatalystId, role_index::RoleId};
     ///
     /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<CatalystId>()
@@ -436,7 +436,7 @@ impl CatalystId {
     ///
     /// # Examples
     /// ```rust
-    /// use catalyst_types::catalyst_id::{key_rotation::KeyRotation, CatalystId};
+    /// use catalyst_types::catalyst_id::{CatalystId, key_rotation::KeyRotation};
     ///
     /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<CatalystId>()
@@ -537,7 +537,7 @@ impl CatalystId {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId};
+    /// use catalyst_types::catalyst_id::{CatalystId, key_rotation::KeyRotation, role_index::RoleId};
     ///
     /// let catalyst_id =
     ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"

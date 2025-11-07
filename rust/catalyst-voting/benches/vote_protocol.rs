@@ -17,20 +17,19 @@ use catalyst_voting::{
     vote_protocol::{
         committee::{ElectionPublicKey, ElectionSecretKey},
         tally::{
-            decrypt_tally,
+            DecryptionTallySetup, decrypt_tally,
             proof::{generate_tally_proof, verify_tally_proof},
-            tally, DecryptionTallySetup,
+            tally,
         },
         voter::{
-            encrypt_vote,
-            proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
-            Vote,
+            Vote, encrypt_vote,
+            proof::{VoterProofCommitment, generate_voter_proof, verify_voter_proof},
         },
     },
 };
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use proptest::{
-    prelude::{any_with, Strategy},
+    prelude::{Strategy, any_with},
     sample::size_range,
     strategy::ValueTree,
     test_runner::TestRunner,

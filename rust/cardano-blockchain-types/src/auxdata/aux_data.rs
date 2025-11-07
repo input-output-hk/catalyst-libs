@@ -75,7 +75,8 @@ impl TransactionAuxData {
             },
             Ok(None) => {
                 return Err(minicbor::decode::Error::message(
-                    "Error decoding Transaction Aux Data: Indefinite Array found decoding Metadata. Invalid."));
+                    "Error decoding Transaction Aux Data: Indefinite Array found decoding Metadata. Invalid.",
+                ));
             },
             Err(error) => {
                 return Err(minicbor::decode::Error::message(format!(
@@ -120,12 +121,12 @@ impl TransactionAuxData {
             Ok(None) => {
                 return Err(minicbor::decode::Error::message(
                     "Indefinite Map found decoding Alonzo+ Metadata. Invalid.",
-                ))
+                ));
             },
             Err(error) => {
                 return Err(minicbor::decode::Error::message(format!(
                     "Error decoding Transaction Alonzo+ Aux Data: {error}."
-                )))
+                )));
             },
         };
 

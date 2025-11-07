@@ -4,14 +4,14 @@
 mod tests;
 
 use catalyst_signed_doc_spec::{
-    is_required::IsRequired, metadata::template::Template, DocSpecs, DocumentName,
+    DocSpecs, DocumentName, is_required::IsRequired, metadata::template::Template,
 };
 use catalyst_types::json_schema::JsonSchema;
 
 use crate::{
+    CatalystSignedDocument, ContentType, DocType,
     providers::CatalystSignedDocumentProvider,
     validator::rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
-    CatalystSignedDocument, ContentType, DocType,
 };
 
 /// `reply` field validation rule
@@ -114,15 +114,17 @@ impl TemplateRule {
             )
             .await;
         }
-        if let Self::NotSpecified = self {
-            if let Some(template) = doc.doc_meta().template() {
-                doc.report().unknown_field(
-                    "template",
-                    &template.to_string(),
-                    &format!("{context} Not Specified, Document does not expect to have a template field",)
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = self
+            && let Some(template) = doc.doc_meta().template()
+        {
+            doc.report().unknown_field(
+                "template",
+                &template.to_string(),
+                &format!(
+                    "{context} Not Specified, Document does not expect to have a template field",
+                ),
+            );
+            return Ok(false);
         }
 
         Ok(true)

@@ -12,14 +12,14 @@ use futures::future::join_all;
 use tokio::{
     fs::{self},
     io::{self},
-    sync::{mpsc, Mutex},
+    sync::{Mutex, mpsc},
     task::JoinHandle,
 };
 use tracing::{debug, error};
 
 use crate::{
     error::{Error, Result},
-    mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
+    mithril_snapshot_data::{SnapshotData, latest_mithril_snapshot_id},
     mithril_snapshot_sync::background_mithril_update,
     snapshot_id::SnapshotId,
     stats,
@@ -113,11 +113,11 @@ impl MithrilSnapshotConfig {
                 break;
             };
 
-            if let Some(immutable_file) = SnapshotId::parse_path(&entry.path()) {
-                if immutable_file > latest_immutable_file {
-                    latest_immutable_file = immutable_file;
-                    latest_path = entry.path();
-                }
+            if let Some(immutable_file) = SnapshotId::parse_path(&entry.path())
+                && immutable_file > latest_immutable_file
+            {
+                latest_immutable_file = immutable_file;
+                latest_path = entry.path();
             }
         }
 
@@ -244,26 +244,26 @@ impl MithrilSnapshotConfig {
 
         // IF we make it here, the files are identical, so we can de-dup them safely.
         // Remove the tmp file momentarily.
-        if tmp_file.exists() {
-            if let Err(error) = std::fs::remove_file(tmp_file) {
-                error!(
-                    "Error removing tmp file  {} :  {error}",
-                    tmp_file.to_string_lossy(),
-                );
-                bail!("Failed to remove tmp file: {}", tmp_file.to_string_lossy());
-            }
+        if tmp_file.exists()
+            && let Err(error) = std::fs::remove_file(tmp_file)
+        {
+            error!(
+                "Error removing tmp file  {} :  {error}",
+                tmp_file.to_string_lossy(),
+            );
+            bail!("Failed to remove tmp file: {}", tmp_file.to_string_lossy());
         }
 
         let src_file = snapshot_path.join(relative_file);
         let src_file = src_file.as_path();
         // Hardlink the src file to the tmp file.
-        if let Some(parent) = tmp_file.parent() {
-            if let Err(error) = std::fs::create_dir_all(parent) {
-                error!(
-                    "Error creating parent dir {parent:?} for tmp file {}: {error}",
-                    tmp_file.to_string_lossy()
-                );
-            }
+        if let Some(parent) = tmp_file.parent()
+            && let Err(error) = std::fs::create_dir_all(parent)
+        {
+            error!(
+                "Error creating parent dir {parent:?} for tmp file {}: {error}",
+                tmp_file.to_string_lossy()
+            );
         }
         if let Err(error) = std::fs::hard_link(src_file, tmp_file) {
             error!(
@@ -378,7 +378,7 @@ impl MithrilSnapshotConfig {
                 return Err(Error::MithrilClientNoSnapshots(
                     Box::new(self.chain.clone()),
                     url,
-                ))
+                ));
             },
         }
 
@@ -453,10 +453,10 @@ impl MithrilSnapshotConfig {
 /// Will return false on the first detection of a read only file or directory.
 fn check_writable(path: &Path) -> bool {
     // Check the permissions of the current path
-    if let Ok(metadata) = path.metadata() {
-        if metadata.permissions().readonly() {
-            return false;
-        }
+    if let Ok(metadata) = path.metadata()
+        && metadata.permissions().readonly()
+    {
+        return false;
     }
 
     // Can't read the directory for any reason, so can't write to the directory.

@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use cardano_blockchain_types::{pallas_primitives, Fork, MultiEraBlock, Network, Point, Slot};
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point, Slot, pallas_primitives};
 use crossbeam_skiplist::SkipMap;
 use rayon::prelude::*;
 use tracing::debug;
@@ -306,8 +306,8 @@ impl ProtectedLiveChainBlockList {
             let latest_mithril_tip = latest_mithril_snapshot_id(chain).tip();
             if !point.strict_eq(&latest_mithril_tip) {
                 return Err(Error::LiveSync(format!(
-                "First Block of Live Purge {point} MUST be last block of Mithril Snapshot {latest_mithril_tip}."
-            )));
+                    "First Block of Live Purge {point} MUST be last block of Mithril Snapshot {latest_mithril_tip}."
+                )));
             }
         }
 
@@ -328,8 +328,8 @@ impl ProtectedLiveChainBlockList {
             // Make sure the block that IS present, is the actual block, by strict equality.
             if !purge_start_block_entry.value().point().strict_eq(point) {
                 return Err(Error::LiveSync(format!(
-                "The block to purge to {point} slot is in the live chain, but its hashes do not match."
-            )));
+                    "The block to purge to {point} slot is in the live chain, but its hashes do not match."
+                )));
             }
 
             // Purge every block prior to the purge point.
@@ -372,7 +372,7 @@ impl ProtectedLiveChainBlockList {
                 intersect_points.push(entry.value().point().into());
             } else {
                 return intersect_points;
-            };
+            }
         }
 
         // Now find points based on an every increasing Slot age.

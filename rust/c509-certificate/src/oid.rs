@@ -7,7 +7,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use minicbor::{decode, encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, decode, encode::Write};
 use oid_registry::Oid;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -153,7 +153,7 @@ mod test_c509_oid {
     fn encode_decode_unwrapped() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        let oid = C509oid::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1));
+        let oid = C509oid::new(oid!(2.16.840.1.101.3.4.2.1));
         oid.encode(&mut encoder, &mut ())
             .expect("Failed to encode OID");
         // bytes(9) 0x49
@@ -169,7 +169,7 @@ mod test_c509_oid {
     #[test]
     fn partial_equal() {
         let oid1 = C509oid::new(oid_registry::OID_HASH_SHA1);
-        let oid2 = C509oid::new(oid!(1.3.14 .3 .2 .26));
+        let oid2 = C509oid::new(oid!(1.3.14.3.2.26));
         assert_eq!(oid1, oid2);
     }
 }

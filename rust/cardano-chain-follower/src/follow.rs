@@ -1,13 +1,14 @@
 //! Cardano chain follow module.
 
 use cardano_blockchain_types::{
-    pallas_network::miniprotocols::txmonitor::{TxBody, TxId},
     Fork, MultiEraBlock, Network, Point,
+    pallas_network::miniprotocols::txmonitor::{TxBody, TxId},
 };
 use tokio::sync::broadcast::{self};
 use tracing::{debug, error, warn};
 
 use crate::{
+    Kind, Statistics,
     chain_sync::point_at_tip,
     chain_sync_live_chains::{find_best_fork_block, get_live_block, live_chain_length},
     chain_sync_ready::{block_until_sync_ready, get_chain_update_rx_queue},
@@ -16,7 +17,6 @@ use crate::{
     mithril_snapshot_data::latest_mithril_snapshot_id,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
     stats::{self},
-    Kind, Statistics,
 };
 
 /// The Chain Follower
@@ -160,7 +160,9 @@ impl ChainFollower {
                     break;
                 }
                 // Set the mithril follower to None and restart the loop
-                warn!("Detected Mithril snapshot data directory race condition, underlying data directory is not accessible anymore: Correcting...");
+                warn!(
+                    "Detected Mithril snapshot data directory race condition, underlying data directory is not accessible anymore: Correcting..."
+                );
                 self.mithril_follower = None;
             } else {
                 break;
