@@ -1,6 +1,7 @@
 //! Hermes IPFS VFS compatibility
 
 use clap::{Parser, Subcommand};
+use connexa::dummy;
 use hermes_ipfs::{HermesIpfs, HermesIpfsBuilder};
 use lipsum::lipsum;
 use rust_ipfs::IpfsPath;
@@ -44,11 +45,11 @@ async fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
     let base_dir = dirs::data_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
     let ipfs_data_path = base_dir.as_path().join("hermes/ipfs");
-    let builder = HermesIpfsBuilder::new()
+    let builder = HermesIpfsBuilder::<dummy::Behaviour>::new()
         .with_default()
         .set_default_listener()
         // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
-        .disable_tls()
+        //.enable_secure_websocket()
         .set_disk_storage(ipfs_data_path);
     let hermes_node: HermesIpfs = builder.start().await?.into();
     match args.command {
