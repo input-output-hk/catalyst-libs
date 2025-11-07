@@ -3,8 +3,8 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-    DocLocator, DocumentRef, DocumentRefs,
+    DocLocator, DocumentRef, DocumentRefs, builder::tests::Builder, metadata::SupportedField,
+    providers::tests::TestCatalystProvider,
 };
 
 #[test_case(

@@ -108,7 +108,10 @@ impl CatalystSignedDocSpec {
             .ok_or(anyhow::anyhow!(
                 "'versions' list must have at least one entry"
             ))?;
-        anyhow::ensure!(latest_version.version == crate_version, "crate version should align with the latest version of the Catalyst Signed Documents specification");
+        anyhow::ensure!(
+            latest_version.version == crate_version,
+            "crate version should align with the latest version of the Catalyst Signed Documents specification"
+        );
 
         Ok(signed_doc_spec)
     }

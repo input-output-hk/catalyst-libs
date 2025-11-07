@@ -7,9 +7,9 @@ use std::{collections::HashMap, sync::LazyLock};
 use rules::Rules;
 
 use crate::{
+    CatalystSignedDocument,
     metadata::DocType,
     providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
-    CatalystSignedDocument,
 };
 
 /// A table representing a full set or validation rules per document id.

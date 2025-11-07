@@ -1,6 +1,6 @@
 //! C509 certificate To Be Sign Certificate (TBS Certificate)
 
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -226,9 +226,9 @@ pub(crate) mod test_tbs_cert {
             extension::{Extension, ExtensionValue},
         },
         general_names::{
+            GeneralNames,
             general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
             other_name_hw_module::OtherNameHardwareModuleName,
-            GeneralNames,
         },
         name::NameValue,
     };
@@ -240,31 +240,31 @@ pub(crate) mod test_tbs_cert {
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     pub(crate) fn tbs_1() -> (TbsCert, String) {
         let tbs_certificate = (
-            3,                             // c509_certificate_type
-            128_269,                       // certificate_serial_number
-            oid!(1.2.840 .10045 .4 .3 .2), // issuer_signature_algorithm (ecdsa-with-SHA256)
+            3,                         // c509_certificate_type
+            128_269,                   // certificate_serial_number
+            oid!(1.2.840.10045.4.3.2), // issuer_signature_algorithm (ecdsa-with-SHA256)
             (
                 // issuer
-                oid!(2.5.4 .3), // oid (commonName)
-                "RFC test CA",  // value
-                false,          // critical
+                oid!(2.5.4.3), // oid (commonName)
+                "RFC test CA", // value
+                false,         // critical
             ),
             1_672_531_200, // validity_not_before
             1_767_225_600, // validity_not_after
             (
                 // subject
-                oid!(2.5.4 .3),            // oid (commonName)
+                oid!(2.5.4.3),             // oid (commonName)
                 "01-23-45-FF-FE-67-89-AB", // value
                 false,                     // critical
             ),
-            oid!(1.2.840 .10045 .2 .1), /* subject_public_key_algorithm (id-ecPublicKey
-                                         * prime256v1 P-256) */
+            oid!(1.2.840.10045.2.1), /* subject_public_key_algorithm (id-ecPublicKey
+                                      * prime256v1 P-256) */
             PUBKEY, // subject_public_key (modified from the example)
             (
                 // extensions
-                oid!(2.5.29 .15), // oid (keyUsage)
-                1,                // value
-                false,            // critical
+                oid!(2.5.29.15), // oid (keyUsage)
+                1,               // value
+                false,           // critical
             ),
         );
 
@@ -282,21 +282,21 @@ pub(crate) mod test_tbs_cert {
         ];
 
         // Issuer
-        let mut attr1 = Attribute::new(tbs_certificate.3 .0);
-        attr1.add_value(AttributeValue::Text(tbs_certificate.3 .1.to_string()));
+        let mut attr1 = Attribute::new(tbs_certificate.3.0);
+        attr1.add_value(AttributeValue::Text(tbs_certificate.3.1.to_string()));
         let issuer = Name::new(NameValue::Attribute(vec![attr1]));
 
         // Subject
-        let mut attr2 = Attribute::new(tbs_certificate.6 .0);
-        attr2.add_value(AttributeValue::Text(tbs_certificate.6 .1.to_string()));
+        let mut attr2 = Attribute::new(tbs_certificate.6.0);
+        attr2.add_value(AttributeValue::Text(tbs_certificate.6.1.to_string()));
         let subject = Name::new(NameValue::Attribute(vec![attr2]));
 
         // Extensions
         let mut extensions = Extensions::new();
         extensions.add_extension(Extension::new(
-            tbs_certificate.9 .0,
-            ExtensionValue::Int(tbs_certificate.9 .1),
-            tbs_certificate.9 .2,
+            tbs_certificate.9.0,
+            ExtensionValue::Int(tbs_certificate.9.1),
+            tbs_certificate.9.2,
         ));
 
         let data = TbsCert::new(
@@ -340,35 +340,35 @@ pub(crate) mod test_tbs_cert {
     #[allow(clippy::too_many_lines)]
     fn tbs_2() -> (TbsCert, String) {
         let tbs_certificate = (
-            3,                             // c509_certificate_type
-            9_112_578_475_118_446_130,     // certificate_serial_number
-            oid!(1.2.840 .10045 .4 .3 .2), // issuer_signature_algorithm (ecdsa-with-SHA256)
+            3,                         // c509_certificate_type
+            9_112_578_475_118_446_130, // certificate_serial_number
+            oid!(1.2.840.10045.4.3.2), // issuer_signature_algorithm (ecdsa-with-SHA256)
             [
                 // issuer
                 (
-                    oid!(2.5.4 .6), // oid (C: countryName)
-                    "US",           // value
+                    oid!(2.5.4.6), // oid (C: countryName)
+                    "US",          // value
+                    false,         // critical
+                ),
+                (
+                    oid!(2.5.4.8), // oid (ST: stateOrProvinceName)
+                    "CA",          // value
+                    false,         // critical
+                ),
+                (
+                    oid!(2.5.4.10), // oid (O: organizationName)
+                    "Example Inc",  // value
                     false,          // critical
                 ),
                 (
-                    oid!(2.5.4 .8), // oid (ST: stateOrProvinceName)
-                    "CA",           // value
-                    false,          // critical
-                ),
-                (
-                    oid!(2.5.4 .10), // oid (O: organizationName)
-                    "Example Inc",   // value
-                    false,           // critical
-                ),
-                (
-                    oid!(2.5.4 .11), // oid (OU: organizationalUnitName)
+                    oid!(2.5.4.11),  // oid (OU: organizationalUnitName)
                     "certification", // value
                     false,           // critical
                 ),
                 (
-                    oid!(2.5.4 .3), // oid (CN: commonName)
-                    "802.1AR CA",   // value
-                    false,          // critical
+                    oid!(2.5.4.3), // oid (CN: commonName)
+                    "802.1AR CA",  // value
+                    false,         // critical
                 ),
             ],
             1_548_934_156,   // validity_not_before
@@ -376,64 +376,64 @@ pub(crate) mod test_tbs_cert {
             [
                 // subject
                 (
-                    oid!(2.5.4 .6), // oid (C: countryName)
-                    "US",           // value
+                    oid!(2.5.4.6), // oid (C: countryName)
+                    "US",          // value
+                    false,         // critical
+                ),
+                (
+                    oid!(2.5.4.8), // oid (ST: stateOrProvinceName)
+                    "CA",          // value
+                    false,         // critical
+                ),
+                (
+                    oid!(2.5.4.7), // oid (L: localityName)
+                    "LA",          // value
+                    false,         // critical
+                ),
+                (
+                    oid!(2.5.4.10), // oid (O: organizationName)
+                    "example Inc",  // value
                     false,          // critical
                 ),
                 (
-                    oid!(2.5.4 .8), // oid (ST: stateOrProvinceName)
-                    "CA",           // value
+                    oid!(2.5.4.11), // oid (OU: organizationalUnitName)
+                    "IoT",          // value
                     false,          // critical
                 ),
                 (
-                    oid!(2.5.4 .7), // oid (L: localityName)
-                    "LA",           // value
-                    false,          // critical
-                ),
-                (
-                    oid!(2.5.4 .10), // oid (O: organizationName)
-                    "example Inc",   // value
-                    false,           // critical
-                ),
-                (
-                    oid!(2.5.4 .11), // oid (OU: organizationalUnitName)
-                    "IoT",           // value
-                    false,           // critical
-                ),
-                (
-                    oid!(2.5.4 .5), // oid (serialNumber)
-                    "Wt1234",       // value
-                    false,          // critical
+                    oid!(2.5.4.5), // oid (serialNumber)
+                    "Wt1234",      // value
+                    false,         // critical
                 ),
             ],
-            oid!(1.2.840 .10045 .2 .1), /* subject_public_key_algorithm (id-ecPublicKey
-                                         * prime256v1 P-256) */
+            oid!(1.2.840.10045.2.1), /* subject_public_key_algorithm (id-ecPublicKey
+                                      * prime256v1 P-256) */
             PUBKEY, // subject_public_key (modified from the example)
             (
                 // extensions
                 (
-                    oid!(2.5.29 .19), // oid (basicConstraints)
-                    -2,               // value
-                    false,            // critical
+                    oid!(2.5.29.19), // oid (basicConstraints)
+                    -2,              // value
+                    false,           // critical
                 ),
                 (
-                    oid!(2.5.29 .14), // oid (subjectKeyIdentifier)
+                    oid!(2.5.29.14), // oid (subjectKeyIdentifier)
                     [
                         0x96, 0x60, 0x0D, 0x87, 0x16, 0xBF, 0x7F, 0xD0, 0xE7, 0x52, 0xD0, 0xAC,
                         0x76, 0x07, 0x77, 0xAD, 0x66, 0x5D, 0x02, 0xA0,
                     ], // value
-                    false,            // critical
+                    false,           // critical
                 ),
                 (
-                    oid!(2.5.29 .15), // oid (keyUsage)
-                    5,                // value
-                    true,             // critical
+                    oid!(2.5.29.15), // oid (keyUsage)
+                    5,               // value
+                    true,            // critical
                 ),
                 (
-                    oid!(2.5.29 .17), // oid (subjectAltName)
+                    oid!(2.5.29.17), // oid (subjectAltName)
                     (
-                        oid!(1.3.6 .1 .4 .1 .6175 .10 .1), // hwType
-                        [0x01, 0x02, 0x03, 0x04],          // hwSerialNum
+                        oid!(1.3.6.1.4.1.6175.10.1), // hwType
+                        [0x01, 0x02, 0x03, 0x04],    // hwSerialNum
                     ),
                     false, // critical
                 ),
@@ -441,17 +441,17 @@ pub(crate) mod test_tbs_cert {
         );
 
         let tbs_certificate_cbor = [
-                "03", // c509_certificate_type
-                "487e7661d7b54e4632", // certificate_serial_number
-                "00", // issuer_signature_algorithm
-                "8a0462555306624341086b4578616d706c6520496e63096d63657274696669636174696f6e016a3830322e314152204341", // issuer
-                "1a5c52dc0c", // validity_not_before
-                "f6", // validity_not_after
-                "8c046255530662434105624c41086b6578616d706c6520496e630963496f540366577431323334", // subject
-                "01", // subject_public_key_algorithm
-                "4888d0b6b0b37baa46", // subject_public_key
-                "840421015496600d8716bf7fd0e752d0ac760777ad665d02a0210503822082492b06010401b01f0a014401020304", // extensions
-            ];
+            "03",                 // c509_certificate_type
+            "487e7661d7b54e4632", // certificate_serial_number
+            "00",                 // issuer_signature_algorithm
+            "8a0462555306624341086b4578616d706c6520496e63096d63657274696669636174696f6e016a3830322e314152204341", /* issuer */
+            "1a5c52dc0c", // validity_not_before
+            "f6",         // validity_not_after
+            "8c046255530662434105624c41086b6578616d706c6520496e630963496f540366577431323334", /* subject */
+            "01",                 // subject_public_key_algorithm
+            "4888d0b6b0b37baa46", // subject_public_key
+            "840421015496600d8716bf7fd0e752d0ac760777ad665d02a0210503822082492b06010401b01f0a014401020304", /* extensions */
+        ];
 
         // Issuer
         let mut attributes_1 = Vec::new();
@@ -478,24 +478,24 @@ pub(crate) mod test_tbs_cert {
         // Extensions
         let mut extensions = Extensions::new();
         extensions.add_extension(Extension::new(
-            tbs_certificate.9 .0 .0,
-            ExtensionValue::Int(tbs_certificate.9 .0 .1),
-            tbs_certificate.9 .0 .2,
+            tbs_certificate.9.0.0,
+            ExtensionValue::Int(tbs_certificate.9.0.1),
+            tbs_certificate.9.0.2,
         ));
         extensions.add_extension(Extension::new(
-            tbs_certificate.9 .1 .0,
-            ExtensionValue::Bytes(tbs_certificate.9 .1 .1.to_vec()),
-            tbs_certificate.9 .1 .2,
+            tbs_certificate.9.1.0,
+            ExtensionValue::Bytes(tbs_certificate.9.1.1.to_vec()),
+            tbs_certificate.9.1.2,
         ));
         extensions.add_extension(Extension::new(
-            tbs_certificate.9 .2 .0,
-            ExtensionValue::Int(tbs_certificate.9 .2 .1),
-            tbs_certificate.9 .2 .2,
+            tbs_certificate.9.2.0,
+            ExtensionValue::Int(tbs_certificate.9.2.1),
+            tbs_certificate.9.2.2,
         ));
         let mut gns = GeneralNames::new();
         let hw = OtherNameHardwareModuleName::new(
-            tbs_certificate.9 .3 .1 .0,
-            tbs_certificate.9 .3 .1 .1.to_vec(),
+            tbs_certificate.9.3.1.0,
+            tbs_certificate.9.3.1.1.to_vec(),
         );
         gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::OtherNameHardwareModuleName,
@@ -503,7 +503,7 @@ pub(crate) mod test_tbs_cert {
         ));
 
         extensions.add_extension(Extension::new(
-            tbs_certificate.9 .3 .0,
+            tbs_certificate.9.3.0,
             ExtensionValue::AlternativeName(AlternativeName::new(
                 GeneralNamesOrText::GeneralNames(gns),
             )),

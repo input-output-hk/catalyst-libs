@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use cardano_blockchain_types::{pallas_traverse, Fork, MultiEraBlock, Network, Point};
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point, pallas_traverse};
 use logcall::logcall;
 use tokio::task;
 use tracing::{debug, error};
@@ -14,7 +14,7 @@ use tracing_log::log;
 
 use crate::{
     error::{Error, Result},
-    mithril_query::{make_mithril_iterator, ImmutableBlockIterator},
+    mithril_query::{ImmutableBlockIterator, make_mithril_iterator},
 };
 
 /// Search backwards by 60 slots (seconds) looking for a previous block.

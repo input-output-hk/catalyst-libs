@@ -11,7 +11,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use cardano_blockchain_types::{Network, Slot};
 use chrono::Utc;
 use dashmap::DashMap;
-use rollback::{rollbacks, rollbacks_reset, RollbackType};
+use rollback::{RollbackType, rollbacks, rollbacks_reset};
 use serde::Serialize;
 use thread::ThreadStat;
 use tracing::error;
@@ -507,7 +507,7 @@ pub(crate) fn stop_thread(
 
     if let Some(thread_stat) = chain_stats.thread_stats.get(name) {
         thread_stat.stop_thread();
-    };
+    }
 }
 
 /// Resume the thread with the given name.
@@ -525,7 +525,7 @@ pub(crate) fn resume_thread(
 
     if let Some(thread_stat) = chain_stats.thread_stats.get(name) {
         thread_stat.resume_thread();
-    };
+    }
 }
 
 /// Pause the thread with the given name.
@@ -543,7 +543,7 @@ pub(crate) fn pause_thread(
 
     if let Some(thread_stat) = chain_stats.thread_stats.get(name) {
         thread_stat.pause_thread();
-    };
+    }
 }
 
 /// Get the thread statistic with the given name.

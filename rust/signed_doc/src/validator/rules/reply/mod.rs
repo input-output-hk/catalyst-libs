@@ -4,12 +4,12 @@
 mod tests;
 
 use catalyst_signed_doc_spec::{
-    is_required::IsRequired, metadata::reply::Reply, DocSpecs, DocumentName,
+    DocSpecs, DocumentName, is_required::IsRequired, metadata::reply::Reply,
 };
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
-    CatalystSignedDocument, DocType,
+    CatalystSignedDocument, DocType, providers::CatalystSignedDocumentProvider,
+    validator::rules::doc_ref::doc_refs_check,
 };
 
 /// `reply` field validation rule
@@ -122,15 +122,15 @@ impl ReplyRule {
                 return Ok(false);
             }
         }
-        if let Self::NotSpecified = self {
-            if let Some(reply) = doc.doc_meta().reply() {
-                doc.report().unknown_field(
-                    "reply",
-                    &reply.to_string(),
-                    &format!("{context}, document does not expect to have a reply field"),
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = self
+            && let Some(reply) = doc.doc_meta().reply()
+        {
+            doc.report().unknown_field(
+                "reply",
+                &reply.to_string(),
+                &format!("{context}, document does not expect to have a reply field"),
+            );
+            return Ok(false);
         }
 
         Ok(true)

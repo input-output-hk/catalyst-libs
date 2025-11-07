@@ -2,9 +2,9 @@
 
 pub use curve25519_dalek::digest;
 use digest::{
+    FixedOutput, HashMarker, Output, OutputSizeUser, Update,
     consts::{U32, U64},
     typenum::Unsigned,
-    FixedOutput, HashMarker, Output, OutputSizeUser, Update,
 };
 
 /// Blake2b-512 hasher instance.

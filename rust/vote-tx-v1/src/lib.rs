@@ -51,16 +51,15 @@ mod utils;
 use anyhow::ensure;
 use catalyst_voting::{
     crypto::{
-        ed25519::{sign, verify_signature, PrivateKey, PublicKey, Signature},
-        hash::{digest::Digest, Blake2b256Hasher, Blake2b512Hasher},
+        ed25519::{PrivateKey, PublicKey, Signature, sign, verify_signature},
+        hash::{Blake2b256Hasher, Blake2b512Hasher, digest::Digest},
         rng::{default_rng, rand_core::CryptoRngCore},
     },
     vote_protocol::{
         committee::{ElectionPublicKey, ElectionSecretKey},
         voter::{
-            decrypt_vote, encrypt_vote,
-            proof::{generate_voter_proof, verify_voter_proof, VoterProof, VoterProofCommitment},
-            EncryptedVote, Vote,
+            EncryptedVote, Vote, decrypt_vote, encrypt_vote,
+            proof::{VoterProof, VoterProofCommitment, generate_voter_proof, verify_voter_proof},
         },
     },
 };

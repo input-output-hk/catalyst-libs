@@ -4,7 +4,7 @@ use std::io::Read;
 
 use anyhow::anyhow;
 
-use super::{proof::VoterProof, EncryptedVote};
+use super::{EncryptedVote, proof::VoterProof};
 use crate::{
     crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof},
     utils::read_array,

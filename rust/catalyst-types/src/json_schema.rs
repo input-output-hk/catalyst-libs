@@ -2,7 +2,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use jsonschema::{options, Draft, ValidationError, Validator};
+use jsonschema::{Draft, ValidationError, Validator, options};
 use serde_json::Value;
 
 /// Wrapper around a JSON Schema validator.

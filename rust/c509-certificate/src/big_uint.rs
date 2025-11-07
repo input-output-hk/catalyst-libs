@@ -5,7 +5,7 @@
 
 // cspell: words Bignum bignum biguint
 
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{decode::decode_bytes, encode::encode_bytes};

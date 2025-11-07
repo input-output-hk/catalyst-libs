@@ -2,8 +2,8 @@
 
 use catalyst_types::problem_report::ProblemReport;
 use cbork_utils::decode_helper::{decode_bytes, decode_tag};
-use minicbor::{decode, Decode, Decoder};
-use x509_cert::{der::Decode as x509Decode, Certificate};
+use minicbor::{Decode, Decoder, decode};
+use x509_cert::{Certificate, der::Decode as x509Decode};
 
 use crate::cardano::cip509::rbac::tag::KeyTag;
 

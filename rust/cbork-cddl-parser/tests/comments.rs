@@ -1,6 +1,6 @@
 //! Comment Tests
 mod common;
-use common::{comments::*, Rule};
+use common::{Rule, comments::*};
 
 #[test]
 /// Test if the `COMMENT` rule passes properly.

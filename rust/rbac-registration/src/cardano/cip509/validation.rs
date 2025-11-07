@@ -8,6 +8,7 @@ use std::borrow::Cow;
 
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{
+    Network, TxnWitness, VKeyHash,
     hashes::{Blake2b128Hash, Blake2b256Hash},
     pallas_addresses::Address,
     pallas_codec::{
@@ -16,20 +17,19 @@ use cardano_blockchain_types::{
     },
     pallas_primitives::conway,
     pallas_traverse::MultiEraTx,
-    Network, TxnWitness, VKeyHash,
 };
 use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
+    catalyst_id::{CatalystId, role_index::RoleId},
     problem_report::ProblemReport,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
-use x509_cert::{der::Encode as X509Encode, Certificate as X509};
+use x509_cert::{Certificate as X509, der::Encode as X509Encode};
 
 use crate::cardano::cip509::{
+    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, SimplePublicKeyType, X509DerCert,
     rbac::Cip509RbacMetadata,
     types::TxInputHash,
     utils::extract_key::{c509_key, x509_key},
-    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -140,11 +140,11 @@ pub fn validate_cert_addrs(
     for (hash, address) in stake_addrs.into_iter().chain(payment_addrs) {
         if !witness.check_witness_in_tx(&hash, 0.into()) {
             report.other(
-                    &format!(
-                        "Address '{address}', key hash (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable"
-                    ),
-                    context,
-                );
+                &format!(
+                    "Address '{address}', key hash (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable"
+                ),
+                context,
+            );
         }
     }
 }
@@ -445,25 +445,25 @@ pub fn validate_role_data(
         if number == &RoleId::Role0 {
             catalyst_id = validate_role_0(data, metadata, subnet, context, report);
         } else {
-            if let Some(signing_key) = data.signing_key() {
-                if signing_key.key_offset == 0 {
-                    report.other(
-                        &format!(
-                            "Invalid signing key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
-                        ),
-                        context,
-                    );
-                }
+            if let Some(signing_key) = data.signing_key()
+                && signing_key.key_offset == 0
+            {
+                report.other(
+                    &format!(
+                        "Invalid signing key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
+                    ),
+                    context,
+                );
             }
-            if let Some(encryption_key) = data.encryption_key() {
-                if encryption_key.key_offset == 0 {
-                    report.other(
-                        &format!(
-                            "Invalid encryption key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
-                        ),
-                        context,
-                    );
-                }
+            if let Some(encryption_key) = data.encryption_key()
+                && encryption_key.key_offset == 0
+            {
+                report.other(
+                    &format!(
+                        "Invalid encryption key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
+                    ),
+                    context,
+                );
             }
         }
     }
@@ -619,8 +619,11 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report
-            .contains("Role payment key reference index (1) is not found in transaction outputs"));
+        assert!(
+            report.contains(
+                "Role payment key reference index (1) is not found in transaction outputs"
+            )
+        );
     }
 
     #[test]

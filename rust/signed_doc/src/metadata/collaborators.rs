@@ -92,8 +92,8 @@ impl<'de> serde::Deserialize<'de> for Collaborators {
                             Ok(id)
                         } else {
                             Err(serde::de::Error::custom(format!(
-                            "provided CatalystId {id} must in ID format for collaborators field"
-                        )))
+                                "provided CatalystId {id} must in ID format for collaborators field"
+                            )))
                         }
                     })
             })
