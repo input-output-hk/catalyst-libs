@@ -449,27 +449,6 @@ impl HermesIpfs {
         self.node.bootstrap().await
     }
 
-    /// Returns a stream of pubsub swarm events for a topic.
-    ///
-    /// ## Parameters
-    ///
-    /// * `topic` - `impl Into<Option<String>>`
-    ///
-    /// ## Returns
-    ///
-    /// * A result with `BoxStream<'static, PubsubEvent>`
-    ///
-    /// ## Errors
-    ///
-    /// Returns error if unable to retrieve pubsub swarm events.
-    pub async fn pubsub_events(
-        &self,
-        topic: impl Into<Option<String>>,
-    ) -> anyhow::Result<BoxStream<'static, PubsubEvent>> {
-        //self.node.pubsub_events(topic).await
-        todo!()
-    }
-
     /// Subscribes to a pubsub topic.
     ///
     /// ## Parameters
@@ -632,25 +611,42 @@ impl FromStr for GetIpfsFile {
     }
 }
 
+/// GossipsubEvents related to subscription state
+#[derive(Display, Debug)]
+pub enum SubscriptionStatusEvent {
+    /// Peer has been subscribed
+    Subscribed {
+        /// Peer id
+        peer_id: PeerId,
+    },
+    /// Peer has been unsubscribed
+    Unsubscribed {
+        /// Peer id
+        peer_id: PeerId,
+    },
+}
+
 /// Handle stream of messages from the IPFS pubsub topic
-pub fn subscription_stream_task<H>(
+pub fn subscription_stream_task<MH, SH>(
     stream: BoxStream<'static, connexa::prelude::GossipsubEvent>,
-    handler: H,
+    message_handler: MH,
+    subscription_handler: SH,
 ) -> tokio::task::JoinHandle<()>
 where
-    H: Fn(GossipsubMessage) + Send + 'static,
+    MH: Fn(GossipsubMessage) + Send + 'static,
+    SH: Fn(SubscriptionStatusEvent) + Send + 'static,
 {
     tokio::spawn(async move {
         pin_mut!(stream);
         while let Some(msg) = stream.next().await {
             match msg {
                 connexa::prelude::GossipsubEvent::Subscribed { peer_id } => {
-                    unimplemented!("GossipsubEvent::Subscribed")
+                    subscription_handler(SubscriptionStatusEvent::Subscribed { peer_id })
                 },
                 connexa::prelude::GossipsubEvent::Unsubscribed { peer_id } => {
-                    unimplemented!("GossipsubEvent::Unsubscribed")
+                    subscription_handler(SubscriptionStatusEvent::Unsubscribed { peer_id })
                 },
-                connexa::prelude::GossipsubEvent::Message { message } => handler(message),
+                connexa::prelude::GossipsubEvent::Message { message } => message_handler(message),
             };
         }
     })
