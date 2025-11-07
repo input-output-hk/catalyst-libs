@@ -7,7 +7,7 @@
 use std::{collections::HashMap, sync::LazyLock};
 
 use anyhow::Error;
-use asn1_rs::{oid, Oid};
+use asn1_rs::{Oid, oid};
 
 use super::ExtensionValueType;
 use crate::tables::IntegerToOidTable;

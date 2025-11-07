@@ -10,14 +10,14 @@ use std::{
 };
 
 use curve25519_dalek::{
+    RistrettoPoint,
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
     scalar::Scalar as IScalar,
     traits::Identity,
-    RistrettoPoint,
 };
 
 use crate::crypto::{
-    hash::digest::{consts::U64, Digest},
+    hash::digest::{Digest, consts::U64},
     rng::rand_core::CryptoRngCore,
 };
 

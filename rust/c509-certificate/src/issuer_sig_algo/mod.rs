@@ -13,8 +13,8 @@ mod data;
 use std::str::FromStr;
 
 use asn1_rs::Oid;
-use data::{get_oid_from_int, ISSUER_SIG_ALGO_LOOKUP};
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use data::{ISSUER_SIG_ALGO_LOOKUP, get_oid_from_int};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::{
@@ -156,7 +156,7 @@ mod test_issuer_signature_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let isa = IssuerSignatureAlgorithm::new(oid!(1.3.101 .112), None);
+        let isa = IssuerSignatureAlgorithm::new(oid!(1.3.101.112), None);
         isa.encode(&mut encoder, &mut ())
             .expect("Failed to encode IssuerSignatureAlgorithm");
 
@@ -174,7 +174,7 @@ mod test_issuer_signature_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let isa = IssuerSignatureAlgorithm::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1), None);
+        let isa = IssuerSignatureAlgorithm::new(oid!(2.16.840.1.101.3.4.2.1), None);
         isa.encode(&mut encoder, &mut ())
             .expect("Failed to encode IssuerSignatureAlgorithm");
 
@@ -193,7 +193,7 @@ mod test_issuer_signature_algorithm {
         let mut encoder = Encoder::new(&mut buffer);
 
         let isa = IssuerSignatureAlgorithm::new(
-            oid!(2.16.840 .1 .101 .3 .4 .2 .1),
+            oid!(2.16.840.1.101.3.4.2.1),
             Some("example".to_string()),
         );
         isa.encode(&mut encoder, &mut ())

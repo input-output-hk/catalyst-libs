@@ -3,12 +3,12 @@
 #[cfg(test)]
 mod tests;
 
-use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::doc_ref::Ref, DocSpecs};
+use catalyst_signed_doc_spec::{DocSpecs, is_required::IsRequired, metadata::doc_ref::Ref};
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocType, DocumentRef,
-    DocumentRefs,
+    CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
+    providers::CatalystSignedDocumentProvider,
 };
 
 /// `ref` field validation rule
@@ -38,13 +38,16 @@ impl RefRule {
             IsRequired::Excluded => {
                 anyhow::ensure!(
                     spec.doc_type.is_empty() && !spec.multiple,
-                     "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
+                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
                 );
                 return Ok(Self::NotSpecified);
             },
         };
 
-        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
+        anyhow::ensure!(
+            !spec.doc_type.is_empty(),
+            "'type' field should exists and has at least one entry for the required 'ref' metadata definition"
+        );
 
         let exp_ref_types = spec.doc_type.iter().try_fold(
             Vec::new(),
@@ -97,15 +100,15 @@ impl RefRule {
                 return Ok(false);
             }
         }
-        if let Self::NotSpecified = self {
-            if let Some(doc_ref) = doc.doc_meta().doc_ref() {
-                doc.report().unknown_field(
-                    "ref",
-                    &doc_ref.to_string(),
-                    &format!("{context}, document does not expect to have a ref field"),
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = self
+            && let Some(doc_ref) = doc.doc_meta().doc_ref()
+        {
+            doc.report().unknown_field(
+                "ref",
+                &doc_ref.to_string(),
+                &format!("{context}, document does not expect to have a ref field"),
+            );
+            return Ok(false);
         }
 
         Ok(true)

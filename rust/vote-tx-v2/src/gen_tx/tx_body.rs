@@ -3,7 +3,7 @@
 use minicbor::{Decode, Decoder, Encode, Encoder};
 
 use super::{EventMap, Vote};
-use crate::{encoded_cbor::EncodedCbor, uuid::Uuid, Cbor};
+use crate::{Cbor, encoded_cbor::EncodedCbor, uuid::Uuid};
 
 /// `TxBody` array struct length
 const TX_BODY_LEN: u64 = 4;

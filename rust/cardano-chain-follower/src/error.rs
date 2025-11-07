@@ -3,9 +3,9 @@
 use std::{io, path::PathBuf};
 
 use cardano_blockchain_types::{
-    pallas_hardano,
+    Network, pallas_hardano,
     pallas_network::{self, miniprotocols::chainsync},
-    pallas_traverse, Network,
+    pallas_traverse,
 };
 use thiserror::Error;
 
@@ -95,13 +95,19 @@ pub enum Error {
     #[error("Mithril Aggregator network mismatch.  Wanted {0} Got {1}")]
     MithrilClientNetworkMismatch(Box<Network>, String),
     /// Mithril genesis VKEY Mismatch
-    #[error("Mithril Genesis VKEY for Network {0} is already set, and can not be changed to a different value.")]
+    #[error(
+        "Mithril Genesis VKEY for Network {0} is already set, and can not be changed to a different value."
+    )]
     MithrilGenesisVKeyMismatch(Box<Network>),
     /// Mithril genesis VKEY is not properly HEX Encoded
-    #[error("Mithril Genesis VKEY for Network {0} is not hex encoded.  Needs to be only HEX Ascii characters, and even length.")]
+    #[error(
+        "Mithril Genesis VKEY for Network {0} is not hex encoded.  Needs to be only HEX Ascii characters, and even length."
+    )]
     MithrilGenesisVKeyNotHex(Box<Network>),
     /// Mithril Auto-update requires an Aggregator and a VKEY and a Path
-    #[error("Mithril Auto Update Network {0} failed to start. No Aggregator and/or Genesis VKEY and/or Path are configured.")]
+    #[error(
+        "Mithril Auto Update Network {0} failed to start. No Aggregator and/or Genesis VKEY and/or Path are configured."
+    )]
     MithrilUpdateRequiresAggregatorAndVkeyAndPath(Box<Network>),
     /// Internal Error
     #[error("Internal error")]

@@ -7,12 +7,12 @@ use std::collections::HashSet;
 
 use anyhow::ensure;
 use catalyst_signed_doc_spec::{
+    DocSpec,
     is_required::IsRequired,
     signers::update::{Update, UpdatersType},
-    DocSpec,
 };
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
 
 /// Context for the validation problem report.
 const REPORT_CONTEXT: &str = "Document ownership validation";
@@ -96,13 +96,11 @@ impl DocumentOwnershipRule {
                         .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
                     allowed_authors.extend(first_doc.authors());
 
-                    let last_doc =
-                        provider
-                            .try_get_last_doc(doc_id)
-                            .await?
-                            .ok_or(anyhow::anyhow!(
-                        "A latest version of the document must exist if a first version exists"
-                    ))?;
+                    let last_doc = provider.try_get_last_doc(doc_id).await?.ok_or(
+                        anyhow::anyhow!(
+                            "A latest version of the document must exist if a first version exists"
+                        ),
+                    )?;
 
                     allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
                 }

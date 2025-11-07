@@ -4,7 +4,7 @@ pub use catalyst_types::catalyst_id::CatalystId;
 use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 use minicbor::Decode;
 
-use crate::{decode_context::DecodeContext, Content, Metadata};
+use crate::{Content, Metadata, decode_context::DecodeContext};
 
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]

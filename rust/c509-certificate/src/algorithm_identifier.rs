@@ -14,7 +14,7 @@
 //! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use asn1_rs::Oid;
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::{

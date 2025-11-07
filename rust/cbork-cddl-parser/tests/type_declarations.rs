@@ -3,7 +3,7 @@
 // cspell: words rangeop RANGEOP
 
 mod common;
-use common::{type_declarations::*, Rule};
+use common::{Rule, type_declarations::*};
 
 /// Test if the `ctlop` rule passes properly.
 /// This uses a special rule in the Grammar to test `ctlop` exhaustively.

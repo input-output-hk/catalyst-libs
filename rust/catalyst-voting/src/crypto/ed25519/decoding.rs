@@ -2,8 +2,8 @@
 
 use anyhow::anyhow;
 use ed25519_dalek::{
-    Signature as Ed25519Signature, SigningKey, VerifyingKey, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
-    SIGNATURE_LENGTH,
+    PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH, Signature as Ed25519Signature,
+    SigningKey, VerifyingKey,
 };
 
 use super::{PrivateKey, PublicKey, Signature};

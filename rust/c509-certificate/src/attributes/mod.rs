@@ -14,7 +14,7 @@
 //! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use attribute::Attribute;
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{decode::decode_array_len, encode::encode_array_len};
@@ -113,7 +113,7 @@ mod test_attributes {
     fn encode_decode_attributes_int() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        let mut attr = Attribute::new(oid!(1.2.840 .113549 .1 .9 .1));
+        let mut attr = Attribute::new(oid!(1.2.840.113549.1.9.1));
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
         let mut attributes = Attributes::new();

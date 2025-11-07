@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
 
 /// Signed Document `ver` field validation rule
 #[derive(Debug)]

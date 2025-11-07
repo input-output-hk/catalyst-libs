@@ -5,8 +5,8 @@ use catalyst_types::catalyst_id::CatalystId;
 use cbork_utils::with_cbor_bytes::WithCborBytes;
 
 use crate::{
-    signature::{tbs_data, Signature},
     CatalystSignedDocument, Content, ContentType, Metadata, Signatures,
+    signature::{Signature, tbs_data},
 };
 
 /// Catalyst Signed Document Builder.

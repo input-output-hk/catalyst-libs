@@ -1,8 +1,8 @@
 //! Helper functions for encoding CBOR data.
 
 use minicbor::{
-    encode::{self, Write},
     Encoder,
+    encode::{self, Write},
 };
 
 /// Generic helper function for encoding different types.
