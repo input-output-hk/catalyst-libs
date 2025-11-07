@@ -1,7 +1,7 @@
 [project]
 name = "generators"
 version = "0.1.0"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "css-inline>=0.18.0",
     "great-tables>=0.20.0",
@@ -10,7 +10,7 @@ dependencies = [
     "mdformat>=1.0.0",
     "mdformat-mkdocs>=4.4.2",
     "polars>=1.35.1",
-    "pydantic>=2.12.3",
+    "pydantic>=2.12.4",
     "pydot>=4.0.1",
     "rich>=14.2.0",
     "rich-argparse>=1.7.2",
