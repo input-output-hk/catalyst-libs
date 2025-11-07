@@ -2,7 +2,9 @@
 
 use std::fmt::Write;
 
-use crate::{validator::json_schema::JsonSchema, CatalystSignedDocument};
+use catalyst_types::json_schema::JsonSchema;
+
+use crate::CatalystSignedDocument;
 
 /// Validating the document's content against the provided JSON schema
 pub(crate) fn content_json_schema_check(

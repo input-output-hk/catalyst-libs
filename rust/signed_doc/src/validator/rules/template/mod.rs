@@ -6,13 +6,11 @@ mod tests;
 use catalyst_signed_doc_spec::{
     is_required::IsRequired, metadata::template::Template, DocSpecs, DocumentName,
 };
+use catalyst_types::json_schema::JsonSchema;
 
 use crate::{
     providers::CatalystSignedDocumentProvider,
-    validator::{
-        json_schema::JsonSchema,
-        rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
-    },
+    validator::rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
     CatalystSignedDocument, ContentType, DocType,
 };
 
