@@ -100,4 +100,25 @@ cddlDefinitions: {
 			"""
 	}
 
+	"rejections": {
+		def: "uint"
+		description: """
+			The Count of all Documents held by the SMT.
+			"""
+		comment: """
+			\(description)
+			"""
+	}
+
+	"encrypted_tally": {
+		def: "uint"
+		description: """
+			The Count of all Documents held by the SMT.
+			"""
+		comment: """
+			\(description)
+			"""
+	}
+
+
 }
