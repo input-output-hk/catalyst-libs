@@ -99,8 +99,7 @@ cddlDefinitions: {
 			\(description)
 			"""
 	}
-
-	"rejections": {
+	rejections: {
 		def: "uint"
 		description: """
 			The Count of all Documents held by the SMT.
@@ -109,8 +108,7 @@ cddlDefinitions: {
 			\(description)
 			"""
 	}
-
-	"encrypted_tally": {
+	encrypted_tally: {
 		def: "uint"
 		description: """
 			The Count of all Documents held by the SMT.
@@ -119,6 +117,5 @@ cddlDefinitions: {
 			\(description)
 			"""
 	}
-
 
 }
