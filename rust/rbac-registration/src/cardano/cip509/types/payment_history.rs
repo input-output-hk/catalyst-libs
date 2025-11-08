@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use cardano_blockchain_types::{
     pallas_addresses::ShelleyAddress,
-    pallas_primitives::{conway::Value, Hash},
+    pallas_primitives::{Hash, conway::Value},
 };
 
 use super::point_tx_idx::PointTxnIdx;

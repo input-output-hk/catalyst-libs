@@ -150,11 +150,11 @@ mod tests {
     use pallas_addresses::Address;
 
     use crate::{
-        metadata::cip36::{
-            key_registration::Cip36KeyRegistration, voting_pk::VotingPubKey,
-            Cip36RegistrationWitness,
-        },
         Cip36, Network,
+        metadata::cip36::{
+            Cip36RegistrationWitness, key_registration::Cip36KeyRegistration,
+            voting_pk::VotingPubKey,
+        },
     };
 
     fn create_cip36() -> Cip36 {

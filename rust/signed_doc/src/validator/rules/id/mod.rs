@@ -6,7 +6,7 @@ mod tests;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
 
 /// Signed Document `id` field validation rule
 #[derive(Debug)]
@@ -62,16 +62,16 @@ impl IdRule {
 
         if let Ok(id_age) = time_delta.to_std() {
             // `now` is earlier than `id_time`
-            if let Some(future_threshold) = provider.future_threshold() {
-                if id_age > future_threshold {
-                    doc.report().invalid_value(
+            if let Some(future_threshold) = provider.future_threshold()
+                && id_age > future_threshold
+            {
+                doc.report().invalid_value(
                         "id",
                         &id.to_string(),
                         "id < now + future_threshold",
                         &format!("Document ID timestamp {id} cannot be too far in future (threshold: {future_threshold:?}) from now: {now}"),
                     );
-                    is_valid = false;
-                }
+                is_valid = false;
             }
         } else {
             // `id_time` is earlier than `now`
@@ -80,16 +80,16 @@ impl IdRule {
                 .to_std()
                 .context("BUG! `id_time` must be earlier than `now` at this place")?;
 
-            if let Some(past_threshold) = provider.past_threshold() {
-                if id_age > past_threshold {
-                    doc.report().invalid_value(
+            if let Some(past_threshold) = provider.past_threshold()
+                && id_age > past_threshold
+            {
+                doc.report().invalid_value(
                         "id",
                         &id.to_string(),
                         "id > now - past_threshold",
                         &format!("Document ID timestamp {id} cannot be too far behind (threshold: {past_threshold:?}) from now: {now:?}",),
                     );
-                    is_valid = false;
-                }
+                is_valid = false;
             }
         }
 

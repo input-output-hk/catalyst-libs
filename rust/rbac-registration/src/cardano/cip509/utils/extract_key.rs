@@ -5,10 +5,10 @@ use std::borrow::Cow;
 
 use c509_certificate::c509::C509;
 use catalyst_types::problem_report::ProblemReport;
-use ed25519_dalek::{SignatureError, VerifyingKey, PUBLIC_KEY_LENGTH};
-use oid_registry::{Oid, OID_SIG_ED25519};
+use ed25519_dalek::{PUBLIC_KEY_LENGTH, SignatureError, VerifyingKey};
+use oid_registry::{OID_SIG_ED25519, Oid};
 use thiserror::Error;
-use x509_cert::{spki, Certificate as X509Certificate};
+use x509_cert::{Certificate as X509Certificate, spki};
 
 /// Common error type.
 #[derive(Debug, Error)]
@@ -164,13 +164,13 @@ fn verifying_key(public_key: &[u8]) -> Result<VerifyingKey, Error> {
 
 #[cfg(test)]
 mod tests {
-    use oid_registry::{asn1_rs, OID_SIG_ED25519};
+    use oid_registry::{OID_SIG_ED25519, asn1_rs};
     use x509_cert::spki;
 
     #[test]
     fn spki_oid_as_asn1_rs_oid() {
         let spki_oid = spki::ObjectIdentifier::new_unwrap("1.3.101.112");
-        let asn1_rs_oid = asn1_rs::oid!(1.3.101 .112);
+        let asn1_rs_oid = asn1_rs::oid!(1.3.101.112);
         assert_eq!(spki_oid.to_string(), asn1_rs_oid.to_id_string());
 
         let converted_spki_oid = super::spki_oid_as_asn1_rs_oid(&spki_oid);

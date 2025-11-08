@@ -7,7 +7,7 @@ use std::{cmp::Ordering, ops::Deref, vec::IntoIter};
 use crate::{
     decode_context::DecodeCtx,
     decode_helper::get_bytes,
-    deterministic_helper::{get_cbor_header_size, get_declared_length, CBOR_MAX_TINY_VALUE},
+    deterministic_helper::{CBOR_MAX_TINY_VALUE, get_cbor_header_size, get_declared_length},
 };
 
 /// Represents a CBOR map key-value pair, preserving original decoding order of values.

@@ -111,7 +111,9 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
                         match policy {
                             CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
                                 if matches!(policy, CompatibilityPolicy::Warn) {
-                                    warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
+                                    warn!(
+                                        "{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator"
+                                    );
                                 }
                                 if rest.len() != 1 {
                                     return Err(minicbor::decode::Error::message(format!(
@@ -120,9 +122,11 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
                                     )));
                                 }
 
-                                let id = UuidV7::decode(&mut minicbor::Decoder::new(first), &mut CborContext::Tagged).map_err(|e| {
-                                    e.with_message("Invalid ID UUIDv7")
-                                })?;
+                                let id = UuidV7::decode(
+                                    &mut minicbor::Decoder::new(first),
+                                    &mut CborContext::Tagged,
+                                )
+                                .map_err(|e| e.with_message("Invalid ID UUIDv7"))?;
                                 let ver = rest
                                     .first()
                                     .map(|ver| UuidV7::decode(&mut minicbor::Decoder::new(ver), &mut CborContext::Tagged).map_err(|e| {

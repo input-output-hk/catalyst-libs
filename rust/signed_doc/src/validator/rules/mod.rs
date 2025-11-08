@@ -2,12 +2,12 @@
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
 use anyhow::Context;
-use catalyst_signed_doc_spec::{cddl_definitions::CddlDefinitions, DocSpec, DocSpecs};
+use catalyst_signed_doc_spec::{DocSpec, DocSpecs, cddl_definitions::CddlDefinitions};
 use futures::FutureExt;
 
 use crate::{
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
     CatalystSignedDocument,
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
 };
 
 mod chain;

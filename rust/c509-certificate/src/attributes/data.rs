@@ -5,7 +5,7 @@
 use std::sync::LazyLock;
 
 use anyhow::Error;
-use asn1_rs::{oid, Oid};
+use asn1_rs::{Oid, oid};
 
 use crate::tables::IntegerToOidTable;
 

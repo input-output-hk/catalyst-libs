@@ -4,13 +4,13 @@
 
 use std::fmt::{Display, Formatter};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use pallas_addresses::{
     ShelleyAddress, ShelleyDelegationPart, ShelleyPaymentPart, StakeAddress as PallasStakeAddress,
 };
-use pallas_primitives::{conway, Hash};
+use pallas_primitives::{Hash, conway};
 
-use crate::{hashes::Blake2b224Hash, Network};
+use crate::{Network, hashes::Blake2b224Hash};
 
 /// A stake address.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash)]

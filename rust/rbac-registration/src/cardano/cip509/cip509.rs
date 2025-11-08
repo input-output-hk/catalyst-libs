@@ -7,30 +7,31 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use cardano_blockchain_types::{
-    hashes::{Blake2b256Hash, TransactionId, BLAKE_2B256_SIZE},
-    pallas_addresses::{Address, ShelleyAddress},
-    pallas_primitives::{conway, Nullable},
-    pallas_traverse::MultiEraTx,
     MetadatumLabel, MultiEraBlock, TxnIndex,
+    hashes::{BLAKE_2B256_SIZE, Blake2b256Hash, TransactionId},
+    pallas_addresses::{Address, ShelleyAddress},
+    pallas_primitives::{Nullable, conway},
+    pallas_traverse::MultiEraTx,
 };
 use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
+    catalyst_id::{CatalystId, role_index::RoleId},
     cbor_utils::{report_duplicated_key, report_missing_keys},
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
-    decode::{self},
     Decode, Decoder,
+    decode::{self},
 };
 use strum_macros::FromRepr;
 use tracing::warn;
 use uuid::Uuid;
 
 use crate::cardano::cip509::{
+    Payment, PointTxnIdx, RoleData,
     decode_context::DecodeContext,
     rbac::Cip509RbacMetadata,
     types::{PaymentHistory, TxInputHash, ValidationSignature},
@@ -40,7 +41,6 @@ use crate::cardano::cip509::{
         validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
-    Payment, PointTxnIdx, RoleData,
 };
 
 /// A x509 metadata envelope.

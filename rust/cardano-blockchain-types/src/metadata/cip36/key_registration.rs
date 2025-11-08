@@ -11,7 +11,7 @@ use catalyst_types::{
 };
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 use pallas_addresses::Address;
 use strum::FromRepr;
 
@@ -212,13 +212,22 @@ fn decode_voting_key(
                             decode_array_len(d, "CIP36 Key Registration voting key, delegations")?;
                         // This fixed array should be a length of 2 (voting key, weight).
                         if len != 2 {
-                            return Err(decode::Error::message(format!("Invalid length for CIP36 Key Registration voting key delegations, expected 2, got {len}")));
+                            return Err(decode::Error::message(format!(
+                                "Invalid length for CIP36 Key Registration voting key delegations, expected 2, got {len}"
+                            )));
                         }
 
                         // The first entry.
-                        let pub_key = decode_bytes(d, "CIP36 Key Registration voting key, delegation array first entry (voting public key)")?;
+                        let pub_key = decode_bytes(
+                            d,
+                            "CIP36 Key Registration voting key, delegation array first entry (voting public key)",
+                        )?;
                         // The second entry.
-                        let weight: u32 = decode_helper(d, "CIP36 Key Registration voting key, delegation array second entry (weight)", &mut (),)?;
+                        let weight: u32 = decode_helper(
+                            d,
+                            "CIP36 Key Registration voting key, delegation array second entry (weight)",
+                            &mut (),
+                        )?;
 
                         let vk = voting_pk_vec_to_verifying_key(
                             &pub_key,
@@ -230,7 +239,9 @@ fn decode_voting_key(
                 },
 
                 _ => {
-                    return Err(decode::Error::message("Invalid datatype for CIP36 Key Registration voting key, should be either Array or Bytes"));
+                    return Err(decode::Error::message(
+                        "Invalid datatype for CIP36 Key Registration voting key, should be either Array or Bytes",
+                    ));
                 },
             }
         },
