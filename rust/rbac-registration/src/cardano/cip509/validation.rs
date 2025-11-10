@@ -593,8 +593,7 @@ mod tests {
         assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        // The consume function must return the problem report contained within the registration.
-        let report = registration.consume().unwrap_err();
+        let report = registration.report();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
         assert!(report.contains("is not present in the transaction witness set, and can not be verified as owned and spendable"));
@@ -616,7 +615,7 @@ mod tests {
         assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        let report = registration.consume().unwrap_err();
+        let report = registration.report();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
         assert!(report
@@ -637,8 +636,7 @@ mod tests {
         assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        // The consume function must return the problem report contained within the registration.
-        let report = registration.consume().unwrap_err();
+        let report = registration.report();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
         assert!(report.contains("Unknown role found: 4"));
