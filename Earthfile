@@ -1,9 +1,9 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:feat/python-install-for-base AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/python-install-for-base AS cspell-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:feat/python-install-for-base AS python-ci
-IMPORT github.com/input-output-hk/catalyst-ci:feat/python-install-for-base AS cat-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.6.0 AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.6.0 AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.0 AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci:v3.6.0 AS cat-ci
 
 FROM debian:stable-slim
 
