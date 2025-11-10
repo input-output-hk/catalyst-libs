@@ -79,7 +79,7 @@ impl RegistrationChain {
             // Checks that a new registration doesn't contain a signing key that was used by any
             // other chain. Returns a list of public keys in the registration.
             for role in cip509.all_roles() {
-                if let Some((key, _)) = new_chain.get_latest_signing_pk_for_role(role) {
+                if let Some(key) = cip509.signing_pk_for_role(role) {
                     if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
                             cip509.report().functional_validation(
@@ -146,7 +146,7 @@ impl RegistrationChain {
         {
             let cat_id = self.catalyst_id();
             for role in cip509.all_roles() {
-                if let Some((key, _)) = new_chain.get_latest_signing_pk_for_role(role) {
+                if let Some(key) = cip509.signing_pk_for_role(role) {
                     if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
                             cip509.report().functional_validation(
