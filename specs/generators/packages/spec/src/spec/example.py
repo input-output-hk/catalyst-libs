@@ -17,7 +17,7 @@ class JsonExample(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     @classmethod
-    def default(cls) -> list["JsonExample"]:
+    def default(cls) -> list[JsonExample]:
         """Return Default list."""
         return []
 
@@ -51,7 +51,7 @@ class CborExample(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     @classmethod
-    def default(cls) -> list["CborExample"]:
+    def default(cls) -> list[CborExample]:
         """Return Default list."""
         return []
 

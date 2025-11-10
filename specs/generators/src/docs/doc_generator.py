@@ -438,7 +438,7 @@ class DocGenerator:
         """Return the files name."""
         return self._filename
 
-    def file_path(self, relative_doc: "DocGenerator | None" = None) -> Path:
+    def file_path(self, relative_doc: DocGenerator | None = None) -> Path:
         """Return a path to the file."""
         if relative_doc is not None:
             relative_path = relative_doc.file_path().parent
@@ -449,7 +449,7 @@ class DocGenerator:
         self,
         *,
         indent: int = 0,
-        relative_doc: "DocGenerator | None" = None,
+        relative_doc: DocGenerator | None = None,
         title: str = "Markdown Document",
         filetype: str = "md",
     ) -> str:
