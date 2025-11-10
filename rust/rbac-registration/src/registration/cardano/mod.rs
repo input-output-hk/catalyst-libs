@@ -92,7 +92,7 @@ impl RegistrationChain {
             }
         }
 
-        if reg.report().is_problematic() {
+        if cip509.report().is_problematic() {
             Ok(None)
         } else {
             Ok(Some(new_chain))
@@ -102,7 +102,7 @@ impl RegistrationChain {
     /// Create a new instance of registration chain.
     /// The first new value should be the chain root.
     #[must_use]
-    pub fn new_stateless(cip509: &Cip509) -> Option<Self> {
+    fn new_stateless(cip509: &Cip509) -> Option<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
 
         Some(Self {
@@ -118,23 +118,23 @@ impl RegistrationChain {
     ///   ownership (e.g., database lookup failures).
     pub async fn update<Provider>(
         &self,
-        reg: &Cip509,
+        cip509: &Cip509,
         provider: &Provider,
     ) -> anyhow::Result<Option<Self>>
     where
         Provider: RbacRegistrationProvider,
     {
-        let Some(new_chain) = self.update_stateless(reg) else {
+        let Some(new_chain) = self.update_stateless(cip509) else {
             return Ok(None);
         };
 
         // Check that addresses from the new registration aren't used in other chains.
         let previous_addresses = self.stake_addresses();
-        let reg_addresses = reg.stake_addresses();
+        let reg_addresses = cip509.stake_addresses();
         let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
         for address in &new_addresses {
             if provider.chain_from_stake_address(address).await?.is_some() {
-                reg.report().functional_validation(
+                cip509.report().functional_validation(
                         &format!("{address} stake addresses is already used"),
                         "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
                     );
@@ -145,11 +145,11 @@ impl RegistrationChain {
         // other chain. Returns a list of public keys in the registration.
         {
             let cat_id = self.catalyst_id();
-            for role in reg.all_roles() {
+            for role in cip509.all_roles() {
                 if let Some((key, _)) = new_chain.get_latest_signing_pk_for_role(role) {
                     if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
-                            reg.report().functional_validation(
+                            cip509.report().functional_validation(
                                 &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
                                 "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
                             );
@@ -159,7 +159,7 @@ impl RegistrationChain {
             }
         }
 
-        if reg.report().is_problematic() {
+        if cip509.report().is_problematic() {
             Ok(None)
         } else {
             Ok(Some(new_chain))
@@ -171,7 +171,7 @@ impl RegistrationChain {
     /// # Arguments
     /// - `cip509` - The CIP509.
     #[must_use]
-    pub fn update_stateless(
+    fn update_stateless(
         &self,
         cip509: &Cip509,
     ) -> Option<Self> {
