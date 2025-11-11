@@ -230,8 +230,10 @@ impl Cip509 {
     }
 
     /// Returns signing public key for a role.
+    /// Would return only signing public keys for the present ceritificates,
+    /// if certificate marked as deleted or undefined it would be skipped.
     #[must_use]
-    pub fn signing_pk_for_role(
+    pub(crate) fn signing_pk_for_role(
         &self,
         role: RoleId,
     ) -> Option<VerifyingKey> {
