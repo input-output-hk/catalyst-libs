@@ -1,7 +1,7 @@
 //! Catalyst documents signing crate
 
 mod builder;
-mod cid_v1;
+pub mod cid_v1;
 mod content;
 pub mod decode_context;
 pub mod doc_types;
@@ -22,6 +22,7 @@ pub use catalyst_types::{
     uuid::{Uuid, UuidV4, UuidV7},
 };
 use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
+pub use cid_v1::{Cid, CidError};
 pub use content::Content;
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
@@ -263,8 +264,9 @@ impl CatalystSignedDocument {
     /// # Errors
     ///  - CBOR serialization failure
     ///  - Multihash construction failure
-    pub fn to_cid_v1(&self) -> anyhow::Result<cid::Cid> {
-        let cbor_bytes = self.to_bytes()?;
+    pub fn to_cid_v1(&self) -> Result<cid_v1::Cid, cid_v1::CidError> {
+        let cbor_bytes = self.to_bytes()
+            .map_err(|e| cid_v1::CidError::Encoding(e.to_string()))?;
         cid_v1::to_cid_v1(&cbor_bytes)
     }
 
@@ -275,21 +277,9 @@ impl CatalystSignedDocument {
     /// # Errors
     ///  - CBOR serialization failure
     ///  - CID generation failure
-    pub fn to_cid_v1_string(&self) -> anyhow::Result<String> {
-        let cbor_bytes = self.to_bytes()?;
-        cid_v1::to_cid_v1_string(&cbor_bytes)
-    }
-
-    /// Generate a CID v1 and return it as raw bytes.
-    ///
-    /// Binary format: `<version><multicodec><multihash>` (36 bytes)
-    ///
-    /// # Errors
-    ///  - CBOR serialization failure
-    ///  - CID generation failure
-    pub fn to_cid_v1_bytes(&self) -> anyhow::Result<Vec<u8>> {
-        let cbor_bytes = self.to_bytes()?;
-        cid_v1::to_cid_v1_bytes(&cbor_bytes)
+    pub fn to_cid_v1_string(&self) -> Result<String, cid_v1::CidError> {
+        let cid = self.to_cid_v1()?;
+        Ok(cid.to_string())
     }
 }
 
