@@ -49,12 +49,12 @@ class FontTheme(BaseModel):
         return emphasis
 
     @classmethod
-    def default_name_theme(cls) -> "FontTheme":
+    def default_name_theme(cls) -> FontTheme:
         """Get Default Theme for Names."""
         return FontTheme()
 
     @classmethod
-    def default_value_theme(cls) -> "FontTheme":
+    def default_value_theme(cls) -> FontTheme:
         """Get Default Theme for Values."""
         return FontTheme(italic=True)
 
@@ -72,7 +72,7 @@ class TableRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     @classmethod
-    def default_list(cls) -> list["TableRow"]:
+    def default_list(cls) -> list[TableRow]:
         """Return a default list of this class."""
         return []
 
@@ -170,7 +170,7 @@ class Cluster(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     @classmethod
-    def from_doc_cluster(cls, cluster: DocCluster | None) -> "Cluster | None":
+    def from_doc_cluster(cls, cluster: DocCluster | None) -> Cluster | None:
         """Convert the DocCluster to a Cluster."""
         if cluster is None:
             return None

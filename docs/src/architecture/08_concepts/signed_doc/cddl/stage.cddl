@@ -1,0 +1,9 @@
+; What stage in the ballot processing does this checkpoint represent.
+
+
+; What stage in the ballot processing does this checkpoint represent.
+stage = (
+    "bulletin-board" /
+    "tally" /
+    "audit"
+)

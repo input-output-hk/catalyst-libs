@@ -62,8 +62,8 @@ class MetadataHeader(GenericHeader):
             validation += f"""
 
 * The Document referenced by `{ref}`
-  * MUST contain `{self._name}` metadata; AND
-  * MUST match the referencing documents `{self._name}` value."""
+    * MUST contain `{self._name}` metadata; AND
+    * MUST match the referencing documents `{self._name}` value."""
 
         return validation.strip()
 

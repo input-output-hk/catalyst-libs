@@ -196,8 +196,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -216,18 +216,6 @@ States:
 
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
-
-    The kind of action is controlled by this payload.
-    The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
-
-    States:
-
-    * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
-    * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
-    * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-             `hide` is only actioned if sent by the author,
-             for a collaborator it identified that they do not wish to be listed as a `collaborator`.
-
 
     ```json
     {
@@ -327,7 +315,7 @@ of the referenced document specified by the 'ref' metadata field.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-10 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

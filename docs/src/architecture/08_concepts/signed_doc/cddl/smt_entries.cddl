@@ -1,0 +1,5 @@
+; The Count of all Documents held by the SMT.
+
+
+; The Count of all Documents held by the SMT.
+smt-entries = uint

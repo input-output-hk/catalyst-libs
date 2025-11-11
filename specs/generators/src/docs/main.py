@@ -6,10 +6,12 @@ import sys
 from pathlib import Path
 
 import rich
+from pydantic import ValidationError
 from rich_argparse import RichHelpFormatter
 
 from docs.doc_index import DocIndex
 from docs.presentation_template_md import PresentationTemplatesMd
+from docs.subsection_index import SubSectionIndex
 from spec.signed_doc import SignedDoc
 
 from .form_templates_md import FormTemplatesMd
@@ -70,7 +72,14 @@ def main() -> None:
     args = parse_args()
 
     # Get the compiled documentation json file
-    spec = SignedDoc.load(args.spec)
+    try:
+        spec = SignedDoc.load(args.spec)
+    except ValidationError as e:
+        SignedDoc.validation_error(e)
+        sys.exit(1)
+    except Exception:  # noqa: BLE001
+        rich.get_console().print_exception(show_locals=True)
+        sys.exit(1)
 
     # We start out hoping everything is OK.
     good = True
@@ -85,6 +94,8 @@ def main() -> None:
     good &= DocIndex(args, spec).save_or_validate()
     good &= FormTemplatesMd(args, spec).save_or_validate()
     good &= PresentationTemplatesMd(args, spec).save_or_validate()
+    good &= SubSectionIndex(args, spec, template="key_derivation/.pages.jinja").save_or_validate()
+    good &= SubSectionIndex(args, spec, template="voting_process/.pages.jinja").save_or_validate()
 
     if not good:
         rich.print("File Comparisons Failed, Documentation is not current.")
