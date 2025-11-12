@@ -66,6 +66,14 @@ impl Cip0134UriSet {
         &self.0.c_uris
     }
 
+    /// Returns an iterator over of `Cip0134Uri`.
+    pub fn values(&self) -> impl Iterator<Item = &Cip0134Uri> {
+        self.x_uris()
+            .values()
+            .chain(self.c_uris().values())
+            .flat_map(|uris| uris.iter())
+    }
+
     /// Returns `true` if both x509 and c509 certificate maps are empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -90,7 +98,7 @@ impl Cip0134UriSet {
         result
     }
 
-    /// Returns a list of stake addresses by the given role.
+    /// Returns a set of stake addresses by the given role.
     #[must_use]
     pub fn role_stake_addresses(
         &self,
@@ -107,13 +115,10 @@ impl Cip0134UriSet {
             .collect()
     }
 
-    /// Returns a list of all stake addresses.
+    /// Returns a set of all stake addresses.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
-        self.x_uris()
-            .values()
-            .chain(self.c_uris().values())
-            .flat_map(|uris| uris.iter())
+        self.values()
             .filter_map(|uri| {
                 match uri.address() {
                     Address::Stake(a) => Some(a.clone().into()),

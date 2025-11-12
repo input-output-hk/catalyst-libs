@@ -9,7 +9,9 @@ use std::{
 
 use anyhow::Context;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{hashes::TransactionId, Point, StakeAddress, TxnIndex};
+use cardano_blockchain_types::{
+    hashes::TransactionId, pallas_addresses::Address, Cip0134Uri, Point, StakeAddress, TxnIndex,
+};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
@@ -344,10 +346,29 @@ impl RegistrationChain {
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 
-    /// Returns all stake addresses associated to this registration.
+    /// Returns all stake addresses associated to this chain.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
-        self.inner.certificate_uris.stake_addresses()
+        let stolen_stake_addresses = self
+            .inner
+            .stolen_uris
+            .iter()
+            .flat_map(|v| {
+                v.data().iter().filter_map(|uri| {
+                    match uri.address() {
+                        Address::Stake(a) => Some(a.clone().into()),
+                        _ => None,
+                    }
+                })
+            })
+            .collect();
+
+        self.inner
+            .certificate_uris
+            .stake_addresses()
+            .difference(&stolen_stake_addresses)
+            .cloned()
+            .collect()
     }
 }
 
@@ -375,6 +396,9 @@ struct RegistrationChainInner {
     simple_keys: HashMap<usize, Vec<PointData<Option<VerifyingKey>>>>,
     /// List of point + transaction index, and certificate key hash.
     revocations: Vec<PointData<CertKeyHash>>,
+
+    /// URIs which are stolen by another registration chains.
+    stolen_uris: Vec<PointData<Box<[Cip0134Uri]>>>,
 
     // Role
     /// Map of role number to list point + transaction index, and role data.
@@ -494,6 +518,7 @@ impl RegistrationChainInner {
             certificate_uris,
             simple_keys,
             revocations,
+            stolen_uris: vec![],
             role_data_history,
             role_data_record,
             payment_history,
@@ -514,10 +539,25 @@ impl RegistrationChainInner {
         let mut new_inner = self.clone();
 
         let Some(prv_tx_id) = cip509.previous_transaction() else {
-            cip509
-                .report()
-                .missing_field("previous transaction ID", context);
-            return None;
+            if let Some(cat_id) = cip509.catalyst_id() {
+                if cat_id == &self.catalyst_id {
+                    cip509.report().functional_validation(
+                        &format!(
+                            "Trying to apply the first registration to the assosiated {} again",
+                            cat_id.as_short_id()
+                        ),
+                        "It isn't allowed to submit first registration twice",
+                    );
+                    return None;
+                }
+
+                return new_inner.update_cause_another_chain(cip509);
+            } else {
+                cip509
+                    .report()
+                    .missing_field("previous transaction ID", context);
+                return None;
+            }
         };
 
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
@@ -601,6 +641,32 @@ impl RegistrationChainInner {
         );
 
         Some(new_inner)
+    }
+
+    /// Update the registration chain with the `cip509` assosiated to another chain.
+    /// This is the case when registration for different chain affecting the current one,
+    /// by invalidating some data for the current registration chain (stoling stake
+    /// addresses etc.).
+    ///
+    /// The provided `cip509` should be fully validated by another chain before trying to
+    /// submit to the current one.
+    #[must_use]
+    fn update_cause_another_chain(
+        mut self,
+        cip509: &Cip509,
+    ) -> Option<Self> {
+        if let Some(uri_set) = cip509.certificate_uris() {
+            let origin = cip509.origin().clone();
+            self.stolen_uris.push(PointData::new(
+                origin,
+                uri_set
+                    .values()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .into_boxed_slice(),
+            ));
+        }
+        Some(self)
     }
 
     /// Get the latest signing public key for a role.
