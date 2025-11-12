@@ -38,7 +38,7 @@ pub struct ElectionPublicKey(pub(crate) GroupElement);
 
 #[cfg(test)]
 mod arbitrary_impl {
-    use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
+    use proptest::prelude::{Arbitrary, BoxedStrategy, Strategy, any};
 
     use super::{ElectionSecretKey, Scalar};
 

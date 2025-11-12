@@ -5,6 +5,7 @@ import typing
 
 from pydantic import HttpUrl
 
+from docs.cddl_file import CDDLFile
 from spec.payload import DRAFT7_SCHEMA, DRAFT202012_SCHEMA
 from spec.signed_doc import SignedDoc
 
@@ -65,6 +66,55 @@ This section will be included and updated in future iterations.
 
         return header_docs.strip()
 
+    def document_payload_json(self) -> str:
+        """Generate Payload Documentation - JSON."""
+        docs = ""
+        schema = self._doc.payload.doc_schema
+        if schema is not None:
+            if isinstance(schema, HttpUrl):
+                if schema == DRAFT7_SCHEMA:
+                    docs += "\n**Must be a valid JSON Schema Draft 7 document.**"
+                if schema == DRAFT202012_SCHEMA:
+                    docs += "\n**Must be a valid JSON Schema Draft 2020-12 document.**"
+                else:
+                    docs += f"\nMust be a valid according to <{schema}>."
+                return docs
+
+            docs += f"""\n### Schema
+
+{self.json_example(schema, label="Schema", title="Payload JSON Schema", icon_type="abstract")}
+"""
+        if len(self._doc.payload.examples) > 0:
+            docs += "\n### Example\n" if len(self._doc.payload.examples) < 2 else "\n### Examples\n"  # noqa: PLR2004
+            for example in self._doc.payload.examples:
+                docs += f"{example}\n"
+
+        return docs.strip()
+
+    def document_payload_cbor(self) -> str:
+        """Generate Payload Documentation - CBOR."""
+        docs = ""
+
+        cddl_def = CDDLFile(self._args, self._spec, self._doc.payload.doc_schema)
+        if not cddl_def.save_or_validate():
+            raise ValueError
+
+        docs += f"""\n### Schema
+{cddl_def.markdown_reference(title="Payload CDDL Schema", relative_doc=self)}
+
+#### Sub-schemas
+"""
+        reqs = self._spec.cddl_definitions.required_definitions(self._doc.payload.doc_schema)
+        for req in reqs:
+            cddl_req = CDDLFile(self._args, self._spec, req)
+            if not cddl_req.save_or_validate():
+                raise ValueError
+            docs += f"""
+{cddl_req.markdown_reference(title=f"Required Definition: {req}", relative_doc=self)}
+"""
+
+        return docs.strip()
+
     def document_payload(self) -> str:
         """Generate Payload Documentation."""
         if self._doc.draft and self._doc.payload.description == "":
@@ -85,24 +135,10 @@ In this case, it *MUST* be encoded as a CBOR `null (0xf6)`.
 """
 
         schema = self._doc.payload.doc_schema
-        if schema is not None:
-            if isinstance(schema, HttpUrl):
-                if schema == DRAFT7_SCHEMA:
-                    docs += "\n**Must be a valid JSON Schema Draft 7 document.**"
-                if schema == DRAFT202012_SCHEMA:
-                    docs += "\n**Must be a valid JSON Schema Draft 2020-12 document.**"
-                else:
-                    docs += f"\nMust be a valid according to <{schema}>."
-                return docs
-
-            docs += f"""\n### Schema
-
-{self.json_example(schema, label="Schema", title="Payload JSON Schema", description=docs.strip(), icon_type="abstract")}
-"""
-        if len(self._doc.payload.examples) > 0:
-            docs += "\n### Example\n" if len(self._doc.payload.examples) < 2 else "\n### Examples\n"  # noqa: PLR2004
-            for example in self._doc.payload.examples:
-                docs += f"{example}\n"
+        if schema is not None and isinstance(schema, str):
+            docs += "\n" + self.document_payload_cbor()
+        else:
+            docs += "\n" + self.document_payload_json()
 
         return docs.strip()
 

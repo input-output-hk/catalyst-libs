@@ -3,7 +3,7 @@
 // cspell: words assigng assignt ASSIGNT GENERICPARM genericparm
 
 mod common;
-use common::{rules::*, type_declarations::*, Rule};
+use common::{Rule, rules::*, type_declarations::*};
 
 /// Test if the `genericarg` rule passes properly.
 /// This uses a special rule in the Grammar to test `genericarg` exhaustively.

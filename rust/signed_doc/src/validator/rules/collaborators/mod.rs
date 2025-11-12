@@ -39,31 +39,32 @@ impl CollaboratorsRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        if let Self::Specified { optional } = self {
-            if doc.doc_meta().collaborators().is_empty() && !optional {
-                doc.report().missing_field(
-                    "collaborators",
-                    "Document must have at least one entry in 'collaborators' field",
-                );
-                return Ok(false);
-            }
+        if let Self::Specified { optional } = self
+            && doc.doc_meta().collaborators().is_empty()
+            && !optional
+        {
+            doc.report().missing_field(
+                "collaborators",
+                "Document must have at least one entry in 'collaborators' field",
+            );
+            return Ok(false);
         }
-        if let Self::NotSpecified = self {
-            if !doc.doc_meta().collaborators().is_empty() {
-                doc.report().unknown_field(
-                    "collaborators",
-                    &format!(
-                        "{:#?}",
-                        doc.doc_meta()
-                            .collaborators()
-                            .iter()
-                            .map(ToString::to_string)
-                            .reduce(|a, b| format!("{a}, {b}"))
-                    ),
-                    "Document does not expect to have a 'collaborators' field",
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = self
+            && !doc.doc_meta().collaborators().is_empty()
+        {
+            doc.report().unknown_field(
+                "collaborators",
+                &format!(
+                    "{:#?}",
+                    doc.doc_meta()
+                        .collaborators()
+                        .iter()
+                        .map(ToString::to_string)
+                        .reduce(|a, b| format!("{a}, {b}"))
+                ),
+                "Document does not expect to have a 'collaborators' field",
+            );
+            return Ok(false);
         }
 
         Ok(true)

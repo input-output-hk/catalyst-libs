@@ -9,7 +9,7 @@
 
 use std::fmt::Debug;
 
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumDiscriminants, EnumIs};
 
@@ -189,7 +189,7 @@ impl Encode<()> for GeneralNameValue {
             GeneralNameValue::Unsupported => {
                 return Err(minicbor::encode::Error::message(
                     "Cannot encode unsupported GeneralName value",
-                ))
+                ));
             },
         }
         Ok(())
@@ -268,7 +268,7 @@ mod test_general_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let hw = OtherNameHardwareModuleName::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1), vec![
+        let hw = OtherNameHardwareModuleName::new(oid!(2.16.840.1.101.3.4.2.1), vec![
             0x01, 0x02, 0x03, 0x04,
         ]);
         let gn = GeneralName::new(
@@ -320,7 +320,7 @@ mod test_general_name {
 
         let gn = GeneralName::new(
             GeneralNameTypeRegistry::RegisteredID,
-            GeneralNameValue::Oid(C509oid::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1))),
+            GeneralNameValue::Oid(C509oid::new(oid!(2.16.840.1.101.3.4.2.1))),
         );
         gn.encode(&mut encoder, &mut ())
             .expect("Failed to encode GeneralName");
@@ -341,7 +341,7 @@ mod test_general_name {
 
         let gn = GeneralName::new(
             GeneralNameTypeRegistry::OtherNameSmtpUTF8Mailbox,
-            GeneralNameValue::Oid(C509oid::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1))),
+            GeneralNameValue::Oid(C509oid::new(oid!(2.16.840.1.101.3.4.2.1))),
         );
         gn.encode(&mut encoder, &mut ())
             .expect("Failed to encode GeneralName");

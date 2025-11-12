@@ -2,7 +2,7 @@
 
 use catalyst_types::problem_report::ProblemReport;
 use cbork_utils::decode_helper::decode_helper;
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 use strum_macros::FromRepr;
 
 use crate::cardano::cip509::rbac::Cip509RbacMetadataInt;

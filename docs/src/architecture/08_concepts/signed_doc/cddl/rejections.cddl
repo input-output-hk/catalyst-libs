@@ -1,0 +1,49 @@
+; For any documents that were rejected for a defined reason,
+; the list of document references which were rejected.
+
+
+; List of documents rejected at this checkpoint, grouped by reason.
+rejections = {
+    + rejection-reason => [ + document_ref ]
+}
+
+; The reason a document was rejected at this checkpoint.
+rejection-reason = (
+    "already-voted" /  ; Used to indicate a voter already voted in another system (ie, Jormungandr)
+    "obsolete-vote"    ; Used to indicate a vote that was cast was replaced with a newer vote.
+)
+
+; Reference to a single Signed Document
+document_ref = [
+  document_id
+  document_ver
+  document_locator
+]
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)
+
+; Document Version
+document_ver = uuid_v7
+
+; Where a document can be located, must be a unique identifier.
+document_locator = {
+  "cid" : cid
+}
+
+; IPLD content identifier.
+; Currently limited to SHA2-256 based CIDs.
+cid = #6.42(bytes .abnfb ("cid" .det cbor-cid ))
+
+; CIDv1 ABNF Constrained for SHA2-256
+cbor-cid = '
+    cid = cidv1 codec-cbor sha2-256 digest-32 digest
+    cidv1 = %x00 %x01
+    codec-cbor = %x51
+    sha2-256 = %x12
+    digest-32 = %x20
+    digest = 32(%x00-FF)
+'

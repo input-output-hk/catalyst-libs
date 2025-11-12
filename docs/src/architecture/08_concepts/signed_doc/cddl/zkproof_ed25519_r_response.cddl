@@ -1,0 +1,8 @@
+; ZK Proof Response values for Ed25519.
+
+
+; ZK Proof Response values for Ed25519.
+zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
+
+; An individual Ed25519 scalar used in ZK Proofs.
+zkproof-ed25519-scalar = bytes .size 32

@@ -149,10 +149,6 @@ See `[presentation_templates.md](TODO)`
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
 ??? abstract "Schema: Payload [JSON][RFC8259] Schema"
 
-    The Presentation Template is defined by its schema.
-    See `[presentation_templates.md](TODO)`
-
-
     ```json
     {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -255,7 +251,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-10 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

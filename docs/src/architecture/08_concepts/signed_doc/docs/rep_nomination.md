@@ -74,16 +74,16 @@ to re-delegate to affirm the delegates latest nomination.
 * Allows a Representative to create or update their profile for a category.
 * The Representative sets their status to 'active' to be discoverable for delegation.
 * The Representative `revokes` the Nomination to signal they are no longer
-    participating in the category.
+  participating in the category.
 * Nominations are not valid if the latest Delegation by the Representative does NOT
-    reference their latest Nomination.
+  reference their latest Nomination.
 
 #### Back End
 
 * The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
 * The system will only consider Representatives as having valid Nominations if:
-  * Their latest Nomination in a Contest is not Revoked.
-  * Their latest Delegation in a Contest references their latest Nomination.
+    * Their latest Nomination in a Contest is not Revoked.
+    * Their latest Delegation in a Contest references their latest Nomination.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -212,7 +212,7 @@ Revoked documents are flagged as no longer valid, and should not be displayed.
 As a special case, if the revocations are set to `true` then all versions of the document
 are revoked, including the latest document.
 
-In this case, when the latest document is revoked, the payload may be empty.
+In this case, when the latest document is revoked, the payload may be `nil`.
 Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
 and its payload is to be assumed to be invalid.
 
@@ -256,8 +256,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`template`](../metadata.md#template)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -280,7 +280,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-10 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

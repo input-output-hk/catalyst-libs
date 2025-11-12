@@ -4,16 +4,15 @@
 //! use catalyst_voting::vote_protocol::{
 //!     committee::ElectionSecretKey,
 //!     tally::{
-//!         decrypt_tally,
+//!         DecryptionTallySetup, decrypt_tally,
 //!         proof::{generate_tally_proof_with_default_rng, verify_tally_proof},
-//!         tally, DecryptionTallySetup,
+//!         tally,
 //!     },
 //!     voter::{
-//!         encrypt_vote_with_default_rng,
+//!         Vote, encrypt_vote_with_default_rng,
 //!         proof::{
-//!             generate_voter_proof_with_default_rng, verify_voter_proof, VoterProofCommitment,
+//!             VoterProofCommitment, generate_voter_proof_with_default_rng, verify_voter_proof,
 //!         },
-//!         Vote,
 //!     },
 //! };
 //!

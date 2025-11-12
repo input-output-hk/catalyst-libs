@@ -1,0 +1,170 @@
+---
+Title: Proposals, Templates, and Pub/Sub Discovery
+Authors:
+    - Steven Johnson <steven.johnson@iohk.io>
+Created: 2025-11-05
+order: 2
+---
+
+## Abstract
+
+Shows how Proposal documents relate to their Templates, how submission state is determined,
+and how all artifacts are discovered and validated in a decentralized pub/sub network.
+
+## Documents and Roles
+
+* [Proposal](../docs/proposal.md): the authored content.
+* [Proposal Form Template](../docs/proposal_form_template.md): defines schema and form hints.
+* [Proposal Submission Action](../docs/proposal_submission_action.md): signals `final`, `draft`, or `hide`.
+* *Optional [Proposal Comment](../docs/proposal_comment.md)* and
+  *[Proposal Comment Form Template](../docs/proposal_comment_form_template.md)* artifacts exist;
+* *Optional [Proposal Moderation Action](../docs/proposal_moderation_action.md)* artifacts exist;
+
+## Relationships
+
+* A Proposal references a Proposal Form Template via [`metadata.template`](../metadata.md#template)
+  and a system parameters anchor via [`metadata.parameters`](../metadata.md#parameters).
+    * The template’s own [`parameters`](../metadata.md#parameters) must transitively align to the
+      same Brand/Campaign/Category chain.
+* A Proposal Submission Action references the Proposal via `metadata.ref` and repeats `metadata.parameters`,
+  linked to [`ref`](../metadata.md#ref) for consistency.
+    * Multiple collaborators may exist; all listed collaborators must submit equivalent `final`
+      actions to be considered final by the deadline.
+
+The Deadline for a Proposal to be Final will be defined in the applicable parameters document(s),
+typically the Category Parameters document.
+
+## Versioning and Collaboration
+
+* Proposal [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are [UUIDv7][RFC9562-V7].
+* The first Proposal version must be signed by the original author;
+  later versions may be signed by the author or a collaborator from the immediately prior version.
+  See: [Proposal validation](../docs/proposal.md#validation).
+* Collaborators are listed in `metadata.collaborators`;
+  actions from collaborators confirm or rescind participation.
+  See: [Proposal Submission Action](../docs/proposal_submission_action.md).
+
+## Pub/Sub Discovery Model
+
+### Overview
+
+* Publication and topic routing are defined by the parameters anchor (brand/campaign/category).
+  See: [Parameters Hierarchy and Discovery](parameters_hierarchy_and_discovery.md) for topic
+  scope, naming, and subscription strategies.
+* Producers publish each document to the topic derived from its `metadata.parameters`.
+* Consumers subscribe to the relevant topics for their chosen anchor(s) and filter by document type.
+
+### Discovery Workflow
+
+1. Discover templates
+    * Subscribe to the anchor topic(s) and collect all
+      [Proposal Form Template](../docs/proposal_form_template.md) documents.
+    * For each `template.id`, select the latest `template.ver` (respecting `revocations`).
+    * The resulting set enumerates which proposal templates are enabled at the given anchor.
+2. Discover proposals
+    * Collect or Publish new [Proposal](../docs/proposal.md) documents that reference one of the
+      discovered templates via `metadata.template`.
+    * Enforce that `metadata.parameters` on the proposal matches the anchor and links to the same
+      parameters chain as the template.
+3. Ingest submission actions
+    * Collect [Proposal Submission Action](../docs/proposal_submission_action.md) documents by
+      proposal `metadata.ref`.
+    * Track the latest action per signer (author or listed collaborator): `final`, `draft`, or `hide`.
+    * A proposal is eligible to be “final” only if all required signers have a latest `final`
+      action by the configured deadline.
+4. Apply moderation and policy
+    * If present, process [Proposal Moderation Action](../docs/proposal_moderation_action.md)
+      artifacts that may hide or disqualify proposals (policy‑dependent).
+    * Respect `hide` semantics from submission actions and moderation decisions in UI and candidate
+      selection.
+5. Handle revocations
+    * Honor [`revocations`](../metadata.md#revocations) on proposals or related artifacts.
+      Implementations should treat comments under a revoked proposal as revoked for visibility,
+      unless the proposal is re‑instated.
+6. Comments
+    * [Proposal Comment](../docs/proposal_comment.md) documents attach to a proposal;
+      replies attach to another comment.
+    * All comments and replies must link to the same proposal; cross‑proposal replies are invalid.
+    * Comments may be moderated via [Proposal Moderation Action](../docs/proposal_moderation_action.md)
+      and hidden/redacted accordingly.
+
+### Finalization
+
+* At the configured moderation/finalization deadline (from parameters), compute the final set of
+  candidate proposals for the contest at the same anchor level.
+* The candidate set consists of proposals that are “final” (per signer unanimity) and not
+  disqualified by moderation.
+* These candidates feed into the contest voting process (described in the voting flow documentation).
+
+### Flow (Mermaid)
+
+```mermaid
+flowchart TD
+  A["Subscribe to Topics per Anchor<br/>(Brand/Campaign/Category)"] --> B[Discover Templates]
+  B --> C[Discover/Publish Proposals<br/>referencing template + parameters]
+  C --> D[Ingest/Publish Submission Actions<br/>author + collaborators]
+  D --> E{By deadline:<br/>all-final?}
+  E -- No --> F[Status: Draft/Hidden]
+  E -- Yes --> G[Status: Final Candidate]
+  C --> H[Ingest Moderation Actions]
+  H --> I{Moderated?}
+  I -- No --> K[No change]
+  I -- Yes --> J[Hide/Disqualify<br/>per policy]
+  G --> L[Candidate Set]
+  K --> L
+  L --> M[Contest Voting Inputs]
+```
+
+### Consumer Pipeline
+
+1. Template intake
+    * Verify signature, type, id/ver, `metadata.parameters`, and payload schema validity.
+    * Index by `(template-id, ver)` and by anchor.
+2. Proposal intake
+    * Verify signature, `metadata.template`, `metadata.parameters` (linked to template),
+      and payload against the template schema.
+    * Track authorship and collaborators; index by `(proposal-id, ver)` and by anchor.
+3. Submission Action intake
+    * Verify signature from author or collaborator; verify `metadata.ref`
+      points to the intended proposal and `metadata.parameters` matches (linked_refs to `ref`).
+    * For each signer, record latest action: `final`, `draft`, or `hide`.
+    * A proposal is “final” iff all listed collaborators (and the author) have a latest
+      `final` action by the configured deadline.
+4. Moderation Action intake (optional)
+    * Verify signature and policy scope; verify `metadata.ref` points to the intended proposal and
+      `metadata.parameters` matches.
+    * Apply moderation outcomes to proposal visibility and eligibility per policy.
+
+### Status Computation
+
+* Final Set: proposals with all required `final` actions, within configured windows defined by
+  parameters, and not disqualified by moderation.
+* Draft Only: proposals with at least one `draft` and no conflicting `final` from that signer.
+* Hidden: honor `hide` semantics (author hides the proposal; collaborator hide = collaborator does
+  not wish to be shown), and apply moderation decisions.
+
+## Validation Summary
+
+* Verify `type`, `id`, `ver`, `kid`, `content type`, and (if present) `content-encoding`.
+* Verify `metadata.template` exists and aligns via `metadata.parameters` up the same chain.
+* Validate the proposal payload against the referenced template [JSON Schema][JSON Schema-2020-12].
+* For submission actions, enforce signer rules and collaborator unanimity for `final`.
+* Apply [`revocations`](../metadata.md#revocations) and prefer the highest valid
+  [`ver`](../metadata.md#ver) per [`id`](../metadata.md#id).
+
+## Content Addressing and Retrieval
+
+* All documents carry a `document_ref` that includes a [CBOR][RFC8949] Tag 42 CID locator.
+  See: [Document Reference](../metadata.md#document-reference).
+* Pub/sub provides dissemination; the CID enables retrieval from content-addressed
+  storage and ensures immutability.
+
+## Operational Notes
+
+* Timelines and windows come from the applicable parameters (brand/campaign/category/contest);
+  consumers should enforce submission cutoffs as configured.
+* Indexes: maintain by proposal, by anchor, and by template to accelerate UI queries.
+
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
+[RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html

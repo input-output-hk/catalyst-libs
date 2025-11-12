@@ -6,7 +6,7 @@ use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
 use pallas_addresses::Network as PallasNetwork;
 use pallas_primitives::types::network_constant::{
-    MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC,
+    MAINNET_MAGIC, PRE_PRODUCTION_MAGIC, PREVIEW_MAGIC,
 };
 use pallas_traverse::wellknown::GenesisValues;
 use tracing::debug;

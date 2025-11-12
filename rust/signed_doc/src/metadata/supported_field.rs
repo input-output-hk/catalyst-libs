@@ -7,8 +7,8 @@ use serde::Deserialize;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
-    metadata::collaborators::Collaborators, Chain, ContentEncoding, ContentType, DocType,
-    DocumentRefs, Section,
+    Chain, ContentEncoding, ContentType, DocType, DocumentRefs, Section,
+    metadata::collaborators::Collaborators,
 };
 
 /// COSE label. May be either a signed integer or a string.
