@@ -179,7 +179,9 @@ impl Cip0134UriSet {
                 },
                 X509DerCert::X509Cert(_) => {
                     if let Some(uris) = metadata.certificate_uris.x_uris().get(&index) {
-                        taken_uris.remove(&uris);
+                        uris.iter().for_each(|v| {
+                            taken_uris.remove(v);
+                        });
                         x_uris.insert(index, uris.clone());
                     }
                 },
@@ -199,7 +201,9 @@ impl Cip0134UriSet {
                 },
                 C509Cert::C509Certificate(_) => {
                     if let Some(uris) = metadata.certificate_uris.c_uris().get(&index) {
-                        taken_uris.remove(&uris);
+                        uris.iter().for_each(|v| {
+                            taken_uris.remove(v);
+                        });
                         c_uris.insert(index, uris.clone());
                     }
                 },
@@ -224,10 +228,16 @@ impl Cip0134UriSet {
     ) -> Self {
         let taken_uri_set = metadata.certificate_uris.values().collect::<HashSet<_>>();
         let current_uris_set = self.values().collect::<HashSet<_>>();
-        let taken_uris = current_uris_set.intersection(&taken_uri_set);
+        let latest_taken_uris = current_uris_set.intersection(&taken_uri_set);
+        let latest_taken_uris = latest_taken_uris.cloned().cloned().collect::<Vec<_>>();
 
-        let Cip0134UriSetInner { x_uris, c_uris, .. } = Arc::unwrap_or_clone(self.0);
-        let taken_uris = taken_uris.cloned().cloned().collect();
+        let Cip0134UriSetInner {
+            x_uris,
+            c_uris,
+            mut taken_uris,
+        } = Arc::unwrap_or_clone(self.0);
+
+        taken_uris.extend(latest_taken_uris);
 
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,

@@ -347,7 +347,7 @@ impl RegistrationChain {
     /// Returns all stake addresses associated to this chain.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
-        self.inner.certificate_uris.stake_addresses();
+        self.inner.certificate_uris.stake_addresses()
     }
 
     /// Returns the latest know applied registration's `PointTxnIdx`.
@@ -548,7 +548,7 @@ impl RegistrationChainInner {
                     return None;
                 }
 
-                return new_inner.update_cause_another_chain(cip509);
+                return Some(new_inner.update_cause_another_chain(cip509));
             } else {
                 cip509
                     .report()
