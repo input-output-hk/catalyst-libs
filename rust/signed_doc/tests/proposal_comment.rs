@@ -72,6 +72,12 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let template_ref = DocumentRef::try_from(&template)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let comment_ref = DocumentRef::try_from(&comment)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -79,22 +85,10 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                },
-                "reply": {
-                    "id": comment.doc_id()?,
-                    "ver": comment.doc_ver()?
-                },
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref],
+                "reply": [comment_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -114,6 +108,11 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let template_ref = DocumentRef::try_from(&template)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -121,18 +120,9 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                },
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -152,6 +142,11 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let template_ref = DocumentRef::try_from(&template)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -159,18 +154,9 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref]
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -191,24 +177,20 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let template_ref = DocumentRef::try_from(&template)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -228,6 +210,10 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -235,14 +221,8 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -263,6 +243,10 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let template_ref = DocumentRef::try_from(&template)?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -270,14 +254,8 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
+                "ref": [proposal_ref],
+                "template": [template_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -296,6 +274,10 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let template_ref = DocumentRef::try_from(&template)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -303,14 +285,8 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "template": [template_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?

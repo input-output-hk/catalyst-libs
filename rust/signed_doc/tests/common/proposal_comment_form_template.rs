@@ -10,6 +10,9 @@ pub fn proposal_comment_form_template_doc(
     let id = UuidV7::new();
     let (sk, kid) = create_dummy_key_pair(None);
     provider.add_sk(kid.clone(), sk.clone());
+
+    let parameters_ref = DocumentRef::try_from(parameters_doc)?;
+
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::SchemaJson,
@@ -17,10 +20,7 @@ pub fn proposal_comment_form_template_doc(
             "type": doc_types::PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
             "id": id,
             "ver": id,
-            "parameters": {
-                    "id": parameters_doc.doc_id()?,
-                    "ver": parameters_doc.doc_ver()?,
-                }
+            "parameters": [parameters_ref]
         }))?
         .with_json_content(&serde_json::json!({}))?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?

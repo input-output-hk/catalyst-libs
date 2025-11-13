@@ -68,6 +68,10 @@ mod common;
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Role0)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -75,14 +79,8 @@ mod common;
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({
                 "action": "final"
@@ -103,6 +101,10 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -110,14 +112,8 @@ mod common;
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({
                 "action": "final"
@@ -139,6 +135,10 @@ mod common;
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -146,14 +146,8 @@ mod common;
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -173,6 +167,10 @@ mod common;
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -180,14 +178,8 @@ mod common;
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!("null"))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -207,20 +199,18 @@ mod common;
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({
                 "action": "final"
@@ -242,6 +232,9 @@ mod common;
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let parameters_ref = DocumentRef::try_from(&parameters)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json.to_string(),
@@ -249,10 +242,7 @@ mod common;
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({
                 "action": "final"
@@ -274,6 +264,9 @@ mod common;
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let proposal_ref = DocumentRef::try_from(&proposal)?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -281,10 +274,7 @@ mod common;
                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
+                "ref": [proposal_ref],
             }))?
             .with_json_content(&serde_json::json!({
                 "action": "final"

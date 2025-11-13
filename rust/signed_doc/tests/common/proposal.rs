@@ -13,6 +13,10 @@ pub fn proposal_doc(
     let id = UuidV7::new();
     let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
     provider.add_sk(kid.clone(), sk.clone());
+
+    let template_ref = DocumentRef::try_from(template_doc)?;
+    let parameters_ref = DocumentRef::try_from(parameters_doc)?;
+
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json,
@@ -20,14 +24,8 @@ pub fn proposal_doc(
             "type": doc_types::PROPOSAL.clone(),
             "id": id,
             "ver": id,
-            "template": {
-                "id": template_doc.doc_id()?,
-                "ver": template_doc.doc_ver()?,
-            },
-            "parameters": {
-                "id": parameters_doc.doc_id()?,
-                "ver": parameters_doc.doc_ver()?,
-            }
+            "template": [template_ref],
+            "parameters": [parameters_ref]
         }))?
         .with_json_content(&serde_json::json!({}))?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?

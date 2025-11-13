@@ -12,6 +12,10 @@ pub fn proposal_submission_action_doc(
     let (sk, kid) = get_doc_kid_and_sk(provider, ref_doc, 0)
         .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+    let ref_doc_ref = DocumentRef::try_from(ref_doc)?;
+    let parameters_doc_ref = DocumentRef::try_from(parameters_doc)?;
+
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json,
@@ -19,14 +23,8 @@ pub fn proposal_submission_action_doc(
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
             "id": id,
             "ver": id,
-            "ref": {
-                "id": ref_doc.doc_id()?,
-                "ver": ref_doc.doc_ver()?,
-            },
-            "parameters": {
-                "id": parameters_doc.doc_id()?,
-                "ver": parameters_doc.doc_ver()?,
-            }
+            "ref": [ref_doc_ref],
+            "parameters": [parameters_doc_ref]
         }))?
         .with_json_content(&serde_json::json!({
             "action": "final"
