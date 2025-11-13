@@ -9,9 +9,7 @@ use std::{
 
 use anyhow::Context;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{
-    hashes::TransactionId, pallas_addresses::Address, Cip0134Uri, Point, StakeAddress, TxnIndex,
-};
+use cardano_blockchain_types::{hashes::TransactionId, Point, StakeAddress, TxnIndex};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
@@ -26,8 +24,8 @@ use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::{
     cardano::cip509::{
-        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
-        RoleDataRecord, ValidationSignature,
+        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
+        RoleData, RoleDataRecord, ValidationSignature,
     },
     providers::RbacRegistrationProvider,
 };
@@ -349,26 +347,13 @@ impl RegistrationChain {
     /// Returns all stake addresses associated to this chain.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
-        let stolen_stake_addresses = self
-            .inner
-            .stolen_uris
-            .iter()
-            .flat_map(|v| {
-                v.data().iter().filter_map(|uri| {
-                    match uri.address() {
-                        Address::Stake(a) => Some(a.clone().into()),
-                        _ => None,
-                    }
-                })
-            })
-            .collect();
+        self.inner.certificate_uris.stake_addresses();
+    }
 
-        self.inner
-            .certificate_uris
-            .stake_addresses()
-            .difference(&stolen_stake_addresses)
-            .cloned()
-            .collect()
+    /// Returns the latest know applied registration's `PointTxnIdx`.
+    #[must_use]
+    pub fn latest_applied(&self) -> PointTxnIdx {
+        self.inner.latest_applied()
     }
 }
 
@@ -379,6 +364,9 @@ struct RegistrationChainInner {
     catalyst_id: CatalystId,
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: PointData<TransactionId>,
+    /// The latest `PointTxnIdx` of the stolen taken URIs by another registration chains.
+    latest_taken_uris_point: Option<PointTxnIdx>,
+
     /// List of purpose for this registration chain
     purpose: Vec<UuidV4>,
 
@@ -396,9 +384,6 @@ struct RegistrationChainInner {
     simple_keys: HashMap<usize, Vec<PointData<Option<VerifyingKey>>>>,
     /// List of point + transaction index, and certificate key hash.
     revocations: Vec<PointData<CertKeyHash>>,
-
-    /// URIs which are stolen by another registration chains.
-    stolen_uris: Vec<PointData<Box<[Cip0134Uri]>>>,
 
     // Role
     /// Map of role number to list point + transaction index, and role data.
@@ -516,9 +501,9 @@ impl RegistrationChainInner {
             x509_certs,
             c509_certs,
             certificate_uris,
+            latest_taken_uris_point: None,
             simple_keys,
             revocations,
-            stolen_uris: vec![],
             role_data_history,
             role_data_record,
             payment_history,
@@ -536,6 +521,18 @@ impl RegistrationChainInner {
         signing_pk: VerifyingKey,
     ) -> Option<Self> {
         let context = "Registration Chain update";
+        if self.latest_applied().point() >= cip509.origin().point() {
+            cip509.report().functional_validation(
+                &format!(
+                    "The provided registration is earlier {} than the current one {}",
+                    cip509.origin().point(),
+                    self.current_tx_id_hash.point()
+                ),
+                "Provided registrations must be applied in the correct order.",
+            );
+            return None;
+        }
+
         let mut new_inner = self.clone();
 
         let Some(prv_tx_id) = cip509.previous_transaction() else {
@@ -654,19 +651,12 @@ impl RegistrationChainInner {
     fn update_cause_another_chain(
         mut self,
         cip509: &Cip509,
-    ) -> Option<Self> {
-        if let Some(uri_set) = cip509.certificate_uris() {
-            let origin = cip509.origin().clone();
-            self.stolen_uris.push(PointData::new(
-                origin,
-                uri_set
-                    .values()
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .into_boxed_slice(),
-            ));
+    ) -> Self {
+        if let Some(reg) = cip509.metadata() {
+            self.certificate_uris = self.certificate_uris.update_taken_uris(reg);
         }
-        Some(self)
+        self.latest_taken_uris_point = Some(cip509.origin().clone());
+        self
     }
 
     /// Get the latest signing public key for a role.
@@ -699,6 +689,20 @@ impl RegistrationChainInner {
                 key.data().extract_pk().map(|pk| (pk, rotation))
             })
         })
+    }
+
+    /// Returns the latest know applied registration's `PointTxnIdx`.
+    #[must_use]
+    fn latest_applied(&self) -> PointTxnIdx {
+        if let Some(latest_taken_uris_point) = &self.latest_taken_uris_point {
+            if latest_taken_uris_point.point() > self.current_tx_id_hash.point() {
+                return latest_taken_uris_point.clone();
+            }
+        }
+        PointTxnIdx::new(
+            self.current_tx_id_hash.point().clone(),
+            self.current_tx_id_hash.txn_index(),
+        )
     }
 }
 

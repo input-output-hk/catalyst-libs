@@ -157,10 +157,7 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, Strin
         return Vec::new();
     };
 
-    uris.x_uris()
-        .iter()
-        .chain(uris.c_uris())
-        .flat_map(|(_index, uris)| uris.iter())
+    uris.values()
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
                 let bech32 = uri.address().to_string();
@@ -185,10 +182,7 @@ fn extract_payment_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, Str
         return Vec::new();
     };
 
-    uris.x_uris()
-        .iter()
-        .chain(uris.c_uris())
-        .flat_map(|(_index, uris)| uris.iter())
+    uris.values()
         .filter_map(|uri| {
             if let Address::Shelley(a) = uri.address() {
                 match a.payment() {
