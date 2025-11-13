@@ -28,7 +28,7 @@
 //! # let doc: CatalystSignedDocument = todo!();
 //! let cid = doc.to_cid_v1()?;
 //! let cid_string = cid.to_string();
-//! // Result: "bafyrei..." (base32-encoded CID v1)
+//! // Result: "b..." (base32-encoded CID v1)
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
@@ -71,7 +71,7 @@ pub enum CidError {
     Encoding(String),
 }
 
-/// A newtype wrapper around `cid::Cid` for type-safe CID v1 handling.
+/// A new type wrapper around `cid::Cid` for type-safe CID v1 handling.
 ///
 /// This type provides conversion methods and trait implementations for working with
 /// CID v1 identifiers, especially in the context of CBOR-encoded Catalyst Signed
@@ -281,7 +281,7 @@ mod tests {
         let cid_string = cid.to_string();
 
         // Parse the string back to a CID
-        let cid_from_str = Cid::from_str(&cid_string).expect("CID string should be parseable");
+        let cid_from_str = Cid::from_str(&cid_string).expect("CID string should be parsable");
 
         assert_eq!(cid, cid_from_str);
     }
