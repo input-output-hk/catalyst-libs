@@ -20,7 +20,7 @@ pub struct DocumentRef {
     /// Reference to the Document Ver
     ver: UuidV7,
     /// Document locator
-    #[serde(rename = "cid", default)]
+    #[serde(rename = "cid")]
     doc_locator: DocLocator,
 }
 
@@ -62,10 +62,11 @@ impl TryFrom<&CatalystSignedDocument> for DocumentRef {
     type Error = anyhow::Error;
 
     fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
+        let cid = value.to_cid_v1()?;
         Ok(Self::new(
             value.doc_id()?,
             value.doc_ver()?,
-            DocLocator::default(),
+            DocLocator::from(cid),
         ))
     }
 }
