@@ -5,7 +5,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use pallas_addresses::Address;
 
 /// A URI in the CIP-0134 format.
