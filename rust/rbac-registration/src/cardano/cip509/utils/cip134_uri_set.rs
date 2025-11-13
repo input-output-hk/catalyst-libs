@@ -73,12 +73,13 @@ impl Cip0134UriSet {
         &self.0.c_uris
     }
 
-    /// Returns an iterator over of `Cip0134Uri`.
+    /// Returns an iterator over of active (without taken) `Cip0134Uri`.
     pub(crate) fn values(&self) -> impl Iterator<Item = &Cip0134Uri> {
         self.x_uris()
             .values()
             .chain(self.c_uris().values())
             .flat_map(|uris| uris.iter())
+            .filter(|v| !self.0.taken_uris.contains(v))
     }
 
     /// Returns `true` if both x509 and c509 certificate maps are empty.
@@ -224,12 +225,16 @@ impl Cip0134UriSet {
     #[must_use]
     pub fn update_taken_uris(
         self,
-        metadata: &Cip509RbacMetadata,
+        reg: &Cip509RbacMetadata,
     ) -> Self {
-        let taken_uri_set = metadata.certificate_uris.values().collect::<HashSet<_>>();
         let current_uris_set = self.values().collect::<HashSet<_>>();
-        let latest_taken_uris = current_uris_set.intersection(&taken_uri_set);
-        let latest_taken_uris = latest_taken_uris.cloned().cloned().collect::<Vec<_>>();
+
+        let latest_taken_uris = reg
+            .certificate_uris
+            .values()
+            .filter(|v| current_uris_set.contains(v))
+            .cloned()
+            .collect::<Vec<_>>();
 
         let Cip0134UriSetInner {
             x_uris,
