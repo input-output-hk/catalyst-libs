@@ -89,7 +89,8 @@ pub mod tests {
             if let Some(dr) = doc_ref {
                 self.signed_doc.insert(dr, doc.clone());
             } else {
-                let dr = DocumentRef::new(doc.doc_id()?, doc.doc_ver()?, DocLocator::default());
+                let cid = doc.to_cid_v1()?;
+                let dr = DocumentRef::new(doc.doc_id()?, doc.doc_ver()?, DocLocator::from(cid));
                 self.signed_doc.insert(dr, doc.clone());
             }
             Ok(())

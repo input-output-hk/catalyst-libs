@@ -6,9 +6,10 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::{
-    CatalystSignedDocument, DocLocator, DocumentRef,
+    CatalystSignedDocument, DocumentRef,
     builder::tests::Builder,
     metadata::SupportedField,
+    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
     providers::tests::TestCatalystProvider,
     validator::rules::{DocumentOwnershipRule, utils::create_dummy_key_pair},
 };
@@ -34,7 +35,7 @@ use crate::{
                     DocumentRef::new(
                         doc.doc_id().unwrap(),
                         doc.doc_ver().unwrap(),
-                        DocLocator::default()
+                        create_dummy_doc_locator()
                     )
                 ].into()
             ))
@@ -67,7 +68,7 @@ use crate::{
                     DocumentRef::new(
                         doc.doc_id().unwrap(),
                         doc.doc_ver().unwrap(),
-                        DocLocator::default()
+                        create_dummy_doc_locator()
                     )
                 ].into()
             ))
@@ -122,7 +123,7 @@ use crate::{
                     DocumentRef::new(
                         doc.doc_id().unwrap(),
                         doc.doc_ver().unwrap(),
-                        DocLocator::default()
+                        create_dummy_doc_locator()
                     )
                 ].into()
             ))

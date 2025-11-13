@@ -3,7 +3,8 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    DocLocator, DocumentRef, builder::tests::Builder, metadata::SupportedField,
+    DocumentRef, builder::tests::Builder, metadata::SupportedField,
+    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
     providers::tests::TestCatalystProvider,
 };
 
@@ -18,11 +19,7 @@ use crate::{
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -54,21 +51,11 @@ use crate::{
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc_1.doc_id().unwrap(),
-                    ref_doc_1.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_2.doc_id().unwrap(),
-                    ref_doc_2.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_3.doc_id().unwrap(),
-                    ref_doc_3.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![
+                    DocumentRef::try_from(&ref_doc_1).unwrap(),
+                    DocumentRef::try_from(&ref_doc_2).unwrap(),
+                    DocumentRef::try_from(&ref_doc_3).unwrap(),
+                ]
                 .into(),
             ))
             .build()
@@ -100,21 +87,11 @@ use crate::{
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc_1.doc_id().unwrap(),
-                    ref_doc_1.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_2.doc_id().unwrap(),
-                    ref_doc_2.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_3.doc_id().unwrap(),
-                    ref_doc_3.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![
+                    DocumentRef::try_from(&ref_doc_1).unwrap(),
+                    DocumentRef::try_from(&ref_doc_2).unwrap(),
+                    DocumentRef::try_from(&ref_doc_3).unwrap(),
+                ]
                 .into(),
             ))
             .build()
@@ -145,21 +122,11 @@ use crate::{
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc_1.doc_id().unwrap(),
-                    ref_doc_1.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_2.doc_id().unwrap(),
-                    ref_doc_2.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_3.doc_id().unwrap(),
-                    ref_doc_3.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![
+                    DocumentRef::try_from(&ref_doc_1).unwrap(),
+                    DocumentRef::try_from(&ref_doc_2).unwrap(),
+                    DocumentRef::try_from(&ref_doc_3).unwrap(),
+                ]
                 .into(),
             ))
             .build()
@@ -175,15 +142,11 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(Some(DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default())), &ref_doc).unwrap();
+        provider.add_document(Some(DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator())), &ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -199,7 +162,7 @@ use crate::{
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    DocLocator::default(),
+                    create_dummy_doc_locator(),
                 ),
                 ]
                 .into(),
@@ -253,11 +216,7 @@ async fn ref_multiple_specified_test(
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -289,21 +248,11 @@ async fn ref_multiple_specified_test(
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc_1.doc_id().unwrap(),
-                    ref_doc_1.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_2.doc_id().unwrap(),
-                    ref_doc_2.doc_ver().unwrap(),
-                    DocLocator::default(),
-                ),
-                DocumentRef::new(
-                    ref_doc_3.doc_id().unwrap(),
-                    ref_doc_3.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![
+                    DocumentRef::try_from(&ref_doc_1).unwrap(),
+                    DocumentRef::try_from(&ref_doc_2).unwrap(),
+                    DocumentRef::try_from(&ref_doc_3).unwrap(),
+                ]
                 .into(),
             ))
             .build()
@@ -379,7 +328,7 @@ async fn ref_rule_not_specified_test() {
     let ref_ver = UuidV7::new();
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Ref(
-            vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
+            vec![DocumentRef::new(ref_id, ref_ver, create_dummy_doc_locator())].into(),
         ))
         .build();
     assert!(!rule.check(&doc, &provider).await.unwrap());

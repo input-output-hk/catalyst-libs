@@ -197,8 +197,8 @@ async fn test_valid_chained_documents(
             .build();
         let first_doc_ref = DocumentRef::try_from(&first).unwrap();
 
-        // same version
-        let last_doc_ver = first_doc_ver;
+        // version not greater than first (using an earlier timestamp)
+        let last_doc_ver = helper::get_now_plus_uuidv7(-60);
         let last = Builder::new()
             .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
             .with_metadata_field(SupportedField::Id(doc_id))

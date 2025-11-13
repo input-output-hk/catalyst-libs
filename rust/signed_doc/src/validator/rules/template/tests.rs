@@ -3,26 +3,23 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    DocLocator, DocumentRef, builder::tests::Builder, metadata::SupportedField,
+    DocumentRef, builder::tests::Builder, metadata::SupportedField,
+    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
     providers::tests::TestCatalystProvider,
 };
 
 #[test_case(
     |allowed_type, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(json_schema)
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()
@@ -39,14 +36,9 @@ use crate::{
 #[test_case(
     |allowed_type, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(json_schema)
@@ -65,19 +57,15 @@ use crate::{
 #[test_case(
     |allowed_type, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(json_schema)
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
@@ -92,19 +80,15 @@ use crate::{
 #[test_case(
     |allowed_type, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(json_schema)
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
@@ -123,7 +107,7 @@ use crate::{
         let template_ref = DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         );
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(*template_ref.id()))
@@ -149,18 +133,14 @@ use crate::{
 #[test_case(
     |_, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(json_schema)
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()
@@ -177,18 +157,14 @@ use crate::{
 #[test_case(
     |allowed_type, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_content(json_schema)
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()
@@ -204,18 +180,14 @@ use crate::{
 )]
 #[test_case(
     |allowed_type, provider| {
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()
@@ -231,19 +203,15 @@ use crate::{
 )]
 #[test_case(
     |allowed_type, provider| {
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(vec![1,2 ,3])
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()
@@ -262,7 +230,7 @@ use crate::{
         let template_ref = DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         );
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
@@ -305,19 +273,15 @@ async fn template_specified_test(
 #[test_case(
     |allowed_type, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            DocLocator::default(),
-        );
         let doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(*template_ref.id()))
-            .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(allowed_type))
             .with_metadata_field(SupportedField::ContentType(ContentType::SchemaJson))
             .with_content(json_schema)
             .build();
         provider.add_document(None, &doc).unwrap();
+        let template_ref = DocumentRef::try_from(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()

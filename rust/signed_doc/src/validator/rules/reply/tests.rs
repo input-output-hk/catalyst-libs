@@ -3,7 +3,8 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    DocLocator, DocumentRef, DocumentRefs, builder::tests::Builder, metadata::SupportedField,
+    DocumentRef, DocumentRefs, builder::tests::Builder, metadata::SupportedField,
+    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
     providers::tests::TestCatalystProvider,
 };
 
@@ -12,7 +13,7 @@ use crate::{
         let common_ref: DocumentRefs = vec![DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         )]
         .into();
         let ref_doc = Builder::new()
@@ -26,11 +27,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -44,7 +41,7 @@ use crate::{
         let common_ref: DocumentRefs = vec![DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         )]
         .into();
         let ref_doc = Builder::new()
@@ -58,11 +55,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -76,7 +69,7 @@ use crate::{
         let common_ref: DocumentRefs = vec![DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         )]
         .into();
         let ref_doc = Builder::new()
@@ -89,11 +82,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -111,7 +100,7 @@ use crate::{
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    DocLocator::default(),
+                    create_dummy_doc_locator(),
                 )]
                 .into(),
             ))
@@ -124,16 +113,12 @@ use crate::{
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    DocLocator::default(),
+                    create_dummy_doc_locator(),
                 )]
                 .into(),
             ))
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -147,7 +132,7 @@ use crate::{
         let common_ref: DocumentRefs = vec![DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         )]
         .into();
         let ref_doc = Builder::new()
@@ -160,11 +145,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -178,7 +159,7 @@ use crate::{
         let common_ref: DocumentRefs = vec![DocumentRef::new(
             UuidV7::new(),
             UuidV7::new(),
-            DocLocator::default(),
+            create_dummy_doc_locator(),
         )]
         .into();
         let ref_doc = Builder::new()
@@ -190,11 +171,7 @@ use crate::{
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![DocumentRef::try_from(&ref_doc).unwrap()]
                 .into(),
             ))
             .build()
@@ -210,7 +187,7 @@ use crate::{
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    DocLocator::default(),
+                    create_dummy_doc_locator(),
                 )]
                 .into(),
             ))
@@ -218,7 +195,7 @@ use crate::{
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    DocLocator::default(),
+                    create_dummy_doc_locator(),
                 )]
                 .into(),
             ))
@@ -291,7 +268,7 @@ async fn reply_rule_not_specified_test() {
     let ref_ver = UuidV7::new();
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Reply(
-            vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
+            vec![DocumentRef::new(ref_id, ref_ver, create_dummy_doc_locator())].into(),
         ))
         .build();
     assert!(!rule.check(&doc, &provider).await.unwrap());
