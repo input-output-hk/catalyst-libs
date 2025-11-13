@@ -22,12 +22,12 @@ use update_rbac::{
 };
 use x509_cert::certificate::Certificate as X509Certificate;
 
-use crate::{
-    cardano::cip509::{
+use crate::cardano::{
+    cip509::{
         CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
         RoleData, RoleDataRecord, ValidationSignature,
     },
-    providers::RbacRegistrationProvider,
+    state::RBACState,
 };
 
 /// Registration chains.
@@ -47,12 +47,12 @@ impl RegistrationChain {
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
     ///   ownership (e.g., database lookup failures).
-    pub async fn new<Provider>(
+    pub async fn new<State>(
         cip509: &Cip509,
-        provider: &Provider,
+        state: &State,
     ) -> anyhow::Result<Option<Self>>
     where
-        Provider: RbacRegistrationProvider,
+        State: RBACState,
     {
         let Some(new_chain) = Self::new_stateless(cip509) else {
             return Ok(None);
@@ -69,7 +69,7 @@ impl RegistrationChain {
         // Verify that a Catalyst ID of this chain is unique.
         {
             let cat_id = new_chain.catalyst_id();
-            if provider.is_chain_known(cat_id).await? {
+            if state.is_chain_known(cat_id).await? {
                 cip509.report().functional_validation(
             &format!("{} is already used", cat_id.as_short_id()),
                 "It isn't allowed to use same Catalyst ID (certificate subject public key) in multiple registration chains",
@@ -80,7 +80,7 @@ impl RegistrationChain {
             // other chain. Returns a list of public keys in the registration.
             for role in cip509.all_roles() {
                 if let Some(key) = cip509.signing_pk_for_role(role) {
-                    if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
+                    if let Some(previous) = state.catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
                             cip509.report().functional_validation(
                                 &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
@@ -116,13 +116,13 @@ impl RegistrationChain {
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
     ///   ownership (e.g., database lookup failures).
-    pub async fn update<Provider>(
+    pub async fn update<State>(
         &self,
         cip509: &Cip509,
-        provider: &Provider,
+        state: &State,
     ) -> anyhow::Result<Option<Self>>
     where
-        Provider: RbacRegistrationProvider,
+        State: RBACState,
     {
         let Some(new_chain) = self.update_stateless(cip509) else {
             return Ok(None);
@@ -133,7 +133,7 @@ impl RegistrationChain {
         let reg_addresses = cip509.stake_addresses();
         let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
         for address in &new_addresses {
-            if provider.chain_from_stake_address(address).await?.is_some() {
+            if state.chain_from_stake_address(address).await?.is_some() {
                 cip509.report().functional_validation(
                         &format!("{address} stake addresses is already used"),
                         "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
@@ -147,7 +147,7 @@ impl RegistrationChain {
             let cat_id = self.catalyst_id();
             for role in cip509.all_roles() {
                 if let Some(key) = cip509.signing_pk_for_role(role) {
-                    if let Some(previous) = provider.catalyst_id_from_public_key(&key).await? {
+                    if let Some(previous) = state.catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
                             cip509.report().functional_validation(
                                 &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
