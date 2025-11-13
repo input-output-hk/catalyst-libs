@@ -23,22 +23,32 @@ pub trait RBACState {
         id: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<bool>> + Send;
 
-    /// Returns a current valid RBAC chain corresponding to the given stake
+    /// Returns a current valid RBAC chain Catalyst ID corresponding to the given stake
     /// address.
-    fn chain_from_stake_address(
+    fn chain_catalyst_id_from_stake_address(
         &self,
         address: &StakeAddress,
-    ) -> impl Future<Output = anyhow::Result<Option<RegistrationChain>>> + Send;
+    ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
-    /// Returns a Catalyst ID corresponding to the given public key.
-    fn catalyst_id_from_public_key(
+    /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
+    /// public key.
+    fn chain_catalyst_id_from_public_key(
         &self,
         key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
-    /// Returns a Catalyst ID corresponding to the given transaction hash.
-    fn catalyst_id_from_txn_id(
+    /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
+    /// transaction hash.
+    fn chain_catalyst_id_from_txn_id(
         &self,
         txn_id: &TransactionId,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
+
+    /// Update the update by "taking" the given `StakeAddress` for the correspoding RBAC
+    /// chain's by the given `CatalystId`.
+    fn take_stake_address_from_chain(
+        &mut self,
+        id: &CatalystId,
+        address: &StakeAddress,
+    ) -> impl Future<Output = anyhow::Result<()>> + Send;
 }

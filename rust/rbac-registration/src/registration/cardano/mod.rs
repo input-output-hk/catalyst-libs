@@ -49,7 +49,7 @@ impl RegistrationChain {
     ///   ownership (e.g., database lookup failures).
     pub async fn new<State>(
         cip509: &Cip509,
-        state: &State,
+        state: &mut State,
     ) -> anyhow::Result<Option<Self>>
     where
         State: RBACState,
@@ -57,14 +57,6 @@ impl RegistrationChain {
         let Some(new_chain) = Self::new_stateless(cip509) else {
             return Ok(None);
         };
-
-        // Validate stake addresses.
-        let new_addresses = cip509.stake_addresses();
-        for _address in &new_addresses {
-            // TODO: The new root registration "takes" an address(es) from the
-            // existing chain, so that chain needs to be
-            // updated.
-        }
 
         // Verify that a Catalyst ID of this chain is unique.
         {
@@ -80,7 +72,7 @@ impl RegistrationChain {
             // other chain. Returns a list of public keys in the registration.
             for role in cip509.all_roles() {
                 if let Some(key) = cip509.signing_pk_for_role(role) {
-                    if let Some(previous) = state.catalyst_id_from_public_key(&key).await? {
+                    if let Some(previous) = state.chain_catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
                             cip509.report().functional_validation(
                                 &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
@@ -93,10 +85,16 @@ impl RegistrationChain {
         }
 
         if cip509.report().is_problematic() {
-            Ok(None)
-        } else {
-            Ok(Some(new_chain))
+            return Ok(None);
         }
+
+        for address in &cip509.stake_addresses() {
+            if let Some(id) = state.chain_catalyst_id_from_stake_address(address).await? {
+                state.take_stake_address_from_chain(&id, address).await?;
+            }
+        }
+
+        Ok(Some(new_chain))
     }
 
     /// Create a new instance of registration chain.
@@ -133,7 +131,11 @@ impl RegistrationChain {
         let reg_addresses = cip509.stake_addresses();
         let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
         for address in &new_addresses {
-            if state.chain_from_stake_address(address).await?.is_some() {
+            if state
+                .chain_catalyst_id_from_stake_address(address)
+                .await?
+                .is_some()
+            {
                 cip509.report().functional_validation(
                         &format!("{address} stake addresses is already used"),
                         "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
@@ -147,7 +149,7 @@ impl RegistrationChain {
             let cat_id = self.catalyst_id();
             for role in cip509.all_roles() {
                 if let Some(key) = cip509.signing_pk_for_role(role) {
-                    if let Some(previous) = state.catalyst_id_from_public_key(&key).await? {
+                    if let Some(previous) = state.chain_catalyst_id_from_public_key(&key).await? {
                         if &previous != cat_id {
                             cip509.report().functional_validation(
                                 &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
