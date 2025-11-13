@@ -5,7 +5,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use anyhow::{Context, Error, Result, anyhow};
+use anyhow::{anyhow, Context, Error, Result};
 use pallas_addresses::Address;
 
 /// A URI in the CIP-0134 format.
@@ -13,7 +13,7 @@ use pallas_addresses::Address;
 /// See the [proposal] for more details.
 ///
 /// [proposal]: https://github.com/cardano-foundation/CIPs/pull/888
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[allow(clippy::module_name_repetitions)]
 pub struct Cip0134Uri {
     /// A URI string.
