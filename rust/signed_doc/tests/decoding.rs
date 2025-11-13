@@ -2,7 +2,7 @@
 
 use catalyst_signed_doc::{decode_context::CompatibilityPolicy, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
-use common::{create_dummy_key_pair, create_dummy_doc_locator};
+use common::{create_dummy_doc_locator, create_dummy_key_pair};
 use minicbor::{Decode, Encoder, data::Tag};
 use rand::Rng;
 
@@ -145,7 +145,8 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
         name: format!("Catalyst Signed Doc with missing '{field}' header."),
         bytes_gen: Box::new({
             move || {
-                let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
+                let doc_ref =
+                    DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
@@ -302,7 +303,8 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
         name: format!("Multiple definitions of '{}' at once.", aliases.join(", ")),
         bytes_gen: Box::new({
             move || {
-                let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
+                let doc_ref =
+                    DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;

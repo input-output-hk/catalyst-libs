@@ -3,8 +3,9 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    DocumentRef, DocumentRefs, builder::tests::Builder, metadata::SupportedField,
-    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
+    DocumentRef, DocumentRefs,
+    builder::tests::Builder,
+    metadata::{SupportedField, document_refs::doc_locator::tests::create_dummy_doc_locator},
     providers::tests::TestCatalystProvider,
 };
 
@@ -268,7 +269,12 @@ async fn reply_rule_not_specified_test() {
     let ref_ver = UuidV7::new();
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Reply(
-            vec![DocumentRef::new(ref_id, ref_ver, create_dummy_doc_locator())].into(),
+            vec![DocumentRef::new(
+                ref_id,
+                ref_ver,
+                create_dummy_doc_locator(),
+            )]
+            .into(),
         ))
         .build();
     assert!(!rule.check(&doc, &provider).await.unwrap());

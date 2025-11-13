@@ -3,8 +3,9 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    DocumentRef, builder::tests::Builder, metadata::SupportedField,
-    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
+    DocumentRef,
+    builder::tests::Builder,
+    metadata::{SupportedField, document_refs::doc_locator::tests::create_dummy_doc_locator},
     providers::tests::TestCatalystProvider,
 };
 

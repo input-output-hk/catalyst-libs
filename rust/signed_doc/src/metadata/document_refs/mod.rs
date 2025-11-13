@@ -104,7 +104,8 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
 
                         Ok(DocumentRefs(doc_refs))
                     },
-                    // Old structure (id, ver) - no longer supported as DocLocator requires a valid CID
+                    // Old structure (id, ver) - no longer supported as DocLocator requires a valid
+                    // CID
                     minicbor::data::Type::Tag => {
                         Err(minicbor::decode::Error::message(format!(
                             "{CONTEXT}: Legacy document reference format (id, ver) without CID is no longer supported. \
@@ -198,8 +199,7 @@ mod tests {
     use minicbor::{Decoder, Encoder};
     use test_case::test_case;
 
-    use super::*;
-    use super::doc_locator::tests::create_dummy_doc_locator;
+    use super::{doc_locator::tests::create_dummy_doc_locator, *};
 
     #[test_case(
         CompatibilityPolicy::Accept,

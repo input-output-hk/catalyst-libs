@@ -265,7 +265,8 @@ impl CatalystSignedDocument {
     ///  - CBOR serialization failure
     ///  - Multihash construction failure
     pub fn to_cid_v1(&self) -> Result<cid_v1::Cid, cid_v1::CidError> {
-        let cbor_bytes = self.to_bytes()
+        let cbor_bytes = self
+            .to_bytes()
             .map_err(|e| cid_v1::CidError::Encoding(e.to_string()))?;
         cid_v1::to_cid_v1(&cbor_bytes)
     }

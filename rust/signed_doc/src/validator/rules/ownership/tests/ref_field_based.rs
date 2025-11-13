@@ -8,8 +8,7 @@ use test_case::test_case;
 use crate::{
     CatalystSignedDocument, DocumentRef,
     builder::tests::Builder,
-    metadata::SupportedField,
-    metadata::document_refs::doc_locator::tests::create_dummy_doc_locator,
+    metadata::{SupportedField, document_refs::doc_locator::tests::create_dummy_doc_locator},
     providers::tests::TestCatalystProvider,
     validator::rules::{DocumentOwnershipRule, utils::create_dummy_key_pair},
 };

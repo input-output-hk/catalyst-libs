@@ -32,13 +32,9 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
-use std::fmt;
-use std::ops::Deref;
-use std::str::FromStr;
+use std::{fmt, ops::Deref, str::FromStr};
 
-use minicbor::data::Tag;
-use minicbor::decode::Error as DecodeError;
-use minicbor::{Decoder, Encoder};
+use minicbor::{Decoder, Encoder, data::Tag, decode::Error as DecodeError};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
@@ -78,7 +74,8 @@ pub enum CidError {
 /// A newtype wrapper around `cid::Cid` for type-safe CID v1 handling.
 ///
 /// This type provides conversion methods and trait implementations for working with
-/// CID v1 identifiers, especially in the context of CBOR-encoded Catalyst Signed Documents.
+/// CID v1 identifiers, especially in the context of CBOR-encoded Catalyst Signed
+/// Documents.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Cid(cid::Cid);
 
@@ -129,13 +126,19 @@ impl FromStr for Cid {
 }
 
 impl fmt::Display for Cid {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
 impl serde::Serialize for Cid {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -145,9 +148,7 @@ impl serde::Serialize for Cid {
 
 impl<'de> serde::Deserialize<'de> for Cid {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
+    where D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
@@ -167,8 +168,14 @@ impl minicbor::Encode<()> for Cid {
 }
 
 impl<'de> minicbor::Decode<'de, ()> for Cid {
-    fn decode(d: &mut Decoder<'de>, _ctx: &mut ()) -> Result<Self, DecodeError> {
-        let tag = d.tag().map_err(|e| DecodeError::message(e.to_string()))?.as_u64();
+    fn decode(
+        d: &mut Decoder<'de>,
+        _ctx: &mut (),
+    ) -> Result<Self, DecodeError> {
+        let tag = d
+            .tag()
+            .map_err(|e| DecodeError::message(e.to_string()))?
+            .as_u64();
         if tag != CID_CBOR_TAG {
             return Err(DecodeError::message(format!(
                 "Expected IPLD CID tag ({CID_CBOR_TAG}), got {tag}",
@@ -259,8 +266,8 @@ mod tests {
         let cid_bytes = Vec::<u8>::from(cid);
 
         // Convert back from bytes
-        let cid_from_bytes = Cid::try_from(cid_bytes.as_slice())
-            .expect("Should parse CID from bytes");
+        let cid_from_bytes =
+            Cid::try_from(cid_bytes.as_slice()).expect("Should parse CID from bytes");
 
         assert_eq!(cid, cid_from_bytes);
     }
@@ -274,8 +281,7 @@ mod tests {
         let cid_string = cid.to_string();
 
         // Parse the string back to a CID
-        let cid_from_str = Cid::from_str(&cid_string)
-            .expect("CID string should be parseable");
+        let cid_from_str = Cid::from_str(&cid_string).expect("CID string should be parseable");
 
         assert_eq!(cid, cid_from_str);
     }
@@ -289,8 +295,10 @@ mod tests {
         let cid_string = cid.to_string();
 
         // Should be multibase encoded (starts with 'b' for base32)
-        assert!(cid_string.starts_with('b'),
-            "CID v1 base32 string should start with 'b'");
+        assert!(
+            cid_string.starts_with('b'),
+            "CID v1 base32 string should start with 'b'"
+        );
     }
 
     #[test]
@@ -407,10 +415,10 @@ mod tests {
             .build()
             .expect("Should build document");
 
-        let cid1 = to_cid_v1(&doc1.to_bytes().expect("Should serialize"))
-            .expect("CID 1 should be valid");
-        let cid2 = to_cid_v1(&doc2.to_bytes().expect("Should serialize"))
-            .expect("CID 2 should be valid");
+        let cid1 =
+            to_cid_v1(&doc1.to_bytes().expect("Should serialize")).expect("CID 1 should be valid");
+        let cid2 =
+            to_cid_v1(&doc2.to_bytes().expect("Should serialize")).expect("CID 2 should be valid");
 
         assert_ne!(
             cid1, cid2,
@@ -434,7 +442,10 @@ mod tests {
 
         // Base32 encoding uses lowercase letters and digits 2-7
         assert!(
-            cid_string.chars().skip(1).all(|c| c.is_ascii_lowercase() || ('2'..='7').contains(&c)),
+            cid_string
+                .chars()
+                .skip(1)
+                .all(|c| c.is_ascii_lowercase() || ('2'..='7').contains(&c)),
             "CID v1 base32 string should only contain lowercase letters and digits 2-7"
         );
 
@@ -458,8 +469,8 @@ mod tests {
         let cid_bytes = Vec::<u8>::from(cid);
 
         // Parse bytes back to CID
-        let cid_from_bytes = Cid::try_from(cid_bytes.as_slice())
-            .expect("Should parse CID from bytes");
+        let cid_from_bytes =
+            Cid::try_from(cid_bytes.as_slice()).expect("Should parse CID from bytes");
 
         // Convert back to string
         let final_string = cid_from_bytes.to_string();

@@ -7,8 +7,10 @@ use std::{fmt::Display, ops::Deref, str::FromStr};
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode};
 
-use crate::cid_v1::{Cid, CidError};
-use crate::metadata::document_refs::DocRefError;
+use crate::{
+    cid_v1::{Cid, CidError},
+    metadata::document_refs::DocRefError,
+};
 
 /// CID map key.
 const CID_MAP_KEY: &str = "cid";
@@ -56,8 +58,7 @@ impl FromStr for DocLocator {
     type Err = DocRefError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let cid = Cid::from_str(s)
-            .map_err(|e| DocRefError::StringConversion(e.to_string()))?;
+        let cid = Cid::from_str(s).map_err(|e| DocRefError::StringConversion(e.to_string()))?;
         Ok(Self(cid))
     }
 }
@@ -107,11 +108,10 @@ impl Decode<'_, ()> for DocLocator {
                 let mut value_decoder = minicbor::Decoder::new(&entry.value);
 
                 // Decode the Cid, which validates tag(42) and CID format
-                let cid = Cid::decode(&mut value_decoder, &mut ())
-                    .map_err(|e| {
-                        let msg = format!("{CONTEXT}: {e}");
-                        e.with_message(msg)
-                    })?;
+                let cid = Cid::decode(&mut value_decoder, &mut ()).map_err(|e| {
+                    let msg = format!("{CONTEXT}: {e}");
+                    e.with_message(msg)
+                })?;
 
                 Ok(DocLocator(cid))
             },
@@ -184,14 +184,19 @@ pub(crate) mod tests {
     fn test_doc_locator_display() {
         let locator = create_dummy_doc_locator();
         let display_str = locator.to_string();
-        assert!(display_str.starts_with('b'), "Should use multibase format starting with 'b'");
+        assert!(
+            display_str.starts_with('b'),
+            "Should use multibase format starting with 'b'"
+        );
     }
 
     #[test]
     fn test_doc_locator_from_str() {
         let locator = create_dummy_doc_locator();
         let display_str = locator.to_string();
-        let parsed = display_str.parse::<DocLocator>().expect("Should parse multibase string");
+        let parsed = display_str
+            .parse::<DocLocator>()
+            .expect("Should parse multibase string");
         assert_eq!(locator, parsed);
     }
 

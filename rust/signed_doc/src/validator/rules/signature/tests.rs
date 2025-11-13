@@ -5,7 +5,7 @@ use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
 use crate::{
-    metadata::document_refs::{doc_locator::tests::create_dummy_doc_locator, DocumentRef},
+    metadata::document_refs::{DocumentRef, doc_locator::tests::create_dummy_doc_locator},
     providers::tests::*,
     validator::rules::utils::create_dummy_key_pair,
     *,
@@ -205,7 +205,11 @@ fn parameters_alias_field(
     // empty unprotected headers
     e.map(1)?;
     e.str(alias)?.encode_with(
-        DocumentRef::new(UuidV7::new(), UuidV7::new(), crate::metadata::document_refs::doc_locator::tests::create_dummy_doc_locator()),
+        DocumentRef::new(
+            UuidV7::new(),
+            UuidV7::new(),
+            crate::metadata::document_refs::doc_locator::tests::create_dummy_doc_locator(),
+        ),
         &mut (),
     )?;
     // content (random bytes)
