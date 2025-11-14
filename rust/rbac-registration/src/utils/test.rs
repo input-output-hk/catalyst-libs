@@ -48,8 +48,7 @@ impl BlockTestData {
         assert!(cip509.role_data(self.role).is_some());
         assert_eq!(cip509.txn_hash(), self.txn_hash);
         assert_eq!(cip509.previous_transaction(), self.prv_hash);
-        let (purpose, ..) = cip509.clone().consume().unwrap();
-        assert_eq!(purpose, self.purpose);
+        assert_eq!(cip509.purpose().unwrap(), self.purpose);
     }
 }
 
