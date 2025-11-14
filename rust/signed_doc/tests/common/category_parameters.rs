@@ -12,8 +12,8 @@ pub fn category_parameters_doc(
     let (sk, kid) = create_dummy_key_pair(None);
     provider.add_sk(kid.clone(), sk.clone());
 
-    let template_ref = DocumentRef::try_from(template)?;
-    let parameters_ref = DocumentRef::try_from(parameters)?;
+    let template_ref = template.doc_ref()?;
+    let parameters_ref = parameters.doc_ref()?;
 
     Builder::new()
         .with_json_metadata(serde_json::json!({

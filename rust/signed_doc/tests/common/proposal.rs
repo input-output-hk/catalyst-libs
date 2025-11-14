@@ -14,8 +14,8 @@ pub fn proposal_doc(
     let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
     provider.add_sk(kid.clone(), sk.clone());
 
-    let template_ref = DocumentRef::try_from(template_doc)?;
-    let parameters_ref = DocumentRef::try_from(parameters_doc)?;
+    let template_ref = template_doc.doc_ref()?;
+    let parameters_ref = parameters_doc.doc_ref()?;
 
     Builder::new()
         .with_json_metadata(serde_json::json!({

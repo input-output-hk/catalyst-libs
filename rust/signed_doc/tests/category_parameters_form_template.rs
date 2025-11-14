@@ -36,7 +36,7 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -65,7 +65,7 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -94,7 +94,7 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({

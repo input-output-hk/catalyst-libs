@@ -73,10 +73,10 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let proposal_ref = DocumentRef::try_from(&proposal)?;
-        let template_ref = DocumentRef::try_from(&template)?;
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
-        let comment_ref = DocumentRef::try_from(&comment)?;
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+        let comment_ref = comment.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -109,9 +109,9 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let proposal_ref = DocumentRef::try_from(&proposal)?;
-        let template_ref = DocumentRef::try_from(&template)?;
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -143,9 +143,9 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let proposal_ref = DocumentRef::try_from(&proposal)?;
-        let template_ref = DocumentRef::try_from(&template)?;
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -178,9 +178,9 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let proposal_ref = DocumentRef::try_from(&proposal)?;
-        let template_ref = DocumentRef::try_from(&template)?;
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -211,8 +211,8 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let proposal_ref = DocumentRef::try_from(&proposal)?;
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let proposal_ref = proposal.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -244,8 +244,8 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let proposal_ref = DocumentRef::try_from(&proposal)?;
-        let template_ref = DocumentRef::try_from(&template)?;
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
 
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -275,8 +275,8 @@ mod common;
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let template_ref = DocumentRef::try_from(&template)?;
-        let parameters_ref = DocumentRef::try_from(&parameters)?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({

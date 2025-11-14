@@ -65,7 +65,7 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 }
 
 #[allow(clippy::expect_used)]
-pub fn create_dummy_doc_locator() -> DocLocator {
+pub fn create_dummy_doc_ref() -> DocumentRef {
     let test_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "id": UuidV7::new().to_string(),
@@ -79,6 +79,5 @@ pub fn create_dummy_doc_locator() -> DocLocator {
         .build()
         .expect("Should build document");
 
-    let cid = test_doc.to_cid_v1().expect("Should generate CID");
-    DocLocator::from(cid)
+    test_doc.doc_ref().expect("Should generate DocumentRef")
 }

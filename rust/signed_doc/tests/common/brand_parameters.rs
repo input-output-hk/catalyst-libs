@@ -11,7 +11,7 @@ pub fn brand_parameters_doc(
     let (sk, kid) = create_dummy_key_pair(None);
     provider.add_sk(kid.clone(), sk.clone());
 
-    let template_ref = DocumentRef::try_from(template)?;
+    let template_ref = template.doc_ref()?;
 
     Builder::new()
         .with_json_metadata(serde_json::json!({

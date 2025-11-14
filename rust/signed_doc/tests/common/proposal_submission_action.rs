@@ -13,8 +13,8 @@ pub fn proposal_submission_action_doc(
         .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
 
-    let ref_doc_ref = DocumentRef::try_from(ref_doc)?;
-    let parameters_doc_ref = DocumentRef::try_from(parameters_doc)?;
+    let ref_doc_ref = ref_doc.doc_ref()?;
+    let parameters_doc_ref = parameters_doc.doc_ref()?;
 
     Builder::new()
         .with_json_metadata(serde_json::json!({
