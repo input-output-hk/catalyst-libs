@@ -121,7 +121,7 @@ async fn test_without_chaining_documents() {
             .build();
         provider.add_document(&first).unwrap();
         provider.add_document(&intermediate).unwrap();
-        
+
         (provider, last)
     } => true;
     "valid intermediate chained documents (0, 1, -2)"
@@ -165,7 +165,7 @@ async fn test_valid_chained_documents(
             ))
             .build();
         provider.add_document(&first).unwrap();
-    
+
         (provider, last)
     } => false;
     "not have the same id as the document being chained to"
@@ -199,7 +199,7 @@ async fn test_valid_chained_documents(
             ))
             .build();
         provider.add_document(&first).unwrap();
-       
+
         (provider, last)
     } => false;
     "not have a ver that is greater than the ver being chained to"
@@ -234,7 +234,7 @@ async fn test_valid_chained_documents(
             ))
             .build();
         provider.add_document(&first).unwrap();
-       
+
         (provider, last)
     } => false;
     "not the same type as the chained document"
