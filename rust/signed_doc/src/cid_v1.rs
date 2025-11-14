@@ -13,7 +13,7 @@
 //! Where:
 //! - `version`: varint(1) - CID version 1
 //! - `multicodec`: varint(0x51) - CBOR codec
-//! - `multihash`: varint(0x12) || varint(32) || digest[32] - SHA2-256 multihash
+//! - `multihash`: varint(0x12) || varint(32) || digest\[32\] - SHA2-256 multihash
 //!
 //! ## Constraints
 //!
