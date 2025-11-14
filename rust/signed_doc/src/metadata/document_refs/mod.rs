@@ -279,15 +279,15 @@ pub(crate) mod tests {
 
     #[test_case(
         CompatibilityPolicy::Accept,
-        |uuid: UuidV7, doc_loc: DocLocator| {
+        |id, ver, doc_loc| {
             let mut e = Encoder::new(Vec::new());
             e.array(1)
                 .unwrap()
                 .array(3)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(id, &mut CborContext::Tagged)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(ver, &mut CborContext::Tagged)
                 .unwrap()
                 .encode(doc_loc)
                 .unwrap();
@@ -297,15 +297,15 @@ pub(crate) mod tests {
     )]
     #[test_case(
         CompatibilityPolicy::Fail,
-        |uuid: UuidV7, doc_loc: DocLocator| {
+        |id, ver, doc_loc| {
             let mut e = Encoder::new(Vec::new());
             e.array(1)
                 .unwrap()
                 .array(3)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(id, &mut CborContext::Tagged)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(ver, &mut CborContext::Tagged)
                 .unwrap()
                 .encode(doc_loc)
                 .unwrap();
@@ -315,10 +315,10 @@ pub(crate) mod tests {
     )]
     fn test_valid_cbor_decode(
         mut policy: CompatibilityPolicy,
-        e_gen: impl FnOnce(UuidV7, DocLocator) -> Encoder<Vec<u8>>,
+        e_gen: impl FnOnce(UuidV7, UuidV7, DocLocator) -> Encoder<Vec<u8>>,
     ) {
         let doc_ref = create_dummy_doc_ref();
-        let e = e_gen(*doc_ref.id(), doc_ref.doc_locator().clone());
+        let e = e_gen(*doc_ref.id(), *doc_ref.ver(), doc_ref.doc_locator().clone());
 
         let doc_refs =
             DocumentRefs::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy)
