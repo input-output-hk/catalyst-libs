@@ -3,7 +3,7 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    Chain, DocType, DocumentRef, builder::tests::Builder, metadata::SupportedField,
+    Chain, DocType, builder::tests::Builder, metadata::SupportedField,
     providers::tests::TestCatalystProvider,
 };
 
@@ -64,7 +64,7 @@ async fn test_without_chaining_documents() {
                 Chain::new(0, None)
             ))
             .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+        let first_doc_ref = first.doc_ref().unwrap();
 
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
@@ -75,7 +75,7 @@ async fn test_without_chaining_documents() {
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+        let last_doc_ref = last.doc_ref().unwrap();
 
         provider.add_document(Some(first_doc_ref), &first).unwrap();
         provider.add_document(Some(last_doc_ref), &last).unwrap();
@@ -100,7 +100,7 @@ async fn test_without_chaining_documents() {
                 Chain::new(0, None)
             ))
             .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+        let first_doc_ref = first.doc_ref().unwrap();
 
         let intermediate_doc_ver = helper::get_now_plus_uuidv7(60);
         let intermediate = Builder::new()
@@ -111,7 +111,7 @@ async fn test_without_chaining_documents() {
                 Chain::new(1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let intermediate_doc_ref = DocumentRef::try_from(&intermediate).unwrap();
+        let intermediate_doc_ref = intermediate.doc_ref().unwrap();
 
         let last_doc_ver = helper::get_now_plus_uuidv7(120);
         let last = Builder::new()
@@ -122,7 +122,7 @@ async fn test_without_chaining_documents() {
                 Chain::new(-2, Some(intermediate_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+        let last_doc_ref = last.doc_ref().unwrap();
 
         provider.add_document(Some(first_doc_ref), &first).unwrap();
         provider.add_document(Some(intermediate_doc_ref), &intermediate).unwrap();
@@ -159,7 +159,7 @@ async fn test_valid_chained_documents(
                 Chain::new(0, None)
             ))
             .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+        let first_doc_ref = first.doc_ref().unwrap();
 
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
@@ -170,7 +170,7 @@ async fn test_valid_chained_documents(
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+        let last_doc_ref = last.doc_ref().unwrap();
 
         provider.add_document(Some(first_doc_ref), &first).unwrap();
         provider.add_document(Some(last_doc_ref), &last).unwrap();
@@ -195,7 +195,7 @@ async fn test_valid_chained_documents(
                 Chain::new(0, None)
             ))
             .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+        let first_doc_ref = first.doc_ref().unwrap();
 
         // version not greater than first (using an earlier timestamp)
         let last_doc_ver = helper::get_now_plus_uuidv7(-60);
@@ -207,7 +207,7 @@ async fn test_valid_chained_documents(
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+        let last_doc_ref = last.doc_ref().unwrap();
 
         provider.add_document(Some(first_doc_ref), &first).unwrap();
         provider.add_document(Some(last_doc_ref), &last).unwrap();
@@ -234,7 +234,7 @@ async fn test_valid_chained_documents(
                 Chain::new(0, None)
             ))
             .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+        let first_doc_ref = first.doc_ref().unwrap();
 
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
@@ -245,7 +245,7 @@ async fn test_valid_chained_documents(
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+        let last_doc_ref = last.doc_ref().unwrap();
 
         provider.add_document(Some(first_doc_ref), &first).unwrap();
         provider.add_document(Some(last_doc_ref), &last).unwrap();
@@ -270,7 +270,7 @@ async fn test_valid_chained_documents(
                 Chain::new(0, None)
             ))
             .build();
-        let first_doc_ref = DocumentRef::try_from(&first).unwrap();
+        let first_doc_ref = first.doc_ref().unwrap();
 
         let last_doc_ver = helper::get_now_plus_uuidv7(60);
         let last = Builder::new()
@@ -282,7 +282,7 @@ async fn test_valid_chained_documents(
                 Chain::new(-2, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = DocumentRef::try_from(&last).unwrap();
+        let last_doc_ref = last.doc_ref().unwrap();
 
         provider.add_document(Some(first_doc_ref), &first).unwrap();
         provider.add_document(Some(last_doc_ref), &last).unwrap();
