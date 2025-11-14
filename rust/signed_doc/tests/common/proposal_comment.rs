@@ -13,6 +13,11 @@ pub fn proposal_comment_doc(
     let id = UuidV7::new();
     let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
     provider.add_sk(kid.clone(), sk.clone());
+
+    let ref_doc_ref = ref_doc.doc_ref()?;
+    let template_doc_ref = template_doc.doc_ref()?;
+    let parameters_doc_ref = parameters_doc.doc_ref()?;
+
     Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json,
@@ -20,18 +25,9 @@ pub fn proposal_comment_doc(
             "type": doc_types::PROPOSAL_COMMENT.clone(),
             "id": id,
             "ver": id,
-            "ref": {
-                "id": ref_doc.doc_id()?,
-                "ver": ref_doc.doc_ver()?,
-            },
-            "template": {
-                "id": template_doc.doc_id()?,
-                "ver": template_doc.doc_ver()?,
-            },
-            "parameters": {
-                "id": parameters_doc.doc_id()?,
-                "ver": parameters_doc.doc_ver()?,
-            }
+            "ref": [ref_doc_ref],
+            "template": [template_doc_ref],
+            "parameters": [parameters_doc_ref]
         }))?
         .with_json_content(&serde_json::json!({}))?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?

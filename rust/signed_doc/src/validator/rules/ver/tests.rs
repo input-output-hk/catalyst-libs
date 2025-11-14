@@ -34,7 +34,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build();
-        provider.add_document(None, &first_doc).unwrap();
+        provider.add_document(&first_doc).unwrap();
 
         let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
@@ -64,7 +64,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build();
-        provider.add_document(None, &first_doc).unwrap();
+        provider.add_document(&first_doc).unwrap();
 
         let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now - 1).unwrap_or(0), 0, 0, 0))
             .try_into()
@@ -94,7 +94,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let ver_1 = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 3).unwrap_or(0), 0, 0, 0))
             .try_into()
@@ -104,7 +104,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(ver_1))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let ver_2 = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 2).unwrap_or(0), 0, 0, 0))
             .try_into()
@@ -156,7 +156,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Type(doc_type.into()))
             .build();
-        provider.add_document(None, &first_doc).unwrap();
+        provider.add_document(&first_doc).unwrap();
 
         let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
@@ -184,7 +184,7 @@ use crate::{
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .build();
-        provider.add_document(None, &first_doc).unwrap();
+        provider.add_document(&first_doc).unwrap();
 
         let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()
@@ -213,7 +213,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
-        provider.add_document(None, &first_doc).unwrap();
+        provider.add_document(&first_doc).unwrap();
 
         let ver = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 1).unwrap_or(0), 0, 0, 0))
             .try_into()

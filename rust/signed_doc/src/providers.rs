@@ -62,7 +62,7 @@ pub mod tests {
         CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
         VerifyingKey,
     };
-    use crate::{DocLocator, DocumentRef};
+    use crate::DocumentRef;
 
     /// Simple testing implementation of `CatalystSignedDocumentProvider`,
     #[derive(Default, Debug)]
@@ -74,25 +74,28 @@ pub mod tests {
     }
 
     impl TestCatalystProvider {
-        /// Inserts document into the `TestCatalystSignedDocumentProvider` where
-        /// if document reference is provided use that value.
-        /// if not use the id and version of the provided doc.
+        /// Inserts document into the `TestCatalystSignedDocumentProvider`.
         ///
         /// # Errors
         /// Returns error if document reference is not provided and its fail to create one
         /// from the given doc.
         pub fn add_document(
             &mut self,
-            doc_ref: Option<DocumentRef>,
             doc: &CatalystSignedDocument,
         ) -> anyhow::Result<()> {
-            if let Some(dr) = doc_ref {
-                self.signed_doc.insert(dr, doc.clone());
-            } else {
-                let dr = DocumentRef::new(doc.doc_id()?, doc.doc_ver()?, DocLocator::default());
-                self.signed_doc.insert(dr, doc.clone());
-            }
+            let dr = doc.doc_ref()?;
+            self.signed_doc.insert(dr, doc.clone());
             Ok(())
+        }
+
+        /// Inserts document into the `TestCatalystSignedDocumentProvider` using provided
+        /// `DocumentRef` as key.
+        pub fn add_document_with_ref(
+            &mut self,
+            doc_ref: DocumentRef,
+            doc: &CatalystSignedDocument,
+        ) {
+            self.signed_doc.insert(doc_ref, doc.clone());
         }
 
         /// Inserts signing key into the `TestVerifyingKeyProvider`

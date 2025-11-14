@@ -7,10 +7,10 @@ use std::{fmt::Display, ops::Deref, str::FromStr};
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode};
 
-use crate::metadata::document_refs::DocRefError;
-
-/// CBOR tag of IPLD content identifiers (CIDs).
-const CID_TAG: u64 = 42;
+use crate::{
+    cid_v1::{Cid, CidError},
+    metadata::document_refs::DocRefError,
+};
 
 /// CID map key.
 const CID_MAP_KEY: &str = "cid";
@@ -18,21 +18,30 @@ const CID_MAP_KEY: &str = "cid";
 /// Document locator number of map item.
 const DOC_LOC_MAP_ITEM: u64 = 1;
 
-/// Document locator, no size limit.
-#[derive(Clone, Debug, Default, PartialEq, Hash, Eq)]
-pub struct DocLocator(Vec<u8>);
+/// Document locator wrapping a CID (Content Identifier).
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+pub struct DocLocator(Cid);
 
 impl Deref for DocLocator {
-    type Target = Vec<u8>;
+    type Target = Cid;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<Vec<u8>> for DocLocator {
-    fn from(value: Vec<u8>) -> Self {
-        Self(value)
+impl From<Cid> for DocLocator {
+    fn from(cid: Cid) -> Self {
+        Self(cid)
+    }
+}
+
+impl TryFrom<&[u8]> for DocLocator {
+    type Error = CidError;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        let cid = Cid::try_from(bytes)?;
+        Ok(Self(cid))
     }
 }
 
@@ -41,7 +50,7 @@ impl Display for DocLocator {
         &self,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        write!(f, "0x{}", hex::encode(self.0.as_slice()))
+        write!(f, "{}", self.0)
     }
 }
 
@@ -49,11 +58,8 @@ impl FromStr for DocLocator {
     type Err = DocRefError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.strip_prefix("0x")
-            .map(hex::decode)
-            .ok_or(DocRefError::HexDecode("missing 0x prefix".to_string()))?
-            .map(Self)
-            .map_err(|e| DocRefError::HexDecode(e.to_string()))
+        let cid = Cid::from_str(s).map_err(|e| DocRefError::StringConversion(e.to_string()))?;
+        Ok(Self(cid))
     }
 }
 
@@ -77,7 +83,7 @@ impl serde::Serialize for DocLocator {
     }
 }
 
-// document_locator = { "cid" => cid }
+// document_locator = { "cid" => tag(42)(cid_bytes) }
 impl Decode<'_, ()> for DocLocator {
     fn decode(
         d: &mut Decoder,
@@ -101,22 +107,13 @@ impl Decode<'_, ()> for DocLocator {
 
                 let mut value_decoder = minicbor::Decoder::new(&entry.value);
 
-                let tag = value_decoder
-                    .tag()
-                    .map_err(|e| e.with_message(format!("{CONTEXT}: expected tag")))?;
+                // Decode the Cid, which validates tag(42) and CID format
+                let cid = Cid::decode(&mut value_decoder, &mut ()).map_err(|e| {
+                    let msg = format!("{CONTEXT}: {e}");
+                    e.with_message(msg)
+                })?;
 
-                if tag.as_u64() != CID_TAG {
-                    return Err(minicbor::decode::Error::message(format!(
-                        "{CONTEXT}: expected tag {CID_TAG}, found {tag}",
-                    )));
-                }
-
-                // No length limit
-                let cid_bytes = value_decoder
-                    .bytes()
-                    .map_err(|e| e.with_message(format!("{CONTEXT}: expected bytes")))?;
-
-                Ok(DocLocator(cid_bytes.to_vec()))
+                Ok(DocLocator(cid))
             },
             _ => {
                 Err(minicbor::decode::Error::message(format!(
@@ -132,12 +129,12 @@ impl Encode<()> for DocLocator {
     fn encode<W: minicbor::encode::Write>(
         &self,
         e: &mut minicbor::Encoder<W>,
-        (): &mut (),
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(DOC_LOC_MAP_ITEM)?;
         e.str(CID_MAP_KEY)?;
-        e.tag(minicbor::data::Tag::new(CID_TAG))?;
-        e.bytes(&self.0)?;
+        // Delegate Cid encoding which handles tag(42) and CID bytes
+        self.0.encode(e, ctx)?;
         Ok(())
     }
 }
@@ -148,10 +145,13 @@ mod tests {
     use minicbor::{Decoder, Encoder};
 
     use super::*;
+    use crate::{
+        Builder, ContentType, UuidV7, metadata::document_refs::tests::create_dummy_doc_ref,
+    };
 
     #[test]
     fn test_doc_locator_encode_decode() {
-        let locator = DocLocator(vec![1, 2, 3, 4]);
+        let locator = create_dummy_doc_ref().doc_locator().clone();
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
         locator.encode(&mut encoder, &mut ()).unwrap();
@@ -160,15 +160,48 @@ mod tests {
         assert_eq!(locator, decoded_doc_loc);
     }
 
-    // Empty doc locator should not fail
     #[test]
-    fn test_doc_locator_encode_decode_empty() {
-        let locator = DocLocator(vec![]);
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        locator.encode(&mut encoder, &mut ()).unwrap();
-        let mut decoder = Decoder::new(&buffer);
-        let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut ()).unwrap();
-        assert_eq!(locator, decoded_doc_loc);
+    fn test_doc_locator_display() {
+        let locator = create_dummy_doc_ref().doc_locator().clone();
+        let display_str = locator.to_string();
+        assert!(
+            display_str.starts_with('b'),
+            "Should use multibase format starting with 'b'"
+        );
+    }
+
+    #[test]
+    fn test_doc_locator_from_str() {
+        let locator = create_dummy_doc_ref().doc_locator().clone();
+        let display_str = locator.to_string();
+        let parsed = display_str
+            .parse::<DocLocator>()
+            .expect("Should parse multibase string");
+        assert_eq!(locator, parsed);
+    }
+
+    #[test]
+    fn test_doc_locator_from_cid() {
+        use crate::UuidV4;
+
+        let id = UuidV7::new();
+        let ver = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": id.to_string(),
+                "ver": ver.to_string(),
+                "type": UuidV4::new().to_string(),
+                "content-type": ContentType::Json,
+            }))
+            .expect("Should create metadata")
+            .with_json_content(&serde_json::json!({"test": "content"}))
+            .expect("Should set content")
+            .build()
+            .expect("Should build document");
+
+        let cid = doc.to_cid_v1().expect("Should generate CID");
+        let locator = DocLocator::from(cid);
+
+        assert_eq!(&*locator, &cid);
     }
 }

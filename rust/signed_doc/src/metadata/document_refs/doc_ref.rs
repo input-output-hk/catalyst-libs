@@ -7,7 +7,6 @@ use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Encode};
 
 use super::doc_locator::DocLocator;
-use crate::CatalystSignedDocument;
 
 /// Number of item that should be in each document reference instance.
 const DOC_REF_ARR_ITEM: u64 = 3;
@@ -20,7 +19,7 @@ pub struct DocumentRef {
     /// Reference to the Document Ver
     ver: UuidV7,
     /// Document locator
-    #[serde(rename = "cid", default)]
+    #[serde(rename = "cid")]
     doc_locator: DocLocator,
 }
 
@@ -55,18 +54,6 @@ impl DocumentRef {
     #[must_use]
     pub fn doc_locator(&self) -> &DocLocator {
         &self.doc_locator
-    }
-}
-
-impl TryFrom<&CatalystSignedDocument> for DocumentRef {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
-        Ok(Self::new(
-            value.doc_id()?,
-            value.doc_ver()?,
-            DocLocator::default(),
-        ))
     }
 }
 

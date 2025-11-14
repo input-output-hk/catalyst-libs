@@ -127,7 +127,6 @@ mod tests {
     use minicbor::{Decode, Decoder, Encode, Encoder};
 
     use super::*;
-    use crate::DocLocator;
 
     #[test]
     fn test_chain_encode_decode_without_doc_ref() {
@@ -151,9 +150,26 @@ mod tests {
         let id = UuidV7::new();
         let ver = UuidV7::new();
 
+        // Create a test document to generate a valid CID for DocLocator
+        let test_doc = crate::Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": id.to_string(),
+                "ver": ver.to_string(),
+                "type": "ab7c2428-c353-4331-856e-385b2eb20546",
+                "content-type": crate::ContentType::Json,
+            }))
+            .expect("Should create metadata")
+            .with_json_content(&serde_json::json!({"test": "content"}))
+            .expect("Should set content")
+            .build()
+            .expect("Should build document");
+
+        let cid = test_doc.to_cid_v1().expect("Should generate CID");
+        let doc_locator = crate::DocLocator::from(cid);
+
         let chain = Chain {
             height: 3,
-            document_ref: Some(DocumentRef::new(id, ver, DocLocator::default())),
+            document_ref: Some(DocumentRef::new(id, ver, doc_locator)),
         };
 
         let mut buf = Vec::new();
