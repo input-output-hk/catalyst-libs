@@ -20,17 +20,6 @@
 //! - **Hash function**: Only SHA2-256 is supported (32-byte digest)
 //! - **Codec**: Fixed to CBOR (0x51)
 //! - **Output size**: 36 bytes in binary format
-//!
-//! ## Example
-//!
-//! ```no_run
-//! # use catalyst_signed_doc::{CatalystSignedDocument, cid_v1::Cid};
-//! # let doc: CatalystSignedDocument = todo!();
-//! let cid = doc.to_cid_v1()?;
-//! let cid_string = cid.to_string();
-//! // Result: "b..." (base32-encoded CID v1)
-//! # Ok::<(), anyhow::Error>(())
-//! ```
 
 use std::{fmt, ops::Deref, str::FromStr};
 
