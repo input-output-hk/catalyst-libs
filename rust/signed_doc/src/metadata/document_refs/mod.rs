@@ -193,13 +193,33 @@ mod serde_impl {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 
-    use catalyst_types::uuid::{CborContext, UuidV7};
+    use catalyst_types::uuid::{CborContext, UuidV4, UuidV7};
     use minicbor::{Decoder, Encoder};
     use test_case::test_case;
 
-    use super::{doc_locator::tests::create_dummy_doc_locator, *};
+    use super::*;
+    use crate::{ContentType, builder::Builder};
+
+    pub(crate) fn create_dummy_doc_ref() -> DocumentRef {
+        let id = UuidV7::new();
+        let ver = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": id.to_string(),
+                "ver": ver.to_string(),
+                "type": UuidV4::new().to_string(),
+                "content-type": ContentType::Json,
+            }))
+            .expect("Should create metadata")
+            .with_json_content(&serde_json::json!({"test": "content"}))
+            .expect("Should set content")
+            .build()
+            .expect("Should build document");
+
+        doc.doc_ref().expect("Should generate DocumentRef")
+    }
 
     #[test_case(
         CompatibilityPolicy::Accept,
@@ -248,16 +268,17 @@ mod tests {
     #[test_case(
         CompatibilityPolicy::Accept,
         {
+            let doc_ref = create_dummy_doc_ref();
             let mut e = Encoder::new(Vec::new());
             e.array(1)
                 .unwrap()
                 .array(3)
                 .unwrap()
-                .encode_with(UuidV7::new(), &mut CborContext::Untagged)
+                .encode_with(*doc_ref.id(), &mut CborContext::Untagged)
                 .unwrap()
-                .encode_with(UuidV7::new(), &mut CborContext::Untagged)
+                .encode_with(*doc_ref.ver(), &mut CborContext::Untagged)
                 .unwrap()
-                .encode(create_dummy_doc_locator())
+                .encode(doc_ref.doc_locator().clone())
                 .unwrap();
             e
         } ;
@@ -275,15 +296,15 @@ mod tests {
 
     #[test_case(
         CompatibilityPolicy::Accept,
-        |uuid: UuidV7, doc_loc: DocLocator| {
+        |id, ver, doc_loc| {
             let mut e = Encoder::new(Vec::new());
             e.array(1)
                 .unwrap()
                 .array(3)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(id, &mut CborContext::Tagged)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(ver, &mut CborContext::Tagged)
                 .unwrap()
                 .encode(doc_loc)
                 .unwrap();
@@ -293,15 +314,15 @@ mod tests {
     )]
     #[test_case(
         CompatibilityPolicy::Fail,
-        |uuid: UuidV7, doc_loc: DocLocator| {
+        |id, ver, doc_loc| {
             let mut e = Encoder::new(Vec::new());
             e.array(1)
                 .unwrap()
                 .array(3)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(id, &mut CborContext::Tagged)
                 .unwrap()
-                .encode_with(uuid, &mut CborContext::Tagged)
+                .encode_with(ver, &mut CborContext::Tagged)
                 .unwrap()
                 .encode(doc_loc)
                 .unwrap();
@@ -311,26 +332,21 @@ mod tests {
     )]
     fn test_valid_cbor_decode(
         mut policy: CompatibilityPolicy,
-        e_gen: impl FnOnce(UuidV7, DocLocator) -> Encoder<Vec<u8>>,
+        e_gen: impl FnOnce(UuidV7, UuidV7, DocLocator) -> Encoder<Vec<u8>>,
     ) {
-        let uuid = UuidV7::new();
-        let doc_loc = create_dummy_doc_locator();
-        let e = e_gen(uuid, doc_loc.clone());
+        let doc_ref = create_dummy_doc_ref();
+        let e = e_gen(*doc_ref.id(), *doc_ref.ver(), doc_ref.doc_locator().clone());
 
         let doc_refs =
             DocumentRefs::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy)
                 .unwrap();
-        assert_eq!(doc_refs.0, vec![DocumentRef::new(uuid, uuid, doc_loc)]);
+        assert_eq!(doc_refs.0, vec![doc_ref]);
     }
 
     #[test]
     fn test_json_valid_serde() {
-        let uuid1 = UuidV7::new();
-        let uuid2 = UuidV7::new();
-        let doc_loc = create_dummy_doc_locator();
-
-        let doc_ref1 = DocumentRef::new(uuid1, uuid1, doc_loc.clone());
-        let doc_ref2 = DocumentRef::new(uuid2, uuid2, doc_loc);
+        let doc_ref1 = create_dummy_doc_ref();
+        let doc_ref2 = create_dummy_doc_ref();
 
         let refs = DocumentRefs(vec![doc_ref1, doc_ref2]);
 

@@ -6,9 +6,9 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::{
-    CatalystSignedDocument, DocumentRef,
+    CatalystSignedDocument,
     builder::tests::Builder,
-    metadata::{SupportedField, document_refs::doc_locator::tests::create_dummy_doc_locator},
+    metadata::SupportedField,
     providers::tests::TestCatalystProvider,
     validator::rules::{DocumentOwnershipRule, utils::create_dummy_key_pair},
 };
@@ -23,20 +23,14 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let id = UuidV7::new();
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Ref(
-                vec![
-                    DocumentRef::new(
-                        doc.doc_id().unwrap(),
-                        doc.doc_ver().unwrap(),
-                        create_dummy_doc_locator()
-                    )
-                ].into()
+                vec![doc.doc_ref().unwrap()].into()
             ))
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
@@ -56,20 +50,14 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let id = UuidV7::new();
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Ref(
-                vec![
-                    DocumentRef::new(
-                        doc.doc_id().unwrap(),
-                        doc.doc_ver().unwrap(),
-                        create_dummy_doc_locator()
-                    )
-                ].into()
+                vec![doc.doc_ref().unwrap()].into()
             ))
             .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
             .unwrap()
@@ -110,7 +98,7 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
@@ -118,13 +106,7 @@ use crate::{
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Ref(
-                vec![
-                    DocumentRef::new(
-                        doc.doc_id().unwrap(),
-                        doc.doc_ver().unwrap(),
-                        create_dummy_doc_locator()
-                    )
-                ].into()
+                vec![doc.doc_ref().unwrap()].into()
             ))
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
