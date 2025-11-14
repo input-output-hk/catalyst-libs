@@ -243,7 +243,7 @@ impl Cip509 {
                 LocalRefInt::X509Certs => {
                     m.x509_certs.get(key_ref.key_offset).and_then(|c| {
                         if let X509DerCert::X509Cert(c) = c {
-                            extract_key::x509_key(&c).ok()
+                            extract_key::x509_key(c).ok()
                         } else {
                             None
                         }
@@ -252,7 +252,7 @@ impl Cip509 {
                 LocalRefInt::C509Certs => {
                     m.c509_certs.get(key_ref.key_offset).and_then(|c| {
                         if let C509Cert::C509Certificate(c) = c {
-                            extract_key::c509_key(&c).ok()
+                            extract_key::c509_key(c).ok()
                         } else {
                             None
                         }
@@ -261,7 +261,7 @@ impl Cip509 {
                 LocalRefInt::PubKeys => {
                     m.pub_keys.get(key_ref.key_offset).and_then(|c| {
                         if let SimplePublicKeyType::Ed25519(c) = c {
-                            Some(c.clone())
+                            Some(*c)
                         } else {
                             None
                         }

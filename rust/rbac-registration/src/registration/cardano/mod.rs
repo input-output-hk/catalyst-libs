@@ -46,7 +46,7 @@ impl RegistrationChain {
     ///
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
-    ///   ownership (e.g., database lookup failures).
+    ///    ownership (e.g., database lookup failures).
     pub async fn new<State>(
         cip509: &Cip509,
         state: &mut State,
@@ -68,20 +68,7 @@ impl RegistrationChain {
                     );
             }
 
-            // Checks that a new registration doesn't contain a signing key that was used by any
-            // other chain. Returns a list of public keys in the registration.
-            for role in cip509.all_roles() {
-                if let Some(key) = cip509.signing_pk_for_role(role) {
-                    if let Some(previous) = state.chain_catalyst_id_from_public_key(&key).await? {
-                        if &previous != cat_id {
-                            cip509.report().functional_validation(
-                                &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
-                                "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
-                            );
-                        }
-                    }
-                }
-            }
+            check_signing_pk(cat_id, cip509, state).await?;
         }
 
         if cip509.report().is_problematic() {
@@ -113,7 +100,7 @@ impl RegistrationChain {
     ///
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
-    ///   ownership (e.g., database lookup failures).
+    ///    ownership (e.g., database lookup failures).
     pub async fn update<State>(
         &self,
         cip509: &Cip509,
@@ -143,23 +130,7 @@ impl RegistrationChain {
             }
         }
 
-        // Checks that a new registration doesn't contain a signing key that was used by any
-        // other chain. Returns a list of public keys in the registration.
-        {
-            let cat_id = self.catalyst_id();
-            for role in cip509.all_roles() {
-                if let Some(key) = cip509.signing_pk_for_role(role) {
-                    if let Some(previous) = state.chain_catalyst_id_from_public_key(&key).await? {
-                        if &previous != cat_id {
-                            cip509.report().functional_validation(
-                                &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
-                                "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
-                            );
-                        }
-                    }
-                }
-            }
-        }
+        check_signing_pk(self.catalyst_id(), cip509, state).await?;
 
         if cip509.report().is_problematic() {
             Ok(None)
@@ -453,7 +424,7 @@ impl RegistrationChainInner {
 
         check_validation_signature(
             cip509.validation_signature(),
-            &cip509.raw_aux_data(),
+            cip509.raw_aux_data(),
             signing_pk,
             cip509.report(),
             context,
@@ -461,7 +432,7 @@ impl RegistrationChainInner {
 
         if cip509.txn_inputs_hash().is_none() {
             cip509.report().missing_field("txn inputs hash", context);
-        };
+        }
 
         let Some(purpose) = cip509.purpose() else {
             cip509.report().missing_field("purpose", context);
@@ -551,12 +522,11 @@ impl RegistrationChainInner {
                 }
 
                 return Some(new_inner.update_cause_another_chain(cip509));
-            } else {
-                cip509
-                    .report()
-                    .missing_field("previous transaction ID", context);
-                return None;
             }
+            cip509
+                .report()
+                .missing_field("previous transaction ID", context);
+            return None;
         };
 
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
@@ -586,7 +556,7 @@ impl RegistrationChainInner {
 
         if cip509.txn_inputs_hash().is_none() {
             cip509.report().missing_field("txn inputs hash", context);
-        };
+        }
 
         let Some(purpose) = cip509.purpose() else {
             cip509.report().missing_field("purpose", context);
@@ -747,6 +717,32 @@ fn check_validation_signature(
     {
         report.functional_validation(&format!("Signature validation failed: {e}"), context);
     }
+}
+
+/// Checks that a new registration doesn't contain a signing key that was used by any
+/// other chain.
+async fn check_signing_pk<State>(
+    cat_id: &CatalystId,
+    cip509: &Cip509,
+    state: &State,
+) -> anyhow::Result<()>
+where
+    State: RBACState,
+{
+    for role in cip509.all_roles() {
+        if let Some(key) = cip509.signing_pk_for_role(role) {
+            if let Some(previous) = state.chain_catalyst_id_from_public_key(&key).await? {
+                if &previous != cat_id {
+                    cip509.report().functional_validation(
+                                &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
+                                "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
+                            );
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

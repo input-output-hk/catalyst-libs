@@ -40,7 +40,7 @@ struct Cip0134UriSetInner {
     /// URIs from c509 certificates.
     c_uris: UrisMap,
     /// URIs which are taken by another certificates.
-    taken_uris: HashSet<Cip0134Uri>,
+    taken: HashSet<Cip0134Uri>,
 }
 
 impl Cip0134UriSet {
@@ -57,7 +57,7 @@ impl Cip0134UriSet {
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken_uris,
+            taken: taken_uris,
         }))
     }
 
@@ -79,7 +79,7 @@ impl Cip0134UriSet {
             .values()
             .chain(self.c_uris().values())
             .flat_map(|uris| uris.iter())
-            .filter(|v| !self.0.taken_uris.contains(v))
+            .filter(|v| !self.0.taken.contains(v))
     }
 
     /// Returns `true` if both x509 and c509 certificate maps are empty.
@@ -167,7 +167,7 @@ impl Cip0134UriSet {
         let Cip0134UriSetInner {
             mut x_uris,
             mut c_uris,
-            mut taken_uris,
+            taken: mut taken_uris,
         } = Arc::unwrap_or_clone(self.0);
 
         for (index, cert) in metadata.x509_certs.iter().enumerate() {
@@ -214,7 +214,7 @@ impl Cip0134UriSet {
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken_uris,
+            taken: taken_uris,
         }))
     }
 
@@ -239,7 +239,7 @@ impl Cip0134UriSet {
         let Cip0134UriSetInner {
             x_uris,
             c_uris,
-            mut taken_uris,
+            taken: mut taken_uris,
         } = Arc::unwrap_or_clone(self.0);
 
         taken_uris.extend(latest_taken_uris);
@@ -247,7 +247,7 @@ impl Cip0134UriSet {
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken_uris,
+            taken: taken_uris,
         }))
     }
 }
