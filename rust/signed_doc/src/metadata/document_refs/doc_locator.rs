@@ -140,38 +140,18 @@ impl Encode<()> for DocLocator {
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
 
     use minicbor::{Decoder, Encoder};
 
     use super::*;
-    use crate::{Builder, ContentType, UuidV7};
-
-    pub(crate) fn create_dummy_doc_locator() -> DocLocator {
-        use crate::UuidV4;
-
-        let id = UuidV7::new();
-        let ver = UuidV7::new();
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": id.to_string(),
-                "ver": ver.to_string(),
-                "type": UuidV4::new().to_string(),
-                "content-type": ContentType::Json,
-            }))
-            .expect("Should create metadata")
-            .with_json_content(&serde_json::json!({"test": "content"}))
-            .expect("Should set content")
-            .build()
-            .expect("Should build document");
-
-        let cid = doc.to_cid_v1().expect("Should generate CID");
-        DocLocator::from(cid)
-    }
+    use crate::{
+        Builder, ContentType, UuidV7, metadata::document_refs::tests::create_dummy_doc_ref,
+    };
 
     #[test]
     fn test_doc_locator_encode_decode() {
-        let locator = create_dummy_doc_locator();
+        let locator = create_dummy_doc_ref().doc_locator().clone();
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
         locator.encode(&mut encoder, &mut ()).unwrap();
@@ -182,7 +162,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_doc_locator_display() {
-        let locator = create_dummy_doc_locator();
+        let locator = create_dummy_doc_ref().doc_locator().clone();
         let display_str = locator.to_string();
         assert!(
             display_str.starts_with('b'),
@@ -192,7 +172,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_doc_locator_from_str() {
-        let locator = create_dummy_doc_locator();
+        let locator = create_dummy_doc_ref().doc_locator().clone();
         let display_str = locator.to_string();
         let parsed = display_str
             .parse::<DocLocator>()

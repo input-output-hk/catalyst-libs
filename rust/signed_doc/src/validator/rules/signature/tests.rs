@@ -5,17 +5,15 @@ use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
 use crate::{
-    metadata::document_refs::{DocumentRef, doc_locator::tests::create_dummy_doc_locator},
-    providers::tests::*,
-    validator::rules::utils::create_dummy_key_pair,
-    *,
+    metadata::document_refs::tests::create_dummy_doc_ref, providers::tests::*,
+    validator::rules::utils::create_dummy_key_pair, *,
 };
 
 fn metadata() -> serde_json::Value {
-    let ref_doc = DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
-    let reply_doc = DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
-    let template_doc = DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
-    let parameters_doc = DocumentRef::new(UuidV7::new(), UuidV7::new(), create_dummy_doc_locator());
+    let ref_doc = create_dummy_doc_ref();
+    let reply_doc = create_dummy_doc_ref();
+    let template_doc = create_dummy_doc_ref();
+    let parameters_doc = create_dummy_doc_ref();
 
     serde_json::json!({
         "content-type": ContentType::Json.to_string(),
@@ -204,14 +202,7 @@ fn parameters_alias_field(
     e.bytes(m_p_headers.as_slice())?;
     // empty unprotected headers
     e.map(1)?;
-    e.str(alias)?.encode_with(
-        DocumentRef::new(
-            UuidV7::new(),
-            UuidV7::new(),
-            crate::metadata::document_refs::doc_locator::tests::create_dummy_doc_locator(),
-        ),
-        &mut (),
-    )?;
+    e.str(alias)?.encode_with(create_dummy_doc_ref(), &mut ())?;
     // content (random bytes)
     let content = [1, 2, 3];
     e.bytes(&content)?;
