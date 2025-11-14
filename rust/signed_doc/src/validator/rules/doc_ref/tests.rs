@@ -15,7 +15,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -34,19 +34,19 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(None, &ref_doc_1).unwrap();
+        provider.add_document(&ref_doc_1).unwrap();
         let ref_doc_2 = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
             .build();
-        provider.add_document(None, &ref_doc_2).unwrap();
+        provider.add_document(&ref_doc_2).unwrap();
         let ref_doc_3 = Builder::new()
         .with_metadata_field(SupportedField::Id(UuidV7::new()))
         .with_metadata_field(SupportedField::Ver(UuidV7::new()))
         .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
         .build();
-        provider.add_document(None, &ref_doc_3).unwrap();
+        provider.add_document(&ref_doc_3).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -70,19 +70,19 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(None, &ref_doc_1).unwrap();
+        provider.add_document(&ref_doc_1).unwrap();
         let ref_doc_2 = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
             .build();
-        provider.add_document(None, &ref_doc_2).unwrap();
+        provider.add_document(&ref_doc_2).unwrap();
         let ref_doc_3 = Builder::new()
         .with_metadata_field(SupportedField::Id(UuidV7::new()))
         .with_metadata_field(SupportedField::Ver(UuidV7::new()))
         .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
         .build();
-        provider.add_document(None, &ref_doc_3).unwrap();
+        provider.add_document(&ref_doc_3).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -106,18 +106,18 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(None, &ref_doc_1).unwrap();
+        provider.add_document(&ref_doc_1).unwrap();
         let ref_doc_2 = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
             .build();
-        provider.add_document(None, &ref_doc_2).unwrap();
+        provider.add_document(&ref_doc_2).unwrap();
         let ref_doc_3 = Builder::new()
         .with_metadata_field(SupportedField::Id(UuidV7::new()))
         .with_metadata_field(SupportedField::Ver(UuidV7::new()))
         .build();
-        provider.add_document(None, &ref_doc_3).unwrap();
+        provider.add_document(&ref_doc_3).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -141,7 +141,13 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(Some(create_dummy_doc_ref()), &ref_doc).unwrap();
+        let new_ref = create_dummy_doc_ref();
+        let new_ref = DocumentRef::new(
+            ref_doc.doc_id().unwrap(),
+            ref_doc.doc_ver().unwrap(),
+            new_ref.doc_locator().clone()
+        );
+        provider.add_document_with_ref(new_ref, &ref_doc);
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -204,7 +210,7 @@ async fn ref_multiple_specified_test(
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -223,19 +229,19 @@ async fn ref_multiple_specified_test(
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
-        provider.add_document(None, &ref_doc_1).unwrap();
+        provider.add_document(&ref_doc_1).unwrap();
         let ref_doc_2 = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[1].clone()))
             .build();
-        provider.add_document(None, &ref_doc_2).unwrap();
+        provider.add_document(&ref_doc_2).unwrap();
         let ref_doc_3 = Builder::new()
         .with_metadata_field(SupportedField::Id(UuidV7::new()))
         .with_metadata_field(SupportedField::Ver(UuidV7::new()))
         .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
         .build();
-        provider.add_document(None, &ref_doc_3).unwrap();
+        provider.add_document(&ref_doc_3).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(

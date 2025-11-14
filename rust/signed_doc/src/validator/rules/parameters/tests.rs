@@ -15,7 +15,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(
@@ -34,7 +34,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let common_parameter_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()]
                 .into();
@@ -43,7 +43,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
             .build();
-        provider.add_document(None, &template_doc).unwrap();
+        provider.add_document(&template_doc).unwrap();
 
 
         Builder::new()
@@ -64,7 +64,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
@@ -86,13 +86,13 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let template_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &template_doc).unwrap();
+        provider.add_document(&template_doc).unwrap();
 
 
         Builder::new()
@@ -116,7 +116,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let template_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -125,7 +125,7 @@ use crate::{
                 vec![create_dummy_doc_ref()].into()
             ))
             .build();
-        provider.add_document(None, &template_doc).unwrap();
+        provider.add_document(&template_doc).unwrap();
 
 
         Builder::new()
@@ -149,7 +149,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let common_parameter_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()]
                 .into();
@@ -158,7 +158,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
             .build();
-        provider.add_document(None, &replied_doc).unwrap();
+        provider.add_document(&replied_doc).unwrap();
 
 
         Builder::new()
@@ -179,7 +179,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
@@ -201,13 +201,13 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let reply_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &reply_doc).unwrap();
+        provider.add_document(&reply_doc).unwrap();
 
 
         Builder::new()
@@ -231,7 +231,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let reply_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -240,7 +240,7 @@ use crate::{
                 vec![create_dummy_doc_ref()].into()
             ))
             .build();
-        provider.add_document(None, &reply_doc).unwrap();
+        provider.add_document(&reply_doc).unwrap();
 
 
         Builder::new()
@@ -263,7 +263,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let common_parameter_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()]
                 .into();
@@ -272,7 +272,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
 
         Builder::new()
@@ -293,7 +293,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -315,13 +315,13 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let ref_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
 
         Builder::new()
@@ -344,7 +344,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let ref_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
@@ -353,7 +353,7 @@ use crate::{
                 vec![create_dummy_doc_ref()].into()
             ))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
 
         Builder::new()
@@ -376,7 +376,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(
@@ -394,7 +394,7 @@ use crate::{
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(

@@ -18,11 +18,11 @@ mod common;
 
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         proposal_comment_doc(&proposal, &template, &parameters, provider)
     }
     => true
@@ -31,13 +31,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         proposal_comment_doc(&proposal, &template, &parameters, provider)
     }
     => true
@@ -46,15 +46,15 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = category_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = category_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = category_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = category_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         proposal_comment_doc(&proposal, &template, &parameters, provider)
     }
     => true
@@ -63,12 +63,12 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let comment = proposal_comment_doc(&proposal, &template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let comment = proposal_comment_doc(&proposal, &template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -100,11 +100,11 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
         provider.add_sk(kid.clone(), sk.clone());
@@ -134,11 +134,11 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -169,11 +169,11 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -203,10 +203,10 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -235,11 +235,11 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -268,9 +268,9 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());

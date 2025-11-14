@@ -75,10 +75,7 @@ async fn test_without_chaining_documents() {
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = last.doc_ref().unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
+        provider.add_document(&first).unwrap();
 
         (provider, last)
     } => true;
@@ -122,12 +119,9 @@ async fn test_without_chaining_documents() {
                 Chain::new(-2, Some(intermediate_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = last.doc_ref().unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(intermediate_doc_ref), &intermediate).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
-
+        provider.add_document(&first).unwrap();
+        provider.add_document(&intermediate).unwrap();
+        
         (provider, last)
     } => true;
     "valid intermediate chained documents (0, 1, -2)"
@@ -170,11 +164,8 @@ async fn test_valid_chained_documents(
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = last.doc_ref().unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
-
+        provider.add_document(&first).unwrap();
+    
         (provider, last)
     } => false;
     "not have the same id as the document being chained to"
@@ -207,11 +198,8 @@ async fn test_valid_chained_documents(
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = last.doc_ref().unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
-
+        provider.add_document(&first).unwrap();
+       
         (provider, last)
     } => false;
     "not have a ver that is greater than the ver being chained to"
@@ -245,11 +233,8 @@ async fn test_valid_chained_documents(
                 Chain::new(-1, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = last.doc_ref().unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
-
+        provider.add_document(&first).unwrap();
+       
         (provider, last)
     } => false;
     "not the same type as the chained document"
@@ -282,10 +267,7 @@ async fn test_valid_chained_documents(
                 Chain::new(-2, Some(first_doc_ref.clone()))
             ))
             .build();
-        let last_doc_ref = last.doc_ref().unwrap();
-
-        provider.add_document(Some(first_doc_ref), &first).unwrap();
-        provider.add_document(Some(last_doc_ref), &last).unwrap();
+        provider.add_document(&first).unwrap();
 
         (provider, last)
     } => false;

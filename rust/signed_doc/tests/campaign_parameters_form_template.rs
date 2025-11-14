@@ -15,8 +15,8 @@ mod common;
 
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         campaign_parameters_form_template_doc(&parameters, provider)
     }
     => true
@@ -25,8 +25,8 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -52,8 +52,8 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
@@ -79,8 +79,8 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());

@@ -23,7 +23,7 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let id = UuidV7::new();
         Builder::new()
@@ -50,7 +50,7 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let id = UuidV7::new();
         Builder::new()
@@ -98,7 +98,7 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();

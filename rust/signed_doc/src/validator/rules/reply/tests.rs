@@ -18,7 +18,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
             .with_metadata_field(SupportedField::Type(exp_type))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
@@ -40,7 +40,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
             .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
@@ -61,7 +61,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
@@ -84,7 +84,7 @@ use crate::{
             ))
             .with_metadata_field(SupportedField::Type(exp_type))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
@@ -107,7 +107,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_type))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(common_ref))
@@ -128,7 +128,7 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
