@@ -254,6 +254,28 @@ impl CatalystSignedDocument {
         Ok(minicbor::decode_with(bytes, &mut policy)?)
     }
 
+    /// Returns a `DocumentRef` for the current document.
+    ///
+    /// Generating a CID v1 (Content Identifier version 1) creates an IPFS-compatible
+    /// content identifier using:
+    /// - CID version 1
+    /// - CBOR multicodec (0x51)
+    /// - SHA2-256 multihash
+    ///
+    /// # Errors
+    ///  - CBOR serialization failure
+    ///  - Multihash construction failure
+    ///  - Missing 'id' field.
+    ///  - Missing 'ver' field.
+    pub fn doc_ref(&self) -> anyhow::Result<DocumentRef> {
+        let cid = self.to_cid_v1()?;
+        Ok(DocumentRef::new(
+            self.doc_id()?,
+            self.doc_ver()?,
+            DocLocator::from(cid),
+        ))
+    }
+
     /// Generate a CID v1 (Content Identifier version 1) for this signed document.
     ///
     /// Creates an IPFS-compatible content identifier using:
@@ -264,23 +286,11 @@ impl CatalystSignedDocument {
     /// # Errors
     ///  - CBOR serialization failure
     ///  - Multihash construction failure
-    pub fn to_cid_v1(&self) -> Result<cid_v1::Cid, cid_v1::CidError> {
+    fn to_cid_v1(&self) -> Result<cid_v1::Cid, cid_v1::CidError> {
         let cbor_bytes = self
             .to_bytes()
             .map_err(|e| cid_v1::CidError::Encoding(e.to_string()))?;
         cid_v1::to_cid_v1(&cbor_bytes)
-    }
-
-    /// Generate a CID v1 and return it as a multibase-encoded string.
-    ///
-    /// Uses base32 encoding (CID v1 default). The resulting string starts with 'b'.
-    ///
-    /// # Errors
-    ///  - CBOR serialization failure
-    ///  - CID generation failure
-    pub fn to_cid_v1_string(&self) -> Result<String, cid_v1::CidError> {
-        let cid = self.to_cid_v1()?;
-        Ok(cid.to_string())
     }
 }
 
