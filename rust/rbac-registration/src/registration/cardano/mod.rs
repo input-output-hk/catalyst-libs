@@ -542,7 +542,7 @@ impl RegistrationChainInner {
                 if cat_id == &self.catalyst_id {
                     cip509.report().functional_validation(
                         &format!(
-                            "Trying to apply the first registration to the assosiated {} again",
+                            "Trying to apply the first registration to the associated {} again",
                             cat_id.as_short_id()
                         ),
                         "It isn't allowed to submit first registration twice",
@@ -642,9 +642,9 @@ impl RegistrationChainInner {
         Some(new_inner)
     }
 
-    /// Update the registration chain with the `cip509` assosiated to another chain.
+    /// Update the registration chain with the `cip509` associated to another chain.
     /// This is the case when registration for different chain affecting the current one,
-    /// by invalidating some data for the current registration chain (stoling stake
+    /// by invalidating some data for the current registration chain (stealing stake
     /// addresses etc.).
     ///
     /// The provided `cip509` should be fully validated by another chain before trying to

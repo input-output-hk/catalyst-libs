@@ -1,4 +1,4 @@
-//! Cardano RBAC state traits, which are used during different statefull validation
+//! Cardano RBAC state traits, which are used during different stateful validation
 //! procedures.
 
 use std::future::Future;
@@ -44,7 +44,7 @@ pub trait RBACState {
         txn_id: &TransactionId,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
-    /// Update the update by "taking" the given `StakeAddress` for the correspoding RBAC
+    /// Update the update by "taking" the given `StakeAddress` for the corresponding RBAC
     /// chain's by the given `CatalystId`.
     fn take_stake_address_from_chain(
         &mut self,
