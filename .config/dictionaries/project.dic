@@ -205,6 +205,7 @@ moka
 MPMC
 msvc
 Multiaddr
+multibase
 multicodec
 multiera
 multihash
@@ -346,6 +347,7 @@ utimensat
 UTXO
 uuidv4
 uuidv7
+varint
 venv
 vitss
 Vkey

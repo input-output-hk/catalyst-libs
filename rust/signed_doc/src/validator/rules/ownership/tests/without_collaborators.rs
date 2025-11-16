@@ -36,7 +36,7 @@ use crate::{
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
@@ -83,7 +83,7 @@ use crate::{
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         Builder::new()
@@ -106,7 +106,7 @@ use crate::{
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
             .unwrap()
             .build();
-        provider.add_document(None, &doc).unwrap();
+        provider.add_document(&doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
