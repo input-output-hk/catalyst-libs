@@ -176,6 +176,7 @@ timestamp of when the document was created.
 #### `id` Validation
 
 The document ID validation is performed based on timestamp thresholds:
+
 * If `future_threshold` is configured, the document `id` cannot be too far in the future from the
     current time.
 * If `past_threshold` is configured, the document `id` cannot be too far in the past from the
@@ -640,4 +641,3 @@ classDiagram
 [RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC9562]: https://www.rfc-editor.org/rfc/rfc9562.html
-

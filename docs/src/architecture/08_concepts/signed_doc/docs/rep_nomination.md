@@ -122,6 +122,7 @@ timestamp of when the document was created.
 #### [`id`](../metadata.md#id) Validation
 
 The document ID validation is performed based on timestamp thresholds:
+
 * If `future_threshold` is configured, the document `id` cannot be too far in the future from the
   current time.
 * If `past_threshold` is configured, the document `id` cannot be too far in the past from the
@@ -304,4 +305,3 @@ Only the original author can update and sign a new version of documents.
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-

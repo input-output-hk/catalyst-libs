@@ -46,8 +46,10 @@ _ver_description_sequenced: """
 		validation: """
 			1. The document version must always be >= the document ID.
 			2. IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist.
-			3. When a document with the same `id` already exists, the new document's `ver` must be greater than the latest known submitted version for that `id`.
-			4. When a document with the same `id` already exists, the new document's `type` must be the same as the latest known submitted document's `type` for that `id`.
+			3. When a document with the same `id` already exists, the new document's `ver` must be greater than
+    the latest known submitted version for that `id`.
+			4. When a document with the same `id` already exists, the new document's `type` must be the same as
+    the latest known submitted document's `type` for that `id`.
 			"""
 	}
 }

@@ -140,8 +140,11 @@ _allMetadataNames: or([
 			"""
 		validation: """
 			The document ID validation is performed based on timestamp thresholds:
-			* If `future_threshold` is configured, the document `id` cannot be too far in the future from the current time.
-			* If `past_threshold` is configured, the document `id` cannot be too far in the past from the current time.
+
+			* If `future_threshold` is configured, the document `id` cannot be too far in the future from the
+    current time.
+			* If `past_threshold` is configured, the document `id` cannot be too far in the past from the
+    current time.
 			"""
 	}
 
