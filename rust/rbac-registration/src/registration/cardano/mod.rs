@@ -27,7 +27,7 @@ use crate::cardano::{
         CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
         RoleData, RoleDataRecord, ValidationSignature,
     },
-    state::RBACState,
+    state::RbacChainsState,
 };
 
 /// Registration chains.
@@ -52,7 +52,7 @@ impl RegistrationChain {
         state: &mut State,
     ) -> anyhow::Result<Option<Self>>
     where
-        State: RBACState,
+        State: RbacChainsState,
     {
         let Some(new_chain) = Self::new_stateless(cip509) else {
             return Ok(None);
@@ -107,7 +107,7 @@ impl RegistrationChain {
         state: &State,
     ) -> anyhow::Result<Option<Self>>
     where
-        State: RBACState,
+        State: RbacChainsState,
     {
         let Some(new_chain) = self.update_stateless(cip509) else {
             return Ok(None);
@@ -727,7 +727,7 @@ async fn check_signing_pk<State>(
     state: &State,
 ) -> anyhow::Result<()>
 where
-    State: RBACState,
+    State: RbacChainsState,
 {
     for role in cip509.all_roles() {
         if let Some(key) = cip509.signing_pk_for_role(role) {

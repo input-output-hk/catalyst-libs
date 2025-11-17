@@ -10,7 +10,7 @@ use ed25519_dalek::VerifyingKey;
 use crate::registration::cardano::RegistrationChain;
 
 /// RBAC chains state trait
-pub trait RBACState {
+pub trait RbacChainsState {
     /// Returns RBAC chain for the given Catalyst ID.
     fn chain(
         &self,
