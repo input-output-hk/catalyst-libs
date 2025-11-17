@@ -63,13 +63,13 @@ impl Cip0134UriSet {
 
     /// Returns a mapping from the x509 certificate index to URIs contained within.
     #[must_use]
-    pub fn x_uris(&self) -> &UrisMap {
+    pub(crate) fn x_uris(&self) -> &UrisMap {
         &self.0.x_uris
     }
 
     /// Returns a mapping from the c509 certificate index to URIs contained within.
     #[must_use]
-    pub fn c_uris(&self) -> &UrisMap {
+    pub(crate) fn c_uris(&self) -> &UrisMap {
         &self.0.c_uris
     }
 
@@ -88,34 +88,34 @@ impl Cip0134UriSet {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
-    /// Returns a list of addresses by the given role.
+    /// Returns a list of active (without taken) URIs by the given role.
     #[must_use]
-    pub fn role_addresses(
+    pub(crate) fn role_uris(
         &self,
         role: usize,
-    ) -> HashSet<Address> {
+    ) -> HashSet<Cip0134Uri> {
         let mut result = HashSet::new();
 
         if let Some(uris) = self.x_uris().get(&role) {
-            result.extend(uris.iter().map(|uri| uri.address().clone()));
+            result.extend(uris.iter().filter(|v| !self.0.taken.contains(v)).cloned());
         }
         if let Some(uris) = self.c_uris().get(&role) {
-            result.extend(uris.iter().map(|uri| uri.address().clone()));
+            result.extend(uris.iter().filter(|v| !self.0.taken.contains(v)).cloned());
         }
 
         result
     }
 
-    /// Returns a set of stake addresses by the given role.
+    /// Returns a set of active (without taken) stake addresses by the given role.
     #[must_use]
-    pub fn role_stake_addresses(
+    pub(crate) fn role_stake_addresses(
         &self,
         role: usize,
     ) -> HashSet<StakeAddress> {
-        self.role_addresses(role)
+        self.role_uris(role)
             .iter()
-            .filter_map(|address| {
-                match address {
+            .filter_map(|uri| {
+                match uri.address() {
                     Address::Stake(a) => Some(a.clone().into()),
                     _ => None,
                 }
@@ -123,7 +123,13 @@ impl Cip0134UriSet {
             .collect()
     }
 
-    /// Returns a set of all stake addresses.
+    /// Returns a set of all active (without taken) addresses.
+    #[must_use]
+    pub fn addresses(&self) -> HashSet<Address> {
+        self.values().map(Cip0134Uri::address).cloned().collect()
+    }
+
+    /// Returns a set of all active (without taken) stake addresses.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.values()
@@ -401,7 +407,7 @@ mod tests {
         let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
-        assert_eq!(set.role_addresses(0).len(), 1);
+        assert_eq!(set.role_uris(0).len(), 1);
         assert_eq!(set.role_stake_addresses(0).len(), 1);
         assert_eq!(set.stake_addresses().len(), 1);
 

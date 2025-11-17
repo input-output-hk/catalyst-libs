@@ -3,7 +3,7 @@
 
 use std::future::Future;
 
-use cardano_blockchain_types::StakeAddress;
+use cardano_blockchain_types::pallas_addresses::Address;
 use catalyst_types::catalyst_id::CatalystId;
 use ed25519_dalek::VerifyingKey;
 
@@ -23,12 +23,11 @@ pub trait RbacChainsState {
         id: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<bool>> + Send;
 
-    /// Returns a current valid RBAC chain Catalyst ID corresponding to the given stake
-    /// address.
-    fn chain_catalyst_id_from_stake_address(
+    /// Returns `true` if a provided address already used by any RBAC chain.
+    fn is_addressed_used(
         &self,
-        address: &StakeAddress,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
+        address: &Address,
+    ) -> impl Future<Output = anyhow::Result<bool>> + Send;
 
     /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
     /// signing public key.
@@ -37,11 +36,10 @@ pub trait RbacChainsState {
         key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
-    /// Update the chain by "taking" the given `StakeAddress` for the corresponding
+    /// Update the chain by "taking" the given `Address` for the corresponding
     /// RBAC chain's by the given `CatalystId`.
-    fn take_stake_address_from_chain(
+    fn take_address_from_chains(
         &mut self,
-        id: &CatalystId,
-        address: &StakeAddress,
+        addresses: impl Iterator<Item = Address>,
     ) -> impl Future<Output = anyhow::Result<()>> + Send;
 }

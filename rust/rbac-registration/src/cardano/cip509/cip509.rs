@@ -319,18 +319,6 @@ impl Cip509 {
         self.catalyst_id.as_ref()
     }
 
-    /// Returns a list of addresses extracted from certificate URIs of a specific role.
-    #[must_use]
-    pub fn certificate_addresses(
-        &self,
-        role: usize,
-    ) -> HashSet<Address> {
-        self.metadata
-            .as_ref()
-            .map(|m| m.certificate_uris.role_addresses(role))
-            .unwrap_or_default()
-    }
-
     /// Return validation signature.
     #[must_use]
     pub fn validation_signature(&self) -> Option<&ValidationSignature> {
@@ -347,6 +335,14 @@ impl Cip509 {
     #[must_use]
     pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
         self.metadata.as_ref()
+    }
+
+    /// Returns a set of addresses.
+    #[must_use]
+    pub fn addresses(&self) -> HashSet<Address> {
+        self.certificate_uris()
+            .map(Cip0134UriSet::addresses)
+            .unwrap_or_default()
     }
 
     /// Returns a set of stake addresses.
