@@ -92,8 +92,10 @@ timestamp of when the document was created.
 #### [`id`](../metadata.md#id) Validation
 
 The document ID validation is performed based on timestamp thresholds:
-* If `future_threshold` is configured, the document `id` cannot be too far in the future from the current time.
-* If `past_threshold` is configured, the document `id` cannot be too far in the past from the current time.
+* If `future_threshold` is configured, the document `id` cannot be too far in the future from the
+  current time.
+* If `past_threshold` is configured, the document `id` cannot be too far in the past from the
+  current time.
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
@@ -110,8 +112,10 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 1. The document version must always be >= the document ID.
 2. IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist.
-3. When a document with the same `id` already exists, the new document's `ver` must be greater than the latest known submitted version for that `id`.
-4. When a document with the same `id` already exists, the new document's `type` must be the same as the latest known submitted document's `type` for that `id`.
+3. When a document with the same `id` already exists, the new document's `ver` must be greater than
+    the latest known submitted version for that `id`.
+4. When a document with the same `id` already exists, the new document's `type` must be the same as
+    the latest known submitted document's `type` for that `id`.
 
 ### [`parameters`](../metadata.md#parameters)
 
@@ -185,3 +189,4 @@ Only the original author can update and sign a new version of documents.
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+

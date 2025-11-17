@@ -89,8 +89,10 @@ timestamp of when the document was created.
 #### [`id`](../metadata.md#id) Validation
 
 The document ID validation is performed based on timestamp thresholds:
-* If `future_threshold` is configured, the document `id` cannot be too far in the future from the current time.
-* If `past_threshold` is configured, the document `id` cannot be too far in the past from the current time.
+* If `future_threshold` is configured, the document `id` cannot be too far in the future from the
+  current time.
+* If `past_threshold` is configured, the document `id` cannot be too far in the past from the
+  current time.
 
 ### [`ver`](../metadata.md#ver)
 
@@ -109,8 +111,10 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 1. The document version must always be >= the document ID.
 2. IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist.
-3. When a document with the same `id` already exists, the new document's `ver` must be greater than the latest known submitted version for that `id`.
-4. When a document with the same `id` already exists, the new document's `type` must be the same as the latest known submitted document's `type` for that `id`.
+3. When a document with the same `id` already exists, the new document's `ver` must be greater than
+    the latest known submitted version for that `id`.
+4. When a document with the same `id` already exists, the new document's `type` must be the same as
+    the latest known submitted document's `type` for that `id`.
 
 ### [`revocations`](../metadata.md#revocations)
 
@@ -500,3 +504,4 @@ Only the original author can update and sign a new version of documents.
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
 [RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
+
