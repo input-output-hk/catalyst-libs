@@ -337,14 +337,6 @@ impl Cip509 {
         self.metadata.as_ref()
     }
 
-    /// Returns a set of addresses.
-    #[must_use]
-    pub fn addresses(&self) -> HashSet<Address> {
-        self.certificate_uris()
-            .map(Cip0134UriSet::addresses)
-            .unwrap_or_default()
-    }
-
     /// Returns a set of stake addresses.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {

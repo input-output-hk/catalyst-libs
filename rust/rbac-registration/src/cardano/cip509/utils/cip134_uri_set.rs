@@ -39,8 +39,8 @@ struct Cip0134UriSetInner {
     x_uris: UrisMap,
     /// URIs from c509 certificates.
     c_uris: UrisMap,
-    /// URIs which are taken by another chains.
-    taken: HashSet<Cip0134Uri>,
+    /// `StakeAddress` which are taken by another chains.
+    taken_stake_addresses: HashSet<StakeAddress>,
 }
 
 impl Cip0134UriSet {
@@ -53,11 +53,11 @@ impl Cip0134UriSet {
     ) -> Self {
         let x_uris = extract_x509_uris(x509_certs, report);
         let c_uris = extract_c509_uris(c509_certs, report);
-        let taken_uris = HashSet::new();
+        let taken_stake_addresses = HashSet::new();
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken: taken_uris,
+            taken_stake_addresses,
         }))
     }
 
@@ -73,13 +73,12 @@ impl Cip0134UriSet {
         &self.0.c_uris
     }
 
-    /// Returns an iterator over of active (without taken) `Cip0134Uri`.
+    /// Returns an iterator over of `Cip0134Uri`.
     pub(crate) fn values(&self) -> impl Iterator<Item = &Cip0134Uri> {
         self.x_uris()
             .values()
             .chain(self.c_uris().values())
             .flat_map(|uris| uris.iter())
-            .filter(|v| !self.0.taken.contains(v))
     }
 
     /// Returns `true` if both x509 and c509 certificate maps are empty.
@@ -88,7 +87,7 @@ impl Cip0134UriSet {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
-    /// Returns a list of active (without taken) URIs by the given role.
+    /// Returns a list of URIs by the given role.
     #[must_use]
     pub(crate) fn role_uris(
         &self,
@@ -97,16 +96,16 @@ impl Cip0134UriSet {
         let mut result = HashSet::new();
 
         if let Some(uris) = self.x_uris().get(&role) {
-            result.extend(uris.iter().filter(|v| !self.0.taken.contains(v)).cloned());
+            result.extend(uris.iter().cloned());
         }
         if let Some(uris) = self.c_uris().get(&role) {
-            result.extend(uris.iter().filter(|v| !self.0.taken.contains(v)).cloned());
+            result.extend(uris.iter().cloned());
         }
 
         result
     }
 
-    /// Returns a set of active (without taken) stake addresses by the given role.
+    /// Returns a set of stake addresses by the given role.
     #[must_use]
     pub(crate) fn role_stake_addresses(
         &self,
@@ -121,12 +120,6 @@ impl Cip0134UriSet {
                 }
             })
             .collect()
-    }
-
-    /// Returns a set of all active (without taken) addresses.
-    #[must_use]
-    pub fn addresses(&self) -> HashSet<Address> {
-        self.values().map(Cip0134Uri::address).cloned().collect()
     }
 
     /// Returns a set of all active (without taken) stake addresses.
@@ -173,7 +166,7 @@ impl Cip0134UriSet {
         let Cip0134UriSetInner {
             mut x_uris,
             mut c_uris,
-            taken: mut taken_uris,
+            mut taken_stake_addresses,
         } = Arc::unwrap_or_clone(self.0);
 
         for (index, cert) in metadata.x509_certs.iter().enumerate() {
@@ -186,9 +179,6 @@ impl Cip0134UriSet {
                 },
                 X509DerCert::X509Cert(_) => {
                     if let Some(uris) = metadata.certificate_uris.x_uris().get(&index) {
-                        uris.iter().for_each(|v| {
-                            taken_uris.remove(v);
-                        });
                         x_uris.insert(index, uris.clone());
                     }
                 },
@@ -208,19 +198,24 @@ impl Cip0134UriSet {
                 },
                 C509Cert::C509Certificate(_) => {
                     if let Some(uris) = metadata.certificate_uris.c_uris().get(&index) {
-                        uris.iter().for_each(|v| {
-                            taken_uris.remove(v);
-                        });
                         c_uris.insert(index, uris.clone());
                     }
                 },
             }
         }
 
+        metadata
+            .certificate_uris
+            .stake_addresses()
+            .iter()
+            .for_each(|v| {
+                taken_stake_addresses.remove(v);
+            });
+
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken: taken_uris,
+            taken_stake_addresses,
         }))
     }
 
@@ -233,27 +228,25 @@ impl Cip0134UriSet {
         self,
         reg: &Cip509RbacMetadata,
     ) -> Self {
-        let current_uris_set = self.values().collect::<HashSet<_>>();
-
-        let latest_taken_uris = reg
+        let current_stake_addresses = self.stake_addresses();
+        let latest_taken_stake_addresses = reg
             .certificate_uris
-            .values()
-            .filter(|v| current_uris_set.contains(v))
-            .cloned()
-            .collect::<Vec<_>>();
+            .stake_addresses()
+            .into_iter()
+            .filter(|v| current_stake_addresses.contains(&v));
 
         let Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken: mut taken_uris,
+            mut taken_stake_addresses,
         } = Arc::unwrap_or_clone(self.0);
 
-        taken_uris.extend(latest_taken_uris);
+        taken_stake_addresses.extend(latest_taken_stake_addresses);
 
         Self(Arc::new(Cip0134UriSetInner {
             x_uris,
             c_uris,
-            taken: taken_uris,
+            taken_stake_addresses,
         }))
     }
 }

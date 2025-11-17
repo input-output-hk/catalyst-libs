@@ -9,9 +9,7 @@ use std::{
 
 use anyhow::Context;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{
-    hashes::TransactionId, pallas_addresses::Address, Point, StakeAddress, TxnIndex,
-};
+use cardano_blockchain_types::{hashes::TransactionId, Point, StakeAddress, TxnIndex};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
@@ -78,7 +76,7 @@ impl RegistrationChain {
         }
 
         state
-            .take_address_from_chains(cip509.addresses().into_iter())
+            .take_stake_address_from_chains(cip509.stake_addresses().into_iter())
             .await?;
 
         Ok(Some(new_chain))
@@ -114,14 +112,14 @@ impl RegistrationChain {
         };
 
         // Check that addresses from the new registration aren't used in other chains.
-        let previous_addresses = self.addresses();
-        let reg_addresses = cip509.addresses();
+        let previous_addresses = self.stake_addresses();
+        let reg_addresses = cip509.stake_addresses();
         let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
         for address in &new_addresses {
-            if state.is_addressed_used(address).await? {
+            if state.is_stake_address_used(address).await? {
                 cip509.report().functional_validation(
-                        &format!("{address} addresses is already used"),
-                        "It isn't allowed to use same address in multiple registration chains, if its not a new chain",
+                        &format!("{address} stake address is already used"),
+                        "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
                     );
             }
         }
@@ -311,12 +309,6 @@ impl RegistrationChain {
             .role_data_record
             .get(role)
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
-    }
-
-    /// Returns all addresses associated to this chain.
-    #[must_use]
-    pub fn addresses(&self) -> HashSet<Address> {
-        self.inner.certificate_uris.addresses()
     }
 
     /// Returns all stake addresses associated to this chain.
