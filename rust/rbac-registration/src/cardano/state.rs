@@ -31,8 +31,8 @@ pub trait RbacChainsState {
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
     /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
-    /// public key.
-    fn chain_catalyst_id_from_public_key(
+    /// signing public key.
+    fn chain_catalyst_id_from_signing_pk(
         &self,
         key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;

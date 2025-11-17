@@ -731,7 +731,7 @@ where
 {
     for role in cip509.all_roles() {
         if let Some(key) = cip509.signing_pk_for_role(role) {
-            if let Some(previous) = state.chain_catalyst_id_from_public_key(&key).await? {
+            if let Some(previous) = state.chain_catalyst_id_from_signing_pk(&key).await? {
                 if &previous != cat_id {
                     cip509.report().functional_validation(
                                 &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
