@@ -39,7 +39,7 @@ struct Cip0134UriSetInner {
     x_uris: UrisMap,
     /// URIs from c509 certificates.
     c_uris: UrisMap,
-    /// URIs which are taken by another certificates.
+    /// URIs which are taken by another chains.
     taken: HashSet<Cip0134Uri>,
 }
 
@@ -221,7 +221,7 @@ impl Cip0134UriSet {
     /// Return the updated URIs set where the provided URIs were taken by other
     /// registration chains.
     ///
-    /// Updates the current URI set by removing the taken URIs from it.
+    /// Updates the current URI set by marking URIs as taken.
     #[must_use]
     pub fn update_taken_uris(
         self,

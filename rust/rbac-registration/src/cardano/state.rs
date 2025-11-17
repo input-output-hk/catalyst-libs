@@ -3,7 +3,7 @@
 
 use std::future::Future;
 
-use cardano_blockchain_types::{hashes::TransactionId, StakeAddress};
+use cardano_blockchain_types::StakeAddress;
 use catalyst_types::catalyst_id::CatalystId;
 use ed25519_dalek::VerifyingKey;
 
@@ -37,15 +37,8 @@ pub trait RBACState {
         key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
-    /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
-    /// transaction hash.
-    fn chain_catalyst_id_from_txn_id(
-        &self,
-        txn_id: &TransactionId,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
-
-    /// Update the update by "taking" the given `StakeAddress` for the corresponding RBAC
-    /// chain's by the given `CatalystId`.
+    /// Update the chain by "taking" the given `StakeAddress` for the corresponding
+    /// RBAC chain's by the given `CatalystId`.
     fn take_stake_address_from_chain(
         &mut self,
         id: &CatalystId,
