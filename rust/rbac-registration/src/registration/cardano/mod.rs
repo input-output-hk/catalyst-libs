@@ -497,11 +497,11 @@ impl RegistrationChainInner {
         if self.latest_applied().point() >= cip509.origin().point() {
             cip509.report().functional_validation(
                 &format!(
-                    "The provided registration is earlier {} than the current one {}",
+                    "The provided registration is earlier {} than the latest applied one {}",
                     cip509.origin().point(),
                     self.current_tx_id_hash.point()
                 ),
-                "Provided registrations must be applied in the correct order.",
+                "Registrations must be applied in the correct ascending order.",
             );
             return None;
         }
