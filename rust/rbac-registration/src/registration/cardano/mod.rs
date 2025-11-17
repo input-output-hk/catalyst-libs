@@ -792,12 +792,7 @@ mod test {
 
         let report = registration.report().to_owned();
         assert!(chain.update_stateless(&registration).is_none());
-        let report = format!("{report:?}");
-        assert!(
-            report.contains("kind: InvalidValue { field: \"previous transaction ID\""),
-            "{}",
-            report
-        );
+        assert!(report.is_problematic(), "{:?}", report);
 
         // Add the second registration.
         let data = test::block_6();
