@@ -70,7 +70,7 @@ typically the Category Parameters document.
 * Submission state is tracked by [Proposal Submission Action](../docs/proposal_submission_action.md)
   documents that:
     * Reference the proposal via [`metadata.ref`](../metadata.md#ref); and
-    * Repeat [`metadata.parameters`](../metadata.md#parameters), linked to `ref`.
+    * Repeat [`metadata.parameters`](../metadata.md#parameters), linked to [`metadata.ref`](../metadata.md#ref).
 * The payload is a small JSON object with an `action` field:
     * `final` – signer is submitting this exact proposal version as their final candidate.
     * `draft` – signer confirms collaboration but leaves the proposal in draft.
