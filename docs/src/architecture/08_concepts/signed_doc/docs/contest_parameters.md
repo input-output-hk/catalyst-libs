@@ -226,7 +226,7 @@ of the previous submitted document's version.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-10 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

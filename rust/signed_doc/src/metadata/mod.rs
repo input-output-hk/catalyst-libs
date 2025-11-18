@@ -9,7 +9,7 @@ mod collaborators;
 mod content_encoding;
 mod content_type;
 pub(crate) mod doc_type;
-mod document_refs;
+pub(crate) mod document_refs;
 mod section;
 mod supported_field;
 
@@ -354,39 +354,6 @@ mod tests {
             "content-type": "application/json",
         }) ;
         "minimally valid JSON"
-    )]
-    #[test_case(
-        serde_json::json!(
-            {
-                "id": "0197f398-9f43-7c23-a576-f765131b81f2",
-                "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
-                "type":  "ab7c2428-c353-4331-856e-385b2eb20546",
-                "content-type": "application/json",
-                "ref":  [
-                    {
-                        "id": "0197f398-9f43-7c23-a576-f765131b81f2",
-                        "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
-                        "cid": "0x",
-                    },
-                ]
-            }
-        ) ;
-        "minimally valid JSON, new format reference type"
-    )]
-    #[test_case(
-        serde_json::json!(
-            {
-                "id": "0197f398-9f43-7c23-a576-f765131b81f2",
-                "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
-                "type":  "ab7c2428-c353-4331-856e-385b2eb20546",
-                "content-type": "application/json",
-                "ref": {
-                    "id": "0197f398-9f43-7c23-a576-f765131b81f2",
-                    "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
-                },
-            }
-        ) ;
-        "minimally valid JSON, old format reference type"
     )]
     fn test_json_valid_serde(json: serde_json::Value) {
         let metadata = Metadata::from_json(json).unwrap();

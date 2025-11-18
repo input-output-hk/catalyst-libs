@@ -558,7 +558,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-10 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -625,6 +625,13 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 
 * Updated 'Proposal Submission Action' document, set [`ref`](metadata.md#ref) metadata field `multiply` property to `false`.
 * Changed spec `signers.update` property structure.
+
+#### 0.2.0 (2025-11-10)
+
+* Added a new 'Contest Ballot' and 'Contest Ballot Checkpoint' document types.
+* Improved the specification for 'Contest Delegation' document type.
+* 'content encoding' metadata field become non optional for all document types where it was an optional field.
+* Added new 'payload.schema' type - [CDDL][RFC8610] schema, defined as string.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

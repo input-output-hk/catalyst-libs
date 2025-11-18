@@ -1,6 +1,7 @@
 //! Catalyst documents signing crate
 
 mod builder;
+pub mod cid_v1;
 mod content;
 pub mod decode_context;
 pub mod doc_types;
@@ -21,6 +22,7 @@ pub use catalyst_types::{
     uuid::{Uuid, UuidV4, UuidV7},
 };
 use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
+pub use cid_v1::{Cid, CidError};
 pub use content::Content;
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
@@ -250,6 +252,45 @@ impl CatalystSignedDocument {
         mut policy: CompatibilityPolicy,
     ) -> anyhow::Result<Self> {
         Ok(minicbor::decode_with(bytes, &mut policy)?)
+    }
+
+    /// Returns a `DocumentRef` for the current document.
+    ///
+    /// Generating a CID v1 (Content Identifier version 1) creates an IPFS-compatible
+    /// content identifier using:
+    /// - CID version 1
+    /// - CBOR multicodec (0x51)
+    /// - SHA2-256 multihash
+    ///
+    /// # Errors
+    ///  - CBOR serialization failure
+    ///  - Multihash construction failure
+    ///  - Missing 'id' field.
+    ///  - Missing 'ver' field.
+    pub fn doc_ref(&self) -> anyhow::Result<DocumentRef> {
+        let cid = self.to_cid_v1()?;
+        Ok(DocumentRef::new(
+            self.doc_id()?,
+            self.doc_ver()?,
+            DocLocator::from(cid),
+        ))
+    }
+
+    /// Generate a CID v1 (Content Identifier version 1) for this signed document.
+    ///
+    /// Creates an IPFS-compatible content identifier using:
+    /// - CID version 1
+    /// - CBOR multicodec (0x51)
+    /// - SHA2-256 multihash
+    ///
+    /// # Errors
+    ///  - CBOR serialization failure
+    ///  - Multihash construction failure
+    fn to_cid_v1(&self) -> Result<cid_v1::Cid, cid_v1::CidError> {
+        let cbor_bytes = self
+            .to_bytes()
+            .map_err(|e| cid_v1::CidError::Encoding(e.to_string()))?;
+        cid_v1::to_cid_v1(&cbor_bytes)
     }
 }
 
