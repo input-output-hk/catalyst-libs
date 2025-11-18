@@ -51,11 +51,13 @@ typically the Category Parameters document.
 * Proposals may list *co‑proposers* as [`collaborators`](../metadata.md#collaborators).
   This list grants permission for these accounts to co‑author new proposal versions and participate
   in submission, but does not by itself mean they have accepted.
-* A collaborator is considered to have *accepted* collaboration on a given proposal version when
-  their latest [Proposal Submission Action](../docs/proposal_submission_action.md) for that proposal
-  is `draft` or `final`.
+* A collaborator is considered to have *accepted* collaboration for all proposal versions that list
+  them in [`collaborators`](../metadata.md#collaborators) when their latest
+  [Proposal Submission Action](../docs/proposal_submission_action.md) for that proposal is `draft`
+  or `final`.
 * If a collaborator’s latest submission action is `hide`, they are treated as *not* having agreed
-  to collaborate for that proposal.
+  to collaborate for any version of that proposal (past, present, or future) until they later
+  submit `draft` or `final` again.
 * The effective collaborator set can change over versions 
   (by editing ['collaborators'](../metadata.md#collaborators));
   the original author can never be removed as an allowed signer for new versions.
@@ -77,12 +79,19 @@ typically the Category Parameters document.
         * For a collaborator: they do not wish to be listed as a collaborator.
         * This means **ONLY** the author can control global visibility of a Proposal.
           collaborators can control if they are listed against it.
-* Per signer, only the latest submission action (by time / [`ver`](../metadata.md#ver)) 
-  counts for status computation.
+* Per signer, only the latest submission action (by time / [`ver`](../metadata.md#ver))
+  counts for status computation, and it applies to all versions of that proposal.
+* For a given submitted proposal version, the required signer set is:
+    * The original author (signer of the first version where [`id`](../metadata.md#id) equals
+      [`ver`](../metadata.md#ver)); and
+    * Every collaborator listed in [`collaborators`](../metadata.md#collaborators) on that exact
+      proposal version.
 * A proposal with collaborators is treated as:
-    * **Final** only when the author *and all listed collaborators* have latest `final`
-      actions for the same proposal version by the configured deadline.
-    * **Draft** when at least one required signer is `draft` (or missing).
+    * **Final** only when the author *and all required collaborators for that version* have
+      latest `final` actions for the same proposal version by the configured deadline, and none of
+      those required signers has a latest `hide` action.
+    * **Draft** when at least one required signer is `draft` (or missing), and none has a latest
+      `hide`.
     * **Hidden** when a `hide` from the author, or applicable moderation, marks it as not to be
       displayed, even if technically valid.
 

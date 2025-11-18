@@ -44,6 +44,93 @@ typically the Category Parameters document.
   actions from collaborators confirm or rescind participation.
   See: [Proposal Submission Action](../docs/proposal_submission_action.md).
 
+## Co‑Proposers, Submission, and Moderation
+
+### Co‑Proposers (`metadata.collaborators`)
+
+* Proposals may list *co‑proposers* as [`collaborators`](../metadata.md#collaborators).
+  This list grants permission for these accounts to co‑author new proposal versions and participate
+  in submission, but does not by itself mean they have accepted.
+* A collaborator is considered to have *accepted* collaboration for all proposal versions that list
+  them in [`collaborators`](../metadata.md#collaborators) when their latest
+  [Proposal Submission Action](../docs/proposal_submission_action.md) for that proposal is `draft`
+  or `final`.
+* If a collaborator’s latest submission action is `hide`, they are treated as *not* having agreed
+  to collaborate for any version of that proposal (past, present, or future) until they later
+  submit `draft` or `final` again.
+* The effective collaborator set can change over versions
+  (by editing ['collaborators'](../metadata.md#collaborators));
+  the original author can never be removed as an allowed signer for new versions.
+  Nor is the original Author listed in the ['collaborators'](../metadata.md#collaborators) metadata.
+* The original Author is always and **ONLY** determined by the Author whom signed the first version
+  of a proposal where the [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are equal.
+
+### Submission Documents (Proposal Submission Actions)
+
+* Submission state is tracked by [Proposal Submission Action](../docs/proposal_submission_action.md)
+  documents that:
+    * Reference the proposal via [`metadata.ref`](../metadata.md#ref); and
+    * Repeat [`metadata.parameters`](../metadata.md#parameters), linked to [`ref`](metadata.md#ref).
+* The payload is a small [JSON][RFC8259] object with an `action` field:
+    * `final` – signer is submitting this exact proposal version as their final candidate.
+    * `draft` – signer confirms collaboration but leaves the proposal in draft.
+    * `hide` – signer requests that the proposal be hidden for themselves:
+        * For the author: hide the proposal from consideration and UI.
+        * For a collaborator: they do not wish to be listed as a collaborator.
+        * This means **ONLY** the author can control global visibility of a Proposal.
+          collaborators can control if they are listed against it.
+* Per signer, only the latest submission action (by time / [`ver`](../metadata.md#ver))
+  counts for status computation, and it applies to all versions of that proposal.
+* For a given submitted proposal version, the required signer set is:
+    * The original author (signer of the first version where [`id`](../metadata.md#id) equals
+      [`ver`](../metadata.md#ver)); and
+    * Every collaborator listed in [`collaborators`](../metadata.md#collaborators) on that exact
+      proposal version.
+* A proposal with collaborators is treated as:
+    * **Final** only when the author *and all required collaborators for that version* have
+      latest `final` actions for the same proposal version by the configured deadline, and none of
+      those required signers has a latest `hide` action.
+    * **Draft** when at least one required signer is `draft` (or missing), and none has a latest
+      `hide`.
+    * **Hidden** when a `hide` from the author, or applicable moderation, marks it as not to be
+      displayed, even if technically valid.
+
+### Moderation Documents (Proposal Moderation Actions)
+
+* [Proposal Moderation Action](../docs/proposal_moderation_action.md) documents reference a proposal
+  via [`metadata.ref`](../metadata.md#ref) and are issued by authorized moderators.
+* The exact moderation outcomes (e.g., hide, disqualify, flag for review) are policy‑dependent and
+  may evolve; implementations should treat them as an overlay on top of submission status:
+    * A moderated‑hidden or disqualified proposal is excluded from candidate sets and UI listings,
+      even if all `final` submissions are present.
+    * Moderation can apply to proposals and their associated comments; UIs should consistently
+      reflect any hide/disqualify decision across all related artifacts.
+* Consumers should ensure that candidate selection first filters by valid submission (`final` from
+  all required signers) and then applies moderation results to derive the final visible and
+  eligible proposal set.
+
+### UI Queries for a Single Proposal
+
+For a given proposal (identified by `proposal.id`/`proposal.ver` and its `metadata.parameters`):
+
+* UIs can retrieve submission actions by querying for
+  [Proposal Submission Action](../docs/proposal_submission_action.md) documents where:
+    * [`metadata.ref`](../metadata.md#ref) points to the proposal’s [`id`](../metadata.md#id)
+      and optionally where required [`ver`](../metadata.md#ver); and
+    * [`metadata.parameters`](../metadata.md#parameters) matches the proposal’s parameters anchor.
+* UIs can retrieve moderation actions by querying for
+  [Proposal Moderation Action](../docs/proposal_moderation_action.md) documents where:
+    * [`metadata.ref`](../metadata.md#ref) points to the same proposal; and
+    * [`metadata.parameters`](../metadata.md#parameters) matches the same anchor.
+* In a pub/sub model, this typically means:
+    * Subscribe to the topic derived from the proposal’s parameters.
+    * Filter received documents by type and by `metadata.ref` targeting the proposal.
+* Locally, an index keyed by `(proposal-id, proposal-ver)` plus signer and document type allows the
+  UI to:
+    * Compute per‑signer latest submission action (`final`/`draft`/`hide`).
+    * Overlay any matching moderation actions.
+    * Present a synthesized status for the proposal and each collaborator.
+
 ## Pub/Sub Discovery Model
 
 ### Overview
@@ -168,3 +255,4 @@ flowchart TD
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
+[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

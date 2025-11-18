@@ -25,6 +25,16 @@ docs: #DocumentDefinitions & {
 			Unless they all submit the same version of the proposal
 			the proposal will not be seen as submitted.
 
+			The required set of signers for a submitted proposal version is:
+
+			* The original author of the proposal (the signer of the first version where
+			  [`id`](../metadata.md#id) == [`ver`](../metadata.md#ver)); and
+			* Every collaborator listed in [`collaborators`](../metadata.md#collaborators) on the **exact**
+			  version of the proposal referenced by [`ref`](../metadata.md#ref).
+
+			They may jointly sign a single Proposal Submission Action, or may submit multiple independent
+			Submission actions for the same document (which avoids the need for multi-sig coordination).
+
 			The payload is a fixed format.
 			"""
 		validation: """
@@ -50,20 +60,30 @@ docs: #DocumentDefinitions & {
 				* Remove themselves permanently as a collaborator by publishing a new version with them removed.
 
 				To eliminate the necessity for collaborators to accept collaboration on every version, 
-				they will be considered as agreeing to be a collaborator on any version of the document
-				that lists them, if their latest submission is `draft` or `final`.
+				they will be considered as agreeing to be a collaborator on **any** version of the proposal that
+				lists them in [`collaborators`](../metadata.md#collaborators), if their latest submission for that
+				proposal is `draft` or `final`.
 
-				If their latest submission on a document is `hide` they should be considered to not
-				have agreed to be a collaborator.
+				If their latest submission on a proposal is `hide` they **MUST** be considered to not have agreed
+				to be a collaborator for **any** version of that proposal (past, present, or future) until they
+				submit a new `draft` or `final` action.
 
 				*NOTE* `final` status ONLY applies to the exactly referenced document and version.
 				"""
 
 			back_end: """
-				A Submitted proposal with collaborators *MUST* have 
-				a `final` submission by *ALL* listed `collaborators`.
-				If any `collaborator` has not submitted a `final` submission by the deadline, then the proposal 
-				is not considered `final` and will not be considered in the category it was being submitted to.
+				A Submitted proposal with collaborators *MUST* have, by the configured deadline:
+
+				* A `final` submission from the author; and
+				* A `final` submission from **every** collaborator listed in
+				  [`collaborators`](../metadata.md#collaborators) on the version of the proposal 
+				  referenced by [`ref`](../metadata.md#ref); and
+				* No required signer whose latest submission for that proposal is `hide`.
+
+				If any required collaborator has not submitted a `final` submission for that proposal 
+				version by the deadline, or if any required signer’s latest submission is `hide`, 
+				then the proposal is not considered `final` and will not be considered in the 
+				category it was being submitted to.
 				"""
 		}
 
