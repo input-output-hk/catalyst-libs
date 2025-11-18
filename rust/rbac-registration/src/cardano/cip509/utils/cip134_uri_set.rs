@@ -233,7 +233,7 @@ impl Cip0134UriSet {
             .certificate_uris
             .stake_addresses()
             .into_iter()
-            .filter(|v| current_stake_addresses.contains(&v));
+            .filter(|v| current_stake_addresses.contains(v));
 
         let Cip0134UriSetInner {
             x_uris,
