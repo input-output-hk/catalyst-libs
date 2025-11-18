@@ -202,6 +202,45 @@ flowchart TD
   L --> M[Contest Voting Inputs]
 ```
 
+### Multi‑Sig and Moderation Sequence (Mermaid)
+
+```mermaid
+sequenceDiagram
+    participant Author
+    participant CollabA
+    participant CollabB
+    participant Moderator
+    participant PubSub_Indexer as Pub/Sub + Indexer
+    participant UI
+
+    Note over Author,PubSub_Indexer: Author drafts and publishes Proposal v1
+    Author->>PubSub_Indexer: Publish Proposal v1 (with collaborators A, B)
+    PubSub_Indexer-->>UI: Indexed proposal + collaborators list
+
+    Note over UI: UI highlights<br>collaborators A and B<br/>that have been invited
+    UI-->>CollabA: Show proposal, status: invited
+    UI-->>CollabB: Show proposal, status: invited
+
+    Note over CollabA,PubSub_Indexer: Collaborator A accepts collaboration
+    CollabA->>PubSub_Indexer: Publish Submission Action (draft, ref = Proposal v1)
+    PubSub_Indexer-->>UI: Updated latest actions per signer
+
+    Note over CollabB,PubSub_Indexer: Collaborator B later accepts and finalizes
+    CollabB->>PubSub_Indexer: Publish Submission Action (final, ref = Proposal v1)
+    PubSub_Indexer-->>UI: Updated latest actions per signer
+
+    Note over Author,PubSub_Indexer: Author finalizes the same version
+    Author->>PubSub_Indexer: Publish Submission Action (final, ref = Proposal v1)
+    PubSub_Indexer-->>UI: All required signers: final for v1
+
+    Note over Moderator,PubSub_Indexer: Optional moderation overlay
+    Moderator->>PubSub_Indexer: Publish Proposal Moderation Action (e.g., review/approve/hide)
+    PubSub_Indexer-->>UI: Apply moderation outcome on top of final status
+
+    Note over PubSub_Indexer: At deadline,<br>compute candidate set
+    PubSub_Indexer-->>UI: Proposal v1 is final candidate<br/>iff all required signers are final<br/>and not hidden or disqualified
+```
+
 ### Consumer Pipeline
 
 1. Template intake
@@ -213,7 +252,8 @@ flowchart TD
     * Track authorship and collaborators; index by `(proposal-id, ver)` and by anchor.
 3. Submission Action intake
     * Verify signature from author or collaborator; verify `metadata.ref` 
-      points to the intended proposal and `metadata.parameters` matches (linked_refs to `ref`).
+      points to the intended proposal and `metadata.parameters` matches 
+      (linked_refs to [`metadata.ref`](../metadata.md#ref)).
     * For each signer, record latest action: `final`, `draft`, or `hide`.
     * A proposal is “final” iff all listed collaborators (and the author) have a latest 
       `final` action by the configured deadline.
