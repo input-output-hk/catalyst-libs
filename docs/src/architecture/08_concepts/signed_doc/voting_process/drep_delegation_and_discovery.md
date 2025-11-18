@@ -13,12 +13,9 @@ and how these documents are discovered and validated in a decentralized pub/sub 
 
 ## Documents and Roles
 
-* Rep Profile: the representative’s global profile under a brand.
-  See: [Rep Profile](../docs/rep_profile.md).
-* Rep Nomination: contest-specific nomination under contest parameters.
-  See: [Rep Nomination](../docs/rep_nomination.md).
-* Contest Delegation: voter delegation to one or more representatives (nominations) for a contest.
-  See: [Contest Delegation](../docs/contest_delegation.md).
+* Rep Profile: the representative’s global profile under a brand. See: [Rep Profile](../docs/rep_profile.md).
+* Rep Nomination: contest-specific nomination under contest parameters. See: [Rep Nomination](../docs/rep_nomination.md).
+* Contest Delegation: voter delegation to one or more representatives (nominations) for a contest. See: [Contest Delegation](../docs/contest_delegation.md).
 
 Signers:
 
@@ -40,11 +37,9 @@ Signers:
 
 ### Delegation Semantics
 
-* Multiple Delegates: voters may delegate to multiple representatives for a contest (ordered by priority).
-  See: [Contest Delegation](../docs/contest_delegation.md).
+* Multiple Delegates: voters may delegate to multiple representatives for a contest (ordered by priority). See: [Contest Delegation](../docs/contest_delegation.md).
 * Weights: optional payload weights distribute the voter’s (post-scaling) voting power proportionally;
-  non-positive weights are treated as 1.
-  Remainders go to the highest-priority delegate.
+  non-positive weights are treated as 1. Remainders go to the highest-priority delegate.
 * Insufficient Power: if voting power is insufficient to distribute to all delegates, lower-priority delegates may receive 0.
 * Revocation: [`metadata.revocations`](../metadata.md#revocations) can withdraw a delegation
   (set to `true` to withdraw all versions), or a new delegation supersedes the prior one
@@ -65,19 +60,19 @@ that anchors the document via [`metadata.parameters`](../metadata.md#parameters)
 ### Consumer Pipeline
 
 1. Rep Profile intake (by brand)
-   * Verify signature (`Representative`), `metadata.template`,
-     [`metadata.parameters`](../metadata.md#parameters) (brand), and payload schema.
+    * Verify signature (`Representative`), `metadata.template`,
+      [`metadata.parameters`](../metadata.md#parameters) (brand), and payload schema.
 2. Rep Nomination intake (by contest)
-   * Verify signature (`Representative`), [`metadata.ref`](../metadata.md#ref) to Rep Profile,
-     [`metadata.parameters`](../metadata.md#parameters) (contest), and template/payload validity.
-   * Track the latest valid nomination per (representative, contest), excluding revoked items.
+    * Verify signature (`Representative`), [`metadata.ref`](../metadata.md#ref) to Rep Profile,
+      [`metadata.parameters`](../metadata.md#parameters) (contest), and template/payload validity.
+    * Track the latest valid nomination per (representative, contest), excluding revoked items.
 3. Contest Delegation intake (by contest)
-   * Verify signature (`Registered`), [`metadata.ref`](../metadata.md#ref) to one or more nominations,
-     [`metadata.parameters`](../metadata.md#parameters) (contest), and payload (weights) schema.
-   * For multiple references, ignore any invalid nominations;
-     consider the delegation valid if at least one referenced nomination is valid.
-   * Maintain the latest delegation per (delegator, contest);
-     apply [`metadata.revocations`](../metadata.md#revocations) when present.
+    * Verify signature (`Registered`), [`metadata.ref`](../metadata.md#ref) to one or more nominations,
+      [`metadata.parameters`](../metadata.md#parameters) (contest), and payload (weights) schema.
+    * For multiple references, ignore any invalid nominations;
+      consider the delegation valid if at least one referenced nomination is valid.
+    * Maintain the latest delegation per (delegator, contest);
+      apply [`metadata.revocations`](../metadata.md#revocations) when present.
 
 ### Effective Delegation Set
 

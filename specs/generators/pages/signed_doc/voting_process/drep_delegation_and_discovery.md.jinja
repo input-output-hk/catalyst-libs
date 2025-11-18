@@ -60,26 +60,26 @@ that anchors the document via [`metadata.parameters`](../metadata.md#parameters)
 ### Consumer Pipeline
 
 1. Rep Profile intake (by brand)
-   * Verify signature (`Representative`), `metadata.template`, 
-     [`metadata.parameters`](../metadata.md#parameters) (brand), and payload schema.
+    * Verify signature (`Representative`), `metadata.template`, 
+      [`metadata.parameters`](../metadata.md#parameters) (brand), and payload schema.
 2. Rep Nomination intake (by contest)
-   * Verify signature (`Representative`), [`metadata.ref`](../metadata.md#ref) to Rep Profile, 
-     [`metadata.parameters`](../metadata.md#parameters) (contest), and template/payload validity.
-   * Track the latest valid nomination per (representative, contest), excluding revoked items.
+    * Verify signature (`Representative`), [`metadata.ref`](../metadata.md#ref) to Rep Profile, 
+      [`metadata.parameters`](../metadata.md#parameters) (contest), and template/payload validity.
+    * Track the latest valid nomination per (representative, contest), excluding revoked items.
 3. Contest Delegation intake (by contest)
-   * Verify signature (`Registered`), [`metadata.ref`](../metadata.md#ref) to one or more nominations,
-     [`metadata.parameters`](../metadata.md#parameters) (contest), and payload (weights) schema.
-   * For multiple references, ignore any invalid nominations; 
-     consider the delegation valid if at least one referenced nomination is valid.
-   * Maintain the latest delegation per (delegator, contest); 
-     apply [`metadata.revocations`](../metadata.md#revocations) when present.
+    * Verify signature (`Registered`), [`metadata.ref`](../metadata.md#ref) to one or more nominations,
+      [`metadata.parameters`](../metadata.md#parameters) (contest), and payload (weights) schema.
+    * For multiple references, ignore any invalid nominations; 
+      consider the delegation valid if at least one referenced nomination is valid.
+    * Maintain the latest delegation per (delegator, contest); 
+      apply [`metadata.revocations`](../metadata.md#revocations) when present.
 
 ### Effective Delegation Set
 
 * For a given contest, compute the effective set by:
-  * Taking each delegator’s latest valid delegation.
-  * Filtering delegates to those with a latest valid nomination.
-  * Applying weights and priority, using integer division and remainder assignment to the highest priority.
+    * Taking each delegator’s latest valid delegation.
+    * Filtering delegates to those with a latest valid nomination.
+    * Applying weights and priority, using integer division and remainder assignment to the highest priority.
 
 ## Validation Summary
 

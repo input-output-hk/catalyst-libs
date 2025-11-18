@@ -40,7 +40,7 @@ and how ballots and checkpoints are discovered, validated, and tallied in a dece
     * Payload contains `smt-root` (BLAKE3-256 digest) and `smt-entries` (count).
     * Checkpoints are chained via `metadata.chain`; the final checkpoint height is negated.
     * Typically anchored to a blockchain (e.g., encoded `document_ref` in on-chain metadata signed
-     by the operator) to provide an immutable timestamped anchor.
+      by the operator) to provide an immutable timestamped anchor.
 
 ### Validation (Consumer)
 
