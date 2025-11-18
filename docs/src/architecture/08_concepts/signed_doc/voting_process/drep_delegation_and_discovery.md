@@ -45,7 +45,8 @@ Signers:
 * Weights: optional payload weights distribute the voter’s (post-scaling) voting power proportionally;
   non-positive weights are treated as 1.
   Remainders go to the highest-priority delegate.
-* Insufficient Power: if voting power is insufficient to distribute to all delegates, lower-priority delegates may receive 0.
+* Insufficient Power: if voting power is insufficient to distribute to all delegates,
+  lower-priority delegates may receive 0.
 * Revocation: [`metadata.revocations`](../metadata.md#revocations) can withdraw a delegation
   (set to `true` to withdraw all versions), or a new delegation supersedes the prior one
   (latest only applies).
