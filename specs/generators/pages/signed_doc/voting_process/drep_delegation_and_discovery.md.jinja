@@ -1,0 +1,106 @@
+---
+Title: dRep Delegation, Nominations, and Discovery
+Authors:
+    - Steven Johnson <steven.johnson@iohk.io>
+Created: 2025-11-05
+order: 3
+---
+
+## Abstract
+
+Describes how Representative (dRep) profiles and nominations relate to voter delegations, 
+and how these documents are discovered and validated in a decentralized pub/sub network.
+
+## Documents and Roles
+
+* Rep Profile: the representative’s global profile under a brand. See: [Rep Profile](../docs/rep_profile.md).
+* Rep Nomination: contest-specific nomination under contest parameters. See: [Rep Nomination](../docs/rep_nomination.md).
+* Contest Delegation: voter delegation to one or more representatives (nominations) for a contest. See: [Contest Delegation](../docs/contest_delegation.md).
+
+Signers:
+
+* Rep Profile and Rep Nomination: signed by a `Representative`.
+* Contest Delegation: signed by a `Registered` user (voter).
+
+## Relationships and Rules
+
+* A Rep Profile is anchored to a Brand via [`metadata.parameters`](../metadata.md#parameters) 
+  and validated by its profile template.
+* A Rep Nomination references a Rep Profile via [`metadata.ref`](../metadata.md#ref) and is anchored 
+  to a specific Contest via [`metadata.parameters`](../metadata.md#parameters).
+* A Contest Delegation references one or more Rep Nominations via [`metadata.ref`](../metadata.md#ref) 
+  and is anchored to the same Contest via [`metadata.parameters`](../metadata.md#parameters).
+* The latest Rep Nomination for a representative in a contest must be referenced by the 
+  representative’s own latest Contest Delegation for that contest; otherwise the nomination is invalid. 
+  See nomination rules in [Rep Nomination](../docs/rep_nomination.md#validation) and 
+  [Contest Delegation](../docs/contest_delegation.md#validation).
+
+### Delegation Semantics
+
+* Multiple Delegates: voters may delegate to multiple representatives for a contest (ordered by priority). See: [Contest Delegation](../docs/contest_delegation.md).
+* Weights: optional payload weights distribute the voter’s (post-scaling) voting power proportionally; 
+  non-positive weights are treated as 1. Remainders go to the highest-priority delegate.
+* Insufficient Power: if voting power is insufficient to distribute to all delegates, lower-priority delegates may receive 0.
+* Revocation: [`metadata.revocations`](../metadata.md#revocations) can withdraw a delegation 
+  (set to `true` to withdraw all versions), or a new delegation supersedes the prior one 
+  (latest only applies).
+
+## Pub/Sub Discovery Model
+
+Suggested topics keyed by anchoring parameters:
+
+* Representative Profiles: `signed-docs/rep-profile/<brand-id>`
+* Representative Nominations: `signed-docs/rep-nomination/<contest-id>`
+* Contest Delegations: `signed-docs/contest-delegation/<contest-id>`
+
+Where `<brand-id>` is the Brand Parameters [`metadata.id`](../metadata.md#id), 
+and `<contest-id>` is the Contest Parameters [`metadata.id`](../metadata.md#id) 
+that anchors the document via [`metadata.parameters`](../metadata.md#parameters).
+
+### Consumer Pipeline
+
+1. Rep Profile intake (by brand)
+   * Verify signature (`Representative`), `metadata.template`, 
+     [`metadata.parameters`](../metadata.md#parameters) (brand), and payload schema.
+2. Rep Nomination intake (by contest)
+   * Verify signature (`Representative`), [`metadata.ref`](../metadata.md#ref) to Rep Profile, 
+     [`metadata.parameters`](../metadata.md#parameters) (contest), and template/payload validity.
+   * Track the latest valid nomination per (representative, contest), excluding revoked items.
+3. Contest Delegation intake (by contest)
+   * Verify signature (`Registered`), [`metadata.ref`](../metadata.md#ref) to one or more nominations,
+     [`metadata.parameters`](../metadata.md#parameters) (contest), and payload (weights) schema.
+   * For multiple references, ignore any invalid nominations; 
+     consider the delegation valid if at least one referenced nomination is valid.
+   * Maintain the latest delegation per (delegator, contest); 
+     apply [`metadata.revocations`](../metadata.md#revocations) when present.
+
+### Effective Delegation Set
+
+* For a given contest, compute the effective set by:
+  * Taking each delegator’s latest valid delegation.
+  * Filtering delegates to those with a latest valid nomination.
+  * Applying weights and priority, using integer division and remainder assignment to the highest priority.
+
+## Validation Summary
+
+* Verify signatures and header fields (COSE `kid`, media types).
+* Verify `type`, [`metadata.id`](../metadata.md#id), 
+  [`metadata.ver`](../metadata.md#ver), and payload schemas for Rep Profile, Rep Nomination, 
+  and Contest Delegation.
+* Enforce [`metadata.parameters`](../metadata.md#parameters) alignment rules, 
+  including transitively consistent chains up to the brand.
+* Apply [`metadata.revocations`](../metadata.md#revocations) and prefer the highest valid 
+  [`metadata.ver`](../metadata.md#ver) per [`metadata.id`](../metadata.md#id).
+
+## Content Addressing and Retrieval
+
+* All artifacts carry `document_ref` locators that include a CBOR Tag 42 CID for retrieval and identity. 
+  See: [Document Reference](../metadata.md#document-reference).
+
+## Operational Notes
+
+* The representative must maintain a self-delegation to their latest nomination in each contest for 
+  that nomination to remain valid.
+* Indexing by (contest, representative) and (contest, delegator) accelerates delegation resolution 
+  and tally preparation.
+
