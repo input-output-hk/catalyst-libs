@@ -2,7 +2,10 @@
 
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain};
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{
+    CatalystSignedDocument, providers::CatalystSignedDocumentProvider,
+    validator::rules::CollaboratorsRule,
+};
 
 #[cfg(test)]
 mod tests;
@@ -34,10 +37,12 @@ impl ChainRule {
     }
 
     /// Field validation rule
+    #[allow(clippy::too_many_lines)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
         provider: &Provider,
+        collaborators_rule: &CollaboratorsRule,
     ) -> anyhow::Result<bool>
     where
         Provider: CatalystSignedDocumentProvider,
@@ -135,6 +140,14 @@ impl ChainRule {
                         }
                     }
                 }
+            }
+
+            if let CollaboratorsRule::Specified { .. } = collaborators_rule {
+                doc.report().functional_validation(
+                    "Chained Documents do not support collaborators",
+                    "Chained Documents validation",
+                );
+                return Ok(false);
             }
         }
         if let Self::NotSpecified = self

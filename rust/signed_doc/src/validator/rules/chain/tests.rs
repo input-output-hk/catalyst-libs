@@ -41,11 +41,49 @@ async fn test_without_chaining_documents() {
         .build();
 
     let rule = ChainRule::NotSpecified;
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    let collaborators_rule = CollaboratorsRule::NotSpecified;
+
+    assert!(
+        rule.check(&doc, &provider, &collaborators_rule)
+            .await
+            .unwrap()
+    );
     let rule = ChainRule::Specified { optional: true };
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(
+        rule.check(&doc, &provider, &collaborators_rule)
+            .await
+            .unwrap()
+    );
     let rule = ChainRule::Specified { optional: false };
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(
+        !rule
+            .check(&doc, &provider, &collaborators_rule)
+            .await
+            .unwrap()
+    );
+}
+
+#[tokio::test]
+async fn chain_rule_collaborators_rule_conflict() {
+    let doc_type = UuidV4::new();
+    let doc_id = UuidV7::new();
+    let doc_ver = UuidV7::new();
+
+    let provider = TestCatalystProvider::default();
+    let doc = Builder::new()
+        .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
+        .with_metadata_field(SupportedField::Id(doc_id))
+        .with_metadata_field(SupportedField::Ver(doc_ver))
+        .build();
+
+    let rule = ChainRule::Specified { optional: true };
+    let collaborators_rule = CollaboratorsRule::Specified { optional: true };
+    assert!(
+        !rule
+            .check(&doc, &provider, &collaborators_rule)
+            .await
+            .unwrap()
+    );
 }
 
 #[test_case(
@@ -131,8 +169,11 @@ async fn test_valid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
+    let collaborators_rule = CollaboratorsRule::NotSpecified;
 
-    rule.check(&doc, &provider).await.unwrap()
+    rule.check(&doc, &provider, &collaborators_rule)
+        .await
+        .unwrap()
 }
 
 #[test_case(
@@ -278,6 +319,9 @@ async fn test_invalid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
+    let collaborators_rule = CollaboratorsRule::NotSpecified;
 
-    rule.check(&doc, &provider).await.unwrap()
+    rule.check(&doc, &provider, &collaborators_rule)
+        .await
+        .unwrap()
 }

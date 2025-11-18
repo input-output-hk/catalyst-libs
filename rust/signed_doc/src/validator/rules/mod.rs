@@ -98,7 +98,7 @@ impl Rules {
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
-            self.chain.check(doc, provider).boxed(),
+            self.chain.check(doc, provider, &self.collaborators).boxed(),
             self.collaborators.check(doc).boxed(),
             self.content.check(doc).boxed(),
             self.kid.check(doc).boxed(),
