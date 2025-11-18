@@ -87,4 +87,3 @@ check:
     # Check our validation code actually works properly
     RUN cd generators; \
         uv run docs -o "../../docs" ../signed_doc.json 
-
