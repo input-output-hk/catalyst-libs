@@ -40,6 +40,6 @@ pub trait RbacChainsState {
     /// RBAC chain's by the given `CatalystId`.
     fn take_stake_address_from_chains(
         &mut self,
-        addresses: impl Iterator<Item = StakeAddress>,
+        addresses: impl Iterator<Item = StakeAddress> + Send,
     ) -> impl Future<Output = anyhow::Result<()>> + Send;
 }
