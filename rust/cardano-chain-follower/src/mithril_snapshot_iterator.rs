@@ -187,8 +187,17 @@ impl MithrilSnapshotIterator {
         from: &Point,
         previous_point: Option<Point>,
     ) -> Result<Self> {
+        // If "from" is 0, it is origin.
+        // This is added to avoid the case where point 0 is considered
+        // as fuzzy and not origin.
+        let from = if from.slot_or_default() == 0.into() {
+            Point::ORIGIN
+        } else {
+            from.clone()
+        };
+
         if from.is_fuzzy() || (!from.is_origin() && previous_point.is_none()) {
-            return Ok(Self::fuzzy_iterator(chain, path, from).await);
+            return Ok(Self::fuzzy_iterator(chain, path, &from).await);
         }
 
         let previous = if from.is_origin() {
@@ -202,7 +211,7 @@ impl MithrilSnapshotIterator {
 
         debug!("Actual Mithril Iterator Start: {}", from);
 
-        let iterator = make_mithril_iterator(path, from, chain).await?;
+        let iterator = make_mithril_iterator(path, &from, chain).await?;
 
         Ok(MithrilSnapshotIterator {
             path: path.to_path_buf(),
