@@ -13,6 +13,8 @@ and how these documents are discovered and validated in a decentralized pub/sub 
 
 ## Documents and Roles
 
+* On‑chain dRep Registration: a chain‑level registration that binds a dRep’s
+  Catalyst ID to the role of `Representative`.
 * Rep Profile: the representative’s global profile under a brand. 
   See: [Rep Profile](../docs/rep_profile.md).
 * Rep Nomination: contest-specific nomination under contest parameters. 
@@ -24,6 +26,101 @@ Signers:
 
 * Rep Profile and Rep Nomination: signed by a `Representative`.
 * Contest Delegation: signed by a `Registered` user (voter).
+
+## dRep Lifecycle and Contest Participation
+
+### 1. On‑Chain dRep Registration
+
+* A user first registers on‑chain as a dRep, binding their Catalyst ID to the
+  `Representative` role.
+* This on‑chain registration is a prerequisite for publishing any signed‑doc
+  Rep Profile, Rep Nomination, or Contest Delegation as a representative.
+
+### 2. Global Rep Profile (Brand‑Scoped)
+
+* After on‑chain registration, the dRep creates a [Rep Profile](../docs/rep_profile.md)
+  anchored to a Brand via [`metadata.parameters`](../metadata.md#parameters).
+* This profile is *global* for that Brand:
+    * It describes who the dRep is and the information they wish to make known.
+    * It does **not** by itself make them active in any specific contest.
+* Contest‑specific nominations reference this global profile via
+  [`metadata.ref`](../metadata.md#ref).
+
+### 3. Contest Parameters and dRep Eligibility
+
+* [Contest Parameters](../docs/contest_parameters.md) are published under a Category
+  (and possibly Campaign/Brand) and define:
+    * Whether dRep representation is enabled for that contest.
+    * Which anchor level (Brand/Campaign/Category) the contest belongs to.
+    * Deadlines for dRep nomination and dRep choice (delegation) before voting.
+* Only contests whose parameters explicitly enable dReps will have valid
+  Rep Nominations and Contest Delegations.
+
+### 4. dRep Nomination and Self‑Delegation
+
+* For each contest where a dRep wants to be active, they must:
+    1. Publish a [Rep Nomination](../docs/rep_nomination.md) anchored to that
+       contest via [`metadata.parameters`](../metadata.md#parameters), referencing
+       their Rep Profile via [`metadata.ref`](../metadata.md#ref).
+    2. Publish a [Contest Delegation](../docs/contest_delegation.md) **as the
+       delegator**, delegating their own voting power to their latest nomination
+       for that contest.
+* A Representative ***MAY NOT*** delegate to another Representative for any
+  contest they have nominated for.
+  They ***MAY*** delegate to a Representative in contests they have not
+  nominated for.
+* A Representative’s nomination in a contest is only valid if:
+    * Their latest nomination in that contest is not revoked; and
+    * Their latest Contest Delegation in that contest references their latest
+      nomination.
+* Contest parameters typically define a deadline before voting starts by which:
+    * dReps must have completed nomination + self‑delegation; and
+    * Late nominations or self‑delegations are ignored for that contest.
+
+### 5. Voter Delegation to dReps
+
+* Any registered voter can, up to the contest’s dRep choice deadline, publish a
+  [Contest Delegation](../docs/contest_delegation.md) to one or more dReps who
+  have valid nominations in that contest.
+* Delegations are:
+    * Contest‑specific (one per contest per delegator, latest takes effect).
+    * Priority‑ordered, with optional weights, as described in
+      [Contest Delegation](../docs/contest_delegation.md#description).
+* A voter can delegate to a dRep who:
+    * Has an on‑chain dRep registration;
+    * Has a valid Rep Profile and Rep Nomination for the contest; and
+    * Has a valid self‑delegation to their latest nomination for that contest.
+
+### dRep Delegation Flow (Mermaid)
+
+```mermaid
+flowchart TD
+  subgraph Registration_and_Profile["Registration and Global Profile"]
+    A["On-chain dRep Registration<br/>(Catalyst ID -> Representative role)"]
+    B["Rep Profile<br/>(Brand-scoped identity)"]
+    A --> B
+  end
+
+  subgraph Contest_Setup["Contest Setup"]
+    C["Contest Parameters<br/>(enable dReps, deadlines, anchor)"]
+  end
+
+  subgraph dRep_Activation["dRep Contest Activation"]
+    D["Rep Nomination<br/>(contest-specific)"]
+    E["Contest Delegation<br/>(self-delegation to latest nomination)"]
+    D --> E
+  end
+
+  subgraph Voter_Delegation["Voter Delegation"]
+    F["Voter Contest Delegation<br/>(to one or more dReps)"]
+  end
+
+  Registration_and_Profile --> C
+  B --> D
+  C --> D
+  C --> F
+  E --> F
+```
 
 ## Relationships and Rules
 
@@ -109,4 +206,3 @@ that anchors the document via [`metadata.parameters`](../metadata.md#parameters)
   that nomination to remain valid.
 * Indexing by (contest, representative) and (contest, delegator) accelerates delegation resolution 
   and tally preparation.
-
