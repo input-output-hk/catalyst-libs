@@ -100,6 +100,28 @@ typically the Category Parameters document.
   all required signers) and then applies moderation results to derive the final visible and
   eligible proposal set.
 
+### UI Queries for a Single Proposal
+
+For a given proposal (identified by `proposal.id`/`proposal.ver` and its `metadata.parameters`):
+
+* UIs can retrieve submission actions by querying for
+  [Proposal Submission Action](../docs/proposal_submission_action.md) documents where:
+    * [`metadata.ref`](../metadata.md#ref) points to the proposal’s [`id`](../metadata.md#id)
+      and optionally where required [`ver`](../metadata.md#ver); and
+    * [`metadata.parameters`](../metadata.md#parameters) matches the proposal’s parameters anchor.
+* UIs can retrieve moderation actions by querying for
+  [Proposal Moderation Action](../docs/proposal_moderation_action.md) documents where:
+    * [`metadata.ref`](../metadata.md#ref) points to the same proposal; and
+    * [`metadata.parameters`](../metadata.md#parameters) matches the same anchor.
+* In a pub/sub model, this typically means:
+    * Subscribe to the topic derived from the proposal’s parameters.
+    * Filter received documents by type and by `metadata.ref` targeting the proposal.
+* Locally, an index keyed by `(proposal-id, proposal-ver)` plus signer and document type allows the
+  UI to:
+    * Compute per‑signer latest submission action (`final`/`draft`/`hide`).
+    * Overlay any matching moderation actions.
+    * Present a synthesized status for the proposal and each collaborator.
+
 ## Pub/Sub Discovery Model
 
 ### Overview
