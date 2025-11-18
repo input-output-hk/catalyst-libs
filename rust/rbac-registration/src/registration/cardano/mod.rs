@@ -85,7 +85,7 @@ impl RegistrationChain {
     /// Create a new instance of registration chain.
     /// The first new value should be the chain root.
     #[must_use]
-    fn new_stateless(cip509: &Cip509) -> Option<Self> {
+    pub fn new_stateless(cip509: &Cip509) -> Option<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
 
         Some(Self {
@@ -138,7 +138,7 @@ impl RegistrationChain {
     /// # Arguments
     /// - `cip509` - The CIP509.
     #[must_use]
-    fn update_stateless(
+    pub fn update_stateless(
         &self,
         cip509: &Cip509,
     ) -> Option<Self> {
