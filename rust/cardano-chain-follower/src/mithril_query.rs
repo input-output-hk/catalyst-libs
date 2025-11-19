@@ -3,8 +3,8 @@
 use std::path::Path;
 
 use cardano_blockchain_types::{
-    pallas_hardano::{self},
     Network, Point,
+    pallas_hardano::{self},
 };
 use tokio::task;
 

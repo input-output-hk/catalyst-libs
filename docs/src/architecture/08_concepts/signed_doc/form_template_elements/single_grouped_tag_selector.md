@@ -92,8 +92,11 @@ The Single Grouped Tag Selector form element takes the following parameters:
  #element_Single_Grouped_Tag_Selector_parameters .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #element_Single_Grouped_Tag_Selector_parameters .gt_row_group_first td { border-top-width: 2px; }
  #element_Single_Grouped_Tag_Selector_parameters .gt_row_group_first th { border-top-width: 2px; }
- #element_Single_Grouped_Tag_Selector_parameters .gt_striped { background-color: #EDF7FC; }
+ #element_Single_Grouped_Tag_Selector_parameters .gt_striped { color: #333333; background-color: #EDF7FC; }
  #element_Single_Grouped_Tag_Selector_parameters .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #element_Single_Grouped_Tag_Selector_parameters .gt_grand_summary_row { color: #333333; background-color: #D5D5D5; text-transform: inherit; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; }
+ #element_Single_Grouped_Tag_Selector_parameters .gt_first_grand_summary_row_bottom { border-top-style: double; border-top-width: 6px; border-top-color: #D3D3D3; }
+ #element_Single_Grouped_Tag_Selector_parameters .gt_last_grand_summary_row_top { border-bottom-style: double; border-bottom-width: 6px; border-bottom-color: #D3D3D3; }
  #element_Single_Grouped_Tag_Selector_parameters .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #element_Single_Grouped_Tag_Selector_parameters .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
  #element_Single_Grouped_Tag_Selector_parameters .gt_left { text-align: left; }
@@ -148,7 +151,7 @@ Parameters
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">excluded</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
@@ -156,7 +159,7 @@ Parameters
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left gt_striped">optional_property_type=None description='\tAn array of grouped tag objects, of which one can be selected.\n\tEach object <em>MUST</em> have the form:\n\t\n\t<code>json\n\t&quot;properties&quot;: {\n\t\t&quot;group&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagGroup&quot;,\n\t\t\t&quot;const&quot;: &lt;group name string&gt;\n\t\t},\n\t\t&quot;tag&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagSelection&quot;,\n\t\t\t&quot;enum&quot;: [\n\t\t\t\t&lt;tag 1 string&gt;,\n\t\t\t\t&lt;tag 2 string&gt;,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t</code>' required=&lt;OptionalField.excluded: 'excluded'&gt; type='object' items=None choices=None format=None content_media_type=None pattern=None min_length=None minimum=None maximum=None example=None element_name='Unknown' property_type='object' name='Unknown'</td>
+    <td class="gt_row gt_left gt_striped">optional_property_type=None description='\tAn array of grouped tag objects, of which one can be selected.\n\tEach object <em>MUST</em> have the form:\n\t\n\t<code>json\n\t&quot;properties&quot;: {\n\t\t&quot;group&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagGroup&quot;,\n\t\t\t&quot;const&quot;: &lt;group name string&gt;\n\t\t},\n\t\t&quot;tag&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagSelection&quot;,\n\t\t\t&quot;enum&quot;: [\n\t\t\t\t&lt;tag 1 string&gt;,\n\t\t\t\t&lt;tag 2 string&gt;,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t</code>' required=&lt;OptionalField.required: 'yes'&gt; type='object' items=None choices=None format=None content_media_type=None pattern=None min_length=None minimum=None maximum=None example=None element_name='Unknown' property_type='object' name='Unknown'</td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>

@@ -6,6 +6,8 @@ import (
 
 // Proposal Document Definition
 
+// TODO: Proposers that sign this are proposer to proposer comments for collaboration.
+
 docs: #DocumentDefinitions & {
 	"Proposal Comment": {
 		description: """

@@ -1,0 +1,23 @@
+; Choices are constructed as a CBOR multidimensional array of the form:
+; `[ +[+choice] ]`
+; reflecting the choices in the rows and columns as present 1:1 in the encrypted
+; choices.
+;
+; This data is then compressed using `brotli` compression, and the result is encrypted
+; using AES-CTR and encoded as a sequence of blocks here.
+;
+; Data needs to be pre-compressed before encryption as encryption will make the data
+; incompressible.
+;
+; The Encryption Key is to be derived from the Voters catalyst key-chain and not to be
+; published.
+; Derivation *MUST* include the contest Document ID and Version, so that the same
+; encryption key is never used twice for different contests, but can still be re-derived
+; by a voter that holds their catalyst key-chain recovery keys.
+
+
+; Encrypted Voter Choices
+aes-ctr-encrypted-choices = +aes-ctr-encrypted-block
+
+; AES-CTR Encrypted Data Block
+aes-ctr-encrypted-block = bytes .size 16

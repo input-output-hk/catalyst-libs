@@ -15,6 +15,7 @@ import jsonschema
 import rich
 import rich.markdown
 import rich.pretty
+import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from rich.traceback import Traceback
 
@@ -25,7 +26,7 @@ __jinja_env: Environment | None = None
 TEMPLATES: str = "./pages"
 
 
-def get_jinja_environment(spec: SignedDoc) -> Environment:
+def get_jinja_environment(spec: SignedDoc, extra: dict[str, typing.Any] | None) -> Environment:
     """Get the current jinja environment for rendering templates."""
     global __jinja_env  # noqa: PLW0603
     if __jinja_env is None:
@@ -33,6 +34,10 @@ def get_jinja_environment(spec: SignedDoc) -> Environment:
             loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True
         )
         __jinja_env.globals["spec"] = spec  # type: ignore reportUnknownMemberType
+        if extra is not None:
+            for key, value in extra.items():
+                if key not in __jinja_env.globals:
+                    __jinja_env.globals[key] = value  # type: ignore reportUnknownMemberType
 
     return __jinja_env
 
@@ -311,7 +316,8 @@ class DocGenerator:
     def generate_from_page_template(self, **kwargs: typing.Any) -> None:  # noqa: ANN401
         """Generate a Page from a Page Template inside the specifications."""
         if self._template is not None:
-            env = get_jinja_environment(self._spec)
+            extra = kwargs.get("extra")
+            env = get_jinja_environment(self._spec, extra=extra)
             template = env.get_template(self._template)
             self._filedata = template.render(doc=self, **kwargs)
         else:
@@ -432,7 +438,7 @@ class DocGenerator:
         """Return the files name."""
         return self._filename
 
-    def file_path(self, relative_doc: "DocGenerator | None" = None) -> Path:
+    def file_path(self, relative_doc: DocGenerator | None = None) -> Path:
         """Return a path to the file."""
         if relative_doc is not None:
             relative_path = relative_doc.file_path().parent
@@ -443,7 +449,7 @@ class DocGenerator:
         self,
         *,
         indent: int = 0,
-        relative_doc: "DocGenerator | None" = None,
+        relative_doc: DocGenerator | None = None,
         title: str = "Markdown Document",
         filetype: str = "md",
     ) -> str:
@@ -453,7 +459,7 @@ class DocGenerator:
 
         return textwrap.indent(
             f"""
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "{title}"
 
     * [{file_name}]({file_path})
@@ -461,7 +467,7 @@ class DocGenerator:
     ``` {filetype}
     {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 """.strip(),
             " " * indent,
         )
@@ -551,6 +557,42 @@ class DocGenerator:
         self.json_schema_validate(new_data)
         return json.dumps(new_data, indent=indent)
 
+    def example_block(  # noqa: PLR0913
+        self,
+        example: str,
+        *,
+        label: str = "Example",
+        title: str = "",
+        description: str | None = None,
+        example_type: str = "json",
+        icon_type: typing.Literal[
+            "note",
+            "abstract",
+            "info",
+            "tip",
+            "success",
+            "question",
+            "warning",
+            "failure",
+            "danger",
+            "bug",
+            "example",
+            "quote",
+        ] = "example",
+    ) -> str:
+        """Get the example properly formatted as markdown."""
+        description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
+
+        return f"""
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? {icon_type} "{label}: {title}"
+{description}
+    ```{example_type}
+{textwrap.indent(example, "    ")}
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+""".strip()
+
     def json_example(
         self,
         data: dict[str, typing.Any],
@@ -581,14 +623,50 @@ class DocGenerator:
             # Reload the json, but now with sorted keys.
             example = self.json_schema_sort(example, indent=2)
 
-        description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
+        return self.example_block(
+            example,
+            label=label,
+            title=title,
+            description=description,
+            example_type="json",
+            icon_type=icon_type,
+        )
 
-        return f"""
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? {icon_type} "{label}: {title}"
-{description}
-    ```json
-{textwrap.indent(example, "    ")}
-    ```
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
-""".strip()
+    @staticmethod
+    def get_front_matter_yaml(path: Path) -> dict[str, typing.Any]:
+        """Extract YAML front matter from a file."""
+        text = path.read_text(encoding="utf-8")
+        # Extract front matter
+        if not text.startswith("---"):
+            err = f"File {path} does not start with front matter '---'"
+            raise ValueError(err)
+        lines = text.splitlines()
+        # Find the closing '---' of the front matter block.
+        end_idx: int | None = None
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                end_idx = i
+                break
+        if end_idx is None:
+            err = f"File {path} front matter not closed with '---'"
+            raise ValueError(err)
+        fm = "\n".join(lines[1:end_idx])
+        return yaml.safe_load(fm)
+
+    @staticmethod
+    def read_md_jinja_with_frontmatter(base_path: str) -> list[dict[str, typing.Any]]:
+        """Read all .md.jinja files and extract the front matter, return as a dict."""
+        index_filename = get_template_with_path(base_path)
+        index_path = (Path(TEMPLATES) / index_filename).resolve()
+        base_dir = index_path.parent
+
+        return sorted(
+            [
+                {
+                    "path": path,
+                    "front_matter": DocGenerator.get_front_matter_yaml(path),
+                }
+                for path in sorted(base_dir.glob("*.md.jinja"))
+            ],
+            key=lambda x: x["front_matter"]["Title"],
+        )

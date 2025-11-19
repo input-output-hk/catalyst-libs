@@ -48,7 +48,8 @@ async fn main() -> anyhow::Result<()> {
     println!("* Hermes IPFS node A is publishing 'my_key' to DHT.");
     hermes_ipfs_a.dht_put(b"my_key", ipfs_file).await?;
     println!("* Hermes IPFS node B is getting 'my_key' from DHT.");
-    let data_retrieved = hermes_ipfs_b.dht_get(b"my_key").await?;
+    let key: Vec<u8> = "my_key".bytes().collect();
+    let data_retrieved = hermes_ipfs_b.dht_get(key).await?;
     let data = String::from_utf8(data_retrieved)?;
     println!("  Got data: {data:?}");
     // Stop the nodes and exit.

@@ -9,9 +9,9 @@ use std::{
 
 use anyhow::Context;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{hashes::TransactionId, Point, StakeAddress, TxnIndex};
+use cardano_blockchain_types::{Point, StakeAddress, TxnIndex, hashes::TransactionId};
 use catalyst_types::{
-    catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
+    catalyst_id::{CatalystId, key_rotation::KeyRotation, role_index::RoleId},
     conversion::zero_out_last_n_bytes,
     problem_report::ProblemReport,
     uuid::UuidV4,
@@ -773,16 +773,20 @@ mod test {
         assert_eq!(origin.txn_index(), data.txn_index);
 
         // no encryption key is included for the role
-        assert!(chain
-            .get_encryption_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::default())
-            .is_none());
+        assert!(
+            chain
+                .get_encryption_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::default())
+                .is_none()
+        );
 
-        assert!(chain
-            .get_encryption_key_cert_or_key_for_role_at_rotation(
-                &RoleId::Role0,
-                &KeyRotation::default()
-            )
-            .is_none());
+        assert!(
+            chain
+                .get_encryption_key_cert_or_key_for_role_at_rotation(
+                    &RoleId::Role0,
+                    &KeyRotation::default()
+                )
+                .is_none()
+        );
 
         // Try to add an invalid registration.
         let data = test::block_2();
@@ -828,11 +832,18 @@ mod test {
             .get_latest_signing_pk_for_role(RoleId::Role0)
             .unwrap();
         assert_eq!(r, KeyRotation::from(1));
-        assert!(update
-            .get_signing_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(2))
-            .is_none());
-        assert!(update
-            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(0))
-            .is_some());
+        assert!(
+            update
+                .get_signing_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(2))
+                .is_none()
+        );
+        assert!(
+            update
+                .get_singing_key_cert_or_key_for_role_at_rotation(
+                    &RoleId::Role0,
+                    &KeyRotation::from(0)
+                )
+                .is_some()
+        );
     }
 }

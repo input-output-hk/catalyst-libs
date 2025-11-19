@@ -18,10 +18,10 @@
 use std::str::FromStr;
 
 use asn1_rs::Oid;
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use super::data::{get_oid_from_int, ATTRIBUTES_LOOKUP};
+use super::data::{ATTRIBUTES_LOOKUP, get_oid_from_int};
 use crate::{
     helper::{
         decode::{decode_array_len, decode_datatype, decode_helper},
@@ -259,7 +259,7 @@ mod test_attribute {
     fn encode_decode_attribute_int() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        let mut attribute = Attribute::new(oid!(1.2.840 .113549 .1 .9 .1));
+        let mut attribute = Attribute::new(oid!(1.2.840.113549.1.9.1));
         attribute.add_value(AttributeValue::Text("example@example.com".to_string()));
         attribute
             .encode(&mut encoder, &mut ())
@@ -281,7 +281,7 @@ mod test_attribute {
     fn empty_attribute_value() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        let attribute = Attribute::new(oid!(1.2.840 .113549 .1 .9 .1));
+        let attribute = Attribute::new(oid!(1.2.840.113549.1.9.1));
         attribute
             .encode(&mut encoder, &mut ())
             .expect_err("Failed to encode Attribute");

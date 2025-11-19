@@ -6,11 +6,11 @@ use std::{
 };
 
 use c509_certificate::{
+    C509ExtensionType,
     extensions::{alt_name::GeneralNamesOrText, extension::ExtensionValue},
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
-    C509ExtensionType,
 };
-use cardano_blockchain_types::{pallas_addresses::Address, Cip0134Uri, StakeAddress};
+use cardano_blockchain_types::{Cip0134Uri, StakeAddress, pallas_addresses::Address};
 use catalyst_types::problem_report::ProblemReport;
 use der_parser::der::parse_der_sequence;
 use tracing::debug;

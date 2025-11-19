@@ -8,7 +8,7 @@ use crate::{
     crypto::{
         group::{GroupElement, Scalar},
         rng::{default_rng, rand_core::CryptoRngCore},
-        zk_dl_equality::{generate_dleq_proof, verify_dleq_proof, DleqProof},
+        zk_dl_equality::{DleqProof, generate_dleq_proof, verify_dleq_proof},
     },
     vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey},
 };

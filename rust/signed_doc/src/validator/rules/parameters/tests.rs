@@ -3,8 +3,9 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-    DocLocator, DocumentRef,
+    builder::tests::Builder,
+    metadata::{SupportedField, document_refs::tests::create_dummy_doc_ref},
+    providers::tests::TestCatalystProvider,
 };
 
 #[test_case(
@@ -14,16 +15,11 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    parameter_doc.doc_id().unwrap(),
-                    parameter_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into(),
+                vec![parameter_doc.doc_ref().unwrap()].into(),
             ))
             .build()
     }
@@ -38,30 +34,21 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
-        let common_parameter_field: DocumentRefs = vec![DocumentRef::new(
-                    parameter_doc.doc_id().unwrap(),
-                    parameter_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+        let common_parameter_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()]
                 .into();
         let template_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
             .build();
-        provider.add_document(None, &template_doc).unwrap();
+        provider.add_document(&template_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    template_doc.doc_id().unwrap(),
-                    template_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![template_doc.doc_ref().unwrap()].into()
             ))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field))
             .build()
@@ -77,23 +64,15 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![create_dummy_doc_ref()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -107,30 +86,23 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let template_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &template_doc).unwrap();
+        provider.add_document(&template_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    template_doc.doc_id().unwrap(),
-                    template_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![template_doc.doc_ref().unwrap()]
                 .into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -144,36 +116,26 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let template_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                UuidV7::new(),
-                UuidV7::new(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![create_dummy_doc_ref()].into()
+            ))
             .build();
-        provider.add_document(None, &template_doc).unwrap();
+        provider.add_document(&template_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(
-                    template_doc.doc_id().unwrap(),
-                    template_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![template_doc.doc_ref().unwrap()]
                 .into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -187,30 +149,21 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
-        let common_parameter_field: DocumentRefs = vec![DocumentRef::new(
-                    parameter_doc.doc_id().unwrap(),
-                    parameter_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+        let common_parameter_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()]
                 .into();
         let replied_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
             .build();
-        provider.add_document(None, &replied_doc).unwrap();
+        provider.add_document(&replied_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    replied_doc.doc_id().unwrap(),
-                    replied_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![replied_doc.doc_ref().unwrap()].into()
             ))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field))
             .build()
@@ -226,23 +179,15 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![create_dummy_doc_ref()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -256,30 +201,23 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let reply_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &reply_doc).unwrap();
+        provider.add_document(&reply_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    reply_doc.doc_id().unwrap(),
-                    reply_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+                vec![reply_doc.doc_ref().unwrap()]
                 .into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -293,36 +231,25 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let reply_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                UuidV7::new(),
-                UuidV7::new(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![create_dummy_doc_ref()].into()
+            ))
             .build();
-        provider.add_document(None, &reply_doc).unwrap();
+        provider.add_document(&reply_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Reply(
-                vec![DocumentRef::new(
-                    reply_doc.doc_id().unwrap(),
-                    reply_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![reply_doc.doc_ref().unwrap()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -336,30 +263,21 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
-        let common_parameter_field: DocumentRefs = vec![DocumentRef::new(
-                    parameter_doc.doc_id().unwrap(),
-                    parameter_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
+        let common_parameter_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()]
                 .into();
         let ref_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field.clone()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![ref_doc.doc_ref().unwrap()].into()
             ))
             .with_metadata_field(SupportedField::Parameters(common_parameter_field))
             .build()
@@ -375,23 +293,15 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![create_dummy_doc_ref()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -405,30 +315,22 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let ref_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![ref_doc.doc_ref().unwrap()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -442,36 +344,25 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         let ref_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                UuidV7::new(),
-                UuidV7::new(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![create_dummy_doc_ref()].into()
+            ))
             .build();
-        provider.add_document(None, &ref_doc).unwrap();
+        provider.add_document(&ref_doc).unwrap();
 
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(
-                    ref_doc.doc_id().unwrap(),
-                    ref_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into()
+                vec![ref_doc.doc_ref().unwrap()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(vec![DocumentRef::new(
-                parameter_doc.doc_id().unwrap(),
-                parameter_doc.doc_ver().unwrap(),
-                DocLocator::default(),
-            )]
-            .into()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![parameter_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
@@ -485,16 +376,11 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    parameter_doc.doc_id().unwrap(),
-                    parameter_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into(),
+                vec![parameter_doc.doc_ref().unwrap()].into(),
             ))
             .build()
     }
@@ -508,16 +394,11 @@ use crate::{
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .build();
-        provider.add_document(None, &parameter_doc).unwrap();
+        provider.add_document(&parameter_doc).unwrap();
 
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    parameter_doc.doc_id().unwrap(),
-                    parameter_doc.doc_ver().unwrap(),
-                    DocLocator::default(),
-                )]
-                .into(),
+                vec![parameter_doc.doc_ref().unwrap()].into(),
             ))
             .build()
     }
@@ -529,12 +410,7 @@ use crate::{
     |_, _| {
         Builder::new()
             .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(
-                    UuidV7::new(),
-                    UuidV7::new(),
-                    DocLocator::default(),
-                )]
-                .into(),
+                vec![create_dummy_doc_ref()].into(),
             ))
             .build()
     }
@@ -601,11 +477,9 @@ async fn parameters_rule_not_specified_test() {
     let doc = Builder::new().build();
     assert!(rule.check(&doc, &provider).await.unwrap());
 
-    let ref_id = UuidV7::new();
-    let ref_ver = UuidV7::new();
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Parameters(
-            vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
+            vec![create_dummy_doc_ref()].into(),
         ))
         .build();
     assert!(!rule.check(&doc, &provider).await.unwrap());

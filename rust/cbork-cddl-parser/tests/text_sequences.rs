@@ -1,6 +1,6 @@
 //! Text Sequence Tests
 mod common;
-use common::{text_sequences::*, Rule};
+use common::{Rule, text_sequences::*};
 
 #[test]
 /// Test if the `S` rule passes properly.

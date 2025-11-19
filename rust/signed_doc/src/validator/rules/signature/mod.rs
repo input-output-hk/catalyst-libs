@@ -7,9 +7,9 @@ use anyhow::Context;
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
-    signature::{tbs_data, Signature},
     CatalystSignedDocument,
+    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
+    signature::{Signature, tbs_data},
 };
 
 /// Signed Document signatures validation rule.

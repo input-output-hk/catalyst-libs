@@ -1,0 +1,16 @@
+; This is an encrypted payload that a voter, and ONLY the voter can decrypt.
+; It allows the voter to recover their choices without needing to decrypt the
+; encrypted votes used in the tally.
+;
+; There is no way to associate this data with the encrypted choices directly, but
+; it is created by the voter from the same data used to create the choices.
+
+
+; Encrypted Voter Choice Payload
+voter-choice = [ 0, aes-ctr-encrypted-choices ]
+
+; Encrypted Voter Choices
+aes-ctr-encrypted-choices = +aes-ctr-encrypted-block
+
+; AES-CTR Encrypted Data Block
+aes-ctr-encrypted-block = bytes .size 16

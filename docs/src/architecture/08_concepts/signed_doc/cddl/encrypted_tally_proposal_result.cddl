@@ -1,0 +1,6 @@
+; The Result of an encrypted tally.
+; Placeholder until formally defined.
+
+
+; Placeholder of encrypted tally result.
+encrypted-tally-proposal-result = [ 1, undefined ]

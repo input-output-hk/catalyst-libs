@@ -4,18 +4,26 @@ use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
-use crate::{providers::tests::*, validator::rules::utils::create_dummy_key_pair, *};
+use crate::{
+    metadata::document_refs::tests::create_dummy_doc_ref, providers::tests::*,
+    validator::rules::utils::create_dummy_key_pair, *,
+};
 
 fn metadata() -> serde_json::Value {
+    let ref_doc = create_dummy_doc_ref();
+    let reply_doc = create_dummy_doc_ref();
+    let template_doc = create_dummy_doc_ref();
+    let parameters_doc = create_dummy_doc_ref();
+
     serde_json::json!({
         "content-type": ContentType::Json.to_string(),
         "content-encoding": ContentEncoding::Brotli.to_string(),
         "type": UuidV4::new(),
         "id":  UuidV7::new(),
         "ver":  UuidV7::new(),
-        "ref": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
-        "reply": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
-        "template": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "ref": [ref_doc],
+        "reply": [reply_doc],
+        "template": [template_doc],
         "section": "$",
         "collaborators": vec![
             /* cspell:disable */
@@ -23,7 +31,7 @@ fn metadata() -> serde_json::Value {
             "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3"
             /* cspell:enable */
         ],
-        "parameters": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "parameters": [parameters_doc],
     })
 }
 
@@ -53,10 +61,12 @@ async fn single_signature_validation_test() {
     );
 
     // case: empty provider
-    assert!(!SignatureRule
-        .check(&signed_doc, &TestCatalystProvider::default())
-        .await
-        .unwrap());
+    assert!(
+        !SignatureRule
+            .check(&signed_doc, &TestCatalystProvider::default())
+            .await
+            .unwrap()
+    );
 
     // case: signed with different key
     let (another_sk, ..) = create_dummy_key_pair(RoleId::Role0);
@@ -127,10 +137,12 @@ async fn multiple_signatures_validation_test() {
     assert!(!SignatureRule.check(&signed_doc, &provider).await.unwrap());
 
     // case: no valid signatures available
-    assert!(!SignatureRule
-        .check(&signed_doc, &TestCatalystProvider::default())
-        .await
-        .unwrap());
+    assert!(
+        !SignatureRule
+            .check(&signed_doc, &TestCatalystProvider::default())
+            .await
+            .unwrap()
+    );
 }
 
 fn content(
@@ -190,10 +202,7 @@ fn parameters_alias_field(
     e.bytes(m_p_headers.as_slice())?;
     // empty unprotected headers
     e.map(1)?;
-    e.str(alias)?.encode_with(
-        DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default()),
-        &mut (),
-    )?;
+    e.str(alias)?.encode_with(create_dummy_doc_ref(), &mut ())?;
     // content (random bytes)
     let content = [1, 2, 3];
     e.bytes(&content)?;

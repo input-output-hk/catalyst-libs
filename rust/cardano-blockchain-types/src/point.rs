@@ -10,7 +10,7 @@ use std::{
 
 use pallas_primitives::Hash;
 
-use crate::{hashes::Blake2b256Hash, Slot};
+use crate::{Slot, hashes::Blake2b256Hash};
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
@@ -282,7 +282,7 @@ impl Point {
     /// # Examples
     ///
     /// ```
-    /// use cardano_blockchain_types::{hashes::Blake2b256Hash, Point};
+    /// use cardano_blockchain_types::{Point, hashes::Blake2b256Hash};
     ///
     /// let specific_point = Point::new(42.into(), [0; 32].into());
     /// assert_eq!(

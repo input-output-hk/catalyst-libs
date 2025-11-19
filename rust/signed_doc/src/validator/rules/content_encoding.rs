@@ -4,7 +4,7 @@ use std::string::ToString;
 
 use catalyst_signed_doc_spec::is_required::IsRequired;
 
-use crate::{metadata::ContentEncoding, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, metadata::ContentEncoding};
 
 /// `content-encoding` field validation rule.
 #[derive(Debug)]

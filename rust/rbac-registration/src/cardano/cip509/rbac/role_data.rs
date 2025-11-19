@@ -8,7 +8,7 @@ use catalyst_types::{
     problem_report::ProblemReport,
 };
 use cbork_utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len};
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 use strum_macros::FromRepr;
 
 use crate::cardano::cip509::KeyLocalRef;

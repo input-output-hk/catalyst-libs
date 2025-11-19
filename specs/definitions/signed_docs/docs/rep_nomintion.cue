@@ -71,16 +71,16 @@ docs: "Rep Nomination": {
 			* Allows a Representative to create or update their profile for a category.
 			* The Representative sets their status to 'active' to be discoverable for delegation.
 			* The Representative `revokes` the Nomination to signal they are no longer 
-				participating in the category.
+			  participating in the category.
 			* Nominations are not valid if the latest Delegation by the Representative does NOT
-				reference their latest Nomination.
+			  reference their latest Nomination.
 			"""
 
 		back_end: """
 			* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
 			* The system will only consider Representatives as having valid Nominations if:
-			  * Their latest Nomination in a Contest is not Revoked.
-			  * Their latest Delegation in a Contest references their latest Nomination.
+				* Their latest Nomination in a Contest is not Revoked.
+				* Their latest Delegation in a Contest references their latest Nomination.
 			"""
 	}
 	headers: "content type": value: "application/json"

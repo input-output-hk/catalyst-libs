@@ -10,7 +10,7 @@ use super::committee::ElectionSecretKey;
 use crate::{
     crypto::{
         babystep_giantstep::BabyStepGiantStep,
-        elgamal::{decrypt, Ciphertext},
+        elgamal::{Ciphertext, decrypt},
         group::Scalar,
     },
     vote_protocol::voter::EncryptedVote,

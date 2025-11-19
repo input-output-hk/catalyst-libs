@@ -7,16 +7,16 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use cardano_blockchain_types::{
-    hashes::{Blake2b256Hash, TransactionId, BLAKE_2B256_SIZE},
-    pallas_addresses::{Address, ShelleyAddress},
-    pallas_primitives::{conway, Nullable},
-    pallas_traverse::MultiEraTx,
     MetadatumLabel, MultiEraBlock, StakeAddress, TxnIndex,
+    hashes::{BLAKE_2B256_SIZE, Blake2b256Hash, TransactionId},
+    pallas_addresses::{Address, ShelleyAddress},
+    pallas_primitives::{Nullable, conway},
+    pallas_traverse::MultiEraTx,
 };
 use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
+    catalyst_id::{CatalystId, role_index::RoleId},
     cbor_utils::{report_duplicated_key, report_missing_keys},
     problem_report::ProblemReport,
     uuid::UuidV4,
@@ -24,14 +24,15 @@ use catalyst_types::{
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{
-    decode::{self},
     Decode, Decoder,
+    decode::{self},
 };
 use strum_macros::FromRepr;
 use tracing::warn;
 use uuid::Uuid;
 
 use crate::cardano::cip509::{
+    C509Cert, LocalRefInt, Payment, PointTxnIdx, RoleData, SimplePublicKeyType, X509DerCert,
     decode_context::DecodeContext,
     extract_key,
     rbac::Cip509RbacMetadata,
@@ -42,7 +43,6 @@ use crate::cardano::cip509::{
         validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
-    C509Cert, LocalRefInt, Payment, PointTxnIdx, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// A x509 metadata envelope.

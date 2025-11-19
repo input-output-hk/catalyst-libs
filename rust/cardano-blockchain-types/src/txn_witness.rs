@@ -6,7 +6,7 @@ use dashmap::{DashMap, DashSet};
 use ed25519_dalek::VerifyingKey;
 use pallas_traverse::MultiEraTx;
 
-use crate::{hashes::Blake2b224Hash, TxnIndex};
+use crate::{TxnIndex, hashes::Blake2b224Hash};
 
 /// Hash of a witness verifying public key
 pub type VKeyHash = Blake2b224Hash;

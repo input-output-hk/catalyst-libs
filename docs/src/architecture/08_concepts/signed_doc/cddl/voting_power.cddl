@@ -1,0 +1,7 @@
+; The Voting Power.
+; Voting Power is always an integer, any fractional voting power
+; is represented as a fixed point, and not defined here.
+
+
+; Voting Power.
+voting-power = int

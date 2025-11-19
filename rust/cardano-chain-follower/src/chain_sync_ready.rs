@@ -6,7 +6,7 @@ use std::{sync::LazyLock, time::Duration};
 use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use tokio::{
-    sync::{broadcast, oneshot, RwLock},
+    sync::{RwLock, broadcast, oneshot},
     time::sleep,
 };
 use tracing::error;
@@ -42,13 +42,13 @@ pub(crate) fn notify_follower(
     update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
     kind: &chain_update::Kind,
 ) {
-    if let Some(update_sender) = update_sender {
-        if let Err(error) = update_sender.send(kind.clone()) {
-            error!(
-                chain = chain.to_string(),
-                "Failed to broadcast the Update {kind} : {error}"
-            );
-        }
+    if let Some(update_sender) = update_sender
+        && let Err(error) = update_sender.send(kind.clone())
+    {
+        error!(
+            chain = chain.to_string(),
+            "Failed to broadcast the Update {kind} : {error}"
+        );
     }
 }
 

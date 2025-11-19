@@ -1,6 +1,6 @@
 //! CBOR decoding helper functions.
 
-use minicbor::{data::Tag, decode, Decoder};
+use minicbor::{Decoder, data::Tag, decode};
 
 /// Generic helper function for decoding different types.
 ///

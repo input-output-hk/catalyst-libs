@@ -16,6 +16,7 @@ use pallas_traverse::MultiEraTx;
 use tracing::debug;
 
 use crate::{
+    Slot,
     auxdata::{
         block::BlockAuxData, metadatum_label::MetadatumLabel, metadatum_value::MetadatumValue,
     },
@@ -24,7 +25,6 @@ use crate::{
     point::Point,
     txn_index::TxnIndex,
     txn_witness::{TxnWitness, VKeyHash},
-    Slot,
 };
 
 /// Self-referencing CBOR encoded data of a multi-era block.
@@ -127,8 +127,8 @@ impl MultiEraBlock {
 
             // Special case, when the previous block is actually UNKNOWN, we can't check it.
             if !previous.is_unknown()
-                    // Otherwise, we make sure the hash chain is intact
-                    && previous != &decoded_block.header().previous_hash()
+                // Otherwise, we make sure the hash chain is intact
+                && previous != &decoded_block.header().previous_hash()
             {
                 debug!("{}, {:?}", previous, decoded_block.header().previous_hash());
 
@@ -273,10 +273,10 @@ impl MultiEraBlock {
         vkey_hash: &VKeyHash,
         tx_num: TxnIndex,
     ) -> Option<VerifyingKey> {
-        if let Some(witnesses) = self.witness_map() {
-            if witnesses.check_witness_in_tx(vkey_hash, tx_num) {
-                return witnesses.get_witness_vkey(vkey_hash);
-            }
+        if let Some(witnesses) = self.witness_map()
+            && witnesses.check_witness_in_tx(vkey_hash, tx_num)
+        {
+            return witnesses.get_witness_vkey(vkey_hash);
         }
 
         None
@@ -339,8 +339,12 @@ impl Display for MultiEraBlock {
             pallas_traverse::MultiEraBlock::Conway(_) => "Conway".to_string(),
             _ => "Unknown".to_string(),
         };
-        write!(f, "{block_era} block : {}, Previous {} : Slot# {slot} : {fork} : Block# {block_number} : Size {size} : Txns {txns} : AuxData? {aux_data}",
-    self.point(), self.previous())?;
+        write!(
+            f,
+            "{block_era} block : {}, Previous {} : Slot# {slot} : {fork} : Block# {block_number} : Size {size} : Txns {txns} : AuxData? {aux_data}",
+            self.point(),
+            self.previous()
+        )?;
         Ok(())
     }
 }
@@ -510,10 +514,12 @@ pub(crate) mod tests {
             );
 
             assert!(block.is_err());
-            assert!(block
-                .unwrap_err()
-                .to_string()
-                .contains("Previous slot is not less than current slot"));
+            assert!(
+                block
+                    .unwrap_err()
+                    .to_string()
+                    .contains("Previous slot is not less than current slot")
+            );
         }
 
         Ok(())

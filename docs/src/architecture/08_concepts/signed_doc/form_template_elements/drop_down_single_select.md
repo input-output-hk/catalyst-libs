@@ -73,8 +73,11 @@ The Drop Down Single Select form element takes the following parameters:
  #element_Drop_Down_Single_Select_parameters .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #element_Drop_Down_Single_Select_parameters .gt_row_group_first td { border-top-width: 2px; }
  #element_Drop_Down_Single_Select_parameters .gt_row_group_first th { border-top-width: 2px; }
- #element_Drop_Down_Single_Select_parameters .gt_striped { background-color: #EDF7FC; }
+ #element_Drop_Down_Single_Select_parameters .gt_striped { color: #333333; background-color: #EDF7FC; }
  #element_Drop_Down_Single_Select_parameters .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #element_Drop_Down_Single_Select_parameters .gt_grand_summary_row { color: #333333; background-color: #D5D5D5; text-transform: inherit; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; }
+ #element_Drop_Down_Single_Select_parameters .gt_first_grand_summary_row_bottom { border-top-style: double; border-top-width: 6px; border-top-color: #D3D3D3; }
+ #element_Drop_Down_Single_Select_parameters .gt_last_grand_summary_row_top { border-bottom-style: double; border-bottom-width: 6px; border-bottom-color: #D3D3D3; }
  #element_Drop_Down_Single_Select_parameters .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #element_Drop_Down_Single_Select_parameters .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
  #element_Drop_Down_Single_Select_parameters .gt_left { text-align: left; }
@@ -166,69 +169,65 @@ Each item in the array <strong>MUST</strong> be  unique.</th>
     <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
-    <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
-  </tr>
-  <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>enum: [&quot;option 1&quot;, &quot;option 2&quot;, &quot;option 3&quot;]</code></td>
+    <td class="gt_row gt_left gt_striped"><code>enum: [&quot;option 1&quot;, &quot;option 2&quot;, &quot;option 3&quot;]</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">yes</td>
+    <td class="gt_row gt_left">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>title: &quot;Selector&quot;</code></td>
+    <td class="gt_row gt_left gt_striped"><code>title: &quot;Selector&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>x-guidance: &quot;It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.&quot;</code></td>
+    <td class="gt_row gt_left gt_striped"><code>x-guidance: &quot;It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Choices</th>
-    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left"><code>x-icon: &quot;emoji-happy&quot;</code></td>
+    <td class="gt_row gt_left gt_striped"><code>x-icon: &quot;emoji-happy&quot;</code></td>
   </tr>
 </tbody>
 
