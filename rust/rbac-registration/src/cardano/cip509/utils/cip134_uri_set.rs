@@ -46,7 +46,7 @@ struct Cip0134UriSetInner {
 impl Cip0134UriSet {
     /// Creates a new `Cip0134UriSet` instance from the given certificates.
     #[must_use]
-    pub fn new(
+    pub(crate) fn new(
         x509_certs: &[X509DerCert],
         c509_certs: &[C509Cert],
         report: &ProblemReport,
@@ -82,8 +82,8 @@ impl Cip0134UriSet {
     }
 
     /// Returns `true` if both x509 and c509 certificate maps are empty.
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
+    #[cfg(test)]
+    pub(crate) fn is_empty(&self) -> bool {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
@@ -124,7 +124,7 @@ impl Cip0134UriSet {
 
     /// Returns a set of all active (without taken) stake addresses.
     #[must_use]
-    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
+    pub(crate) fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.values()
             .filter_map(|uri| {
                 match uri.address() {
@@ -132,6 +132,7 @@ impl Cip0134UriSet {
                     _ => None,
                 }
             })
+            .filter(|v| !self.0.taken_stake_addresses.contains(v))
             .collect()
     }
 
@@ -154,7 +155,7 @@ impl Cip0134UriSet {
     /// 2: [uri_4]
     /// ```
     #[must_use]
-    pub fn update(
+    pub(crate) fn update(
         self,
         metadata: &Cip509RbacMetadata,
     ) -> Self {
@@ -224,7 +225,7 @@ impl Cip0134UriSet {
     ///
     /// Updates the current URI set by marking URIs as taken.
     #[must_use]
-    pub fn update_taken_uris(
+    pub(crate) fn update_taken_uris(
         self,
         reg: &Cip509RbacMetadata,
     ) -> Self {

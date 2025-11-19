@@ -303,7 +303,7 @@ impl Cip509 {
 
     /// Returns URIs contained in both x509 and c509 certificates of `Cip509` metadata.
     #[must_use]
-    pub fn certificate_uris(&self) -> Option<&Cip0134UriSet> {
+    pub(crate) fn certificate_uris(&self) -> Option<&Cip0134UriSet> {
         self.metadata.as_ref().map(|m| &m.certificate_uris)
     }
 
