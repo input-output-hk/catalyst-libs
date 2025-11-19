@@ -22,6 +22,7 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
+use ed25519_dalek::VerifyingKey;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
@@ -32,6 +33,7 @@ use uuid::Uuid;
 
 use crate::cardano::cip509::{
     decode_context::DecodeContext,
+    extract_key,
     rbac::Cip509RbacMetadata,
     types::{PaymentHistory, TxInputHash, ValidationSignature},
     utils::Cip0134UriSet,
@@ -40,7 +42,7 @@ use crate::cardano::cip509::{
         validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
-    Payment, PointTxnIdx, RoleData,
+    C509Cert, LocalRefInt, Payment, PointTxnIdx, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// A x509 metadata envelope.
@@ -80,7 +82,8 @@ pub struct Cip509 {
     origin: PointTxnIdx,
     /// A catalyst ID.
     ///
-    /// This field is only present in role 0 registrations.
+    /// This field is only present in role 0 registrations and only for the first
+    /// registration, which defines a `CatalystId` for the chain.
     catalyst_id: Option<CatalystId>,
     /// Raw aux data associated with the transaction that CIP509 is attached to,
     raw_aux_data: Vec<u8>,
@@ -180,6 +183,12 @@ impl Cip509 {
             validate_self_sign_cert(metadata, &report);
         }
 
+        // We want to keep `catalyst_id` field only for the first registration,
+        // which starts a new chain
+        if cip509.prv_tx_id.is_some() {
+            cip509.catalyst_id = None;
+        }
+
         Ok(Some(cip509))
     }
 
@@ -227,6 +236,48 @@ impl Cip509 {
         self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
     }
 
+    /// Returns signing public key for a role.
+    /// Would return only signing public keys for the present certificates,
+    /// if certificate marked as deleted or undefined it would be skipped.
+    #[must_use]
+    pub fn signing_pk_for_role(
+        &self,
+        role: RoleId,
+    ) -> Option<VerifyingKey> {
+        self.metadata.as_ref().and_then(|m| {
+            let key_ref = m.role_data.get(&role).and_then(|d| d.signing_key())?;
+            match key_ref.local_ref {
+                LocalRefInt::X509Certs => {
+                    m.x509_certs.get(key_ref.key_offset).and_then(|c| {
+                        if let X509DerCert::X509Cert(c) = c {
+                            extract_key::x509_key(c).ok()
+                        } else {
+                            None
+                        }
+                    })
+                },
+                LocalRefInt::C509Certs => {
+                    m.c509_certs.get(key_ref.key_offset).and_then(|c| {
+                        if let C509Cert::C509Certificate(c) = c {
+                            extract_key::c509_key(c).ok()
+                        } else {
+                            None
+                        }
+                    })
+                },
+                LocalRefInt::PubKeys => {
+                    m.pub_keys.get(key_ref.key_offset).and_then(|c| {
+                        if let SimplePublicKeyType::Ed25519(c) = c {
+                            Some(*c)
+                        } else {
+                            None
+                        }
+                    })
+                },
+            }
+        })
+    }
+
     /// Returns a purpose of this registration.
     #[must_use]
     pub fn purpose(&self) -> Option<UuidV4> {
@@ -259,7 +310,7 @@ impl Cip509 {
 
     /// Returns URIs contained in both x509 and c509 certificates of `Cip509` metadata.
     #[must_use]
-    pub fn certificate_uris(&self) -> Option<&Cip0134UriSet> {
+    pub(crate) fn certificate_uris(&self) -> Option<&Cip0134UriSet> {
         self.metadata.as_ref().map(|m| &m.certificate_uris)
     }
 
@@ -269,22 +320,11 @@ impl Cip509 {
         self.txn_inputs_hash.as_ref()
     }
 
-    /// Returns a Catalyst ID of this registration if role 0 is present.
+    /// Returns a Catalyst ID of this registration if role 0 is present and if its a first
+    /// registration, which defines a `CatalystId` for the chain.
     #[must_use]
     pub fn catalyst_id(&self) -> Option<&CatalystId> {
         self.catalyst_id.as_ref()
-    }
-
-    /// Returns a list of addresses extracted from certificate URIs of a specific role.
-    #[must_use]
-    pub fn certificate_addresses(
-        &self,
-        role: usize,
-    ) -> HashSet<Address> {
-        self.metadata
-            .as_ref()
-            .map(|m| m.certificate_uris.role_addresses(role))
-            .unwrap_or_default()
     }
 
     /// Return validation signature.
@@ -313,26 +353,10 @@ impl Cip509 {
             .unwrap_or_default()
     }
 
-    /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
-    /// validated otherwise return the problem report that contains all the encountered
-    /// issues.
-    ///
-    /// # Errors
-    ///
-    /// - `Err(ProblemReport)`
-    pub fn consume(self) -> Result<(UuidV4, Cip509RbacMetadata, PaymentHistory), ProblemReport> {
-        match (
-            self.purpose,
-            self.txn_inputs_hash,
-            self.metadata,
-            self.validation_signature,
-        ) {
-            (Some(purpose), Some(_), Some(metadata), Some(_)) if !self.report.is_problematic() => {
-                Ok((purpose, metadata, self.payment_history))
-            },
-
-            _ => Err(self.report),
-        }
+    /// Returns a payment history map.
+    #[must_use]
+    pub fn payment_history(&self) -> &PaymentHistory {
+        &self.payment_history
     }
 }
 

@@ -22,12 +22,12 @@ use update_rbac::{
 };
 use x509_cert::certificate::Certificate as X509Certificate;
 
-use crate::{
-    cardano::cip509::{
-        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
-        RoleDataRecord, ValidationSignature,
+use crate::cardano::{
+    cip509::{
+        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
+        RoleData, RoleDataRecord, ValidationSignature,
     },
-    providers::RbacRegistrationProvider,
+    state::RbacChainsState,
 };
 
 /// Registration chains.
@@ -40,61 +40,126 @@ pub struct RegistrationChain {
 }
 
 impl RegistrationChain {
+    /// Attempts to initialize a new RBAC registration chain
+    /// from a given CIP-509 registration, ensuring uniqueness of Catalyst ID, stake
+    /// addresses, and associated public keys.
+    ///
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
+    ///
+    /// # Errors
+    ///  - Propagates any I/O or provider-level errors encountered while checking key
+    ///    ownership (e.g., database lookup failures).
+    pub async fn new<State>(
+        cip509: &Cip509,
+        state: &mut State,
+    ) -> anyhow::Result<Option<Self>>
+    where
+        State: RbacChainsState,
+    {
+        let Some(new_chain) = Self::new_stateless(cip509) else {
+            return Ok(None);
+        };
+
+        // Verify that a Catalyst ID of this chain is unique.
+        {
+            let cat_id = new_chain.catalyst_id();
+            if state.is_chain_known(cat_id).await? {
+                cip509.report().functional_validation(
+            &format!("{} is already used", cat_id.as_short_id()),
+                "It isn't allowed to use same Catalyst ID (certificate subject public key) in multiple registration chains",
+                    );
+            }
+
+            check_signing_pk(cat_id, cip509, state).await?;
+        }
+
+        if cip509.report().is_problematic() {
+            return Ok(None);
+        }
+
+        state
+            .take_stake_address_from_chains(cip509.stake_addresses().into_iter())
+            .await?;
+
+        Ok(Some(new_chain))
+    }
+
     /// Create a new instance of registration chain.
     /// The first new value should be the chain root.
     ///
-    /// # Arguments
-    /// - `cip509` - The CIP509.
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
     #[must_use]
-    pub fn new_stateless(cip509: Cip509) -> Option<Self> {
-        let inner = RegistrationChainInner::new_stateless(cip509)?;
+    pub fn new_stateless(cip509: &Cip509) -> Option<Self> {
+        let inner = RegistrationChainInner::new(cip509)?;
 
         Some(Self {
             inner: Arc::new(inner),
         })
     }
 
+    /// Attempts to update an existing RBAC registration chain
+    /// with a new CIP-509 registration, validating address and key usage consistency.
+    ///
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
+    ///
+    /// # Errors
+    ///  - Propagates any I/O or provider-level errors encountered while checking key
+    ///    ownership (e.g., database lookup failures).
+    pub async fn update<State>(
+        &self,
+        cip509: &Cip509,
+        state: &State,
+    ) -> anyhow::Result<Option<Self>>
+    where
+        State: RbacChainsState,
+    {
+        let Some(new_chain) = self.update_stateless(cip509) else {
+            return Ok(None);
+        };
+
+        // Check that addresses from the new registration aren't used in other chains.
+        let previous_addresses = self.stake_addresses();
+        let reg_addresses = cip509.stake_addresses();
+        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
+        for address in &new_addresses {
+            if state.is_stake_address_used(address).await? {
+                cip509.report().functional_validation(
+                        &format!("{address} stake address is already used"),
+                        "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
+                    );
+            }
+        }
+
+        check_signing_pk(self.catalyst_id(), cip509, state).await?;
+
+        if cip509.report().is_problematic() {
+            Ok(None)
+        } else {
+            Ok(Some(new_chain))
+        }
+    }
+
     /// Update the registration chain.
     ///
-    /// # Arguments
-    /// - `cip509` - The CIP509.
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
     #[must_use]
     pub fn update_stateless(
         &self,
-        cip509: Cip509,
+        cip509: &Cip509,
     ) -> Option<Self> {
         let latest_signing_pk = self.get_latest_signing_pk_for_role(RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
-            self.inner.update_stateless(cip509, signing_pk)?
+            self.inner.update(cip509, signing_pk)?
         } else {
             cip509.report().missing_field(
                 "latest signing key for role 0",
                 "cannot perform signature validation during Registration Chain update",
             );
             return None;
-        };
-        Some(Self {
-            inner: Arc::new(new_inner),
-        })
-    }
-
-    /// Creates or updates an RBAC registration chain from a CIP-509 registration.
-    ///
-    /// If the given registration references a previous transaction, it attempts
-    /// to update the existing chain using that previous transaction.
-    /// Otherwise, it starts a new chain from the provided registration.
-    pub async fn update<Provider>(
-        &self,
-        reg: Cip509,
-        provider: &Provider,
-    ) -> Option<Self>
-    where
-        Provider: RbacRegistrationProvider,
-    {
-        let new_inner = if reg.previous_transaction().is_some() {
-            self.inner.update(reg, provider).await?
-        } else {
-            RegistrationChainInner::new(reg, provider).await?
         };
         Some(Self {
             inner: Arc::new(new_inner),
@@ -255,10 +320,16 @@ impl RegistrationChain {
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 
-    /// Returns all stake addresses associated to this registration.
+    /// Returns all stake addresses associated to this chain.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.inner.certificate_uris.stake_addresses()
+    }
+
+    /// Returns the latest know applied registration's `PointTxnIdx`.
+    #[must_use]
+    pub fn latest_applied(&self) -> PointTxnIdx {
+        self.inner.latest_applied()
     }
 }
 
@@ -269,6 +340,9 @@ struct RegistrationChainInner {
     catalyst_id: CatalystId,
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: PointData<TransactionId>,
+    /// The latest `PointTxnIdx` of the stolen taken URIs by another registration chains.
+    latest_taken_uris_point: Option<PointTxnIdx>,
+
     /// List of purpose for this registration chain
     purpose: Vec<UuidV4>,
 
@@ -305,7 +379,7 @@ impl RegistrationChainInner {
     /// # Arguments
     /// - `cip509` - The CIP509.
     #[must_use]
-    fn new_stateless(cip509: Cip509) -> Option<Self> {
+    fn new(cip509: &Cip509) -> Option<Self> {
         let context = "Registration Chain new";
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
@@ -318,23 +392,21 @@ impl RegistrationChainInner {
             return None;
         };
 
-        let point_tx_idx = cip509.origin().clone();
-        let current_tx_id_hash = PointData::new(point_tx_idx.clone(), cip509.txn_hash());
-        let validation_signature = cip509.validation_signature().cloned();
-        let raw_aux_data = cip509.raw_aux_data().to_vec();
+        let Some(registration) = cip509.metadata().cloned() else {
+            cip509.report().missing_field("metadata", context);
+            return None;
+        };
 
         // Role data
         let mut role_data_history = HashMap::new();
         let mut role_data_record = HashMap::new();
-
-        if let Some(registration) = cip509.metadata() {
-            update_role_data(
-                registration,
-                &mut role_data_history,
-                &mut role_data_record,
-                &point_tx_idx,
-            );
-        }
+        let point_tx_idx = cip509.origin().clone();
+        update_role_data(
+            &registration,
+            &mut role_data_history,
+            &mut role_data_record,
+            &point_tx_idx,
+        );
 
         // There should be role 0 since we already check that the chain root (no previous tx id)
         // must contain role 0
@@ -354,16 +426,25 @@ impl RegistrationChainInner {
         };
 
         check_validation_signature(
-            validation_signature,
-            &raw_aux_data,
+            cip509.validation_signature(),
+            cip509.raw_aux_data(),
             signing_pk,
             cip509.report(),
             context,
         );
 
-        let Ok((purpose, registration, payment_history)) = cip509.consume() else {
+        if cip509.txn_inputs_hash().is_none() {
+            cip509.report().missing_field("txn inputs hash", context);
+        }
+
+        let Some(purpose) = cip509.purpose() else {
+            cip509.report().missing_field("purpose", context);
             return None;
         };
+
+        if cip509.report().is_problematic() {
+            return None;
+        }
 
         let purpose = vec![purpose];
         let certificate_uris = registration.certificate_uris.clone();
@@ -386,6 +467,8 @@ impl RegistrationChainInner {
             &point_tx_idx,
         );
         let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
+        let current_tx_id_hash = PointData::new(point_tx_idx, cip509.txn_hash());
+        let payment_history = cip509.payment_history().clone();
 
         Some(Self {
             catalyst_id,
@@ -394,6 +477,7 @@ impl RegistrationChainInner {
             x509_certs,
             c509_certs,
             certificate_uris,
+            latest_taken_uris_point: None,
             simple_keys,
             revocations,
             role_data_history,
@@ -407,15 +491,41 @@ impl RegistrationChainInner {
     /// # Arguments
     /// - `cip509` - The CIP509.
     #[must_use]
-    fn update_stateless(
+    fn update(
         &self,
-        cip509: Cip509,
+        cip509: &Cip509,
         signing_pk: VerifyingKey,
     ) -> Option<Self> {
         let context = "Registration Chain update";
+        if self.latest_applied().point() >= cip509.origin().point() {
+            cip509.report().functional_validation(
+                &format!(
+                    "The provided registration is earlier {} than the latest applied one {}",
+                    cip509.origin().point(),
+                    self.current_tx_id_hash.point()
+                ),
+                "Registrations must be applied in the correct ascending order.",
+            );
+            return None;
+        }
+
         let mut new_inner = self.clone();
 
         let Some(prv_tx_id) = cip509.previous_transaction() else {
+            if let Some(cat_id) = cip509.catalyst_id() {
+                if cat_id == &self.catalyst_id {
+                    cip509.report().functional_validation(
+                        &format!(
+                            "Trying to apply the first registration to the associated {} again",
+                            cat_id.as_short_id()
+                        ),
+                        "It isn't allowed to submit first registration twice",
+                    );
+                    return None;
+                }
+
+                return Some(new_inner.update_cause_another_chain(cip509));
+            }
             cip509
                 .report()
                 .missing_field("previous transaction ID", context);
@@ -427,7 +537,7 @@ impl RegistrationChainInner {
             // Perform signature validation
             // This should be done before updating the signing key
             check_validation_signature(
-                cip509.validation_signature().cloned(),
+                cip509.validation_signature(),
                 cip509.raw_aux_data(),
                 signing_pk,
                 cip509.report(),
@@ -447,18 +557,34 @@ impl RegistrationChainInner {
             return None;
         }
 
-        let point_tx_idx = cip509.origin().clone();
-        let Ok((purpose, registration, payment_history)) = cip509.consume() else {
+        if cip509.txn_inputs_hash().is_none() {
+            cip509.report().missing_field("txn inputs hash", context);
+        }
+
+        let Some(purpose) = cip509.purpose() else {
+            cip509.report().missing_field("purpose", context);
             return None;
         };
+        let Some(registration) = cip509.metadata().cloned() else {
+            cip509.report().missing_field("metadata", context);
+            return None;
+        };
+
+        if cip509.report().is_problematic() {
+            return None;
+        }
 
         // Add purpose to the chain, if not already exist
         if !self.purpose.contains(&purpose) {
             new_inner.purpose.push(purpose);
         }
 
+        let point_tx_idx = cip509.origin().clone();
+
         new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
-        new_inner.payment_history.extend(payment_history);
+        new_inner
+            .payment_history
+            .extend(cip509.payment_history().clone());
         update_x509_certs(
             &mut new_inner.x509_certs,
             registration.x509_certs.clone(),
@@ -489,175 +615,23 @@ impl RegistrationChainInner {
         Some(new_inner)
     }
 
-    /// Attempts to initialize a new RBAC registration chain
-    /// from a given CIP-509 registration, ensuring uniqueness of Catalyst ID, stake
-    /// addresses, and associated public keys.
-    pub async fn new<Provider>(
-        reg: Cip509,
-        provider: &Provider,
-    ) -> Option<Self>
-    where
-        Provider: RbacRegistrationProvider,
-    {
-        let report = reg.report().to_owned();
-
-        // Try to start a new chain.
-        let new_chain = Self::new_stateless(reg)?;
-        // Verify that a Catalyst ID of this chain is unique.
-        let catalyst_id = new_chain.catalyst_id.as_short_id();
-        if provider.is_chain_known(catalyst_id.clone()).await.ok()? {
-            report.functional_validation(
-            &format!("{catalyst_id} is already used"),
-            "It isn't allowed to use same Catalyst ID (certificate subject public key) in multiple registration chains",
-        );
-            return None;
-        }
-
-        // Validate stake addresses.
-        let new_addresses = new_chain.certificate_uris.stake_addresses();
-        let mut updated_chains: HashMap<_, HashSet<StakeAddress>> = HashMap::new();
-        for address in &new_addresses {
-            if let Some(id) = provider
-                .catalyst_id_from_stake_address(address)
-                .await
-                .ok()?
-            {
-                // If an address is used in existing chain then a new chain must have different role
-                // 0 signing key.
-                let previous_chain = provider.chain(id.clone()).await.ok()??;
-                if previous_chain.get_latest_signing_pk_for_role(RoleId::Role0)
-                    == new_chain.get_latest_signing_pk_for_role(RoleId::Role0)
-                {
-                    report.functional_validation(
-                    &format!("A new registration ({catalyst_id}) uses the same public key as the previous one ({})",
-                        previous_chain.catalyst_id().as_short_id()
-                    ),
-                    "It is only allowed to override the existing chain by using different public key",
-                );
-                } else {
-                    // The new root registration "takes" an address(es) from the existing chain, so
-                    // that chain needs to be updated.
-                    updated_chains
-                        .entry(id)
-                        .and_modify(|e| {
-                            e.insert(address.clone());
-                        })
-                        .or_insert([address.clone()].into_iter().collect());
-                }
-            }
-        }
-
-        // Check that new public keys aren't used by other chains.
-        new_chain
-            .validate_public_keys(&report, provider)
-            .await
-            .ok()?;
-
-        if report.is_problematic() {
-            return None;
-        }
-
-        Some(new_chain)
-    }
-
-    /// Attempts to update an existing RBAC registration chain
-    /// with a new CIP-509 registration, validating address and key usage consistency.
-    pub async fn update<Provider>(
-        &self,
-        reg: Cip509,
-        provider: &Provider,
-    ) -> Option<Self>
-    where
-        Provider: RbacRegistrationProvider,
-    {
-        let previous_txn = reg.previous_transaction()?;
-        let report = reg.report().to_owned();
-
-        // Find a chain this registration belongs to.
-        let Some(catalyst_id) = provider.catalyst_id_from_txn_id(previous_txn).await.ok()? else {
-            // We are unable to determine a Catalyst ID, so there is no sense to update the problem
-            // report because we would be unable to store this registration anyway.
-            return None;
-        };
-        let chain = provider.chain(catalyst_id.clone()).await.ok()??;
-
-        // Check that addresses from the new registration aren't used in other chains.
-        let previous_addresses = chain.stake_addresses();
-        let reg_addresses = reg.stake_addresses();
-        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
-        for address in &new_addresses {
-            match provider
-                .catalyst_id_from_stake_address(address)
-                .await
-                .ok()?
-            {
-                None => {
-                    // All good: the address wasn't used before.
-                },
-                Some(_) => {
-                    report.functional_validation(
-                    &format!("{address} stake addresses is already used"),
-                    "It isn't allowed to use same stake address in multiple registration chains",
-                    );
-                },
-            }
-        }
-
-        // Try to add a new registration to the chain.
-        let (signing_pk, _) = self.get_latest_signing_pk_for_role(RoleId::Role0)?;
-        let new_chain = chain.inner.update_stateless(reg.clone(), signing_pk)?;
-
-        // Check that new public keys aren't used by other chains.
-        new_chain
-            .validate_public_keys(&report, provider)
-            .await
-            .ok()?;
-
-        // Return an error if any issues were recorded in the report.
-        if report.is_problematic() {
-            return None;
-        }
-
-        Some(new_chain)
-    }
-
-    /// Validates that none of the signing keys in a given RBAC registration chain
-    /// have been used by any other existing chain, ensuring global key uniqueness
-    /// across all Catalyst registrations.
+    /// Update the registration chain with the `cip509` associated to another chain.
+    /// This is the case when registration for different chain affecting the current one,
+    /// by invalidating some data for the current registration chain (stealing stake
+    /// addresses etc.).
     ///
-    /// # Returns
-    /// Returns `Ok(true)` if all signing keys are unique and validation passes
-    /// successfully. Returns `Ok(false)` if any key conflict is detected, with the
-    /// issue recorded in the provided [`ProblemReport`].
-    ///
-    /// # Errors
-    /// - Propagates any I/O or provider-level errors encountered while checking key
-    ///   ownership (e.g., database lookup failures).
-    async fn validate_public_keys<Provider>(
-        &self,
-        report: &ProblemReport,
-        provider: &Provider,
-    ) -> anyhow::Result<()>
-    where
-        Provider: RbacRegistrationProvider,
-    {
-        let roles: Vec<_> = self.role_data_history.keys().collect();
-        let catalyst_id = self.catalyst_id.as_short_id();
-
-        for role in roles {
-            if let Some((key, _)) = self.get_latest_signing_pk_for_role(*role) {
-                if let Some(previous) = provider.catalyst_id_from_public_key(key).await? {
-                    if previous != catalyst_id {
-                        report.functional_validation(
-                        &format!("An update to {catalyst_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
-                        "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
-                        );
-                    }
-                }
-            }
+    /// The provided `cip509` should be fully validated by another chain before trying to
+    /// submit to the current one.
+    #[must_use]
+    fn update_cause_another_chain(
+        mut self,
+        cip509: &Cip509,
+    ) -> Self {
+        if let Some(reg) = cip509.metadata() {
+            self.certificate_uris = self.certificate_uris.update_taken_uris(reg);
         }
-
-        Ok(())
+        self.latest_taken_uris_point = Some(cip509.origin().clone());
+        self
     }
 
     /// Get the latest signing public key for a role.
@@ -691,12 +665,26 @@ impl RegistrationChainInner {
             })
         })
     }
+
+    /// Returns the latest know applied registration's `PointTxnIdx`.
+    #[must_use]
+    fn latest_applied(&self) -> PointTxnIdx {
+        if let Some(latest_taken_uris_point) = &self.latest_taken_uris_point {
+            if latest_taken_uris_point.point() > self.current_tx_id_hash.point() {
+                return latest_taken_uris_point.clone();
+            }
+        }
+        PointTxnIdx::new(
+            self.current_tx_id_hash.point().clone(),
+            self.current_tx_id_hash.txn_index(),
+        )
+    }
 }
 
 /// Perform a check on the validation signature.
 /// The auxiliary data should be sign with the latest signing public key.
 fn check_validation_signature(
-    validation_signature: Option<ValidationSignature>,
+    validation_signature: Option<&ValidationSignature>,
     raw_aux_data: &[u8],
     signing_pk: VerifyingKey,
     report: &ProblemReport,
@@ -734,6 +722,32 @@ fn check_validation_signature(
     }
 }
 
+/// Checks that a new registration doesn't contain a signing key that was used by any
+/// other chain.
+async fn check_signing_pk<State>(
+    cat_id: &CatalystId,
+    cip509: &Cip509,
+    state: &State,
+) -> anyhow::Result<()>
+where
+    State: RbacChainsState,
+{
+    for role in cip509.all_roles() {
+        if let Some(key) = cip509.signing_pk_for_role(role) {
+            if let Some(previous) = state.chain_catalyst_id_from_signing_pk(&key).await? {
+                if &previous != cat_id {
+                    cip509.report().functional_validation(
+                                &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
+                                "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
+                            );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
     use catalyst_types::catalyst_id::role_index::RoleId;
@@ -749,8 +763,9 @@ mod test {
             .unwrap();
         data.assert_valid(&registration);
 
+        // Performs only stateless validations
         // Create a chain with the first registration.
-        let chain = RegistrationChain::new_stateless(registration).unwrap();
+        let chain = RegistrationChain::new_stateless(&registration).unwrap();
         assert_eq!(chain.purpose(), &[data.purpose]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().first().unwrap();
@@ -777,13 +792,8 @@ mod test {
         assert!(registration.report().is_problematic());
 
         let report = registration.report().to_owned();
-        assert!(chain.update_stateless(registration).is_none());
-        let report = format!("{report:?}");
-        assert!(
-            report.contains("kind: InvalidValue { field: \"previous transaction ID\""),
-            "{}",
-            report
-        );
+        assert!(chain.update_stateless(&registration).is_none());
+        assert!(report.is_problematic(), "{report:?}");
 
         // Add the second registration.
         let data = test::block_6();
@@ -791,7 +801,7 @@ mod test {
             .unwrap()
             .unwrap();
         data.assert_valid(&registration);
-        let update = chain.update_stateless(registration).unwrap();
+        let update = chain.update_stateless(&registration).unwrap();
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
         assert!(update.role_data_record().contains_key(&data.role));
