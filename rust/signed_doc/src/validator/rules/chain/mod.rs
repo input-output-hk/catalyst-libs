@@ -1,10 +1,10 @@
 //! `chain` rule type impl.
 
+use anyhow::ensure;
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain};
-
+use catalyst_signed_doc_spec::metadata::collaborators::Collaborators;
 use crate::{
     CatalystSignedDocument, providers::CatalystSignedDocumentProvider,
-    validator::rules::CollaboratorsRule,
 };
 
 #[cfg(test)]
@@ -24,25 +24,25 @@ pub(crate) enum ChainRule {
 
 impl ChainRule {
     /// Generating `ChainRule` from specs
-    pub(crate) fn new(spec: &Chain) -> Self {
+    pub(crate) fn new(spec: &Chain, collaborators_spec: &Collaborators) -> anyhow::Result<Self> {
         let optional = match spec.required {
             IsRequired::Yes => false,
             IsRequired::Optional => true,
             IsRequired::Excluded => {
-                return Self::NotSpecified;
-            },
+                return Ok(Self::NotSpecified);
+            }
         };
 
-        Self::Specified { optional }
+        ensure!(matches!(collaborators_spec.required, IsRequired::Excluded), "Chained Documents do not support collaborators");
+
+        Ok(Self::Specified { optional })
     }
 
     /// Field validation rule
-    #[allow(clippy::too_many_lines)]
     pub(crate) async fn check<Provider>(
         &self,
         doc: &CatalystSignedDocument,
         provider: &Provider,
-        collaborators_rule: &CollaboratorsRule,
     ) -> anyhow::Result<bool>
     where
         Provider: CatalystSignedDocumentProvider,
@@ -140,14 +140,6 @@ impl ChainRule {
                         }
                     }
                 }
-            }
-
-            if let CollaboratorsRule::Specified { .. } = collaborators_rule {
-                doc.report().functional_validation(
-                    "Chained Documents do not support collaborators",
-                    "Chained Documents validation",
-                );
-                return Ok(false);
             }
         }
         if let Self::NotSpecified = self

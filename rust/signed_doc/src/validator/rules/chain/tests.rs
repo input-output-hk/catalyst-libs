@@ -1,10 +1,11 @@
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain as ChainSpec};
 use catalyst_types::uuid::{UuidV4, UuidV7};
 use test_case::test_case;
 
 use super::*;
 use crate::{
-    Chain, DocType, builder::tests::Builder, metadata::SupportedField,
-    providers::tests::TestCatalystProvider,
+    builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+    Chain, DocType,
 };
 
 mod helper {
@@ -41,49 +42,22 @@ async fn test_without_chaining_documents() {
         .build();
 
     let rule = ChainRule::NotSpecified;
-    let collaborators_rule = CollaboratorsRule::NotSpecified;
-
-    assert!(
-        rule.check(&doc, &provider, &collaborators_rule)
-            .await
-            .unwrap()
-    );
+    assert!(rule.check(&doc, &provider).await.unwrap());
     let rule = ChainRule::Specified { optional: true };
-    assert!(
-        rule.check(&doc, &provider, &collaborators_rule)
-            .await
-            .unwrap()
-    );
+    assert!(rule.check(&doc, &provider).await.unwrap());
     let rule = ChainRule::Specified { optional: false };
-    assert!(
-        !rule
-            .check(&doc, &provider, &collaborators_rule)
-            .await
-            .unwrap()
-    );
+    assert!(!rule.check(&doc, &provider).await.unwrap());
 }
 
 #[tokio::test]
 async fn chain_rule_collaborators_rule_conflict() {
-    let doc_type = UuidV4::new();
-    let doc_id = UuidV7::new();
-    let doc_ver = UuidV7::new();
-
-    let provider = TestCatalystProvider::default();
-    let doc = Builder::new()
-        .with_metadata_field(SupportedField::Type(DocType::from(doc_type)))
-        .with_metadata_field(SupportedField::Id(doc_id))
-        .with_metadata_field(SupportedField::Ver(doc_ver))
-        .build();
-
-    let rule = ChainRule::Specified { optional: true };
-    let collaborators_rule = CollaboratorsRule::Specified { optional: true };
-    assert!(
-        !rule
-            .check(&doc, &provider, &collaborators_rule)
-            .await
-            .unwrap()
-    );
+    let chain = ChainSpec {
+        required: IsRequired::Optional,
+    };
+    let collaborators = Collaborators {
+        required: IsRequired::Optional,
+    };
+    ChainRule::new(&chain, &collaborators).unwrap_err();
 }
 
 #[test_case(
@@ -169,11 +143,8 @@ async fn test_valid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
-    let collaborators_rule = CollaboratorsRule::NotSpecified;
 
-    rule.check(&doc, &provider, &collaborators_rule)
-        .await
-        .unwrap()
+    rule.check(&doc, &provider).await.unwrap()
 }
 
 #[test_case(
@@ -319,9 +290,6 @@ async fn test_invalid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
-    let collaborators_rule = CollaboratorsRule::NotSpecified;
 
-    rule.check(&doc, &provider, &collaborators_rule)
-        .await
-        .unwrap()
+    rule.check(&doc, &provider).await.unwrap()
 }
