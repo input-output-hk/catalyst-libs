@@ -669,11 +669,12 @@ impl RegistrationChainInner {
     /// Returns the latest know applied registration's `PointTxnIdx`.
     #[must_use]
     fn latest_applied(&self) -> PointTxnIdx {
-        if let Some(latest_taken_uris_point) = &self.latest_taken_uris_point {
-            if latest_taken_uris_point.point() > self.current_tx_id_hash.point() {
-                return latest_taken_uris_point.clone();
-            }
+        if let Some(latest_taken_uris_point) = &self.latest_taken_uris_point
+            && latest_taken_uris_point.point() > self.current_tx_id_hash.point()
+        {
+            return latest_taken_uris_point.clone();
         }
+
         PointTxnIdx::new(
             self.current_tx_id_hash.point().clone(),
             self.current_tx_id_hash.txn_index(),
@@ -733,15 +734,14 @@ where
     State: RbacChainsState,
 {
     for role in cip509.all_roles() {
-        if let Some(key) = cip509.signing_pk_for_role(role) {
-            if let Some(previous) = state.chain_catalyst_id_from_signing_pk(&key).await? {
-                if &previous != cat_id {
-                    cip509.report().functional_validation(
-                                &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
-                                "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
-                            );
-                }
-            }
+        if let Some(key) = cip509.signing_pk_for_role(role)
+            && let Some(previous) = state.chain_catalyst_id_from_signing_pk(&key).await?
+            && &previous != cat_id
+        {
+            cip509.report().functional_validation(
+                    &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
+                    "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
+                    );
         }
     }
 
