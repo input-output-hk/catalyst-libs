@@ -82,7 +82,8 @@ pub struct Cip509 {
     origin: PointTxnIdx,
     /// A catalyst ID.
     ///
-    /// This field is only present in role 0 registrations.
+    /// This field is only present in role 0 registrations and only for the first
+    /// registration, which defines a `CatalystId` for the chain.
     catalyst_id: Option<CatalystId>,
     /// Raw aux data associated with the transaction that CIP509 is attached to,
     raw_aux_data: Vec<u8>,
@@ -180,6 +181,12 @@ impl Cip509 {
             // witnessed in the transaction.
             validate_cert_addrs(txn, cip509.certificate_uris(), &report);
             validate_self_sign_cert(metadata, &report);
+        }
+
+        // We want to keep `catalyst_id` field only for the first registration,
+        // which starts a new chain
+        if cip509.prv_tx_id.is_some() {
+            cip509.catalyst_id = None;
         }
 
         Ok(Some(cip509))
@@ -313,7 +320,8 @@ impl Cip509 {
         self.txn_inputs_hash.as_ref()
     }
 
-    /// Returns a Catalyst ID of this registration if role 0 is present.
+    /// Returns a Catalyst ID of this registration if role 0 is present and if its a first
+    /// registration, which defines a `CatalystId` for the chain.
     #[must_use]
     pub fn catalyst_id(&self) -> Option<&CatalystId> {
         self.catalyst_id.as_ref()
