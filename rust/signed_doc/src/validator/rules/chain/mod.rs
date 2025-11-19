@@ -1,11 +1,12 @@
 //! `chain` rule type impl.
 
 use anyhow::ensure;
-use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain};
-use catalyst_signed_doc_spec::metadata::collaborators::Collaborators;
-use crate::{
-    CatalystSignedDocument, providers::CatalystSignedDocumentProvider,
+use catalyst_signed_doc_spec::{
+    is_required::IsRequired,
+    metadata::{chain::Chain, collaborators::Collaborators},
 };
+
+use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
 
 #[cfg(test)]
 mod tests;
@@ -24,16 +25,22 @@ pub(crate) enum ChainRule {
 
 impl ChainRule {
     /// Generating `ChainRule` from specs
-    pub(crate) fn new(spec: &Chain, collaborators_spec: &Collaborators) -> anyhow::Result<Self> {
+    pub(crate) fn new(
+        spec: &Chain,
+        collaborators_spec: &Collaborators,
+    ) -> anyhow::Result<Self> {
         let optional = match spec.required {
             IsRequired::Yes => false,
             IsRequired::Optional => true,
             IsRequired::Excluded => {
                 return Ok(Self::NotSpecified);
-            }
+            },
         };
 
-        ensure!(matches!(collaborators_spec.required, IsRequired::Excluded), "Chained Documents do not support collaborators");
+        ensure!(
+            matches!(collaborators_spec.required, IsRequired::Excluded),
+            "Chained Documents do not support collaborators"
+        );
 
         Ok(Self::Specified { optional })
     }

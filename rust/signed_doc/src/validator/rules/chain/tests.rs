@@ -4,8 +4,8 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
-    Chain, DocType,
+    Chain, DocType, builder::tests::Builder, metadata::SupportedField,
+    providers::tests::TestCatalystProvider,
 };
 
 mod helper {
