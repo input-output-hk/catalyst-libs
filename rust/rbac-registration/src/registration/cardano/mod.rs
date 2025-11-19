@@ -44,6 +44,9 @@ impl RegistrationChain {
     /// from a given CIP-509 registration, ensuring uniqueness of Catalyst ID, stake
     /// addresses, and associated public keys.
     ///
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
+    ///
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
     ///    ownership (e.g., database lookup failures).
@@ -84,6 +87,9 @@ impl RegistrationChain {
 
     /// Create a new instance of registration chain.
     /// The first new value should be the chain root.
+    ///
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
     #[must_use]
     pub fn new_stateless(cip509: &Cip509) -> Option<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
@@ -95,6 +101,9 @@ impl RegistrationChain {
 
     /// Attempts to update an existing RBAC registration chain
     /// with a new CIP-509 registration, validating address and key usage consistency.
+    ///
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
     ///
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
@@ -135,8 +144,8 @@ impl RegistrationChain {
 
     /// Update the registration chain.
     ///
-    /// # Arguments
-    /// - `cip509` - The CIP509.
+    /// Returns `None` if the `cip509` is invalid by any reason, properly updating
+    /// `cip509.report()`.
     #[must_use]
     pub fn update_stateless(
         &self,
