@@ -38,8 +38,11 @@ pub trait RbacChainsState {
 
     /// Update the chain by "taking" the given `StakeAddress` for the corresponding
     /// RBAC chain's by the given `CatalystId`.
-    fn take_stake_address_from_chains(
+    fn take_stake_address_from_chains<I>(
         &mut self,
-        addresses: impl IntoIterator<Item = StakeAddress> + Send,
-    ) -> impl Future<Output = anyhow::Result<()>> + Send;
+        addresses: I,
+    ) -> impl Future<Output = anyhow::Result<()>> + Send
+    where
+        I: IntoIterator<Item = StakeAddress> + Send,
+        <I as IntoIterator>::IntoIter: Send;
 }
