@@ -346,7 +346,7 @@ struct RegistrationChainInner {
     catalyst_id: CatalystId,
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: PointData<TransactionId>,
-    /// The latest `PointTxnIdx` of the stolen taken URIs by another registration chains.
+    /// The latest `PointTxnIdx` of the taken URIs by another registration chains.
     latest_taken_uris_point: Option<PointTxnIdx>,
 
     /// List of purpose for this registration chain
