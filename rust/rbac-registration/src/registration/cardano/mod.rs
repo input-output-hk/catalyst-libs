@@ -320,6 +320,12 @@ impl RegistrationChain {
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 
+    /// Returns most recent URIs contained from both x509 and c509 certificates.
+    #[must_use]
+    pub fn certificate_uris(&self) -> &Cip0134UriSet {
+        &self.inner.certificate_uris
+    }
+
     /// Returns all stake addresses associated to this chain.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
