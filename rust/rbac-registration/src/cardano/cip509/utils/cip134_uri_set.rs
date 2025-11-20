@@ -30,7 +30,7 @@ type UrisMap = HashMap<usize, Box<[Cip0134Uri]>>;
 /// This structure uses [`Arc`] internally, so it is cheap to clone.
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[allow(clippy::module_name_repetitions)]
-pub struct Cip0134UriSet(Arc<Cip0134UriSetInner>);
+pub(crate) struct Cip0134UriSet(Arc<Cip0134UriSetInner>);
 
 /// Internal `Cip0134UriSet` data.
 #[derive(Debug, Clone, Eq, PartialEq)]
