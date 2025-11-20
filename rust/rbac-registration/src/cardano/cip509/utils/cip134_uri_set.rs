@@ -30,7 +30,7 @@ type UrisMap = HashMap<usize, Box<[Cip0134Uri]>>;
 /// This structure uses [`Arc`] internally, so it is cheap to clone.
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[allow(clippy::module_name_repetitions)]
-pub(crate) struct Cip0134UriSet(Arc<Cip0134UriSetInner>);
+pub struct Cip0134UriSet(Arc<Cip0134UriSetInner>);
 
 /// Internal `Cip0134UriSet` data.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -74,7 +74,7 @@ impl Cip0134UriSet {
     }
 
     /// Returns an iterator over of `Cip0134Uri`.
-    pub(crate) fn values(&self) -> impl Iterator<Item = &Cip0134Uri> {
+    pub fn values(&self) -> impl Iterator<Item = &Cip0134Uri> {
         self.x_uris()
             .values()
             .chain(self.c_uris().values())
@@ -82,8 +82,8 @@ impl Cip0134UriSet {
     }
 
     /// Returns `true` if both x509 and c509 certificate maps are empty.
-    #[cfg(test)]
-    pub(crate) fn is_empty(&self) -> bool {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
@@ -124,7 +124,7 @@ impl Cip0134UriSet {
 
     /// Returns a set of all active (without taken) stake addresses.
     #[must_use]
-    pub(crate) fn stake_addresses(&self) -> HashSet<StakeAddress> {
+    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.values()
             .filter_map(|uri| {
                 match uri.address() {
