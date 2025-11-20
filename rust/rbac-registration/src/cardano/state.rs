@@ -31,7 +31,7 @@ pub trait RbacChainsState {
 
     /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
     /// signing public key.
-    fn chain_catalyst_id_from_signing_pk(
+    fn chain_catalyst_id_from_signing_public_key(
         &self,
         key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
@@ -40,6 +40,6 @@ pub trait RbacChainsState {
     /// RBAC chain's by the given `CatalystId`.
     fn take_stake_address_from_chains(
         &mut self,
-        addresses: impl Iterator<Item = StakeAddress> + Send,
+        addresses: impl IntoIterator<Item = StakeAddress> + Send,
     ) -> impl Future<Output = anyhow::Result<()>> + Send;
 }

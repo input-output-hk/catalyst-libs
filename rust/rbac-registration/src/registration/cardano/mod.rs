@@ -71,7 +71,7 @@ impl RegistrationChain {
                     );
             }
 
-            check_signing_pk(cat_id, cip509, state).await?;
+            check_signing_public_key(cat_id, cip509, state).await?;
         }
 
         if cip509.report().is_problematic() {
@@ -79,7 +79,7 @@ impl RegistrationChain {
         }
 
         state
-            .take_stake_address_from_chains(cip509.stake_addresses().into_iter())
+            .take_stake_address_from_chains(cip509.stake_addresses())
             .await?;
 
         Ok(Some(new_chain))
@@ -133,7 +133,7 @@ impl RegistrationChain {
             }
         }
 
-        check_signing_pk(self.catalyst_id(), cip509, state).await?;
+        check_signing_public_key(self.catalyst_id(), cip509, state).await?;
 
         if cip509.report().is_problematic() {
             Ok(None)
@@ -151,7 +151,7 @@ impl RegistrationChain {
         &self,
         cip509: &Cip509,
     ) -> Option<Self> {
-        let latest_signing_pk = self.get_latest_signing_pk_for_role(RoleId::Role0);
+        let latest_signing_pk = self.get_latest_signing_public_key_for_role(RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
             self.inner.update(cip509, signing_pk)?
         } else {
@@ -247,11 +247,11 @@ impl RegistrationChain {
     /// Get the latest signing public key for a role.
     /// Returns the public key and the rotation,`None` if not found.
     #[must_use]
-    pub fn get_latest_signing_pk_for_role(
+    pub fn get_latest_signing_public_key_for_role(
         &self,
         role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
-        self.inner.get_latest_signing_pk_for_role(role)
+        self.inner.get_latest_signing_public_key_for_role(role)
     }
 
     /// Get the latest encryption public key for a role.
@@ -261,7 +261,7 @@ impl RegistrationChain {
         &self,
         role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
-        self.inner.get_latest_encryption_pk_for_role(role)
+        self.inner.get_latest_encryption_public_key_for_role(role)
     }
 
     /// Get signing public key for a role with given rotation.
@@ -274,7 +274,7 @@ impl RegistrationChain {
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
-                .and_then(CertOrPk::extract_pk)
+                .and_then(CertOrPk::extract_public_key)
         })
     }
 
@@ -288,7 +288,7 @@ impl RegistrationChain {
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
-                .and_then(CertOrPk::extract_pk)
+                .and_then(CertOrPk::extract_public_key)
         })
     }
 
@@ -398,7 +398,7 @@ impl RegistrationChainInner {
             return None;
         };
 
-        let Some(registration) = cip509.metadata().cloned() else {
+        let Some(registration) = cip509.metadata() else {
             cip509.report().missing_field("metadata", context);
             return None;
         };
@@ -408,7 +408,7 @@ impl RegistrationChainInner {
         let mut role_data_record = HashMap::new();
         let point_tx_idx = cip509.origin().clone();
         update_role_data(
-            &registration,
+            registration,
             &mut role_data_history,
             &mut role_data_record,
             &point_tx_idx,
@@ -423,7 +423,7 @@ impl RegistrationChainInner {
         let Some(signing_pk) = role0_data
             .signing_keys()
             .last()
-            .and_then(|key| key.data().extract_pk())
+            .and_then(|key| key.data().extract_public_key())
         else {
             cip509
                 .report()
@@ -643,7 +643,7 @@ impl RegistrationChainInner {
     /// Get the latest signing public key for a role.
     /// Returns the public key and the rotation,`None` if not found.
     #[must_use]
-    pub fn get_latest_signing_pk_for_role(
+    pub fn get_latest_signing_public_key_for_role(
         &self,
         role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
@@ -651,7 +651,7 @@ impl RegistrationChainInner {
             rdr.signing_keys().last().and_then(|key| {
                 let rotation = KeyRotation::from_latest_rotation(rdr.signing_keys());
 
-                key.data().extract_pk().map(|pk| (pk, rotation))
+                key.data().extract_public_key().map(|pk| (pk, rotation))
             })
         })
     }
@@ -659,7 +659,7 @@ impl RegistrationChainInner {
     /// Get the latest encryption public key for a role.
     /// Returns the public key and the rotation, `None` if not found.
     #[must_use]
-    pub fn get_latest_encryption_pk_for_role(
+    pub fn get_latest_encryption_public_key_for_role(
         &self,
         role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
@@ -667,7 +667,7 @@ impl RegistrationChainInner {
             rdr.encryption_keys().last().and_then(|key| {
                 let rotation = KeyRotation::from_latest_rotation(rdr.encryption_keys());
 
-                key.data().extract_pk().map(|pk| (pk, rotation))
+                key.data().extract_public_key().map(|pk| (pk, rotation))
             })
         })
     }
@@ -731,7 +731,7 @@ fn check_validation_signature(
 
 /// Checks that a new registration doesn't contain a signing key that was used by any
 /// other chain.
-async fn check_signing_pk<State>(
+async fn check_signing_public_key<State>(
     cat_id: &CatalystId,
     cip509: &Cip509,
     state: &State,
@@ -740,8 +740,10 @@ where
     State: RbacChainsState,
 {
     for role in cip509.all_roles() {
-        if let Some(key) = cip509.signing_pk_for_role(role)
-            && let Some(previous) = state.chain_catalyst_id_from_signing_pk(&key).await?
+        if let Some(key) = cip509.signing_public_key_for_role(role)
+            && let Some(previous) = state
+                .chain_catalyst_id_from_signing_public_key(&key)
+                .await?
             && &previous != cat_id
         {
             cip509.report().functional_validation(
@@ -835,7 +837,7 @@ mod test {
         assert_eq!(role_0_data.extended_data().len(), 2);
 
         let (_k, r) = update
-            .get_latest_signing_pk_for_role(RoleId::Role0)
+            .get_latest_signing_public_key_for_role(RoleId::Role0)
             .unwrap();
         assert_eq!(r, KeyRotation::from(1));
         assert!(

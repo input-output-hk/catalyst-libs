@@ -92,17 +92,16 @@ impl Cip0134UriSet {
     pub(crate) fn role_uris(
         &self,
         role: usize,
-    ) -> HashSet<Cip0134Uri> {
-        let mut result = HashSet::new();
-
-        if let Some(uris) = self.x_uris().get(&role) {
-            result.extend(uris.iter().cloned());
-        }
-        if let Some(uris) = self.c_uris().get(&role) {
-            result.extend(uris.iter().cloned());
-        }
-
-        result
+    ) -> impl Iterator<Item = &Cip0134Uri> {
+        let x_iter = self
+            .x_uris()
+            .get(&role)
+            .map_or_else(|| [].iter(), |uris| uris.iter());
+        let c_iter = self
+            .c_uris()
+            .get(&role)
+            .map_or_else(|| [].iter(), |uris| uris.iter());
+        x_iter.chain(c_iter)
     }
 
     /// Returns a set of stake addresses by the given role.
@@ -112,7 +111,6 @@ impl Cip0134UriSet {
         role: usize,
     ) -> HashSet<StakeAddress> {
         self.role_uris(role)
-            .iter()
             .filter_map(|uri| {
                 match uri.address() {
                     Address::Stake(a) => Some(a.clone().into()),
@@ -401,7 +399,7 @@ mod tests {
         let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
-        assert_eq!(set.role_uris(0).len(), 1);
+        assert_eq!(set.role_uris(0).count(), 1);
         assert_eq!(set.role_stake_addresses(0).len(), 1);
         assert_eq!(set.stake_addresses().len(), 1);
 
