@@ -88,7 +88,6 @@ impl Cip0134UriSet {
     }
 
     /// Returns a list of URIs by the given role.
-    #[must_use]
     pub(crate) fn role_uris(
         &self,
         role: usize,
@@ -105,7 +104,6 @@ impl Cip0134UriSet {
     }
 
     /// Returns a set of stake addresses by the given role.
-    #[must_use]
     pub(crate) fn role_stake_addresses(
         &self,
         role: usize,
