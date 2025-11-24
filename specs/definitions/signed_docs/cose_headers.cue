@@ -79,6 +79,7 @@ _coseHeaders: #coseHeaders & {
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
+		required:  "optional"
 		description: """
 			Supported HTTP Encodings of the Payload.
 			If no compression or encoding is used, then this field must not be present.

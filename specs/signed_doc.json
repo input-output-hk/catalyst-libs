@@ -661,7 +661,7 @@
         "coseLabel": "content-encoding",
         "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
         "format": "HTTP Content Encoding",
-        "required": "yes",
+        "required": "optional",
         "value": [
           "br"
         ]
@@ -709,7 +709,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -834,7 +834,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -963,7 +963,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1091,7 +1091,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1225,7 +1225,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1353,7 +1353,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1484,7 +1484,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1610,7 +1610,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1748,7 +1748,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1897,7 +1897,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2074,7 +2074,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2206,7 +2206,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2339,7 +2339,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2557,7 +2557,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2694,7 +2694,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2834,7 +2834,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2967,7 +2967,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3100,7 +3100,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3222,7 +3222,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3422,7 +3422,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3549,7 +3549,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3685,7 +3685,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3811,7 +3811,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
