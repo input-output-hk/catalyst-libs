@@ -13,6 +13,57 @@ order: 5
 Describes the end-to-end voting flow, the bulletin board (ballot box) checkpointing model, 
 and how ballots and checkpoints are discovered, validated, and tallied in a decentralized pub/sub network.
 
+## End-to-End Voting Flow (No dReps)
+
+1. Voter Registration
+    * A user registers a Catalyst ID on-chain.
+    * The default on-chain role enables them to act as a `Registered` voter in signed-docs.
+2. Determine Eligible Proposals
+    * After Proposal Submission and Moderation deadlines close for a contest’s anchor
+      (typically Category, less commonly Campaign or Brand), the backend and frontend can
+      compute the final set of eligible proposals for that contest.
+    * Eligibility is derived from:
+        * Proposals with `final` submission actions from all required signers by the deadline; and
+        * Not disqualified or hidden by moderation, per
+          [Proposals, Templates, and Discovery](./proposals_templates_and_discovery.md).
+3. Voting Window and Mode
+    * Contest Parameters specify when voting opens and closes and the voting mode
+      (e.g., private, public, encrypted).
+    * Ballots cast outside this window are invalid for tally.
+4. Casting a Ballot
+    * When voting opens, a registered voter may cast a [Contest Ballot](../docs/contest_ballot.md)
+      for that contest.
+    * The ballot payload **MUST** include a choice for every eligible proposal for that contest.
+      If any eligible proposal is missing, or if extra unexpected proposals are present,
+      the ballot is invalid.
+5. Logging Ballots
+    * The backend or pub/sub network accepts the ballot, verifies it, and logs it for the contest
+      under the voter’s Catalyst ID.
+6. Re-voting and Latest-Ballot Semantics
+    * A voter may submit new ballots for the same contest any time until voting closes.
+    * Only the latest valid ballot per (voter, contest) is counted; earlier versions are ignored.
+7. Voting Power Computation
+    * When voting closes, the system gathers the latest valid ballot for each registered voter
+      in the contest.
+    * For each voter, it computes their voting power according to the Contest Parameters
+      (e.g., stake-based rules, caps, or other policies).
+8. Applying Voting Power and Aggregation
+    * The system applies each voter’s voting power to the selections in their ballot.
+    * For each proposal, voting power from all voters with valid ballots is accumulated to produce
+      per-proposal totals.
+9. Bulletin Board Checkpoints
+    * During voting, the bulletin board (ballot box) periodically publishes
+      [Contest Ballot Checkpoints](../docs/contest_ballot_checkpoint.md) that commit to the
+      collected ballots via an SMT root.
+    * These checkpoints may be anchored on-chain to provide an immutable, time-stamped log of
+      ballots collected up to each checkpoint.
+10. Tally and Outcome
+    * After voting closes and tally completes:
+        * For encrypted ballots, aggregated ciphertexts are decrypted with proofs as described in
+          [Voting Protocol Cryptography](./crypto.md#tally).
+        * For each proposal, the total voting power applied determines the outcome and winners
+          according to the Contest Parameters (e.g., thresholds, ranking, number of seats).
+
 ## Ballots
 
 * Document: [Contest Ballot](../docs/contest_ballot.md) — one ballot per registered user per contest 
@@ -107,4 +158,3 @@ Tally computes per-proposal totals from valid ballots and delegated voting power
   reject or ignore ballots outside allowed windows.
 * Prefer latest valid [`ver`](../metadata.md#ver) per ballot [`id`](../metadata.md#id), 
   and respect checkpoint finality for inclusion proofs.
-

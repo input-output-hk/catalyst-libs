@@ -35,7 +35,7 @@ docs: #DocumentDefinitions & {
 			This allows for a collaborator to make an update to the document which removes themselves
 			from the `collaborators` list.
 
-			All versions of the document *MUST* list the author as the original author.
+			All versions of the document are owned by the original author.
 			The Author can not be changed by any document revision.
 
 			Any Proposal that lists a collaborator is an invitation for that collaborator to participate in the proposal.

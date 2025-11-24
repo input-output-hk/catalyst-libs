@@ -37,7 +37,7 @@ of the document they are signing, provided they are listed as a collaborator in 
 This allows for a collaborator to make an update to the document which removes themselves
 from the [`collaborators`](../metadata.md#collaborators) list.
 
-All versions of the document *MUST* list the author as the original author.
+All versions of the document are owned by the original author.
 The Author can not be changed by any document revision.
 
 Any Proposal that lists a collaborator is an invitation for that collaborator to participate in the proposal.
@@ -171,6 +171,11 @@ are permitting these potential collaborators to participate in the drafting and 
 However, any document submission referencing a proposal MUST be signed by all collaborators in
 addition to the author.
 
+In the event there are **MULTIPLE** [`collaborators`](../metadata.md#collaborators) listed, they **MUST** be sorted.
+
+Sorting for each element of [`collaborators`](../metadata.md#collaborators) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
+
 ### [`revocations`](../metadata.md#revocations)
 
 <!-- markdownlint-disable MD033 -->
@@ -272,6 +277,7 @@ of the previous submitted document's version.
 
 * Use generalized parameters.
 
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7

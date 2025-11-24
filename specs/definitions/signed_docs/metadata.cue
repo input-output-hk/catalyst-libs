@@ -176,6 +176,10 @@ _allMetadataNames: or([
 			* The Referenced Document **MUST** Exist
 			* Every value in the `document_locator` must consistently reference the exact same document.
 			* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+			* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.
+
+			Sorting for each element of `ref` follows the same sort order as specified for Map Keys, 
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
 			"""
 	}
 
@@ -224,6 +228,11 @@ _allMetadataNames: or([
 			are permitting these potential collaborators to participate in the drafting and submission process.
 			However, any document submission referencing a proposal MUST be signed by all collaborators in
 			addition to the author.
+
+			In the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.
+
+			Sorting for each element of `collaborators` follows the same sort order as specified for Map Keys, 
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
 			"""
 	}
 
