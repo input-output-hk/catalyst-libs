@@ -71,14 +71,24 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     /// Set the storage type for the IPFS node to local disk.
     ///
     /// ## Parameters
+    ///
+    /// On native platforms, this creates filesystem-backed storage.
+    /// On WASM, this creates IndexedDB-backed storage using the path as a namespace.
     pub fn set_disk_storage<T: Into<std::path::PathBuf>>(
         self,
         storage_path: T,
     ) -> Self {
-        Self(
-            self.0
-                .set_repo(&rust_ipfs::repo::Repo::new_fs(storage_path.into())),
-        )
+        #[cfg(not(target_arch = "wasm32"))]
+        let repo = { rust_ipfs::repo::Repo::new_fs(storage_path.into()) };
+
+        #[cfg(target_arch = "wasm32")]
+        let repo = {
+            // On WASM, use IndexedDB with the path as namespace
+            let namespace = storage_path.into().to_string_lossy().to_string();
+            rust_ipfs::repo::Repo::new_idb(Some(namespace))
+        };
+
+        Self(self.0.set_repo(&repo))
     }
 
     /// Start the IPFS node.
@@ -137,6 +147,25 @@ impl HermesIpfs {
         &self,
         ipfs_file: AddIpfsFile,
     ) -> anyhow::Result<IpfsPath> {
+        // Handle file reading for Path variant
+        let ipfs_file = match ipfs_file {
+            AddIpfsFile::Path(file_path) => {
+                // Read file from filesystem
+                let file_bytes = tokio::fs::read(&file_path).await.map_err(|e| {
+                    anyhow::anyhow!("Failed to read file at {:?}: {}", file_path, e)
+                })?;
+
+                // Extract filename for the stream
+                let file_name = file_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| s.to_string());
+
+                AddIpfsFile::Stream((file_name, file_bytes))
+            },
+            stream @ AddIpfsFile::Stream(_) => stream,
+        };
+
         let ipfs_path = self.node.add_unixfs(ipfs_file).await?;
         Ok(ipfs_path)
     }
@@ -531,7 +560,12 @@ pub enum AddIpfsFile {
 impl From<AddIpfsFile> for AddOpt {
     fn from(value: AddIpfsFile) -> Self {
         match value {
-            AddIpfsFile::Path(file_path) => file_path.into(),
+            AddIpfsFile::Path(_) => {
+                // Path variants are converted to Stream in add_ipfs_file before reaching here
+                unreachable!(
+                    "Path should be converted to Stream before From<AddIpfsFile> for AddOpt"
+                )
+            },
             AddIpfsFile::Stream((None, bytes)) => bytes.into(),
             AddIpfsFile::Stream((Some(name), bytes)) => (name, bytes).into(),
         }
