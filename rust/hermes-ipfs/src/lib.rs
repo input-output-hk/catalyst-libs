@@ -149,6 +149,7 @@ impl HermesIpfs {
     ) -> anyhow::Result<IpfsPath> {
         // Handle file reading for Path variant
         let ipfs_file = match ipfs_file {
+            #[cfg(not(target_arch = "wasm32"))]
             AddIpfsFile::Path(file_path) => {
                 // Read file from filesystem
                 let file_bytes = tokio::fs::read(&file_path).await.map_err(|e| {
@@ -550,6 +551,8 @@ impl From<Ipfs> for HermesIpfs {
 /// File that will be added to IPFS
 pub enum AddIpfsFile {
     /// Path in local disk storage to the file.
+    /// Only available on non-WASM targets.
+    #[cfg(not(target_arch = "wasm32"))]
     Path(std::path::PathBuf),
     /// Stream of file bytes, with an optional name.
     /// **NOTE** current implementation of `rust-ipfs` does not add names to published
@@ -560,6 +563,7 @@ pub enum AddIpfsFile {
 impl From<AddIpfsFile> for AddOpt {
     fn from(value: AddIpfsFile) -> Self {
         match value {
+            #[cfg(not(target_arch = "wasm32"))]
             AddIpfsFile::Path(_) => {
                 // Path variants are converted to Stream in add_ipfs_file before reaching here
                 unreachable!(
@@ -572,12 +576,14 @@ impl From<AddIpfsFile> for AddOpt {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<String> for AddIpfsFile {
     fn from(value: String) -> Self {
         Self::Path(value.into())
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl From<std::path::PathBuf> for AddIpfsFile {
     fn from(value: std::path::PathBuf) -> Self {
         Self::Path(value)
