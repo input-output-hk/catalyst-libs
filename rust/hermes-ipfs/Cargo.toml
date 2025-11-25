@@ -19,11 +19,25 @@ ipld-core = { version = "0.4.1", features = ["serde"]}
 # A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
 # rev-26b99cb as at July 30, 2025
 rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs", rev = "0a6269e05a4ccfaa547a47a56f92171e4abc0564" }
+
+# Cross-platform tokio configuration:
+# - "rt" feature: Required for async runtime on all platforms (native + WASM)
 tokio = { version = "1.46.0", features = ["rt"] }
+
 futures = "0.3.31"
 libp2p = "0.56.0"
 connexa = { version = "0.4.1", features = ["identify", "dcutr", "gossipsub", "autonat", "relay", "kad", "keypair_base64_encoding", "ping", "request-response", "request-response-misc", "rendezvous", "mdns"] }
 
+# Native-only dependencies and features
+#
+# WASM runtimes typically don't provide direct filesystem access for security
+# and portability reasons. The "fs" feature enables tokio::fs::read() and other
+# filesystem operations that are only available on native platforms (Linux, macOS, Windows).
+#
+# This conditional dependency ensures:
+# 1. Native builds get the "fs" feature for file system operations
+# 2. WASM builds compile without filesystem APIs (which would fail to compile)
+# 3. Code using tokio::fs is gated with #[cfg(not(target_arch = "wasm32"))]
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1.46.0", features = ["fs"] }
 

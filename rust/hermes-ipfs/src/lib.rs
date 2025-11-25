@@ -1,6 +1,27 @@
 //! Hermes IPFS
 //!
 //! Provides support for storage, and `PubSub` functionality.
+//!
+//! # Cross-Platform Support
+//!
+//! This library supports both native (desktop/server) and WASM targets.
+//! The key differences between these platforms are:
+//!
+//! ## Native Targets (Linux, macOS, Windows)
+//! - **Storage**: Uses filesystem-backed storage via `tokio::fs`
+//! - **File handling**: Supports reading files from disk using `std::path::PathBuf`
+//! - **API**: `AddIpfsFile::Path` variant available for direct file system access
+//!
+//! ## WASM Targets (wasm32 architecture)
+//! - **Storage**: Uses alternative storage backends (e.g., IndexedDB in web environments)
+//! - **File handling**: Only supports in-memory byte streams
+//! - **API**: `AddIpfsFile::Path` variant is NOT available; use `AddIpfsFile::Stream` instead
+//!
+//! **Why these differences?** WASM runtimes typically don't provide direct filesystem access
+//! for security and portability reasons. File data must be provided as byte streams.
+//!
+//! The cross-compilation is achieved using `#[cfg(not(target_arch = "wasm32"))]` attributes
+//! to conditionally compile code based on the target architecture.
 
 use std::{convert::Infallible, str::FromStr};
 
@@ -68,22 +89,41 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     }
 
     #[must_use]
-    /// Set the storage type for the IPFS node to local disk.
+    /// Set the storage type for the IPFS node.
     ///
     /// ## Parameters
     ///
-    /// On native platforms, this creates filesystem-backed storage.
-    /// On WASM, this creates IndexedDB-backed storage using the path as a namespace.
+    /// * `storage_path` - Path for storage location (or namespace on WASM)
+    ///
+    /// ## Cross-Platform Behavior
+    ///
+    /// This method creates different storage backends depending on the target platform:
+    ///
+    /// ### Native Targets (not(target_arch = "wasm32"))
+    /// Creates filesystem-backed storage using `Repo::new_fs()`. The storage_path is used
+    /// as a directory path where IPFS blocks and metadata will be stored on disk.
+    ///
+    /// **Why**: Native platforms have filesystem access via `tokio::fs` and can
+    /// persist data directly to disk.
+    ///
+    /// ### WASM Targets (target_arch = "wasm32")
+    /// Creates alternative storage using `Repo::new_idb()`. The storage_path is
+    /// converted to a string and used as a namespace identifier for the storage system.
+    ///
+    /// **Why**: WASM runtimes typically don't provide direct filesystem APIs. Alternative
+    /// storage mechanisms are used instead. The path string serves as a logical namespace
+    /// rather than an actual file path.
     pub fn set_disk_storage<T: Into<std::path::PathBuf>>(
         self,
         storage_path: T,
     ) -> Self {
+        // Native: Use filesystem storage
         #[cfg(not(target_arch = "wasm32"))]
         let repo = { rust_ipfs::repo::Repo::new_fs(storage_path.into()) };
 
+        // WASM: Use alternative storage (e.g., IndexedDB) with path as namespace
         #[cfg(target_arch = "wasm32")]
         let repo = {
-            // On WASM, use IndexedDB with the path as namespace
             let namespace = storage_path.into().to_string_lossy().to_string();
             rust_ipfs::repo::Repo::new_idb(Some(namespace))
         };
@@ -133,35 +173,55 @@ impl HermesIpfs {
     ///
     /// ## Parameters
     ///
-    /// * `file_path` The `file_path` can be specified as a type that converts into
-    ///   `std::path::PathBuf`.
+    /// * `ipfs_file` - Either a file path (native only) or byte stream (all platforms)
     ///
     /// ## Returns
     ///
-    /// * A result with `IpfsPath`
+    /// * A result with `IpfsPath` pointing to the uploaded content
     ///
     /// ## Errors
     ///
-    /// Returns an error if the file fails to upload.
+    /// Returns an error if the file fails to upload or (on native) if the file cannot be read.
+    ///
+    /// ## Cross-Platform Behavior
+    ///
+    /// This method normalizes file input across platforms before uploading to IPFS:
+    ///
+    /// ### Native Targets
+    /// - Accepts `AddIpfsFile::Path` which contains a filesystem path
+    /// - Reads the file from disk using `tokio::fs::read` (requires the `fs` feature)
+    /// - Converts to `AddIpfsFile::Stream` with file contents and optional filename
+    /// - Then uploads the stream to IPFS
+    ///
+    /// ### WASM Targets
+    /// - Only accepts `AddIpfsFile::Stream` (the Path variant doesn't exist in WASM)
+    /// - Directly uploads the provided byte stream to IPFS
+    /// - Files must be read into memory by the caller using platform-specific APIs
+    ///
+    /// **Why this conversion?** The underlying `rust-ipfs` library's `add_unixfs` method
+    /// works with streams internally. On native, we provide convenience by handling file
+    /// reading, but on WASM there's no filesystem to read from.
     pub async fn add_ipfs_file(
         &self,
         ipfs_file: AddIpfsFile,
     ) -> anyhow::Result<IpfsPath> {
-        // Handle file reading for Path variant
+        // On native: Convert Path to Stream by reading from filesystem
+        // On WASM: This match only handles Stream since Path doesn't exist
         let ipfs_file = match ipfs_file {
             #[cfg(not(target_arch = "wasm32"))]
             AddIpfsFile::Path(file_path) => {
-                // Read file from filesystem
+                // Read file from filesystem using tokio::fs (not available in WASM)
                 let file_bytes = tokio::fs::read(&file_path).await.map_err(|e| {
                     anyhow::anyhow!("Failed to read file at {:?}: {}", file_path, e)
                 })?;
 
-                // Extract filename for the stream
+                // Extract filename for metadata
                 let file_name = file_path
                     .file_name()
                     .and_then(|n| n.to_str())
                     .map(|s| s.to_string());
 
+                // Convert to Stream variant for uploading
                 AddIpfsFile::Stream((file_name, file_bytes))
             },
             stream @ AddIpfsFile::Stream(_) => stream,
@@ -549,14 +609,57 @@ impl From<Ipfs> for HermesIpfs {
 }
 
 /// File that will be added to IPFS
+///
+/// ## Cross-Platform Design
+///
+/// This enum has different variants available depending on the compilation target:
+///
+/// ### Native Targets (Linux, macOS, Windows)
+/// ```rust,ignore
+/// // Both variants available:
+/// AddIpfsFile::Path(PathBuf)                      // Convenient: read from filesystem
+/// AddIpfsFile::Stream((Option<String>, Vec<u8>))  // Explicit: provide bytes
+/// ```
+///
+/// ### WASM Targets (wasm32 architecture)
+/// ```rust,ignore
+/// // Only Stream variant available:
+/// AddIpfsFile::Stream((Option<String>, Vec<u8>))
+/// ```
+///
+/// **Why the difference?**
+///
+/// - **Native**: Has filesystem access via `std::fs` and `tokio::fs`, so we can provide
+///   the `Path` variant as a convenience. The library reads the file for you.
+///
+/// - **WASM**: Most WASM runtimes don't provide direct filesystem access for security
+///   and portability reasons. File data must be obtained through:
+///   - Platform-specific APIs
+///   - Network operations
+///   - Alternative storage systems
+///   - In-memory generation
+///
+///   The caller must obtain the bytes using the appropriate APIs for their environment,
+///   then pass them as a Stream. This keeps the library's API honest about what's possible.
 pub enum AddIpfsFile {
     /// Path in local disk storage to the file.
-    /// Only available on non-WASM targets.
+    ///
+    /// **Only available on non-WASM targets** because WASM runtimes typically don't
+    /// provide direct filesystem access.
+    ///
+    /// The file will be read using `tokio::fs::read` when calling `add_ipfs_file()`.
     #[cfg(not(target_arch = "wasm32"))]
     Path(std::path::PathBuf),
-    /// Stream of file bytes, with an optional name.
-    /// **NOTE** current implementation of `rust-ipfs` does not add names to published
-    /// files.
+
+    /// Stream of file bytes with an optional filename.
+    ///
+    /// **Available on all platforms** (native and WASM).
+    ///
+    /// - First element: Optional filename for metadata (note: current `rust-ipfs`
+    ///   implementation may not preserve names in published files)
+    /// - Second element: The actual file contents as bytes
+    ///
+    /// On WASM, this is the **only** way to add files since there's no direct filesystem access.
     Stream((Option<String>, Vec<u8>)),
 }
 
@@ -565,7 +668,8 @@ impl From<AddIpfsFile> for AddOpt {
         match value {
             #[cfg(not(target_arch = "wasm32"))]
             AddIpfsFile::Path(_) => {
-                // Path variants are converted to Stream in add_ipfs_file before reaching here
+                // Path variants should be converted to Stream in add_ipfs_file() before
+                // reaching this conversion. If we hit this, there's a bug in the call chain.
                 unreachable!(
                     "Path should be converted to Stream before From<AddIpfsFile> for AddOpt"
                 )
@@ -576,6 +680,16 @@ impl From<AddIpfsFile> for AddOpt {
     }
 }
 
+// Conversion implementations for creating AddIpfsFile from various types
+//
+// Note: The Path-based conversions (String, PathBuf) are only available on native
+// targets because AddIpfsFile::Path doesn't exist in WASM.
+
+/// Convert String to AddIpfsFile::Path on native platforms.
+///
+/// **Only available on non-WASM targets.**
+///
+/// Example: `let file = AddIpfsFile::from("/path/to/file.txt".to_string());`
 #[cfg(not(target_arch = "wasm32"))]
 impl From<String> for AddIpfsFile {
     fn from(value: String) -> Self {
@@ -583,6 +697,11 @@ impl From<String> for AddIpfsFile {
     }
 }
 
+/// Convert PathBuf to AddIpfsFile::Path on native platforms.
+///
+/// **Only available on non-WASM targets.**
+///
+/// Example: `let file = AddIpfsFile::from(PathBuf::from("/path/to/file.txt"));`
 #[cfg(not(target_arch = "wasm32"))]
 impl From<std::path::PathBuf> for AddIpfsFile {
     fn from(value: std::path::PathBuf) -> Self {
