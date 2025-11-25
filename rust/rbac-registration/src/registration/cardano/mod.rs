@@ -723,13 +723,11 @@ fn check_validation_signature(
 
 /// Checks that a new registration doesn't contain a signing key that was used by any
 /// other chain.
-async fn check_signing_public_key<State>(
+async fn check_signing_public_key(
     cat_id: &CatalystId,
     cip509: &Cip509,
-    state: &State,
+    state: &impl RbacChainsProvider,
 ) -> anyhow::Result<()>
-where
-    State: RbacChainsProvider,
 {
     for role in cip509.all_roles() {
         if let Some(key) = cip509.signing_public_key_for_role(role)
