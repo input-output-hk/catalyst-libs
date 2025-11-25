@@ -121,10 +121,10 @@ impl RegistrationChain {
         };
 
         // Check that addresses from the new registration aren't used in other chains.
-        let previous_addresses = self.stake_addresses();
-        let reg_addresses = cip509.stake_addresses();
-        let new_addresses: Vec<_> = reg_addresses.difference(&previous_addresses).collect();
-        for address in &new_addresses {
+        let previous_stake_addresses = self.stake_addresses();
+        let reg_stake_addresses = cip509.stake_addresses();
+        let new_stake_addresses: Vec<_> = reg_stake_addresses.difference(&previous_stake_addresses).collect();
+        for address in &new_stake_addresses {
             if state.is_stake_address_used(address).await? {
                 cip509.report().functional_validation(
                         &format!("{address} stake address is already used"),
@@ -257,7 +257,7 @@ impl RegistrationChain {
     /// Get the latest encryption public key for a role.
     /// Returns the public key and the rotation, `None` if not found.
     #[must_use]
-    pub fn get_latest_encryption_pk_for_role(
+    pub fn get_latest_encryption_public_key_for_role(
         &self,
         role: RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
@@ -329,7 +329,7 @@ impl RegistrationChain {
     /// Returns all stake addresses associated to this chain.
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
-        self.inner.certificate_uris.stake_addresses()
+        self.inner.certificate_uris.active_stake_addresses()
     }
 
     /// Returns the latest know applied registration's `PointTxnIdx`.
@@ -748,7 +748,7 @@ where
         {
             cip509.report().functional_validation(
                     &format!("An update to {cat_id} registration chain uses the same public key ({key:?}) as {previous} chain"),
-                    "It isn't allowed to use role 0 signing (certificate subject public) key in different chains",
+                    "It isn't allowed to use signing (certificate subject public) key in different chains",
                     );
         }
     }

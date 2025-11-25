@@ -29,14 +29,14 @@ pub trait RbacChainsState {
         addr: &StakeAddress,
     ) -> impl Future<Output = anyhow::Result<bool>> + Send;
 
-    /// Returns a corresponding to the RBAC chain's Catalyst ID corresponding by the given
+    /// Returns the Catalyst ID associated with the RBAC chain for the given signing public key
     /// signing public key.
     fn chain_catalyst_id_from_signing_public_key(
         &self,
         key: &VerifyingKey,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystId>>> + Send;
 
-    /// Update the chain by "taking" the given `StakeAddress` for the corresponding
+    /// Update currently assosiated with the stake addresses chains by "taking" the given `StakeAddress` for the corresponding
     /// RBAC chain's by the given `CatalystId`.
     fn take_stake_address_from_chains<I>(
         &mut self,

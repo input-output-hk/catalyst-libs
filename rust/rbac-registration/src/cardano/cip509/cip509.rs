@@ -349,7 +349,7 @@ impl Cip509 {
     #[must_use]
     pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
         self.certificate_uris()
-            .map(Cip0134UriSet::stake_addresses)
+            .map(Cip0134UriSet::active_stake_addresses)
             .unwrap_or_default()
     }
 

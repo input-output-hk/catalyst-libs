@@ -120,7 +120,7 @@ impl Cip0134UriSet {
 
     /// Returns a set of all active (without taken) stake addresses.
     #[must_use]
-    pub fn stake_addresses(&self) -> HashSet<StakeAddress> {
+    pub fn active_stake_addresses(&self) -> HashSet<StakeAddress> {
         self.values()
             .filter_map(|uri| {
                 match uri.address() {
@@ -203,7 +203,7 @@ impl Cip0134UriSet {
 
         metadata
             .certificate_uris
-            .stake_addresses()
+            .active_stake_addresses()
             .iter()
             .for_each(|v| {
                 taken_stake_addresses.remove(v);
@@ -225,10 +225,10 @@ impl Cip0134UriSet {
         self,
         reg: &Cip509RbacMetadata,
     ) -> Self {
-        let current_stake_addresses = self.stake_addresses();
+        let current_stake_addresses = self.active_stake_addresses();
         let latest_taken_stake_addresses = reg
             .certificate_uris
-            .stake_addresses()
+            .active_stake_addresses()
             .into_iter()
             .filter(|v| current_stake_addresses.contains(v));
 
@@ -399,7 +399,7 @@ mod tests {
         assert!(set.c_uris().is_empty());
         assert_eq!(set.role_uris(0).count(), 1);
         assert_eq!(set.role_stake_addresses(0).len(), 1);
-        assert_eq!(set.stake_addresses().len(), 1);
+        assert_eq!(set.active_stake_addresses().len(), 1);
 
         let x_uris = set.x_uris();
         assert_eq!(x_uris.len(), 1);
