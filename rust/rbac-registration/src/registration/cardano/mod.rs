@@ -727,8 +727,7 @@ async fn check_signing_public_key(
     cat_id: &CatalystId,
     cip509: &Cip509,
     state: &impl RbacChainsProvider,
-) -> anyhow::Result<()>
-{
+) -> anyhow::Result<()> {
     for role in cip509.all_roles() {
         if let Some(key) = cip509.signing_public_key_for_role(role)
             && let Some(previous) = state
