@@ -1,4 +1,4 @@
 //! Cardano module
 
 pub mod cip509;
-pub mod state;
+pub mod provider;

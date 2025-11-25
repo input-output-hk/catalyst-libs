@@ -27,7 +27,7 @@ use crate::cardano::{
         CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
         RoleData, RoleDataRecord, ValidationSignature,
     },
-    state::RbacChainsState,
+    provider::RbacChainsProvider,
 };
 
 /// Registration chains.
@@ -50,12 +50,10 @@ impl RegistrationChain {
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
     ///    ownership (e.g., database lookup failures).
-    pub async fn new<State>(
+    pub async fn new(
         cip509: &Cip509,
-        state: &mut State,
+        provider: &impl RbacChainsProvider,
     ) -> anyhow::Result<Option<Self>>
-    where
-        State: RbacChainsState,
     {
         let Some(new_chain) = Self::new_stateless(cip509) else {
             return Ok(None);
@@ -64,23 +62,19 @@ impl RegistrationChain {
         // Verify that a Catalyst ID of this chain is unique.
         {
             let cat_id = new_chain.catalyst_id();
-            if state.is_chain_known(cat_id).await? {
+            if provider.is_chain_known(cat_id).await? {
                 cip509.report().functional_validation(
             &format!("{} is already used", cat_id.as_short_id()),
                 "It isn't allowed to use same Catalyst ID (certificate subject public key) in multiple registration chains",
                     );
             }
 
-            check_signing_public_key(cat_id, cip509, state).await?;
+            check_signing_public_key(cat_id, cip509, provider).await?;
         }
 
         if cip509.report().is_problematic() {
             return Ok(None);
         }
-
-        state
-            .take_stake_address_from_chains(cip509.stake_addresses())
-            .await?;
 
         Ok(Some(new_chain))
     }
@@ -108,13 +102,11 @@ impl RegistrationChain {
     /// # Errors
     ///  - Propagates any I/O or provider-level errors encountered while checking key
     ///    ownership (e.g., database lookup failures).
-    pub async fn update<State>(
+    pub async fn update(
         &self,
         cip509: &Cip509,
-        state: &State,
+        provider: &impl RbacChainsProvider,
     ) -> anyhow::Result<Option<Self>>
-    where
-        State: RbacChainsState,
     {
         let Some(new_chain) = self.update_stateless(cip509) else {
             return Ok(None);
@@ -123,9 +115,11 @@ impl RegistrationChain {
         // Check that addresses from the new registration aren't used in other chains.
         let previous_stake_addresses = self.stake_addresses();
         let reg_stake_addresses = cip509.stake_addresses();
-        let new_stake_addresses: Vec<_> = reg_stake_addresses.difference(&previous_stake_addresses).collect();
+        let new_stake_addresses: Vec<_> = reg_stake_addresses
+            .difference(&previous_stake_addresses)
+            .collect();
         for address in &new_stake_addresses {
-            if state.is_stake_address_used(address).await? {
+            if provider.is_stake_address_used(address).await? {
                 cip509.report().functional_validation(
                         &format!("{address} stake address is already used"),
                         "It isn't allowed to use same stake address in multiple registration chains, if its not a new chain",
@@ -133,7 +127,7 @@ impl RegistrationChain {
             }
         }
 
-        check_signing_public_key(self.catalyst_id(), cip509, state).await?;
+        check_signing_public_key(self.catalyst_id(), cip509, provider).await?;
 
         if cip509.report().is_problematic() {
             Ok(None)
@@ -737,7 +731,7 @@ async fn check_signing_public_key<State>(
     state: &State,
 ) -> anyhow::Result<()>
 where
-    State: RbacChainsState,
+    State: RbacChainsProvider,
 {
     for role in cip509.all_roles() {
         if let Some(key) = cip509.signing_public_key_for_role(role)
