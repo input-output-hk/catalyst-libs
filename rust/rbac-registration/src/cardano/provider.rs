@@ -1,4 +1,5 @@
-//! Cardano RBAC provider trait, which are used during different stateful validation procedures.
+//! Cardano RBAC provider trait, which are used during different stateful validation
+//! procedures.
 
 use std::future::Future;
 

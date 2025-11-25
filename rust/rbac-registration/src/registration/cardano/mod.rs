@@ -53,8 +53,7 @@ impl RegistrationChain {
     pub async fn new(
         cip509: &Cip509,
         provider: &impl RbacChainsProvider,
-    ) -> anyhow::Result<Option<Self>>
-    {
+    ) -> anyhow::Result<Option<Self>> {
         let Some(new_chain) = Self::new_stateless(cip509) else {
             return Ok(None);
         };
@@ -106,8 +105,7 @@ impl RegistrationChain {
         &self,
         cip509: &Cip509,
         provider: &impl RbacChainsProvider,
-    ) -> anyhow::Result<Option<Self>>
-    {
+    ) -> anyhow::Result<Option<Self>> {
         let Some(new_chain) = self.update_stateless(cip509) else {
             return Ok(None);
         };
