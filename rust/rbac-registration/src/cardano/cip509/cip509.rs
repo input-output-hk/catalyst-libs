@@ -238,7 +238,7 @@ impl Cip509 {
 
     /// Returns signing public key for a role.
     /// Would return only signing public keys for the present certificates,
-    /// if certificate marked as deleted or undefined it would be skipped.
+    /// if certificates or simple public key is marked as deleted or undefined it would be skipped.
     #[must_use]
     pub fn signing_public_key_for_role(
         &self,
