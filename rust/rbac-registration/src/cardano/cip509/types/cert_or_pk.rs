@@ -21,7 +21,7 @@ pub enum CertOrPk {
 
 impl CertOrPk {
     /// Extract public key from the given certificate or public key.
-    pub(crate) fn extract_pk(&self) -> Option<VerifyingKey> {
+    pub(crate) fn extract_public_key(&self) -> Option<VerifyingKey> {
         match self {
             CertOrPk::X509(Some(x509)) => extract_key::x509_key(x509).ok(),
             CertOrPk::C509(Some(c509)) => extract_key::c509_key(c509).ok(),

@@ -157,10 +157,7 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, Strin
         return Vec::new();
     };
 
-    uris.x_uris()
-        .iter()
-        .chain(uris.c_uris())
-        .flat_map(|(_index, uris)| uris.iter())
+    uris.values()
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
                 let bech32 = uri.address().to_string();
@@ -185,10 +182,7 @@ fn extract_payment_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, Str
         return Vec::new();
     };
 
-    uris.x_uris()
-        .iter()
-        .chain(uris.c_uris())
-        .flat_map(|(_index, uris)| uris.iter())
+    uris.values()
         .filter_map(|uri| {
             if let Address::Shelley(a) = uri.address() {
                 match a.payment() {
@@ -593,8 +587,7 @@ mod tests {
         assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        // The consume function must return the problem report contained within the registration.
-        let report = registration.consume().unwrap_err();
+        let report = registration.report();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
         assert!(report.contains("is not present in the transaction witness set, and can not be verified as owned and spendable"));
@@ -616,7 +609,7 @@ mod tests {
         assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        let report = registration.consume().unwrap_err();
+        let report = registration.report();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
         assert!(
@@ -640,8 +633,7 @@ mod tests {
         assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        // The consume function must return the problem report contained within the registration.
-        let report = registration.consume().unwrap_err();
+        let report = registration.report();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
         assert!(report.contains("Unknown role found: 4"));
