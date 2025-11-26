@@ -189,41 +189,40 @@ mod common;
     ;
     "corrupted content"
 )]
-// TODO: Re-enable this test case after the `content-type` fields becomes optional again.
-// #[test_case(
-//     |provider| {
-//         let template = brand_parameters_form_template_doc(provider).inspect(|v|
-// provider.add_document(v).unwrap())?;         let parameters = brand_parameters_doc(&template,
-// provider).inspect(|v| provider.add_document(v).unwrap())?;         let template =
-// proposal_form_template_doc(&parameters, provider).inspect(|v|
-// provider.add_document(v).unwrap())?;         let proposal = proposal_doc(&template, &parameters,
-// provider).inspect(|v| provider.add_document(v).unwrap())?;         let id = UuidV7::new();
-//         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
-//             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
-//             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
-//
-//         let proposal_ref = proposal.doc_ref()?;
-//         let parameters_ref = parameters.doc_ref()?;
-//
-//         Builder::new()
-//             .with_json_metadata(serde_json::json!({
-//                 "content-type": ContentType::Json,
-//                 "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-//                 "id": id,
-//                 "ver": id,
-//                 "ref": [proposal_ref],
-//                 "parameters": [parameters_ref]
-//             }))?
-//             .with_json_content(&serde_json::json!({
-//                 "action": "final"
-//             }))?
-//             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-//             .build()
-//     }
-//     => true
-//     ;
-//     "missing content-encoding (optional)"
-// )]
+#[test_case(
+    |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let id = UuidV7::new();
+        let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
+            .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
+            .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
+
+        let proposal_ref = proposal.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
+        Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Json,
+                "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
+                "id": id,
+                "ver": id,
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
+            }))?
+            .with_json_content(&serde_json::json!({
+                "action": "final"
+            }))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()
+    }
+    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
+    => ignore["non-optional `content-type`"] true
+    ;
+    "missing content-encoding (optional)"
+)]
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;

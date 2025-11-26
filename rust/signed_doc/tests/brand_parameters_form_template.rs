@@ -60,27 +60,27 @@ mod common;
     ;
     "empty content"
 )]
-// TODO: Re-enable this test case after the `content-type` fields becomes optional again.
-// #[test_case(
-//     |provider| {
-//         let id = UuidV7::new();
-//         let (sk, kid) = create_dummy_key_pair(None);
-//         provider.add_sk(kid.clone(), sk.clone());
-//         Builder::new()
-//             .with_json_metadata(serde_json::json!({
-//                 "content-type": ContentType::SchemaJson,
-//                 "id": id,
-//                 "ver": id,
-//                 "type": doc_types::BRAND_PARAMETERS_FORM_TEMPLATE.clone(),
-//             }))?
-//             .with_json_content(&serde_json::json!({}))?
-//             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-//             .build()
-//     }
-//     => true
-//     ;
-//     "missing 'content-encoding' (optional)"
-// )]
+#[test_case(
+    |provider| {
+        let id = UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(None);
+        provider.add_sk(kid.clone(), sk.clone());
+        Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::SchemaJson,
+                "id": id,
+                "ver": id,
+                "type": doc_types::BRAND_PARAMETERS_FORM_TEMPLATE.clone(),
+            }))?
+            .with_json_content(&serde_json::json!({}))?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()
+    }
+    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
+    => ignore["non-optional `content-type`"] true
+    ;
+    "missing 'content-encoding' (optional)"
+)]
 #[tokio::test]
 #[allow(clippy::unwrap_used)]
 async fn test_brand_parameters_form_template_doc(
