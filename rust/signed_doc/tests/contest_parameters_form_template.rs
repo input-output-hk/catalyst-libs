@@ -1,5 +1,5 @@
-//! Integration test for proposal form template document validation part.
-//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal_form_template/>
+//! Integration test for contest ballot document validation part.
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_parameters_form_template>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -9,7 +9,8 @@ use test_case::test_case;
 use crate::common::{
     brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
     campaign_parameters_form_template_doc, category_parameters_doc,
-    category_parameters_form_template_doc, create_dummy_key_pair, proposal_form_template_doc,
+    category_parameters_form_template_doc, contest_parameters_form_template_doc,
+    create_dummy_key_pair,
 };
 
 mod common;
@@ -18,7 +19,7 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        proposal_form_template_doc(&parameters, provider)
+        contest_parameters_form_template_doc(&parameters, provider)
     }
     => true
     ;
@@ -26,11 +27,11 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        proposal_form_template_doc(&parameters, provider)
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_doc(&campaign, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_parameters_form_template_doc(&campaign, provider)
     }
     => true
     ;
@@ -38,13 +39,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = category_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = category_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        proposal_form_template_doc(&parameters, provider)
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_doc(&campaign, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let category = category_parameters_form_template_doc(&campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let category = category_parameters_doc(&category, &campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_parameters_form_template_doc(&category, provider)
     }
     => true
     ;
@@ -62,9 +63,9 @@ mod common;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::SchemaJson.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
-                "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
+                "content-type": ContentType::SchemaJson,
+                "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
                 "parameters": [parameters_ref],
@@ -89,9 +90,9 @@ mod common;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::SchemaJson.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
-                "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
+                "content-type": ContentType::SchemaJson,
+                "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
                 "parameters": [parameters_ref],
@@ -117,8 +118,8 @@ mod common;
 //
 //         Builder::new()
 //             .with_json_metadata(serde_json::json!({
-//                 "content-type": ContentType::SchemaJson.to_string(),
-//                 "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
+//                 "content-type": ContentType::SchemaJson,
+//                 "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
 //                 "id": id,
 //                 "ver": id,
 //                 "parameters": [parameters_ref],
@@ -138,9 +139,9 @@ mod common;
         provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::SchemaJson.to_string(),
-                "content-encoding": ContentEncoding::Brotli.to_string(),
-                "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
+                "content-type": ContentType::SchemaJson,
+                "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
             }))?
@@ -154,7 +155,7 @@ mod common;
 )]
 #[tokio::test]
 #[allow(clippy::unwrap_used)]
-async fn test_proposal_form_template_doc(
+async fn contest_parameters_form_template(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -162,7 +163,7 @@ async fn test_proposal_form_template_doc(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(
         *doc.doc_type().unwrap(),
-        doc_types::PROPOSAL_FORM_TEMPLATE.clone()
+        doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone()
     );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();

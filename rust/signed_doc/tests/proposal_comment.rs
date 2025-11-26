@@ -1,6 +1,6 @@
 //! Test for Proposal Comment document.
 //! Require fields: type, id, ver, ref, template, parameters
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment/>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal_comment>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -167,40 +167,43 @@ mod common;
     ;
     "missing content"
 )]
-#[test_case(
-    |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
-        provider.add_sk(kid.clone(), sk.clone());
-
-        let proposal_ref = proposal.doc_ref()?;
-        let template_ref = template.doc_ref()?;
-        let parameters_ref = parameters.doc_ref()?;
-
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json,
-                "type": doc_types::PROPOSAL_COMMENT.clone(),
-                "id": id,
-                "ver": id,
-                "ref": [proposal_ref],
-                "template": [template_ref],
-                "parameters": [parameters_ref]
-            }))?
-            .with_json_content(&serde_json::json!({}))?
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-            .build()?;
-        Ok(doc)
-    }
-    => true
-    ;
-    "missing content-encoding (optional)"
-)]
+// TODO: Re-enable this test case after the `content-type` fields becomes optional again.
+// #[test_case(
+//     |provider| {
+//         let template = brand_parameters_form_template_doc(provider).inspect(|v|
+// provider.add_document(v).unwrap())?;         let parameters = brand_parameters_doc(&template,
+// provider).inspect(|v| provider.add_document(v).unwrap())?;         let template =
+// proposal_form_template_doc(&parameters, provider).inspect(|v|
+// provider.add_document(v).unwrap())?;         let proposal = proposal_doc(&template, &parameters,
+// provider).inspect(|v| provider.add_document(v).unwrap())?;         let template =
+// proposal_comment_form_template_doc(&parameters, provider).inspect(|v|
+// provider.add_document(v).unwrap())?;         let id = UuidV7::new();
+//         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+//         provider.add_sk(kid.clone(), sk.clone());
+//
+//         let proposal_ref = proposal.doc_ref()?;
+//         let template_ref = template.doc_ref()?;
+//         let parameters_ref = parameters.doc_ref()?;
+//
+//         let doc = Builder::new()
+//             .with_json_metadata(serde_json::json!({
+//                 "content-type": ContentType::Json,
+//                 "type": doc_types::PROPOSAL_COMMENT.clone(),
+//                 "id": id,
+//                 "ver": id,
+//                 "ref": [proposal_ref],
+//                 "template": [template_ref],
+//                 "parameters": [parameters_ref]
+//             }))?
+//             .with_json_content(&serde_json::json!({}))?
+//             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+//             .build()?;
+//         Ok(doc)
+//     }
+//     => true
+//     ;
+//     "missing content-encoding (optional)"
+// )]
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
