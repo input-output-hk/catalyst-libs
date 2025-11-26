@@ -141,23 +141,19 @@ use crate::{
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
+
         let new_ref = create_dummy_doc_ref();
-        let new_ref = DocumentRef::new(
-            ref_doc.doc_id().unwrap(),
-            ref_doc.doc_ver().unwrap(),
-            new_ref.doc_locator().clone()
-        );
-        provider.add_document_with_ref(new_ref, &ref_doc);
+        provider.add_document_with_ref(new_ref.clone(), &ref_doc);
 
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![ref_doc.doc_ref().unwrap()].into(),
+                vec![new_ref].into(),
             ))
             .build()
     }
     => false
     ;
-    "invalid reference to the document, which has different id and ver fields as stated in the `ref` field"
+    "invalid reference in the `ref` field to the document, which is different with the fetched document"
 )]
 #[test_case(
     |_, _| {

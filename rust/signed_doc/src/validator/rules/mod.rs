@@ -129,7 +129,7 @@ impl Rules {
             content_encoding: ContentEncodingRule::new(&doc_spec.headers.content_encoding)?,
             template: TemplateRule::new(all_docs_specs, &doc_spec.metadata.template)?,
             parameters: ParametersRule::new(all_docs_specs, &doc_spec.metadata.parameters)?,
-            chain: ChainRule::new(&doc_spec.metadata.chain),
+            chain: ChainRule::new(&doc_spec.metadata.chain, &doc_spec.metadata.collaborators)?,
             doc_ref: RefRule::new(all_docs_specs, &doc_spec.metadata.doc_ref)?,
             reply: ReplyRule::new(all_docs_specs, &doc_spec.metadata.reply)?,
             section: SectionRule::NotSpecified,
