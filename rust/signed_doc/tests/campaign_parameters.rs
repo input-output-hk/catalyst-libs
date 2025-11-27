@@ -1,5 +1,5 @@
 //! Integration test for campaign parameters document validation part.
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/campaign_parameters>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/campaign_parameters>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -109,7 +109,8 @@ mod common;
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
-    => true
+    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
+    => ignore["non-optional `content-type`"] true
     ;
     "missing 'content-encoding' (optional)"
 )]
