@@ -76,7 +76,7 @@ mod common;
                 "ver": id,
                 "parameters": [parameters_ref],
             }))?
-            .with_cbor_content(vec![1])?
+            .with_cbor_content(1)?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
@@ -129,7 +129,7 @@ mod common;
                 "ver": id,
                 "parameters": [parameters_ref],
             }))?
-            .with_cbor_content(vec![1])?
+            .with_cbor_content(1)?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
@@ -151,7 +151,7 @@ mod common;
                 "id": id,
                 "ver": id,
             }))?
-            .with_cbor_content(vec![1])?
+            .with_cbor_content(1)?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }

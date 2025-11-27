@@ -64,11 +64,14 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
+        let linked_ref = linked_doc.doc_ref()?;
         let parameters_ref = parameters.doc_ref()?;
+        let chain = Chain::new(0, None);
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -77,9 +80,11 @@ mod common;
                 "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
                 "id": id,
                 "ver": id,
+                "ref": [linked_ref],
                 "parameters": [parameters_ref],
+                "chain": chain,
             }))?
-            .with_cbor_content(vec![1])?
+            .with_cbor_content(1)?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
@@ -91,11 +96,14 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
+        let linked_ref = linked_doc.doc_ref()?;
         let parameters_ref = parameters.doc_ref()?;
+        let chain = Chain::new(0, None);
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -104,7 +112,9 @@ mod common;
                 "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
                 "id": id,
                 "ver": id,
+                "ref": [linked_ref],
                 "parameters": [parameters_ref],
+                "chain": chain,
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -118,11 +128,14 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
+        let linked_ref = linked_doc.doc_ref()?;
         let parameters_ref = parameters.doc_ref()?;
+        let chain = Chain::new(0, None);
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -130,9 +143,11 @@ mod common;
                 "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
                 "id": id,
                 "ver": id,
+                "ref": [linked_ref],
                 "parameters": [parameters_ref],
+                "chain": chain,
             }))?
-            .with_cbor_content(vec![1])?
+            .with_cbor_content(1)?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
@@ -143,9 +158,16 @@ mod common;
 )]
 #[test_case(
     |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
+
+        let linked_ref = linked_doc.doc_ref()?;
+        let chain = Chain::new(0, None);
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Cbor,
@@ -153,14 +175,75 @@ mod common;
                 "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
                 "id": id,
                 "ver": id,
+                "ref": [linked_ref],
+                "chain": chain,
             }))?
-            .with_cbor_content(vec![1])?
+            .with_cbor_content(1)?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
     => false
     ;
     "missing parameters"
+)]
+#[test_case(
+    |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let id = UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(None);
+        provider.add_sk(kid.clone(), sk.clone());
+
+        let parameters_ref = parameters.doc_ref()?;
+        let chain = Chain::new(0, None);
+
+        Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Cbor,
+                "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
+                "id": id,
+                "ver": id,
+                "parameters": [parameters_ref],
+                "chain": chain,
+            }))?
+            .with_cbor_content(1)?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()
+    }
+    => false
+    ;
+    "missing ref"
+)]
+#[test_case(
+    |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let id = UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(None);
+        provider.add_sk(kid.clone(), sk.clone());
+
+        let linked_ref = linked_doc.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
+        Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": ContentType::Cbor,
+                "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
+                "id": id,
+                "ver": id,
+                "ref": [linked_ref],
+                "parameters": [parameters_ref],
+            }))?
+            .with_cbor_content(1)?
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+            .build()
+    }
+    => false
+    ;
+    "missing chain"
 )]
 #[tokio::test]
 #[allow(clippy::unwrap_used)]

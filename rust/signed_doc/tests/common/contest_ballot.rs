@@ -23,7 +23,7 @@ pub fn contest_ballot_doc(
             "ver": id,
             "parameters": [parameters_ref],
         }))?
-        .with_cbor_content(vec![1])?
+        .with_cbor_content(1)?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?
         .build()
 }

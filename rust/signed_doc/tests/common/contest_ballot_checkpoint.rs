@@ -24,11 +24,11 @@ pub fn contest_ballot_checkpoint_doc(
             "type": doc_types::CONTEST_BALLOT_CHECKPOINT.clone(),
             "id": id,
             "ver": id,
-            "ref": linked_ref,
+            "ref": [linked_ref],
             "parameters": [parameters_ref],
             "chain": chain,
         }))?
-        .with_cbor_content(vec![1])?
+        .with_cbor_content(1)?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?
         .build()
 }
