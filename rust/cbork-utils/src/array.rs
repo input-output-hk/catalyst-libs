@@ -155,7 +155,7 @@ fn decode_array_elements(
         elements.push(element_bytes);
     }
 
-    // for deterministic decoding (4.2.3)
+    // for deterministic array decoding (4.2.3)
     if matches!(ctx, DecodeCtx::ArrayDeterministic) {
         elements.sort_by(|a, b| {
             // 1. shorter first
@@ -334,5 +334,26 @@ mod tests {
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
         // Even it's non-deterministic, this should fail, as we enforce for the defined length.
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_err());
+    }
+
+    #[test]
+    fn test_deterministic_array_decoding() {
+        let bytes = [
+            0x83, // array of length 3
+            0x41, 0x02, // element: [0x02]
+            0x42, 0x01, 0x01, // element: [0x01, 0x01]
+            0x41, 0x01, // element: [0x01]
+        ];
+
+        let mut decoder = Decoder::new(&bytes);
+
+        let decoded = Array::decode(&mut decoder, &mut DecodeCtx::ArrayDeterministic)
+            .expect("deterministic decoding should succeed");
+        let decoded = Vec::from_iter(decoded.into_iter());
+
+        let expected: Vec<Vec<u8>> =
+            vec![vec![0x41, 0x01], vec![0x41, 0x02], vec![0x42, 0x01, 0x01]];
+
+        assert_eq!(decoded, expected);
     }
 }
