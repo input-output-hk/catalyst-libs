@@ -347,13 +347,13 @@ mod tests {
 
         let mut decoder = Decoder::new(&bytes);
 
-        let decoded = Array::decode(&mut decoder, &mut DecodeCtx::ArrayDeterministic)
+        let result = Array::decode(&mut decoder, &mut DecodeCtx::ArrayDeterministic)
             .expect("deterministic decoding should succeed");
-        let decoded = Vec::from_iter(decoded.into_iter());
+        let result = Vec::from_iter(result);
 
         let expected: Vec<Vec<u8>> =
             vec![vec![0x41, 0x01], vec![0x41, 0x02], vec![0x42, 0x01, 0x01]];
 
-        assert_eq!(decoded, expected);
+        assert_eq!(result, expected);
     }
 }

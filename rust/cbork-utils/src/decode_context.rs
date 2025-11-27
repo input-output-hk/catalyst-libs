@@ -52,8 +52,7 @@ impl DecodeCtx {
         f: impl FnOnce() -> Result<(), minicbor::decode::Error>,
     ) -> Result<(), minicbor::decode::Error> {
         match self {
-            Self::Deterministic => f(),
-            Self::ArrayDeterministic => f(),
+            Self::Deterministic | Self::ArrayDeterministic => f(),
             Self::NonDeterministic(None) => Ok(()),
             Self::NonDeterministic(Some(h)) => {
                 if let Err(err) = f() {
