@@ -133,7 +133,7 @@ fn check_array_minimal_length(
 fn decode_array_elements(
     d: &mut minicbor::Decoder,
     length: u64,
-    _ctx: &mut DecodeCtx,
+    ctx: &mut DecodeCtx,
 ) -> Result<Vec<Vec<u8>>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Array length too large for current platform")
@@ -153,6 +153,20 @@ fn decode_array_elements(
         let element_bytes = get_bytes(d, element_start, element_end)?.to_vec();
 
         elements.push(element_bytes);
+    }
+
+    // for deterministic decoding (4.2.3)
+    if matches!(ctx, DecodeCtx::ArrayDeterministic) {
+        elements.sort_by(|a, b| {
+            // 1. shorter first
+            match a.len().cmp(&b.len()) {
+                std::cmp::Ordering::Equal => {
+                    // 2. lexical order
+                    a.as_slice().cmp(b.as_slice())
+                },
+                other => other,
+            }
+        });
     }
 
     Ok(elements)
