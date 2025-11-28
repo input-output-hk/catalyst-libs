@@ -2,10 +2,10 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
-use std::{convert::Infallible, str::FromStr};
+use std::{collections::HashSet, convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
-use futures::{StreamExt, pin_mut, stream::BoxStream};
+use futures::{StreamExt, TryStreamExt, pin_mut, stream::BoxStream};
 /// IPFS Content Identifier.
 pub use ipld_core::cid::Cid;
 /// IPLD
@@ -395,11 +395,68 @@ impl HermesIpfs {
     ) -> anyhow::Result<Vec<u8>> {
         let record_stream = self.node.dht_get(key).await?;
         pin_mut!(record_stream);
+        // TODO: We only ever return a single value from the stream. We might want to improve
+        // this.
         let record = record_stream
             .next()
             .await
             .ok_or(anyhow::anyhow!("No record found"))?;
         Ok(record.value)
+    }
+
+    /// Announce this node as a provider for the given DHT key.
+    ///
+    /// ## Parameters
+    ///
+    /// * `key` - Key identifying the content or resource to provide on the DHT.
+    ///
+    /// ## Returns
+    ///
+    /// * `Result<()>` — Indicates whether the provider announcement succeeded.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if announcing provider information to the DHT fails.
+    pub async fn dht_provide(
+        &self,
+        key: impl AsRef<[u8]> + ToRecordKey,
+    ) -> anyhow::Result<()> {
+        Ok(self.node.dht_provide(key).await?)
+    }
+
+    /// Retrieve all providers for the given DHT key.
+    ///
+    /// ## Parameters
+    ///
+    /// * `key` - Key identifying the content or resource in the DHT.
+    ///
+    /// ## Returns
+    ///
+    /// * `Result<HashSet<PeerId>>` — A set containing all `PeerId`s reported as providers
+    ///   for the given key.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if the provider stream fails or if retrieving provider
+    /// information from the DHT encounters an underlying error.
+    pub async fn dht_get_providers(
+        &self,
+        key: impl AsRef<[u8]> + ToRecordKey,
+    ) -> anyhow::Result<HashSet<PeerId>> {
+        let providers = self
+            .node
+            .dht_get_providers(key)
+            .await?
+            .map_err(anyhow::Error::from)
+            .try_fold(HashSet::new(), |mut acc, set| {
+                async move {
+                    acc.extend(set);
+                    Ok(acc)
+                }
+            })
+            .await?;
+
+        Ok(providers)
     }
 
     /// Add address to bootstrap nodes.
