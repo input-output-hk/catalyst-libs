@@ -259,8 +259,8 @@ impl HermesIpfs {
     pub async fn identity(
         &self,
         peer_id: Option<PeerId>,
-    ) -> anyhow::Result<PeerId> {
-        self.node.identity(peer_id).await.map(|p| p.peer_id)
+    ) -> anyhow::Result<PeerInfo> {
+        self.node.identity(peer_id).await
     }
 
     /// Add peer to address book.
