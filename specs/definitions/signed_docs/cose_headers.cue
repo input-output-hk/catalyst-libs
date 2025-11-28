@@ -79,6 +79,7 @@ _coseHeaders: #coseHeaders & {
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
+		required:  "optional"
 		description: """
 			Supported HTTP Encodings of the Payload.
 			If no compression or encoding is used, then this field must not be present.
@@ -97,7 +98,14 @@ _coseSignatureHeaders: #coseHeaders & {
 			The `kid` is a UTF-8 encoded Catalyst ID URI.
 			Any `kid` URI which conforms to the Catalyst ID specification may be used.
 			The Catalyst ID unambiguously defines both the signing keys and signing algorithm
-			used to sign the protected portion of the document.			
+			used to sign the protected portion of the document.		
+
+			There may be **MULTIPLE** Cose Signatures attached to any document.
+			In the event there are **MULTIPLE** Cose Signatures `kid` attached, then they **MUST**
+			be sorted.
+
+			Sorting for each cose signature follows the same sort order as specified for Map Keys, 
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
 			"""
 	}
 }
