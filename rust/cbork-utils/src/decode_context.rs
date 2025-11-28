@@ -9,6 +9,11 @@ pub enum DecodeCtx {
     /// Decode a CBOR object applying deterministic decoding rules (RFC 8949
     /// Section 4.2).
     Deterministic,
+    /// Decode a CBOR object applying deterministic decoding rules (RFC 8949
+    /// Section 4.2).
+    /// Additional apply `RFC 8949 Section 4.2.3` for array entries, so it become
+    /// deterministically sorted.
+    ArrayDeterministic,
     /// Decode a CBOR object **NOT** applying deterministic decoding rules (RFC 8949
     /// Section 4.2).
     ///
@@ -47,7 +52,7 @@ impl DecodeCtx {
         f: impl FnOnce() -> Result<(), minicbor::decode::Error>,
     ) -> Result<(), minicbor::decode::Error> {
         match self {
-            Self::Deterministic => f(),
+            Self::Deterministic | Self::ArrayDeterministic => f(),
             Self::NonDeterministic(None) => Ok(()),
             Self::NonDeterministic(Some(h)) => {
                 if let Err(err) = f() {
