@@ -172,13 +172,13 @@ fn decode_array_elements(
 /// Returns Err(...) if any adjacent pair violates ordering.
 fn validate_array_ordering(elements: &[Vec<u8>]) -> Result<(), minicbor::decode::Error> {
     for pair in elements.windows(2) {
-        let [prev, curr] = pair else {
+        let [prev, current] = pair else {
             // fails if the array has 0-1 element
             return Ok(());
         };
 
-        let ord = match prev.len().cmp(&curr.len()) {
-            std::cmp::Ordering::Equal => prev.as_slice().cmp(curr.as_slice()),
+        let ord = match prev.len().cmp(&current.len()) {
+            std::cmp::Ordering::Equal => prev.as_slice().cmp(current.as_slice()),
             other => other,
         };
 
@@ -369,7 +369,7 @@ mod tests {
         let result = Array::decode(&mut decoder, &mut DecodeCtx::ArrayDeterministic);
         assert!(result.is_err());
 
-        // should not affact to other decoding ctx
+        // should not affect to other decoding ctx
         let mut decoder = Decoder::new(&invalid_bytes);
         let result = Array::decode(&mut decoder, &mut DecodeCtx::Deterministic);
         assert!(result.is_ok());
