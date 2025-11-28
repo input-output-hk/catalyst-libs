@@ -47,7 +47,7 @@ impl minicbor::Decode<'_, ()> for Collaborators {
         d: &mut minicbor::Decoder<'_>,
         _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        Array::decode(d, &mut DecodeCtx::Deterministic)
+        Array::decode(d, &mut DecodeCtx::ArrayDeterministic)
             .and_then(|arr| {
                 if arr.is_empty() {
                     Err(minicbor::decode::Error::message(
