@@ -9,7 +9,7 @@ async fn start_bootstrapped_nodes() -> anyhow::Result<(HermesIpfs, HermesIpfs)> 
     let hermes_a = HermesIpfs::start().await?;
     println!("***************************************");
     println!("* Hermes IPFS node A has started.");
-    let peer_id_a = hermes_a.identity(None).await?;
+    let peer_id_a = hermes_a.identity(None).await?.peer_id;
     println!("    Peer ID: {peer_id_a}");
     let addresses = hermes_a.listening_addresses().await?;
     let a_address = addresses[0].clone();
@@ -18,7 +18,7 @@ async fn start_bootstrapped_nodes() -> anyhow::Result<(HermesIpfs, HermesIpfs)> 
     println!("***************************************");
     println!("* Hermes IPFS node B has started.");
     let hermes_b = HermesIpfs::start().await?;
-    let peer_id_b = hermes_b.identity(None).await?;
+    let peer_id_b = hermes_b.identity(None).await?.peer_id;
     println!("    Peer ID: {peer_id_b}");
     let addresses = hermes_b.listening_addresses().await?;
     let b_address = addresses[0].clone();
