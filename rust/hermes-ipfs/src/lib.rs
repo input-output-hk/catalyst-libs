@@ -421,7 +421,7 @@ impl HermesIpfs {
         &self,
         key: impl AsRef<[u8]> + ToRecordKey,
     ) -> anyhow::Result<()> {
-        Ok(self.node.dht_provide(key).await?)
+        self.node.dht_provide(key).await
     }
 
     /// Retrieve all providers for the given DHT key.
