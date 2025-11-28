@@ -443,20 +443,17 @@ impl HermesIpfs {
         &self,
         key: impl AsRef<[u8]> + ToRecordKey,
     ) -> anyhow::Result<HashSet<PeerId>> {
-        let providers = self
+        Ok(self
             .node
             .dht_get_providers(key)
             .await?
-            .map_err(anyhow::Error::from)
             .try_fold(HashSet::new(), |mut acc, set| {
                 async move {
                     acc.extend(set);
                     Ok(acc)
                 }
             })
-            .await?;
-
-        Ok(providers)
+            .await?)
     }
 
     /// Add address to bootstrap nodes.
