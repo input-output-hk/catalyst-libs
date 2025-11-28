@@ -1,6 +1,6 @@
 //! Test for Proposal Comment document.
 //! Require fields: type, id, ver, ref, template, parameters
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment/>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal_comment>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -197,7 +197,8 @@ mod common;
             .build()?;
         Ok(doc)
     }
-    => true
+    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
+    => ignore["non-optional `content-type`"] true
     ;
     "missing content-encoding (optional)"
 )]

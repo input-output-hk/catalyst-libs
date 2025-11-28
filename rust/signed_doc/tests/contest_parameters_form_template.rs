@@ -1,5 +1,5 @@
-//! Integration test for campaign parameters form template document validation part.
-//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/campaign_parameters_form_template>
+//! Integration test for contest ballot document validation part.
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_parameters_form_template>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -7,8 +7,10 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::common::{
-    brand_parameters_doc, brand_parameters_form_template_doc,
-    campaign_parameters_form_template_doc, create_dummy_key_pair,
+    brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
+    campaign_parameters_form_template_doc, category_parameters_doc,
+    category_parameters_form_template_doc, contest_parameters_form_template_doc,
+    create_dummy_key_pair,
 };
 
 mod common;
@@ -17,11 +19,37 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        campaign_parameters_form_template_doc(&parameters, provider)
+        contest_parameters_form_template_doc(&parameters, provider)
     }
     => true
     ;
-    "valid document"
+    "valid document with brand 'parameters'"
+)]
+#[test_case(
+    |provider| {
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_doc(&campaign, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_parameters_form_template_doc(&campaign, provider)
+    }
+    => true
+    ;
+    "valid document with campaign 'parameters'"
+)]
+#[test_case(
+    |provider| {
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let campaign = campaign_parameters_doc(&campaign, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let category = category_parameters_form_template_doc(&campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let category = category_parameters_doc(&category, &campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_parameters_form_template_doc(&category, provider)
+    }
+    => true
+    ;
+    "valid document with category 'parameters'"
 )]
 #[test_case(
     |provider| {
@@ -37,10 +65,10 @@ mod common;
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
                 "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
-                "type": doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone(),
-                "parameters": [parameters_ref]
+                "parameters": [parameters_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -64,10 +92,10 @@ mod common;
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
                 "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
-                "type": doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone(),
-                "parameters": [parameters_ref]
+                "parameters": [parameters_ref],
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -90,10 +118,10 @@ mod common;
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
-                "type": doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone(),
-                "parameters": [parameters_ref]
+                "parameters": [parameters_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -113,9 +141,9 @@ mod common;
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
                 "content-encoding": ContentEncoding::Brotli,
+                "type": doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone(),
                 "id": id,
                 "ver": id,
-                "type": doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone(),
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -123,12 +151,11 @@ mod common;
     }
     => false
     ;
-    "missing 'parameters'"
+    "missing parameters"
 )]
 #[tokio::test]
-#[ignore = "Broken Test Case, TODO: Fix it."]
 #[allow(clippy::unwrap_used)]
-async fn test_campaign_parameters_form_template_doc(
+async fn contest_parameters_form_template(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -136,7 +163,7 @@ async fn test_campaign_parameters_form_template_doc(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(
         *doc.doc_type().unwrap(),
-        doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone()
+        doc_types::CONTEST_PARAMETERS_FORM_TEMPLATE.clone()
     );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
