@@ -133,7 +133,7 @@ fn check_array_minimal_length(
 fn decode_array_elements(
     d: &mut minicbor::Decoder,
     length: u64,
-    _ctx: &mut DecodeCtx,
+    ctx: &mut DecodeCtx,
 ) -> Result<Vec<Vec<u8>>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Array length too large for current platform")
@@ -155,7 +155,41 @@ fn decode_array_elements(
         elements.push(element_bytes);
     }
 
+    if matches!(ctx, DecodeCtx::ArrayDeterministic) {
+        ctx.try_check(|| validate_array_ordering(&elements))?;
+    }
+
     Ok(elements)
+}
+
+/// Validates array elements are properly ordered according to RFC 8949 Section 4.2.3.
+///
+/// Ordering rules:
+///   1. If two items differ in length → shorter sorts first.
+///   2. If lengths are equal → compare byte-wise lexicographically.
+///
+/// Returns Ok(()) if elements are correctly ordered.
+/// Returns Err(...) if any adjacent pair violates ordering.
+fn validate_array_ordering(elements: &[Vec<u8>]) -> Result<(), minicbor::decode::Error> {
+    for pair in elements.windows(2) {
+        let [prev, current] = pair else {
+            // fails if the array has 0-1 element
+            return Ok(());
+        };
+
+        let ord = match prev.len().cmp(&current.len()) {
+            std::cmp::Ordering::Equal => prev.as_slice().cmp(current.as_slice()),
+            other => other,
+        };
+
+        if ord == std::cmp::Ordering::Greater {
+            return Err(minicbor::decode::Error::message(
+                "Array elements are not ordered deterministically",
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -320,5 +354,30 @@ mod tests {
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
         // Even it's non-deterministic, this should fail, as we enforce for the defined length.
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_err());
+    }
+
+    #[test]
+    fn test_deterministic_array_decoding() {
+        let invalid_bytes = [
+            0x83, // array of length 3
+            0x41, 0x02, // element: [0x02]
+            0x42, 0x01, 0x01, // element: [0x01, 0x01]
+            0x41, 0x01, // element: [0x01]
+        ];
+
+        let mut decoder = Decoder::new(&invalid_bytes);
+        let result = Array::decode(&mut decoder, &mut DecodeCtx::ArrayDeterministic);
+        assert!(result.is_err());
+
+        // should not affect to other decoding ctx
+        let mut decoder = Decoder::new(&invalid_bytes);
+        let result = Array::decode(&mut decoder, &mut DecodeCtx::Deterministic);
+        assert!(result.is_ok());
+
+        let valid_bytes = [0x83, 0x41, 0x01, 0x41, 0x02, 0x42, 0x01, 0x01];
+
+        let mut decoder = Decoder::new(&valid_bytes);
+        let result = Array::decode(&mut decoder, &mut DecodeCtx::ArrayDeterministic);
+        assert!(result.is_ok());
     }
 }
