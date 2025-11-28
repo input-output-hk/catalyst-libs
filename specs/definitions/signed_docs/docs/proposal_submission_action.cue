@@ -15,22 +15,38 @@ docs: #DocumentDefinitions & {
 			A Proposal Submission Action is a document which can attempt to either submit a 
 			particular version of a proposal into a campaign, or withdraw it.
 
-			The last action on the document ts the action which takes effect at the deadline.
+			The last action on the document is the action which takes effect at the deadline.
 
-			For multiple collaborators, multiple submission actions can be posted independently, 
-			but none of them will take effect until ALL collaborators have posted equivalent actions.
+			For multiple collaborators, multiple submission actions can be posted independently.
+			How those submissions are counted is controlled by a parameter defined in the relevant
+			Brand/Campaign/Category parameters (parameter name TBD):
+
+			* If configured for unanimous collaboration, actions for a proposal version do not take
+			  effect until the author and **all** listed collaborators have posted equivalent actions.
+			* If configured for opt-in collaboration (the default, and the behavior when the parameter
+			  is absent), the author must submit `final`, and collaborators are only counted on the
+			  submission when they submit `final` for that version; other listed collaborators are not
+			  required to post equivalent actions.
 
 			For example, three collaborators Alice/Bob/Claire can each post one submission action
 			for the same document.  
-			Unless they all submit the same version of the proposal
+			Under the unanimous configuration, unless they all submit the same version of the proposal
 			the proposal will not be seen as submitted.
+			Under the opt-in configuration, the author must submit `final` and whichever collaborators
+			also submit `final` for that version are counted as collaborators on that submission.
 
 			The required set of signers for a submitted proposal version is:
 
 			* The original author of the proposal (the signer of the first version where
 			  [`id`](../metadata.md#id) == [`ver`](../metadata.md#ver)); and
-			* Every collaborator listed in [`collaborators`](../metadata.md#collaborators) on the **exact**
-			  version of the proposal referenced by [`ref`](../metadata.md#ref).
+			* A collaborator set derived from the configuration described above.
+
+			When collaborator unanimity is configured, that set is every collaborator listed in
+			[`collaborators`](../metadata.md#collaborators) on the **exact** version of the proposal
+			referenced by [`ref`](../metadata.md#ref).
+			When opt-in is configured (the default/fallback), only collaborators who submit `final`
+			for the referenced version are included as collaborators on that submission.
+			In all modes, a proposal is only final if the author has submitted `final`.
 
 			They may jointly sign a single Proposal Submission Action, or may submit multiple independent
 			Submission actions for the same document (which avoids the need for multi-sig coordination).
@@ -68,6 +84,12 @@ docs: #DocumentDefinitions & {
 				to be a collaborator for **any** version of that proposal (past, present, or future) until they
 				submit a new `draft` or `final` action.
 
+				Whether collaborator submissions are required for finalization follows the
+				Brand/Campaign/Category parameter described above.
+				If the parameter is absent, only collaborators who submit `final` for the referenced version are
+				counted as collaborators on that submission; listed collaborators who do not submit `final` are
+				not required for the proposal to be considered final.
+
 				*NOTE* `final` status ONLY applies to the exactly referenced document and version.
 				"""
 
@@ -75,13 +97,20 @@ docs: #DocumentDefinitions & {
 				A Submitted proposal with collaborators *MUST* have, by the configured deadline:
 
 				* A `final` submission from the author; and
-				* A `final` submission from **every** collaborator listed in
-				  [`collaborators`](../metadata.md#collaborators) on the version of the proposal 
-				  referenced by [`ref`](../metadata.md#ref); and
-				* No required signer whose latest submission for that proposal is `hide`.
+				* Collaborator submissions as required by the Brand/Campaign/Category parameter that controls
+				  collaborator finalization (parameter name TBD):
+					* If set to unanimous, a `final` submission from every collaborator listed in
+					  [`collaborators`](../metadata.md#collaborators) on the version of the proposal 
+					  referenced by [`ref`](../metadata.md#ref); or
+					* If set to opt-in (the default, and the behavior when the parameter is absent), only
+					  collaborators whose latest submission for that proposal version is `final` are included as
+					  collaborators on the submission.
+				* No required signer (author or any collaborator counted under the configured mode) whose latest
+				  submission for that proposal is `hide`.
 
-				If any required collaborator has not submitted a `final` submission for that proposal 
-				version by the deadline, or if any required signer’s latest submission is `hide`, 
+				If the author has not submitted a `final` submission for that proposal version by the deadline,
+				or if any collaborator required by the configured mode has not submitted a `final` submission, or
+				if any required signer’s latest submission is `hide`, 
 				then the proposal is not considered `final` and will not be considered in the 
 				category it was being submitted to.
 				"""
@@ -111,7 +140,12 @@ docs: #DocumentDefinitions & {
 
 				States:
 
-				* `final` : All collaborators must publish a `final` status for the proposal to be `final`.
+				* `final` : Signer marks this proposal version as their final submission.
+				            Whether all collaborators must also submit `final` is controlled by the
+				            Brand/Campaign/Category parameter noted above.
+				            If the parameter is absent, only collaborators who submit `final` for the referenced
+				            version are counted as collaborators on the submission, but the author’s `final` is
+				            always required.
 				* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  
 				* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  
 							`hide` is only actioned if sent by the author, 

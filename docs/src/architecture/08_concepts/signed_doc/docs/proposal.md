@@ -51,9 +51,16 @@ proposal has an `action` of `hide`, they **MUST** be treated as not having agree
 for **any** version of that proposal (past, present, or future) until they later submit `draft`
 or `final` again.
 
-However, any `final` [Proposal Submission Action](proposal_submission_action.md)
-referencing a proposal **MUST** be published by all collaborators
-listed on the specific version being submitted, in addition to the author.
+The requirement for collaborator submissions when finalizing a proposal is controlled by a
+Brand/Campaign/Category parameter (name TBD).
+When configured for unanimous collaboration,
+every collaborator listed on the submitted version **MUST** also publish a `final`
+[Proposal Submission Action](proposal_submission_action.md) alongside the author.
+When configured for opt-in collaboration (the default, and the behavior when the parameter is
+absent), only collaborators who submit `final` for the referenced version are included as
+collaborators on that submission; collaborators who do not submit `final` are not treated as
+collaborators for that submission.
+In all cases, a proposal cannot be final unless the original author has submitted `final`.
 
 The `final` proposal itself may be signed by one or more Collaborators and/or the original Author.
 The `final` proposal must never be signed by anyone else.
@@ -168,8 +175,19 @@ publish a new version of the document.
 
 This list does not imply these collaborators have consented to collaborate, only that the author/s
 are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
+How collaborators are counted on a final submission is determined by a parameter defined at the
+Brand/Campaign/Category level (parameter name TBD).
+Depending on that configuration:
+
+* All listed collaborators may be required to submit a `final` Submission Action in addition
+  to the author; **OR**
+* Only collaborators who submit a `final` Submission Action for the referenced version are
+  included as collaborators on that submission.
+
+If the parameter is not present, default to the latter mode (only final-signing collaborators are
+included).
+In all modes a document is only considered final when the original author has submitted
+`final`.
 
 In the event there are **MULTIPLE** [`collaborators`](../metadata.md#collaborators) listed, they **MUST** be sorted.
 

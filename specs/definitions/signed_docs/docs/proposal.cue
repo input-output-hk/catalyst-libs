@@ -49,9 +49,15 @@ docs: #DocumentDefinitions & {
 			for **any** version of that proposal (past, present, or future) until they later submit `draft`
 			or `final` again.
 
-			However, any `final` [Proposal Submission Action](proposal_submission_action.md)
-			referencing a proposal **MUST** be published by all collaborators
-			listed on the specific version being submitted, in addition to the author.
+			The requirement for collaborator submissions when finalizing a proposal is controlled by a
+			Brand/Campaign/Category parameter (name TBD). When configured for unanimous collaboration,
+			every collaborator listed on the submitted version **MUST** also publish a `final`
+			[Proposal Submission Action](proposal_submission_action.md) alongside the author.
+			When configured for opt-in collaboration (the default, and the behavior when the parameter is
+			absent), only collaborators who submit `final` for the referenced version are included as
+			collaborators on that submission; collaborators who do not submit `final` are not treated as
+			collaborators for that submission.
+			In all cases, a proposal cannot be final unless the original author has submitted `final`.
 
 			The `final` proposal itself may be signed by one or more Collaborators and/or the original Author.
 			The `final` proposal must never be signed by anyone else.

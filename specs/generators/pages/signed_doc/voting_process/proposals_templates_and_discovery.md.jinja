@@ -28,8 +28,11 @@ and how all artifacts are discovered and validated in a decentralized pub/sub ne
       same Brand/Campaign/Category chain. 
 * A Proposal Submission Action references the Proposal via `metadata.ref` and repeats `metadata.parameters`, 
   linked to [`ref`](../metadata.md#ref) for consistency.
-    * Multiple collaborators may exist; all listed collaborators must submit equivalent `final` 
-      actions to be considered final by the deadline.
+    * Multiple collaborators may exist; a Brand/Campaign/Category parameter (name TBD) controls whether 
+      all listed collaborators must submit equivalent `final` actions, or only collaborators who submit 
+      `final` for that version are counted as collaborators on the submission.
+      If the parameter is absent, default to the latter (opt-in) behavior while still requiring the
+      author’s `final` submission.
 
 The Deadline for a Proposal to be Final will be defined in the applicable parameters document(s),
 typically the Category Parameters document.
@@ -84,12 +87,16 @@ typically the Category Parameters document.
 * For a given submitted proposal version, the required signer set is:
     * The original author (signer of the first version where [`id`](../metadata.md#id) equals
       [`ver`](../metadata.md#ver)); and
-    * Every collaborator listed in [`collaborators`](../metadata.md#collaborators) on that exact
-      proposal version.
+    * Collaborators as dictated by a Brand/Campaign/Category parameter (name TBD):
+        * Unanimous mode: every collaborator listed in [`collaborators`](../metadata.md#collaborators)
+          on that exact proposal version.
+        * Opt-in mode (default/fallback when the parameter is absent): only collaborators who submit
+          `final` for that version are counted as collaborators on the submission; listed collaborators
+          who do not submit `final` are not required.
 * A proposal with collaborators is treated as:
-    * **Final** only when the author *and all required collaborators for that version* have
-      latest `final` actions for the same proposal version by the configured deadline, and none of
-      those required signers has a latest `hide` action.
+    * **Final** only when the author has a latest `final` action for the same proposal version and
+      the collaborator requirements defined above are satisfied by the configured deadline, with none
+      of the counted signers having a latest `hide` action.
     * **Draft** when at least one required signer is `draft` (or missing), and none has a latest
       `hide`.
     * **Hidden** when a `hide` from the author, or applicable moderation, marks it as not to be
@@ -157,8 +164,10 @@ For a given proposal (identified by `proposal.id`/`proposal.ver` and its `metada
     * Collect [Proposal Submission Action](../docs/proposal_submission_action.md) documents by 
       proposal `metadata.ref`.
     * Track the latest action per signer (author or listed collaborator): `final`, `draft`, or `hide`.
-    * A proposal is eligible to be “final” only if all required signers have a latest `final` 
-      action by the configured deadline.
+    * A proposal is eligible to be “final” only if the author and the collaborator set defined by the
+      configured Brand/Campaign/Category parameter have latest `final` actions for the referenced
+      version by the configured deadline (defaulting to opt-in collaborators when the parameter is
+      absent).
 4. Apply moderation and policy
     * If present, process [Proposal Moderation Action](../docs/proposal_moderation_action.md) 
       artifacts that may hide or disqualify proposals (policy‑dependent).
@@ -179,8 +188,9 @@ For a given proposal (identified by `proposal.id`/`proposal.ver` and its `metada
 
 * At the configured moderation/finalization deadline (from parameters), compute the final set of
   candidate proposals for the contest at the same anchor level.
-* The candidate set consists of proposals that are “final” (per signer unanimity) and not 
-  disqualified by moderation.
+* The candidate set consists of proposals that are “final” (per the configured collaborator policy,
+  with the author always required and opt-in collaborators as the default) and not disqualified by
+  moderation.
 * These candidates feed into the contest voting process (described in the voting flow documentation).
 
 ### Flow (Mermaid)
@@ -255,8 +265,9 @@ sequenceDiagram
       points to the intended proposal and `metadata.parameters` matches 
       (linked_refs to [`metadata.ref`](../metadata.md#ref)).
     * For each signer, record latest action: `final`, `draft`, or `hide`.
-    * A proposal is “final” iff all listed collaborators (and the author) have a latest 
-      `final` action by the configured deadline.
+    * A proposal is “final” iff the author and the collaborator set defined by the configured
+      Brand/Campaign/Category parameter have latest `final` actions for the referenced version by
+      the configured deadline (defaulting to opt-in collaborators when the parameter is absent).
 4. Moderation Action intake (optional)
     * Verify signature and policy scope; verify `metadata.ref` points to the intended proposal and 
       `metadata.parameters` matches.
@@ -264,8 +275,9 @@ sequenceDiagram
 
 ### Status Computation
 
-* Final Set: proposals with all required `final` actions, within configured windows defined by 
-  parameters, and not disqualified by moderation.
+* Final Set: proposals where the author and the collaborator requirements defined by the configured
+  parameter have `final` actions, within configured windows defined by parameters, and not
+  disqualified by moderation.
 * Draft Only: proposals with at least one `draft` and no conflicting `final` from that signer.
 * Hidden: honor `hide` semantics (author hides the proposal; collaborator hide = collaborator does 
   not wish to be shown), and apply moderation decisions.
@@ -275,7 +287,8 @@ sequenceDiagram
 * Verify `type`, `id`, `ver`, `kid`, `content type`, and (if present) `content-encoding`.
 * Verify `metadata.template` exists and aligns via `metadata.parameters` up the same chain.
 * Validate the proposal payload against the referenced template JSON Schema.
-* For submission actions, enforce signer rules and collaborator unanimity for `final`.
+* For submission actions, enforce signer rules and the configured collaborator finalization policy
+  (defaulting to opt-in collaborators when the parameter is absent, with the author always required).
 * Apply [`revocations`](../metadata.md#revocations) and prefer the highest valid 
   [`ver`](../metadata.md#ver) per [`id`](../metadata.md#id).
 
