@@ -86,7 +86,7 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
 
         // Old: [id, ver]
         // New: [ 1* [id, ver, locator] ]
-        let outer_arr = Array::decode(d, &mut DecodeCtx::Deterministic)
+        let outer_arr = Array::decode(d, &mut DecodeCtx::ArrayDeterministic)
             .map_err(|e| minicbor::decode::Error::message(format!("{CONTEXT}: {e}")))?;
 
         match outer_arr.as_slice() {
@@ -354,5 +354,47 @@ pub(crate) mod tests {
         let refs_from_json: DocumentRefs = serde_json::from_value(json).unwrap();
 
         assert_eq!(refs, refs_from_json);
+    }
+
+    #[test]
+    fn test_deterministic_decoding() {
+        // sorted
+        let mut refs = vec![create_dummy_doc_ref(), create_dummy_doc_ref()];
+        refs.sort_by(|a, b| {
+            let a_bytes = {
+                let mut e = Encoder::new(Vec::new());
+                a.encode(&mut e, &mut ()).unwrap();
+                e.into_writer()
+            };
+            let b_bytes = {
+                let mut e = Encoder::new(Vec::new());
+                b.encode(&mut e, &mut ()).unwrap();
+                e.into_writer()
+            };
+
+            match a_bytes.len().cmp(&b_bytes.len()) {
+                std::cmp::Ordering::Equal => a_bytes.as_slice().cmp(&b_bytes),
+                other => other,
+            }
+        });
+
+        let mut e = Encoder::new(Vec::new());
+        refs.encode(&mut e, &mut ()).unwrap();
+
+        let result = DocumentRefs::decode(
+            &mut Decoder::new(e.into_writer().as_slice()),
+            &mut CompatibilityPolicy::Fail,
+        );
+        assert!(result.is_ok());
+
+        let mut e = Encoder::new(Vec::new());
+        refs.reverse();
+        refs.encode(&mut e, &mut ()).unwrap();
+
+        let result = DocumentRefs::decode(
+            &mut Decoder::new(e.into_writer().as_slice()),
+            &mut CompatibilityPolicy::Fail,
+        );
+        assert!(result.is_err());
     }
 }
