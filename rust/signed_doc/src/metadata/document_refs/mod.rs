@@ -358,7 +358,6 @@ pub(crate) mod tests {
 
     #[test]
     fn test_deterministic_decoding() {
-        // sorted
         let mut refs = vec![create_dummy_doc_ref(), create_dummy_doc_ref()];
         refs.sort_by(|a, b| {
             let a_bytes = {
