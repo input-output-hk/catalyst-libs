@@ -41,9 +41,6 @@ enum Cli {
         sk_hex: String,
         /// Signer kid
         kid: CatalystId,
-        /// provided `sk_hex` key type
-        #[clap(default_value_t)]
-        key_type: KeyType,
     },
     /// Inspects Catalyst Signed Document
     Inspect {
@@ -55,17 +52,6 @@ enum Cli {
         /// Hex-formatted COSE SIGN Bytes
         cose_sign_hex: String,
     },
-}
-
-/// Type of the ed25519 private signing key
-#[derive(clap::ValueEnum, Default, Clone, strum::Display)]
-#[strum(serialize_all = "kebab-case")]
-enum KeyType {
-    /// A regular ed25519
-    #[default]
-    Regular,
-    /// A BIP32 extended ed25519
-    Bip32Extended,
 }
 
 impl Cli {
@@ -86,36 +72,26 @@ impl Cli {
                 println!("report {:?}", &signed_doc.problem_report());
                 save_signed_doc(signed_doc, &output)?;
             },
-            Self::Sign {
-                doc,
-                sk_hex,
-                kid,
-                key_type,
-            } => {
+            Self::Sign { doc, sk_hex, kid } => {
                 let sk_bytes = hex::decode(sk_hex)?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
 
                 let builder = signed_doc.into_builder()?;
 
-                let builder = match key_type {
-                    KeyType::Regular => {
-                        let sk =
-                            ed25519_dalek::SigningKey::from_bytes(&sk_bytes.try_into().map_err(
-                                |_| anyhow::anyhow!("Provided secret key must be 32 bytes long"),
-                            )?);
-                        builder.add_signature(
-                            |message| sk.sign(&message).to_bytes().to_vec(),
-                            kid.clone(),
-                        )?
-                    },
-                    KeyType::Bip32Extended => {
-                        let sk = ed25519_bip32::XPrv::from_slice_verified(&sk_bytes)?;
-                        builder.add_signature(
-                            |message| sk.sign::<()>(&message).to_bytes().to_vec(),
-                            kid.clone(),
-                        )?
-                    },
+                let builder = if let Ok(sk) = ed25519_bip32::XPrv::from_slice_verified(&sk_bytes) {
+                    builder.add_signature(
+                        |message| sk.sign::<()>(&message).to_bytes().to_vec(),
+                        kid.clone(),
+                    )?
+                } else {
+                    let sk = ed25519_dalek::SigningKey::from_bytes(&sk_bytes.try_into().map_err(
+                        |_| anyhow::anyhow!("Provided secret key must be 32 bytes long"),
+                    )?);
+                    builder.add_signature(
+                        |message| sk.sign(&message).to_bytes().to_vec(),
+                        kid.clone(),
+                    )?
                 };
 
                 let new_signed_doc = builder.build()?;
