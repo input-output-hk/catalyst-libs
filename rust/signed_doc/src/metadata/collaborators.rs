@@ -155,6 +155,7 @@ mod tests {
 
     #[test]
     fn test_deterministic_decoding() {
+        /* cspell:disable */
         let mut cat_ids = vec![
             CatalystId::from_str(
                 "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
@@ -165,6 +166,7 @@ mod tests {
             )
             .unwrap(),
         ];
+        /* cspell:enable */
         cat_ids.sort_by(|a, b| {
             let a = a.to_string();
             let b = b.to_string();
