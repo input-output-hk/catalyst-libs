@@ -179,9 +179,9 @@ mod tests {
             }
         });
 
-        let collabs = Collaborators::from(cat_ids.clone());
+        let collaborators = Collaborators::from(cat_ids.clone());
         let mut e = Encoder::new(Vec::new());
-        collabs.encode(&mut e, &mut ()).unwrap();
+        collaborators.encode(&mut e, &mut ()).unwrap();
 
         let result = Collaborators::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut ());
         assert!(result.is_ok());
