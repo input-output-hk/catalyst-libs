@@ -188,8 +188,8 @@ mod tests {
 
         let mut e = Encoder::new(Vec::new());
         cat_ids.reverse();
-        let collabs = Collaborators::from(cat_ids.clone());
-        collabs.encode(&mut e, &mut ()).unwrap();
+        let collaborators = Collaborators::from(cat_ids.clone());
+        collaborators.encode(&mut e, &mut ()).unwrap();
 
         let result = Collaborators::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut ());
         assert!(result.is_err());
