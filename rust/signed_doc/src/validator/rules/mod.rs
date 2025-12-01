@@ -1,9 +1,11 @@
 //! A list of validation rules for all metadata fields
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
+use std::fmt::Debug;
+
 use anyhow::Context;
 use catalyst_signed_doc_spec::{DocSpec, DocSpecs, cddl_definitions::CddlDefinitions};
-use futures::FutureExt;
+use futures::{FutureExt};
 
 use crate::{
     CatalystSignedDocument,
@@ -43,39 +45,51 @@ pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::TemplateRule;
 pub(crate) use ver::VerRule;
 
+trait Rule: Send + Sync + Debug {
+    type Output: Future<Output = anyhow::Result<bool>> + Send;
+
+    fn check(
+        &self,
+        provicer: &(impl CatalystSignedDocumentProvider + CatalystIdProvider),
+    ) -> Self::Output;
+}
+
 /// Struct represented a full collection of rules for all fields
-#[derive(Debug)]
 pub(crate) struct Rules {
     /// 'id' field validation rule
-    pub(crate) id: IdRule,
+    id: IdRule,
     /// 'ver' field validation rule
-    pub(crate) ver: VerRule,
+    ver: VerRule,
     /// 'content-type' field validation rule
-    pub(crate) content_type: ContentTypeRule,
+    content_type: ContentTypeRule,
     /// 'content-encoding' field validation rule
-    pub(crate) content_encoding: ContentEncodingRule,
+    content_encoding: ContentEncodingRule,
     /// 'template' field validation rule
-    pub(crate) template: TemplateRule,
+    template: TemplateRule,
     /// 'ref' field validation rule
-    pub(crate) doc_ref: RefRule,
+    doc_ref: RefRule,
     /// 'reply' field validation rule
-    pub(crate) reply: ReplyRule,
+    reply: ReplyRule,
     /// 'section' field validation rule
-    pub(crate) section: SectionRule,
+    section: SectionRule,
     /// 'parameters' field validation rule
-    pub(crate) parameters: ParametersRule,
+    parameters: ParametersRule,
     /// 'chain' field validation rule
-    pub(crate) chain: ChainRule,
+    chain: ChainRule,
     /// 'collaborators' field validation rule
-    pub(crate) collaborators: CollaboratorsRule,
+    collaborators: CollaboratorsRule,
     /// document's content validation rule
-    pub(crate) content: ContentRule,
+    content: ContentRule,
     /// `kid` field validation rule
-    pub(crate) kid: SignatureKidRule,
+    kid: SignatureKidRule,
     /// document's signatures validation rule
-    pub(crate) signature: SignatureRule,
+    signature: SignatureRule,
     /// Original Author validation rule.
-    pub(crate) ownership: DocumentOwnershipRule,
+    ownership: DocumentOwnershipRule,
+    /// Something
+    extra: Box<dyn Fn(&'static CatalystSignedDocument) -> BoxFuture<'static, anyhow::Result<bool>>>,
+    /// Something 2
+    extra2: Box<dyn Rule>,
 }
 
 impl Rules {
@@ -175,11 +189,11 @@ mod tests {
 
     #[test]
     fn rules_documents_rules_test() {
-        for (doc_type, rules) in Rules::documents_rules()
+        for (_doc_type, _rules) in Rules::documents_rules()
             .map_err(|e| format!("{e:#}"))
             .unwrap()
         {
-            println!("{doc_type}: {rules:?}");
+            // println!("{doc_type}: {rules:?}");
         }
     }
 }
