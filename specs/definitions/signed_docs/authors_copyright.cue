@@ -141,5 +141,13 @@ copyright: #copyrightNotice & {
 				* Added new 'payload.schema' type - CDDL schema, defined as string.
 				"""
 		},
+		{
+			version:  "0.2.1"
+			modified: "2025-12-02"
+			changes: """
+				* Added missing `ref` metadata field definition.
+				* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
+				"""
+		},
 	]
 }

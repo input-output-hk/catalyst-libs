@@ -177,7 +177,7 @@
       ]
     },
     "collaborators": {
-      "comment": "Allowed Collaborators on the next subsequent version of a document.",
+      "comment": "Allowed Collaborators on the next subsequent version of a document.\nSorting for each array element follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).",
       "def": "[ + catalyst_id_kid ]",
       "requires": [
         "catalyst_id_kid"
@@ -222,7 +222,7 @@
     },
     "contest-ballot-payload": {
       "comment": "Catalyst Vote Payload data object.",
-      "def": "{\n\t+ document_ref => choices\n\t? \"column-proof\" : column-proof\n\t? \"matrix-proof\" : matrix-proof\n\t? \"voter-choice\" : voter-choice\n}",
+      "def": "{\n\t+ uint => choices\n\t? \"column-proof\" : column-proof\n\t? \"matrix-proof\" : matrix-proof\n\t? \"voter-choice\" : voter-choice\n}",
       "description": "Catalyst Vote Payload data object.\n\nA vote payload that can hold both encrypted or unencrypted votes.",
       "examples": [
         {
@@ -237,7 +237,6 @@
         }
       ],
       "requires": [
-        "document_ref",
         "choices",
         "column-proof",
         "matrix-proof",
@@ -269,15 +268,15 @@
       ]
     },
     "document_refs": {
-      "comment": "Reference to one or more Signed Documents",
-      "def": "[ 1* document_ref ]",
+      "comment": "Reference to one or more Signed Documents.\nSorting for each array element follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).",
+      "def": "[ + document_ref ]",
       "requires": [
         "document_ref"
       ]
     },
     "document_type": {
       "comment": "Document Type",
-      "def": "[ 1* uuid_v4 ]",
+      "def": "[ + uuid_v4 ]",
       "description": "Unique Document Type Identifier",
       "requires": [
         "uuid_v4"
@@ -618,6 +617,11 @@
         "changes": "* Added a new 'Contest Ballot' and 'Contest Ballot Checkpoint' document types.\n* Improved the specification for 'Contest Delegation' document type.\n* 'content encoding' metadata field become non optional for all document types where it was an optional field.\n* Added new 'payload.schema' type - CDDL schema, defined as string.",
         "modified": "2025-11-10",
         "version": "0.2.0"
+      },
+      {
+        "changes": "* Added missing `ref` metadata field definition.\n* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.",
+        "modified": "2025-12-02",
+        "version": "0.2.1"
       }
     ]
   },
@@ -1638,7 +1642,9 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
+          "linked_refs": [
+            "ref"
+          ],
           "multiple": false,
           "required": "yes",
           "type": "Contest Parameters",
@@ -1647,7 +1653,10 @@
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
-          "required": "excluded",
+          "linked_refs": null,
+          "multiple": true,
+          "required": "yes",
+          "type": "Proposal",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
@@ -1689,7 +1698,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.\n\nContents\n\n* `document_ref => choices`\n\t* The payload is a map keyed by a proposal `document_ref`.\n\t* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.\n\t* The value for each key is that voter’s `choices` for that proposal.\n\t* There is exactly one set of `choices` per referenced proposal (no duplicates).\n\n* `choices`\n\t* Discriminated union of unencrypted or encrypted choices.\n\n* `row-proof` (optional, inside encrypted choices)\n  \t* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.\n\n* `column-proof` (optional, top-level)\n\t* Placeholder for future column-level proofs across proposals.\n\t* Not defined at present; omit in implementations.\n\n* `matrix-proof` (optional, top-level)\n\t* Placeholder for future matrix-wide proofs across all proposals and positions.\n\t* Not defined at present; omit in implementations.\n\n* `voter-choice` (optional, top-level)\n\t* This is ONLY Not included when the vote is unencrypted.\n\t* Allows a voter to read back their ballot selections without decrypting the entire ballot.\n\nNotes\n\n* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.\n  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to\n  reflect an unwrapped COSE_Sign CBOR block.\n* The application defines the permissible range and semantics of `clear-choice` integers.\n* All CBOR must use core-deterministic encoding so that content addressing remains stable.",
+        "description": "The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.\n\nContents\n\n* `uint => choices`\n\t* The payload is a map keyed by a `uint` index to the array element from `ref` metadata field, which is a proposal `document_ref`.\n\t* Each identifies one specific proposal via `[document_id, document_ver, document_locator]`.\n\t* The value for each key is that voter’s `choices` for that proposal.\n\t* There is exactly one set of `choices` per referenced proposal (no duplicates).\n\n* `choices`\n\t* Discriminated union of unencrypted or encrypted choices.\n\n* `row-proof` (optional, inside encrypted choices)\n  \t* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.\n\n* `column-proof` (optional, top-level)\n\t* Placeholder for future column-level proofs across proposals.\n\t* Not defined at present; omit in implementations.\n\n* `matrix-proof` (optional, top-level)\n\t* Placeholder for future matrix-wide proofs across all proposals and positions.\n\t* Not defined at present; omit in implementations.\n\n* `voter-choice` (optional, top-level)\n\t* This is ONLY Not included when the vote is unencrypted.\n\t* Allows a voter to read back their ballot selections without decrypting the entire ballot.\n\nNotes\n\n* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.\n  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to\n  reflect an unwrapped COSE_Sign CBOR block.\n* The application defines the permissible range and semantics of `clear-choice` integers.\n* All CBOR must use core-deterministic encoding so that content addressing remains stable.",
         "examples": [
           {
             "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-ctr-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...",
@@ -1723,6 +1732,11 @@
           "changes": "* Add Voting Ballots and Ballot Checkpoint Documents",
           "modified": "2025-11-03",
           "version": "0.1.5"
+        },
+        {
+          "changes": "* Added missing `ref` metadata field definition.\n* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.",
+          "modified": "2025-12-02",
+          "version": "0.2.1"
         }
       ]
     },

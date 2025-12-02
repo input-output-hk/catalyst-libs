@@ -48,9 +48,17 @@ docs: "Contest Ballot": {
 	}
 
 	metadata: {
+		ref: {
+			required: "yes"
+			type:     "Proposal"
+			multiple: true
+		}
 		parameters: {
 			required: "yes"
 			type:     "Contest Parameters"
+			linked_refs: [
+				"ref",
+			]
 		}
 		revocations: required: "optional"
 	}
@@ -109,6 +117,14 @@ docs: "Contest Ballot": {
 			modified: "2025-11-03"
 			changes: """
 				* Add Voting Ballots and Ballot Checkpoint Documents
+				"""
+		},
+		{
+			version:  "0.2.1"
+			modified: "2025-12-02"
+			changes: """
+				* Added missing `ref` metadata field definition.
+				* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
 				"""
 		},
 	]
