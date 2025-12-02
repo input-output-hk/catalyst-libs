@@ -7,18 +7,11 @@
 use std::convert::Infallible;
 
 use anyhow::{Context, ensure};
+use catalyst_types::uuid::{self, CborContext, UuidV7};
 use ed25519_dalek::VerifyingKey;
-use minicbor::{
-    Decode, Encode, Encoder,
-    data::{Tag, Type},
-    encode::Write,
-};
-use uuid::Timestamp;
+use minicbor::{Decode, Encode, Encoder, data::Type, encode::Write};
 
 use crate::doc_sync::PROTOCOL_VERSION;
-
-/// CBOR semantic tag value used for UUIDs (`#6.37`).
-const CBOR_TAG_UUID: u64 = 37;
 
 /// Ed25519 public key instance.
 /// Wrapper over `ed25519_dalek::VerifyingKey`.
@@ -78,53 +71,6 @@ impl<'b, C> Decode<'b, C> for Signature {
     }
 }
 
-/// New type wrapper.
-struct UUIDv7(uuid::Uuid);
-
-impl UUIDv7 {
-    /// Create a new version 7 UUID using a time value and random bytes.
-    fn new(timestamp: Timestamp) -> Self {
-        Self(uuid::Uuid::new_v7(timestamp))
-    }
-
-    /// Create a new version 7 UUID using the current time value.
-    fn now() -> Self {
-        Self(uuid::Uuid::now_v7())
-    }
-}
-
-impl<C> Encode<C> for UUIDv7 {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut C,
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(Tag::new(CBOR_TAG_UUID))?;
-        e.bytes(self.0.as_bytes())?;
-        Ok(())
-    }
-}
-
-impl<'b, C> Decode<'b, C> for UUIDv7 {
-    fn decode(
-        d: &mut minicbor::Decoder<'b>,
-        _ctx: &mut C,
-    ) -> Result<Self, minicbor::decode::Error> {
-        let tag = d.tag()?;
-        if tag != Tag::new(CBOR_TAG_UUID) {
-            return Err(minicbor::decode::Error::message(format!(
-                "UUIDv7 must be tagged with #{CBOR_TAG_UUID}, got #{}",
-                u64::from(tag)
-            )));
-        }
-        uuid::Uuid::from_slice(d.bytes()?)
-            .map_err(|err| {
-                minicbor::decode::Error::message(format!("error during UUIDv7 decode: {err}"))
-            })
-            .map(UUIDv7)
-    }
-}
-
 /// The unsigned portion of the message envelope.
 /// This structure corresponds to the **signature input** array:
 /// `[peer, seq, ver, payload]`.
@@ -137,7 +83,7 @@ pub struct EnvelopePayload {
     peer: PublicKey,
     /// Unique nonce and timestamp.
     /// Prevents and helps detect message duplication.
-    seq: UUIDv7,
+    seq: UuidV7,
     /// Protocol version number.
     /// This should be `1` for the current specification.
     ver: u64,
@@ -153,31 +99,12 @@ impl EnvelopePayload {
     /// Returns an error when `payload` is not a single CBOR map.
     pub fn new(
         peer: ed25519_dalek::VerifyingKey,
-        seq: Timestamp,
         payload: Vec<u8>,
     ) -> anyhow::Result<Self> {
         ensure_payload_body(&payload)?;
         Ok(Self {
             peer: PublicKey(peer),
-            seq: UUIDv7::new(seq),
-            ver: PROTOCOL_VERSION,
-            payload,
-        })
-    }
-
-    /// Create new instance of `EnvelopePayload` using the current time value.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error when `payload` is not a single CBOR map.
-    pub fn now(
-        peer: ed25519_dalek::VerifyingKey,
-        payload: Vec<u8>,
-    ) -> anyhow::Result<Self> {
-        ensure_payload_body(&payload)?;
-        Ok(Self {
-            peer: PublicKey(peer),
-            seq: UUIDv7::now(),
+            seq: UuidV7::new(),
             ver: PROTOCOL_VERSION,
             payload,
         })
@@ -189,10 +116,10 @@ impl EnvelopePayload {
         &self.peer.0
     }
 
-    /// Returns the `UUIDv7` sequence value.
+    /// Returns the `UuidV7` sequence value.
     #[must_use]
-    pub fn seq(&self) -> &uuid::Uuid {
-        &self.seq.0
+    pub fn seq(&self) -> uuid::Uuid {
+        self.seq.uuid()
     }
 
     /// Returns the encoded payload-body bytes.
@@ -209,16 +136,16 @@ impl EnvelopePayload {
     ///
     /// Returns an error if encoding fails (should not happen with `Vec<u8>` writers).
     pub fn to_bytes(&self) -> Result<Vec<u8>, minicbor::encode::Error<Infallible>> {
-        minicbor::to_vec(self)
+        minicbor::to_vec_with(self, &mut CborContext::Tagged)
     }
 
     /// Decodes `[peer, seq, ver, payload]` from the signed payload array.
-    fn decode_from_signed<C>(
+    fn decode_from_signed(
         decoder: &mut minicbor::Decoder<'_>,
-        ctx: &mut C,
+        ctx: &mut CborContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let peer: PublicKey = decoder.decode_with(ctx)?;
-        let seq: UUIDv7 = decoder.decode_with(ctx)?;
+        let seq: UuidV7 = decoder.decode_with(ctx)?;
         let ver = decoder.u64()?;
 
         if ver != PROTOCOL_VERSION {
@@ -251,24 +178,26 @@ impl EnvelopePayload {
     }
 }
 
-impl<C> Encode<C> for EnvelopePayload {
+impl Encode<CborContext> for EnvelopePayload {
     fn encode<W: Write>(
         &self,
         e: &mut Encoder<W>,
-        _ctx: &mut C,
+        ctx: &mut CborContext,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(4)?;
-        e.encode(&self.peer)?.encode(&self.seq)?.u64(self.ver)?;
+        e.encode(&self.peer)?
+            .encode_with(self.seq, ctx)?
+            .u64(self.ver)?;
         <W as Write>::write_all(e.writer_mut(), &self.payload)
             .map_err(minicbor::encode::Error::write)?;
         Ok(())
     }
 }
 
-impl<'b, C> Decode<'b, C> for EnvelopePayload {
+impl<'b> Decode<'b, CborContext> for EnvelopePayload {
     fn decode(
         d: &mut minicbor::Decoder<'b>,
-        ctx: &mut C,
+        ctx: &mut CborContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let len = d.array()?;
         match len {
@@ -286,7 +215,7 @@ impl<'b, C> Decode<'b, C> for EnvelopePayload {
         }
 
         let peer: PublicKey = d.decode_with(ctx)?;
-        let seq: UUIDv7 = d.decode_with(ctx)?;
+        let seq: UuidV7 = d.decode_with(ctx)?;
         let ver = d.u64()?;
 
         if ver != PROTOCOL_VERSION {
@@ -393,7 +322,7 @@ impl Envelope {
         let mut encoder = Encoder::new(Vec::new());
         encoder.array(5)?;
         encoder.encode(&self.payload.peer)?;
-        encoder.encode(&self.payload.seq)?;
+        encoder.encode_with(self.payload.seq, &mut CborContext::Tagged)?;
         encoder.u64(self.payload.ver)?;
         encoder
             .writer_mut()
@@ -419,10 +348,10 @@ impl<C> Encode<C> for Envelope {
     }
 }
 
-impl<'b, C> Decode<'b, C> for Envelope {
+impl<'b> Decode<'b, CborContext> for Envelope {
     fn decode(
         d: &mut minicbor::Decoder<'b>,
-        ctx: &mut C,
+        ctx: &mut CborContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let signed_payload_bytes = d.bytes()?;
         let mut signed_decoder = minicbor::Decoder::new(signed_payload_bytes);
@@ -490,7 +419,7 @@ mod tests {
     fn envelope_roundtrip_matches_spec_bstr() {
         let signing_key = signing_key();
         let payload_body = sample_payload_body();
-        let payload = EnvelopePayload::now(signing_key.verifying_key(), payload_body.clone())
+        let payload = EnvelopePayload::new(signing_key.verifying_key(), payload_body.clone())
             .expect("payload");
 
         let signature = signing_key
@@ -512,8 +441,9 @@ mod tests {
 
         // Decode fully to ensure `Decode` impl works.
         let mut envelope_decoder = Decoder::new(&encoded);
-        let mut ctx = ();
-        let decoded: Envelope = envelope_decoder.decode_with(&mut ctx).expect("decode");
+        let decoded: Envelope = envelope_decoder
+            .decode_with(&mut CborContext::Tagged)
+            .expect("decode");
         assert_eq!(decoded.payload().payload_bytes(), payload_body.as_slice());
     }
 
@@ -522,7 +452,7 @@ mod tests {
         let signing_key = signing_key();
         let payload_body = sample_payload_body();
         let payload =
-            EnvelopePayload::now(signing_key.verifying_key(), payload_body).expect("payload");
+            EnvelopePayload::new(signing_key.verifying_key(), payload_body).expect("payload");
 
         let signature = signing_key
             .try_sign(&payload.to_bytes().expect("bytes"))
@@ -531,7 +461,9 @@ mod tests {
         let mut signed = Encoder::new(Vec::new());
         signed.array(5).unwrap();
         signed.encode(&payload.peer).unwrap();
-        signed.encode(&payload.seq).unwrap();
+        signed
+            .encode_with(payload.seq, &mut CborContext::Tagged)
+            .unwrap();
         signed.u64(PROTOCOL_VERSION + 1).unwrap();
         <Vec<u8> as Write>::write_all(signed.writer_mut(), &payload.payload).unwrap();
         signed.encode(Signature(signature)).unwrap();
@@ -541,8 +473,7 @@ mod tests {
         let bytes = envelope.into_writer();
 
         let mut decoder = Decoder::new(&bytes);
-        let mut ctx = ();
-        let result: Result<Envelope, _> = decoder.decode_with(&mut ctx);
+        let result: Result<Envelope, _> = decoder.decode_with(&mut CborContext::Tagged);
         assert!(result.is_err(), "expected version mismatch error");
     }
 
@@ -551,7 +482,7 @@ mod tests {
         let signing_key = signing_key();
         let payload_body = sample_payload_body();
         let payload =
-            EnvelopePayload::now(signing_key.verifying_key(), payload_body).expect("payload");
+            EnvelopePayload::new(signing_key.verifying_key(), payload_body).expect("payload");
 
         let mut signature = signing_key
             .try_sign(&payload.to_bytes().expect("bytes"))
@@ -572,30 +503,7 @@ mod tests {
         enc.u8(42).unwrap();
         let payload_bytes = enc.into_writer();
 
-        let result = EnvelopePayload::now(signing_key.verifying_key(), payload_bytes);
+        let result = EnvelopePayload::new(signing_key.verifying_key(), payload_bytes);
         assert!(result.is_err(), "non-map payload must be rejected");
-    }
-
-    #[test]
-    fn uuidv7_uses_cbor_tag_37() {
-        let seq = UUIDv7::now();
-        let bytes = minicbor::to_vec(&seq).expect("encode");
-
-        let mut decoder = Decoder::new(&bytes);
-        let tag = decoder.tag().expect("tag");
-        assert_eq!(u64::from(tag), CBOR_TAG_UUID);
-    }
-
-    #[test]
-    fn uuidv7_decode_rejects_missing_tag() {
-        let seq = UUIDv7::now();
-        let mut encoder = Encoder::new(Vec::new());
-        encoder.bytes(seq.0.as_bytes()).expect("bytes");
-        let bytes = encoder.into_writer();
-
-        let mut decoder = Decoder::new(&bytes);
-        let mut ctx = ();
-        let result: Result<UUIDv7, _> = decoder.decode_with(&mut ctx);
-        assert!(result.is_err(), "untagged UUID must be rejected");
     }
 }
