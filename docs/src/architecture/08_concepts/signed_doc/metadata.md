@@ -266,6 +266,10 @@ The following must be true for a valid reference:
 * The Referenced Document **MUST** Exist
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+* In the event there are **MULTIPLE** [`ref`](metadata.md#ref) listed, they **MUST** be sorted.
+
+Sorting for each element of [`ref`](metadata.md#ref) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ### `template`
 
@@ -341,8 +345,23 @@ publish a new version of the document.
 
 This list does not imply these collaborators have consented to collaborate, only that the author/s
 are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
+How collaborators are counted on a final submission is determined by a parameter defined at the
+Brand/Campaign/Category level (parameter name TBD).
+Depending on that configuration:
+
+* All listed collaborators may be required to submit a `final` Submission Action in addition
+  to the author; **OR**
+* Only collaborators who submit a `final` Submission Action for the referenced version are
+  included as collaborators on that submission.
+
+If the parameter is not present, default to the latter mode (only final-signing collaborators are
+included).
+In all modes a document is only considered final when the original author has submitted `final`.
+
+In the event there are **MULTIPLE** [`collaborators`](metadata.md#collaborators) listed, they **MUST** be sorted.
+
+Sorting for each element of [`collaborators`](metadata.md#collaborators) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ### `revocations`
 
@@ -627,6 +646,7 @@ classDiagram
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4

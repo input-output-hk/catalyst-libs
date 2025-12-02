@@ -397,7 +397,7 @@ Supported HTTP Encodings of the Payload
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">optional</td>
     <td class="gt_row gt_left">Is the field required?</td>
   </tr>
   <tr>
@@ -453,6 +453,13 @@ The `kid` is a [UTF-8][RFC3629] encoded Catalyst ID [URI][RFC3986].
 Any `kid` [URI][RFC3986] which conforms to the Catalyst ID specification may be used.
 The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 used to sign the protected portion of the document.
+
+There may be **MULTIPLE** [Cose][RFC9052] Signatures attached to any document.
+In the event there are **MULTIPLE** [Cose][RFC9052] Signatures `kid` attached, then they **MUST**
+be sorted.
+
+Sorting for each [cose][RFC9052] signature follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 <!---HTML START-->
 <!-- markdownlint-disable -->
