@@ -14,8 +14,8 @@
 //! * The task that reads lines from stdin and publishes them as either node.
 use std::io::Write;
 
-use hermes_ipfs::{pin_mut, FutureExt, HermesIpfs, StreamExt};
-use rust_ipfs::PubsubEvent;
+use futures::{FutureExt, StreamExt, pin_mut};
+use hermes_ipfs::HermesIpfs;
 use rustyline_async::Readline;
 
 #[allow(clippy::indexing_slicing)]
@@ -25,19 +25,19 @@ async fn start_bootstrapped_nodes() -> anyhow::Result<(HermesIpfs, HermesIpfs)> 
     println!("***************************************");
     println!("* Hermes IPFS node A has started.");
     let peer_id_a = hermes_a.identity(None).await?;
-    println!("    Peer ID: {peer_id_a}");
+    println!("    Peer ID: {}", peer_id_a.peer_id);
     let addresses = hermes_a.listening_addresses().await?;
     let a_address = addresses[0].clone();
-    let a_p2p = a_address.with(rust_ipfs::Protocol::P2p(peer_id_a));
+    let a_p2p = a_address.with(rust_ipfs::Protocol::P2p(peer_id_a.peer_id));
     println!("    P2P addr: {a_p2p}");
     println!("***************************************");
     println!("* Hermes IPFS node B has started.");
     let hermes_b = HermesIpfs::start().await?;
     let peer_id_b = hermes_b.identity(None).await?;
-    println!("    Peer ID: {peer_id_b}");
+    println!("    Peer ID: {}", peer_id_b.peer_id);
     let addresses = hermes_b.listening_addresses().await?;
     let b_address = addresses[0].clone();
-    let b_p2p = b_address.with(rust_ipfs::Protocol::P2p(peer_id_b));
+    let b_p2p = b_address.with(rust_ipfs::Protocol::P2p(peer_id_b.peer_id));
     println!("    P2P addr: {b_p2p}");
     println!("***************************************");
     println!("* Bootstrapping node A.");
@@ -57,14 +57,10 @@ async fn start_bootstrapped_nodes() -> anyhow::Result<(HermesIpfs, HermesIpfs)> 
 /// Main function
 async fn main() -> anyhow::Result<()> {
     let topic = String::from("ipfs-chat");
-    let option_topic = Option::Some(topic.clone());
 
     // Initialize the repo and start a daemon
     let (hermes_a, hermes_b) = start_bootstrapped_nodes().await?;
     let (mut rl, mut stdout) = Readline::new(format!("{} > ", "Write message to publish"))?;
-
-    let mut event_stream = hermes_a.pubsub_events(option_topic.clone()).await?;
-    let mut event_stream_b = hermes_b.pubsub_events(option_topic).await?;
 
     let stream = hermes_a.pubsub_subscribe(topic.clone()).await?;
     let stream_b = hermes_b.pubsub_subscribe(topic.clone()).await?;
@@ -79,24 +75,12 @@ async fn main() -> anyhow::Result<()> {
         tokio::select! {
             data = stream.next() => {
                 if let Some(msg) = data {
-                    writeln!(stdout, "NODE A RECV: {}", String::from_utf8_lossy(&msg.data))?;
+                    writeln!(stdout, "NODE A RECV: {:?}", &msg)?;
                 }
             }
             data = stream_b.next() => {
                 if let Some(msg) = data {
-                    writeln!(stdout, "NODE B RECV: {}", String::from_utf8_lossy(&msg.data))?;
-                }
-            }
-            Some(event) = event_stream.next() => {
-                match event {
-                    PubsubEvent::Subscribe { peer_id, topic } => writeln!(stdout, "{peer_id} subscribed to {topic:?}")?,
-                    PubsubEvent::Unsubscribe { peer_id, topic } => writeln!(stdout, "{peer_id} unsubscribed from {topic:?}")?,
-                }
-            }
-            Some(event) = event_stream_b.next() => {
-                match event {
-                    PubsubEvent::Subscribe { peer_id , topic} => writeln!(stdout, "{peer_id} subscribed to {topic:?}")?,
-                    PubsubEvent::Unsubscribe { peer_id, topic } => writeln!(stdout, "{peer_id} unsubscribed from {topic:?}")?,
+                    writeln!(stdout, "NODE B RECV: {:?}", &msg)?;
                 }
             }
             line = rl.readline().fuse() => match line {

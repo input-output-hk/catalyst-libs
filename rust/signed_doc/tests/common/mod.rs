@@ -6,6 +6,10 @@ pub mod campaign_parameters;
 pub mod campaign_parameters_form_template;
 pub mod category_parameters;
 pub mod category_parameters_form_template;
+pub mod contest_ballot;
+pub mod contest_ballot_checkpoint;
+pub mod contest_parameters;
+pub mod contest_parameters_form_template;
 pub mod proposal;
 pub mod proposal_comment;
 pub mod proposal_comment_form_template;
@@ -19,9 +23,16 @@ pub use brand_parameters_form_template::brand_parameters_form_template_doc;
 pub use campaign_parameters::campaign_parameters_doc;
 pub use campaign_parameters_form_template::campaign_parameters_form_template_doc;
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
-use catalyst_types::catalyst_id::role_index::RoleId;
+use catalyst_types::{
+    catalyst_id::role_index::RoleId,
+    uuid::{UuidV4, UuidV7},
+};
 pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
+pub use contest_ballot::contest_ballot_doc;
+pub use contest_ballot_checkpoint::contest_ballot_checkpoint_doc;
+pub use contest_parameters::contest_parameters_doc;
+pub use contest_parameters_form_template::contest_parameters_form_template_doc;
 pub use proposal::proposal_doc;
 pub use proposal_comment::proposal_comment_doc;
 pub use proposal_comment_form_template::proposal_comment_form_template_doc;
@@ -59,4 +70,22 @@ pub fn create_dummy_key_pair(
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     let mut csprng = rand::rngs::OsRng;
     ed25519_dalek::SigningKey::generate(&mut csprng)
+}
+
+#[allow(clippy::expect_used)]
+pub fn create_dummy_doc_ref() -> DocumentRef {
+    let test_doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "id": UuidV7::new().to_string(),
+            "ver": UuidV7::new().to_string(),
+            "type": UuidV4::new().to_string(),
+            "content-type": ContentType::Json,
+        }))
+        .expect("Should create metadata")
+        .with_json_content(&serde_json::json!({"test": "content"}))
+        .expect("Should set content")
+        .build()
+        .expect("Should build document");
+
+    test_doc.doc_ref().expect("Should generate DocumentRef")
 }

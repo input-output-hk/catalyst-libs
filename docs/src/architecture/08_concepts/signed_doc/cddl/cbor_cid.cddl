@@ -1,0 +1,12 @@
+; CIDv1 ABNF Constrained for SHA2-256
+
+
+; CIDv1 ABNF Constrained for SHA2-256
+cbor-cid = '
+    cid = cidv1 codec-cbor sha2-256 digest-32 digest
+    cidv1 = %x00 %x01
+    codec-cbor = %x51
+    sha2-256 = %x12
+    digest-32 = %x20
+    digest = 32(%x00-FF)
+'

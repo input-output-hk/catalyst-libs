@@ -1,6 +1,6 @@
 //! `UUID` types.
 
-pub use uuid::{uuid, Uuid};
+pub use uuid::{Uuid, uuid};
 #[allow(clippy::module_name_repetitions)]
 pub use uuid_v4::{InvalidUuidV4, ParsingError as UuidV4ParsingError, UuidV4};
 #[allow(clippy::module_name_repetitions)]

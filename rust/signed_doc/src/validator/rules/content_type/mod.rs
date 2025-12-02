@@ -3,7 +3,9 @@
 #[cfg(test)]
 mod tests;
 
-use crate::{metadata::ContentType, validator::json_schema::JsonSchema, CatalystSignedDocument};
+use catalyst_types::json_schema::JsonSchema;
+
+use crate::{CatalystSignedDocument, metadata::ContentType};
 
 /// `content-type` field validation rule
 #[derive(Debug)]
@@ -51,15 +53,15 @@ impl ContentTypeRule {
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
-        if let Self::NotSpecified = &self {
-            if let Some(content_type) = doc.doc_content_type() {
-                doc.report().unknown_field(
-                    "content-type",
-                    content_type.to_string().as_str(),
-                    "document does not expect to have the content type field",
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = &self
+            && let Some(content_type) = doc.doc_content_type()
+        {
+            doc.report().unknown_field(
+                "content-type",
+                content_type.to_string().as_str(),
+                "document does not expect to have the content type field",
+            );
+            return Ok(false);
         }
         if let Self::Specified { exp } = &self {
             let Some(content_type) = doc.doc_content_type() else {

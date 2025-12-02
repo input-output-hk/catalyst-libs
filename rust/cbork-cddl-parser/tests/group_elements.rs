@@ -3,7 +3,7 @@
 // cspell: words optcom memberkey grpent grpchoice
 
 mod common;
-use common::{group_elements::*, identifiers::*, Rule};
+use common::{Rule, group_elements::*, identifiers::*};
 
 #[test]
 /// Test if the `occur` rule passes properly.

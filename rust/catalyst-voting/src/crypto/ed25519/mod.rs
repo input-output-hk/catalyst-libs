@@ -3,7 +3,7 @@
 mod decoding;
 
 use ed25519_dalek::{
-    ed25519::signature::Signer, Signature as Ed25519Signature, SigningKey, VerifyingKey,
+    Signature as Ed25519Signature, SigningKey, VerifyingKey, ed25519::signature::Signer,
 };
 
 use super::rng::default_rng;
@@ -61,7 +61,7 @@ pub fn verify_signature(
 
 #[cfg(test)]
 mod arbitrary_impl {
-    use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
+    use proptest::prelude::{Arbitrary, BoxedStrategy, Strategy, any};
 
     use super::{PrivateKey, SigningKey};
 

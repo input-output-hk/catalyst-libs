@@ -1,0 +1,17 @@
+title: Voting Process
+nav:
+{% set ordered = extra.pages_data
+    | selectattr('front_matter.order', 'defined')
+    | sort(attribute='front_matter.Title')
+    | sort(attribute='front_matter.order')
+%}
+{% set unordered = extra.pages_data
+    | rejectattr('front_matter.order', 'defined')
+    | sort(attribute='front_matter.Title')
+%}
+{% for doc in ordered %}
+  - {{ doc.front_matter.Title }}: {{ doc.path.stem }}
+{% endfor %}
+{% for doc in unordered %}
+  - {{ doc.front_matter.Title }}: {{ doc.path.stem }}
+{% endfor %}

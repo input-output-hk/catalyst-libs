@@ -1,6 +1,6 @@
 //! A generalized tx event map struct.
 
-use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, data::Int};
 
 use super::read_cbor_bytes;
 

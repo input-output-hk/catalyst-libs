@@ -1,19 +1,21 @@
 [project]
 name = "generators"
 version = "0.1.0"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
-    "css-inline>=0.17.0",
-    "great-tables>=0.18.0",
+    "css-inline>=0.18.0",
+    "great-tables>=0.20.0",
     "jinja2>=3.1.6",
-    "jsonschema[format]>=4.25.0",
-    "mdformat>=0.7.22",
-    "mdformat-mkdocs>=4.3.0",
-    "polars>=1.31.0",
-    "pydantic>=2.11.7",
+    "jsonschema[format]>=4.25.1",
+    "mdformat>=1.0.0",
+    "mdformat-mkdocs>=4.4.2",
+    "polars>=1.35.1",
+    "pydantic>=2.12.4",
     "pydot>=4.0.1",
-    "rich>=14.1.0",
-    "rich-argparse>=1.7.1",
+    "rich>=14.2.0",
+    "rich-argparse>=1.7.2",
+    "pyYAML>=6.0.3",
+    "cbor2>=5.7.1",
     "spec",
 ]
 

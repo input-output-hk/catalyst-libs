@@ -9,14 +9,14 @@ use catalyst_types::{
 use cbork_utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 use strum_macros::FromRepr;
 
 use crate::cardano::cip509::{
-    decode_context::DecodeContext,
-    rbac::{role_data::CborRoleData, C509Cert, SimplePublicKeyType, X509DerCert},
-    utils::Cip0134UriSet,
     CertKeyHash, RoleData,
+    decode_context::DecodeContext,
+    rbac::{C509Cert, SimplePublicKeyType, X509DerCert, role_data::CborRoleData},
+    utils::Cip0134UriSet,
 };
 
 /// Cip509 RBAC metadata.
@@ -28,9 +28,9 @@ use crate::cardano::cip509::{
 #[allow(clippy::module_name_repetitions)]
 pub struct Cip509RbacMetadata {
     /// A potentially empty list of x509 certificates.
-    pub x509_certs: Vec<X509DerCert>,
+    pub(crate) x509_certs: Vec<X509DerCert>,
     /// A potentially empty list of c509 certificates.
-    pub c509_certs: Vec<C509Cert>,
+    pub(crate) c509_certs: Vec<C509Cert>,
     /// A set of URIs contained in both x509 and c509 certificates.
     ///
     /// URIs from different certificate types are stored separately and certificate
@@ -38,21 +38,21 @@ pub struct Cip509RbacMetadata {
     ///
     /// This field isn't present in the encoded format and is populated by processing both
     /// `x509_certs` and `c509_certs` fields.
-    pub certificate_uris: Cip0134UriSet,
+    pub(crate) certificate_uris: Cip0134UriSet,
     /// A list of public keys that can be used instead of storing full certificates.
     ///
     /// Check [this section] to understand how certificates and the public keys list are
     /// related.
     ///
     /// [this section]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX#storing-certificates-and-public-key
-    pub pub_keys: Vec<SimplePublicKeyType>,
+    pub(crate) pub_keys: Vec<SimplePublicKeyType>,
     /// A potentially empty list of revoked certificates.
-    pub revocation_list: Vec<CertKeyHash>,
+    pub(crate) revocation_list: Vec<CertKeyHash>,
     /// A potentially empty role data.
-    pub role_data: HashMap<RoleId, RoleData>,
+    pub(crate) role_data: HashMap<RoleId, RoleData>,
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
-    pub purpose_key_data: HashMap<u16, Vec<u8>>,
+    pub(crate) purpose_key_data: HashMap<u16, Vec<u8>>,
 }
 
 /// The first valid purpose key.

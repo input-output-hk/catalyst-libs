@@ -3,8 +3,10 @@
 use catalyst_signed_doc::{decode_context::CompatibilityPolicy, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
-use minicbor::{data::Tag, Decode, Encoder};
+use minicbor::{Decode, Encoder, data::Tag};
 use rand::Rng;
+
+use crate::common::create_dummy_doc_ref;
 
 mod common;
 
@@ -25,7 +27,7 @@ struct TestCase {
 fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+    let doc_ref = create_dummy_doc_ref();
     TestCase {
         name: format!(
             "Catalyst Signed Doc with deprecated {field_name} version before v0.04 validating."
@@ -37,7 +39,7 @@ fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
@@ -59,8 +61,8 @@ fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
                         &mut catalyst_types::uuid::CborContext::Tagged,
                     )?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -74,24 +76,15 @@ fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
         }),
         policy: CompatibilityPolicy::Accept,
         can_decode: true,
-        valid_doc: true,
-        post_checks: Some(Box::new({
-            move |doc| {
-                anyhow::ensure!(doc.is_deprecated()?);
-                Ok(())
-            }
-        })),
+        valid_doc: false,
+        post_checks: None,
     }
 }
 
 fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
-        UuidV7::new(),
-        UuidV7::new(),
-        DocLocator::default(),
-    )]);
+    let doc_ref = DocumentRefs::from(vec![create_dummy_doc_ref()]);
     let doc_ref_cloned = doc_ref.clone();
     TestCase {
         name: format!("Provided '{alias}' field should be processed as parameters."),
@@ -102,7 +95,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
@@ -117,8 +110,8 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
                         .str(alias)?
                         .encode_with(doc_ref.clone(), &mut ())?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -146,17 +139,17 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
 fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
     TestCase {
         name: format!("Catalyst Signed Doc with missing '{field}' header."),
         bytes_gen: Box::new({
             move || {
+                let doc_ref = create_dummy_doc_ref();
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(3)?;
                     if field != "type" {
@@ -177,8 +170,8 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
                         .str("parameters")?
                         .encode_with(doc_ref.clone(), &mut ())?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -223,7 +216,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut rng = rand::thread_rng();
                     let mut rand_buf = [0u8; 128];
                     rng.try_fill(&mut rand_buf)?;
@@ -256,8 +249,8 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                         p_headers.str(field)?.encode_with(rand_buf, &mut ())?;
                     }
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -303,17 +296,17 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
 fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str]) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
     TestCase {
         name: format!("Multiple definitions of '{}' at once.", aliases.join(", ")),
         bytes_gen: Box::new({
             move || {
+                let doc_ref = create_dummy_doc_ref();
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(4u64.overflowing_add(u64::try_from(aliases.len())?).0)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
@@ -331,8 +324,8 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
                             .encode_with(doc_ref.clone(), &mut ())?;
                     }
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -368,7 +361,7 @@ fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
@@ -381,8 +374,8 @@ fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
                     p_headers.str(name)?.encode(ContentEncoding::Brotli)?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -421,7 +414,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
@@ -433,8 +426,8 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -445,7 +438,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                 e.array(1)?;
                 e.array(3)?;
                 // protected headers (kid field)
-                e.bytes({
+                {
                     let mut rng = rand::thread_rng();
                     let mut rand_buf = [0u8; 128];
                     rng.try_fill(&mut rand_buf)?;
@@ -453,8 +446,8 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                     let mut p_headers = minicbor::Encoder::new(Vec::new());
                     p_headers.map(1)?.u8(4)?.bytes(&rand_buf)?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 e.map(0)?;
                 e.bytes(&[1, 2, 3])?;
 
@@ -480,7 +473,7 @@ fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
                 e.array(4)?;
 
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
@@ -492,8 +485,8 @@ fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
 
-                    p_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
 
                 // empty unprotected headers
                 e.map(0)?;
@@ -538,7 +531,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
 
                     p_headers.map(4)?;
@@ -552,8 +545,9 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                     p_headers
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
+
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 // empty unprotected headers
                 e.map(0)?;
                 // content
@@ -594,16 +588,13 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
 fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
-        UuidV7::new(),
-        UuidV7::new(),
-        DocLocator::default(),
-    )]);
+    let doc_ref = DocumentRefs::from(vec![create_dummy_doc_ref()]);
     let doc_ref_cloned = doc_ref.clone();
     TestCase {
         name: "Catalyst Signed Doc with all metadata fields defined, signed (one signature), CBOR tagged.".to_string(),
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
+            let doc_ref = doc_ref.clone();
             move || {
                 let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 
@@ -655,7 +646,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 p_headers.map(1)?.u8(4)?.bytes(Vec::<u8>::from(&kid).as_slice())?;
                 e.bytes(p_headers.into_writer().as_slice())?;
                 e.map(0)?;
-                e.bytes(&[1,2,3])?;
+                e.bytes(&[1, 2, 3])?;
                 Ok(e)
             }
         }),
@@ -1039,7 +1030,7 @@ fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
 
                     p_headers.map(4)?;
@@ -1053,8 +1044,9 @@ fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
                     p_headers
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
+
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 // empty unprotected headers
                 e.map(0)?;
                 // content
@@ -1093,7 +1085,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
 
                     p_headers.map(4)?;
@@ -1107,8 +1099,9 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
                     p_headers
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
+
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 // empty unprotected headers
                 e.map(0)?;
                 // content
@@ -1158,7 +1151,7 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
 
                     p_headers.map(5)?;
@@ -1173,8 +1166,9 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
                     p_headers
                         .str("unsupported")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
+
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 // empty unprotected headers
                 e.map(0)?;
                 // content
@@ -1219,7 +1213,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
 
                     p_headers.map(4)?;
@@ -1231,8 +1225,9 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
                     p_headers
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
+
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 // empty unprotected headers
                 e.map(0)?;
                 // content
@@ -1286,7 +1281,7 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
-                e.bytes({
+                {
                     let mut p_headers = Encoder::new(Vec::new());
 
                     p_headers.map(4)?;
@@ -1298,8 +1293,9 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
                     p_headers
                         .str("ver")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
+
+                    e.bytes(p_headers.into_writer().as_slice())?;
+                }
                 // empty unprotected headers
                 e.map(0)?;
                 // content
@@ -1309,7 +1305,7 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
                 // signature
                 e.array(3)?;
                 // protected headers
-                e.bytes({
+                {
                     let mut s_headers = minicbor::Encoder::new(Vec::new());
                     s_headers.map(2)?;
                     // (kid field)
@@ -1318,8 +1314,8 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
                     s_headers
                         .str("unsupported")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    s_headers.into_writer().as_slice()
-                })?;
+                    e.bytes(s_headers.into_writer().as_slice())?;
+                }
                 // unprotected headers
                 e.map(0)?;
                 // signature bytes

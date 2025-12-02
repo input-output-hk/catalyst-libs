@@ -1,0 +1,8 @@
+; The SMT Root hash is a Blake 3 256bit digest Hash.
+
+
+; The SMT Root hash is a Blake 3 256bit digest Hash.
+smt-root = blake3
+
+; Blake3 Hash (Digest Size is determined by length of bytes)
+blake3 = #6.32781(bytes)

@@ -32,6 +32,7 @@ _allAdminRolesList: [
 	"Campaign Admin",
 	"Category Admin",
 	"Moderator",
+	"Bulletin Board Operator",
 ]
 _allAdminRoles: or(_allAdminRolesList)
 

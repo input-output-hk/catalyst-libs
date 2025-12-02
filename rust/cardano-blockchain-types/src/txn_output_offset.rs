@@ -6,12 +6,8 @@ use catalyst_types::conversion::from_saturating;
 pub struct TxnOutputOffset(u16);
 
 impl<
-        T: Copy
-            + TryInto<u16>
-            + std::ops::Sub<Output = T>
-            + PartialOrd<T>
-            + num_traits::identities::Zero,
-    > From<T> for TxnOutputOffset
+    T: Copy + TryInto<u16> + std::ops::Sub<Output = T> + PartialOrd<T> + num_traits::identities::Zero,
+> From<T> for TxnOutputOffset
 {
     fn from(value: T) -> Self {
         Self(from_saturating(value))

@@ -1,3 +1,4 @@
+use catalyst_types::json_schema::JsonSchema;
 use test_case::test_case;
 
 use super::*;
@@ -36,7 +37,7 @@ use crate::builder::tests::Builder;
 async fn content_rule_specified_test(
     doc_gen: impl FnOnce(Vec<u8>) -> CatalystSignedDocument
 ) -> bool {
-    let schema = json_schema::JsonSchema::try_from(&serde_json::json!({})).unwrap();
+    let schema = JsonSchema::try_from(&serde_json::json!({})).unwrap();
     let content_schema = ContentSchema::Json(schema);
     let valid_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
 

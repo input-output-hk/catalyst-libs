@@ -9,7 +9,7 @@ pub use types::{
     CertKeyHash, CertOrPk, KeyLocalRef, LocalRefInt, Payment, PaymentHistory, PointData,
     PointTxnIdx, RoleData, RoleDataRecord, TxInputHash, ValidationSignature,
 };
-pub use utils::{extract_key, Cip0134UriSet};
+pub use utils::{Cip0134UriSet, extract_key};
 
 #[allow(clippy::module_inception)]
 mod cip509;

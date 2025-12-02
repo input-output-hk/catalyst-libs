@@ -94,7 +94,7 @@ mod tests {
     use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
-    use crate::{builder::tests::Builder, metadata::SupportedField, ContentType};
+    use crate::{ContentType, builder::tests::Builder, metadata::SupportedField};
 
     #[tokio::test]
     async fn signature_kid_rule_test() {

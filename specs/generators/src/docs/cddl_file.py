@@ -33,3 +33,7 @@ class CDDLFile(DocGenerator):
         self._filedata = self._spec.cddl_definitions.cddl_file(self._cddl_root)
 
         return super().generate()
+
+    def contents(self) -> str:
+        """Get the contents of the CDDL file."""
+        return self._filedata

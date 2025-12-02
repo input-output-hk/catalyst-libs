@@ -3,7 +3,7 @@
 // cspell: words stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr
 
 use cardano_blockchain_types::{
-    hashes::TransactionId, MultiEraBlock, Network, Point, Slot, TxnIndex,
+    MultiEraBlock, Network, Point, Slot, TxnIndex, hashes::TransactionId,
 };
 use catalyst_types::{catalyst_id::role_index::RoleId, uuid::UuidV4};
 use uuid::Uuid;
@@ -48,8 +48,7 @@ impl BlockTestData {
         assert!(cip509.role_data(self.role).is_some());
         assert_eq!(cip509.txn_hash(), self.txn_hash);
         assert_eq!(cip509.previous_transaction(), self.prv_hash);
-        let (purpose, ..) = cip509.clone().consume().unwrap();
-        assert_eq!(purpose, self.purpose);
+        assert_eq!(cip509.purpose().unwrap(), self.purpose);
     }
 }
 

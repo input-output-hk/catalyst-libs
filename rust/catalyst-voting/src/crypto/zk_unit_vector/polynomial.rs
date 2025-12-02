@@ -82,7 +82,7 @@ pub(crate) fn calculate_polynomial_val(
     x: &Scalar,
     randomness: &[ResponseRandomness],
 ) -> Scalar {
-    let val = randomness
+    randomness
         .iter()
         .map(|r| &r.z)
         .enumerate()
@@ -94,8 +94,7 @@ pub(crate) fn calculate_polynomial_val(
                 acc = &acc * &(x - z);
             }
             acc
-        });
-    val
+        })
 }
 
 #[cfg(test)]

@@ -158,7 +158,7 @@ Revoked documents are flagged as no longer valid, and should not be displayed.
 As a special case, if the revocations are set to `true` then all versions of the document
 are revoked, including the latest document.
 
-In this case, when the latest document is revoked, the payload may be empty.
+In this case, when the latest document is revoked, the payload may be `nil`.
 Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
 and its payload is to be assumed to be invalid.
 
@@ -195,7 +195,7 @@ of the previous submitted document's version.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-11-10 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

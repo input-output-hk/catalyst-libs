@@ -2,7 +2,7 @@
 // cspell: words hexpair rstuvw abcdefghijklmnopqrstuvwyz rstuvw Xhhb Bhcm
 
 mod common;
-use common::{byte_sequences::*, Rule};
+use common::{Rule, byte_sequences::*};
 
 #[test]
 /// Test if the `HEX_PAIR` rule passes properly.

@@ -8,7 +8,7 @@ class Authors(RootModel[dict[str, str]]):
 
     root: dict[str, str]  # name: email
 
-    def combine(self, other: "Authors") -> "Authors":
+    def combine(self, other: Authors) -> Authors:
         """Combine Two Authors lists into a single Authors List."""
         combined = self.root | other.root
         return self.model_validate(combined)

@@ -3,12 +3,12 @@
 #[cfg(test)]
 mod tests;
 
-use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::doc_ref::Ref, DocSpecs};
+use catalyst_signed_doc_spec::{DocSpecs, is_required::IsRequired, metadata::doc_ref::Ref};
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocType, DocumentRef,
-    DocumentRefs,
+    CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
+    providers::CatalystSignedDocumentProvider,
 };
 
 /// `ref` field validation rule
@@ -38,13 +38,16 @@ impl RefRule {
             IsRequired::Excluded => {
                 anyhow::ensure!(
                     spec.doc_type.is_empty() && !spec.multiple,
-                     "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
+                    "'type' and 'multiple' fields could not been specified when 'required' is 'excluded' for 'ref' metadata definition"
                 );
                 return Ok(Self::NotSpecified);
             },
         };
 
-        anyhow::ensure!(!spec.doc_type.is_empty(), "'type' field should exists and has at least one entry for the required 'ref' metadata definition");
+        anyhow::ensure!(
+            !spec.doc_type.is_empty(),
+            "'type' field should exists and has at least one entry for the required 'ref' metadata definition"
+        );
 
         let exp_ref_types = spec.doc_type.iter().try_fold(
             Vec::new(),
@@ -97,15 +100,15 @@ impl RefRule {
                 return Ok(false);
             }
         }
-        if let Self::NotSpecified = self {
-            if let Some(doc_ref) = doc.doc_meta().doc_ref() {
-                doc.report().unknown_field(
-                    "ref",
-                    &doc_ref.to_string(),
-                    &format!("{context}, document does not expect to have a ref field"),
-                );
-                return Ok(false);
-            }
+        if let Self::NotSpecified = self
+            && let Some(doc_ref) = doc.doc_meta().doc_ref()
+        {
+            doc.report().unknown_field(
+                "ref",
+                &doc_ref.to_string(),
+                &format!("{context}, document does not expect to have a ref field"),
+            );
+            return Ok(false);
         }
 
         Ok(true)
@@ -145,7 +148,7 @@ where
     for dr in doc_refs.iter() {
         if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
             let is_valid = referenced_doc_type_check(ref_doc, exp_ref_types, field_name, report)
-                && referenced_doc_id_and_ver_check(ref_doc, dr, field_name, report)
+                && referenced_doc_ref_check(ref_doc, dr, field_name, report)
                 && validator(ref_doc);
 
             if !is_valid {
@@ -164,39 +167,27 @@ where
 
 /// Validation check that the provided `ref_doc` is a correct referenced document found by
 /// `original_doc_ref`
-fn referenced_doc_id_and_ver_check(
+fn referenced_doc_ref_check(
     ref_doc: &CatalystSignedDocument,
     original_doc_ref: &DocumentRef,
     field_name: &str,
     report: &ProblemReport,
 ) -> bool {
-    let Ok(id) = ref_doc.doc_id() else {
-        report.missing_field(
-            "id",
-            &format!("Referenced document validation for the `{field_name}` field"),
+    let context = &format!("Referenced document validation for the `{field_name}` field");
+    let Ok(doc_ref) = ref_doc.doc_ref() else {
+        report.functional_validation(
+            "Cannot calculate a document reference of the fetched document",
+            context,
         );
         return false;
     };
 
-    let Ok(ver) = ref_doc.doc_ver() else {
-        report.missing_field(
-            "ver",
-            &format!("Referenced document validation for the `{field_name}` field"),
-        );
-        return false;
-    };
-
-    // id and version must match the values in ref doc
-    if &id != original_doc_ref.id() && &ver != original_doc_ref.ver() {
+    if &doc_ref != original_doc_ref {
         report.invalid_value(
-            "id and version",
-            &format!("id: {id}, ver: {ver}"),
-            &format!(
-                "id: {}, ver: {}",
-                original_doc_ref.id(),
-                original_doc_ref.ver()
-            ),
-            &format!("Referenced document validation for the `{field_name}` field"),
+            "document reference",
+            &format!("{doc_ref}",),
+            &format!("{original_doc_ref}",),
+            context,
         );
         return false;
     }
