@@ -1,5 +1,4 @@
 import os
-import sys
 
 CAT_API_URL = os.environ["CAT_API_URL"]
 

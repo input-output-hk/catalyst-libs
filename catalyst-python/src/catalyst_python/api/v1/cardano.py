@@ -1,5 +1,6 @@
 import requests
-from api import cat_api_endpoint_url
+
+from catalyst_python.api import cat_api_endpoint_url
 
 
 # cardano assets GET

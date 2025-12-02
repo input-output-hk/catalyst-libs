@@ -1,4 +1,4 @@
-from api import cat_api_endpoint_url
+from catalyst_python.api import cat_api_endpoint_url
 
 LIVE_URL = "api/v1/health/live"
 READY_URL = "api/v1/health/ready"
