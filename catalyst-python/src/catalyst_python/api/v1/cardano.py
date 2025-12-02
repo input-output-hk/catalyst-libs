@@ -11,5 +11,5 @@ def assets(stake_address: str, slot_no: int, token: str | None = None):
 
     if token is not None:
         headers["Authorization"] = f"Bearer {token}"
-        
+
     return requests.get(url, headers=headers)
