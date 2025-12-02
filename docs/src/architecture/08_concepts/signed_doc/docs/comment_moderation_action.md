@@ -137,6 +137,10 @@ The following must be true for a valid reference:
 * The Referenced Document **MUST** Exist
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+* In the event there are **MULTIPLE** [`ref`](../metadata.md#ref) listed, they **MUST** be sorted.
+
+Sorting for each element of [`ref`](../metadata.md#ref) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ## Payload
 
@@ -172,6 +176,7 @@ Only the original author can update and sign a new version of documents.
 * First Published Version
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
