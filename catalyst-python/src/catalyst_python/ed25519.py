@@ -1,6 +1,5 @@
-from enum import StrEnum
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
-from pycardano.crypto.bip32 import BIP32ED25519PrivateKey, BIP32ED25519PublicKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from pycardano.crypto.bip32 import BIP32ED25519PrivateKey
 
 
 class Ed25519Keys:
