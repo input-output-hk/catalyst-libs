@@ -50,7 +50,8 @@ docs: #DocumentDefinitions & {
 			or `final` again.
 
 			The requirement for collaborator submissions when finalizing a proposal is controlled by a
-			Brand/Campaign/Category parameter (name TBD). When configured for unanimous collaboration,
+			Brand/Campaign/Category parameter (name TBD). 
+			When configured for unanimous collaboration,
 			every collaborator listed on the submitted version **MUST** also publish a `final`
 			[Proposal Submission Action](proposal_submission_action.md) alongside the author.
 			When configured for opt-in collaboration (the default, and the behavior when the parameter is

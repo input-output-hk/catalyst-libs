@@ -227,7 +227,8 @@ _allMetadataNames: or([
 			This list does not imply these collaborators have consented to collaborate, only that the author/s
 			are permitting these potential collaborators to participate in the drafting and submission process.
 			How collaborators are counted on a final submission is determined by a parameter defined at the
-			Brand/Campaign/Category level (parameter name TBD). Depending on that configuration:
+			Brand/Campaign/Category level (parameter name TBD). 
+			Depending on that configuration:
 
 			* All listed collaborators may be required to submit a `final` Submission Action in addition
 			  to the author; **OR**
@@ -235,8 +236,8 @@ _allMetadataNames: or([
 			  included as collaborators on that submission.
 
 			If the parameter is not present, default to the latter mode (only final-signing collaborators are
-			included). In all modes a document is only considered final when the original author has submitted
-			`final`.
+			included).
+			In all modes a document is only considered final when the original author has submitted `final`.
 
 			In the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.
 
