@@ -63,9 +63,9 @@ docs: "Contest Ballot": {
 
 			Contents
 			
-			* `document_ref => choices`
-				* The payload is a map keyed by a proposal `document_ref`.
-				* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.
+			* `uint => choices`
+				* The payload is a map keyed by a `uint` index to the array element from `ref` metadata field, which is a proposal `document_ref`.
+				* Each identifies one specific proposal via `[document_id, document_ver, document_locator]`.
 				* The value for each key is that voter’s `choices` for that proposal.
 				* There is exactly one set of `choices` per referenced proposal (no duplicates).
 
