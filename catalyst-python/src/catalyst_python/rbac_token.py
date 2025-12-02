@@ -5,14 +5,6 @@ from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.utils import base64_url
 
 
-class RoleID(IntEnum):
-    ROLE_0 = 0
-    PROPOSER = 3
-
-    def __str__(self):
-        return f"{int(self)}"
-
-
 def generate_rbac_auth_token(
     network: str,
     subnet: str,
