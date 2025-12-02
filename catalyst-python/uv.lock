@@ -1,0 +1,23 @@
+version = 1
+revision = 3
+requires-python = ">=3.13"
+
+[[package]]
+name = "catalyst-python"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "python-bitcoinlib" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "python-bitcoinlib", specifier = ">=0.12.2" }]
+
+[[package]]
+name = "python-bitcoinlib"
+version = "0.12.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/90/a1/ca9d770094a0bfd0f2ce66b7180f0a7729b1b646d90f37f6debf38b28fab/python-bitcoinlib-0.12.2.tar.gz", hash = "sha256:c65ab61427c77c38d397bfc431f71d86fd355b453a536496ec3fcb41bd10087d", size = 153798, upload-time = "2023-06-03T18:37:11.091Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/75/46/b388d0885cf799f5bc66ca9995c83e5b7e17cb737f812a7c2591aa789ea6/python_bitcoinlib-0.12.2-py3-none-any.whl", hash = "sha256:2f29a9f475f21c12169b3a6cc8820f34f11362d7ff1200a5703dce3e4e903a44", size = 106954, upload-time = "2023-06-03T18:37:08.524Z" },
+]
