@@ -209,33 +209,33 @@ where
 
     let mut all_valid = true;
 
-    for dr in ref_field.iter() {
-        if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
-            let Some(ref_doc_parameters) = ref_doc.doc_meta().parameters() else {
+    for doc_ref in ref_field.iter() {
+        if let Some(ref referred_doc) = provider.try_get_doc(doc_ref).await? {
+            let Some(referred_doc_parameters) = referred_doc.doc_meta().parameters() else {
                 report.missing_field(
                     "parameters",
                     &format!(
-                        "Referenced document via {field_name} must have `parameters` field. Referenced Document: {ref_doc}"
+                        "Referenced document via {field_name} must have `parameters` field. Referenced Document: {referred_doc}"
                     ),
                 );
                 all_valid = false;
                 continue;
             };
 
-            if exp_parameters != ref_doc_parameters {
+            if exp_parameters != referred_doc_parameters {
                 report.invalid_value(
                     "parameters",
-                    &format!("Reference doc param: {ref_doc_parameters}",),
+                    &format!("Reference doc param: {referred_doc_parameters}",),
                     &format!("Doc param: {exp_parameters}"),
                     &format!(
-                        "Referenced document via {field_name} `parameters` field must match. Referenced Document: {ref_doc}"
+                        "Referenced document via {field_name} `parameters` field must match. Referenced Document: {referred_doc}"
                     ),
                 );
                 all_valid = false;
             }
         } else {
             report.functional_validation(
-                &format!("Cannot retrieve a document {dr}"),
+                &format!("Cannot retrieve a document {doc_ref}"),
                 &format!("Referenced document link validation for the `{field_name}` field"),
             );
             all_valid = false;
