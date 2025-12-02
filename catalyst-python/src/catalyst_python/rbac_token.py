@@ -1,5 +1,3 @@
-from enum import IntEnum
-
 from catalyst_python.catalyst_id import generate_cat_id
 from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.utils import base64_url
