@@ -241,3 +241,31 @@ impl<C> Encode<C> for Envelope {
         Ok(())
     }
 }
+
+impl<'b, C> Decode<'b, C> for Envelope {
+    fn decode(
+        d: &mut minicbor::Decoder<'b>,
+        ctx: &mut C,
+    ) -> Result<Self, minicbor::decode::Error> {
+        d.array()?;
+
+        let peer: PublicKey = d.decode_with(ctx)?;
+        let seq: UUIDv7 = d.decode_with(ctx)?;
+        let ver_int = d.int()?;
+        let payload_bytes = d.bytes()?.to_vec();
+
+        let inner_payload = EnvelopePayload {
+            peer,
+            seq,
+            ver: ver_int,
+            payload: payload_bytes,
+        };
+
+        let signature: Signature = d.decode_with(ctx)?;
+
+        Ok(Self {
+            payload: inner_payload,
+            signature,
+        })
+    }
+}
