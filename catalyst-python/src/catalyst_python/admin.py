@@ -1,7 +1,5 @@
-import pytest
-import os
-from utils.ed25519 import Ed25519Keys
-from utils.rbac_chain import (
+from catalyst_python.ed25519 import Ed25519Keys
+from catalyst_python.rbac_token import (
     generate_rbac_auth_token,
     generate_cat_id,
 )
@@ -27,9 +25,3 @@ class AdminKey:
             role_0_key=self.key,
             signing_key=self.key,
         )
-
-
-@pytest.fixture(scope="session")
-def admin_key() -> AdminKey:
-    key = Ed25519Keys(os.environ["CAT_GATEWAY_ADMIN_PRIVATE_KEY"])
-    return AdminKey(key)
