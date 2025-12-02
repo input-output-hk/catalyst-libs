@@ -1,4 +1,8 @@
 //! Document synchronization envelope module.
+//!
+//! Implements the envelope layout described in the IPFS Document Sync
+//! specification: an inner `[peer, seq, ver, payload, signature]` array,
+//! signed as-is, and wrapped inside an outer CBOR `bstr` before it is sent.
 
 use std::convert::Infallible;
 
@@ -316,9 +320,12 @@ impl<'b, C> Decode<'b, C> for EnvelopePayload {
 }
 
 /// The final outer message structure.
-/// This structure represents the `signed-payload` array with the signature appended,
-/// then wrapped in an outer `bstr` for framing:
-/// `[peer, seq, ver, payload, signature_bstr]`.
+///
+/// `Envelope` owns both the `[peer, seq, ver, payload, signature]` array (which
+/// is the signed payload defined by the spec) and the outer “framing” when it
+/// is encoded. The `Encode` implementation outputs a CBOR byte string whose
+/// content is exactly that five-element array, matching the spec’s wording:
+/// “`envelope = bstr .cbor signed-payload`”.
 pub struct Envelope {
     /// The inner payload array: `[peer, seq, ver, payload]`.
     /// This is the exact content that is deterministically CBOR encoded and signed.
@@ -403,6 +410,7 @@ impl<C> Encode<C> for Envelope {
         e: &mut Encoder<W>,
         _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        // Spec framing: signed payload array wrapped inside an outer `bstr`.
         let signed_bytes = self
             .signed_payload_bytes()
             .map_err(|err| minicbor::encode::Error::message(err.to_string()))?;
