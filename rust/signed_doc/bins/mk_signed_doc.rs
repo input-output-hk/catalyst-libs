@@ -11,6 +11,7 @@ use std::{
 use anyhow::Context;
 use catalyst_signed_doc::{Builder, CatalystId, CatalystSignedDocument};
 use clap::Parser;
+use ed25519_dalek::ed25519::signature::Signer;
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -36,7 +37,7 @@ enum Cli {
         /// Path to the formed (could be empty, without any signatures) COSE document
         /// This exact file would be modified and new signature would be added
         doc: PathBuf,
-        /// Bip32 extended secret key hex bytes (includes `chain_code`)
+        /// secret key hex bytes
         sk_hex: String,
         /// Signer kid
         kid: CatalystId,
@@ -72,17 +73,28 @@ impl Cli {
                 save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { doc, sk_hex, kid } => {
-                let sk = load_secret_key(&sk_hex)?;
+                let sk_bytes = hex::decode(sk_hex)?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
 
-                let new_signed_doc = signed_doc
-                    .into_builder()?
-                    .add_signature(
+                let builder = signed_doc.into_builder()?;
+
+                let builder = if let Ok(sk) = ed25519_bip32::XPrv::from_slice_verified(&sk_bytes) {
+                    builder.add_signature(
                         |message| sk.sign::<()>(&message).to_bytes().to_vec(),
                         kid.clone(),
                     )?
-                    .build()?;
+                } else {
+                    let sk = ed25519_dalek::SigningKey::from_bytes(&sk_bytes.try_into().map_err(
+                        |_| anyhow::anyhow!("Provided secret key must be 32 bytes long"),
+                    )?);
+                    builder.add_signature(
+                        |message| sk.sign(&message).to_bytes().to_vec(),
+                        kid.clone(),
+                    )?
+                };
+
+                let new_signed_doc = builder.build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {
@@ -146,10 +158,4 @@ fn write_bytes_to_file(
     File::create(output)?
         .write_all(bytes)
         .context(format!("Failed to write to file {}", output.display()))
-}
-
-fn load_secret_key(sk_hex: &str) -> anyhow::Result<ed25519_bip32::XPrv> {
-    let sk_bytes = hex::decode(sk_hex)?;
-    let sk = ed25519_bip32::XPrv::from_slice_verified(&sk_bytes)?;
-    Ok(sk)
 }
