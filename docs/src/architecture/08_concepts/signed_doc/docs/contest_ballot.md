@@ -223,7 +223,7 @@ Contents
 
 * `uint => choices`
     * The payload is a map keyed by a `uint` index to the array element from [`ref`](../metadata.md#ref) metadata field,
-    which is a proposal `document_ref`.
+      which is a proposal `document_ref`.
     * Each identifies one specific proposal via `[document_id, document_ver, document_locator]`.
     * The value for each key is that voter’s `choices` for that proposal.
     * There is exactly one set of `choices` per referenced proposal (no duplicates).
