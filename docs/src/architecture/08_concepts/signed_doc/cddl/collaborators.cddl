@@ -3,7 +3,8 @@
 
 ; Allowed Collaborators on the next subsequent version of a document.
 ; Sorting for each array element follows the same sort order as specified for Map Keys,
-; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
+; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+; and all array elements are unique.
 collaborators = [ + catalyst_id_kid ]
 
 ; UTF8 Catalyst ID URI encoded as a bytes string.

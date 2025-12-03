@@ -177,7 +177,7 @@
       ]
     },
     "collaborators": {
-      "comment": "Allowed Collaborators on the next subsequent version of a document.\nSorting for each array element follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).",
+      "comment": "Allowed Collaborators on the next subsequent version of a document.\nSorting for each array element follows the same sort order as specified for Map Keys,\nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),\nand all array elements are unique.",
       "def": "[ + catalyst_id_kid ]",
       "requires": [
         "catalyst_id_kid"
@@ -268,7 +268,7 @@
       ]
     },
     "document_refs": {
-      "comment": "Reference to one or more Signed Documents.\nSorting for each array element follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).",
+      "comment": "Reference to one or more Signed Documents.\nSorting for each array element follows the same sort order as specified for Map Keys,\nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),\nand all array elements are unique.",
       "def": "[ + document_ref ]",
       "requires": [
         "document_ref"
@@ -276,7 +276,7 @@
     },
     "document_type": {
       "comment": "Document Type",
-      "def": "[ + uuid_v4 ]",
+      "def": "uuid_v4",
       "description": "Unique Document Type Identifier",
       "requires": [
         "uuid_v4"

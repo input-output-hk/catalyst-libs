@@ -3,7 +3,8 @@
 
 ; Reference to one or more Signed Documents.
 ; Sorting for each array element follows the same sort order as specified for Map Keys,
-; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
+; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+; and all array elements are unique.
 document_refs = [ + document_ref ]
 
 ; Reference to a single Signed Document
