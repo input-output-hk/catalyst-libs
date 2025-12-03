@@ -9,6 +9,7 @@ members = [
     "cbork-abnf-parser",
     "cbork-cddl-parser",
     "cbork-utils",
+    "catalyst-contest",
     "catalyst-voting",
     "catalyst-types",
     "immutable-ledger",
