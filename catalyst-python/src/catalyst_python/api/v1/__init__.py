@@ -1,1 +1,0 @@
-"""Catalyst APIs V1 endpoints module."""

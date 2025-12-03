@@ -10,7 +10,6 @@ import json
 from tempfile import NamedTemporaryFile
 
 from catalyst_python.admin import AdminKey
-from catalyst_python.api.v1 import document
 from catalyst_python.catalyst_id import RoleID
 from catalyst_python.uuid import uuid_v7
 from catalyst_python.ed25519 import Ed25519Keys
@@ -42,9 +41,17 @@ class DocType(StrEnum):
 
 
 class SignedDocumentBase:
-    def __init__(self, metadata: dict[str, Any], content: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        metadata: dict[str, Any],
+        content: dict[str, Any],
+        cat_id: str,
+        key: Ed25519Keys,
+    ) -> None:
         self.metadata = metadata
         self.content = content
+        self.cat_id = cat_id
+        self.key = key
 
     def new_version(self) -> None:
         time.sleep(1)
@@ -56,13 +63,13 @@ class SignedDocument(SignedDocumentBase):
         return SignedDocument(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
+            cat_id=copy.deepcopy(self.cat_id),
+            key=copy.deepcopy(self.key),
         )
 
     # Build and sign document, returns hex str of document bytes
     def build_and_sign(
         self,
-        cat_id: str,
-        key: Ed25519Keys,
     ) -> str:
         with (
             NamedTemporaryFile() as metadata_file,
@@ -94,8 +101,8 @@ class SignedDocument(SignedDocumentBase):
                     mk_signed_doc_path,
                     "sign",
                     signed_doc_file.name,
-                    key.sk_hex,
-                    cat_id,
+                    self.key.sk_hex,
+                    self.cat_id,
                 ],
                 capture_output=True,
             )
@@ -106,9 +113,6 @@ class SignedDocument(SignedDocumentBase):
 # ------------------- #
 # Signed Docs Factory #
 # ------------------- #
-
-SUCCESSFULLY_SUBMITTED_STATUS_CODE = 201
-
 
 def proposal_doc(
     content: dict[str, Any],
@@ -123,18 +127,8 @@ def proposal_doc(
         parameters=[param_doc],
     )
 
-    doc = SignedDocument(metadata, content)
     (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
-
-    resp = document.put(
-        data=doc.build_and_sign(cat_id, key),
-        token=rbac_chain.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, cat_id, key)
 
 
 def proposal_form_template_doc(
@@ -147,17 +141,8 @@ def proposal_form_template_doc(
         content_type="application/schema+json",
         parameters=[param_doc],
     )
-    doc = SignedDocument(metadata, content)
 
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_doc(
@@ -172,17 +157,7 @@ def category_parameters_doc(
         template=category_parameters_form_template_doc,
         parameters=[param_doc],
     )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_form_template_doc(
@@ -195,17 +170,8 @@ def category_parameters_form_template_doc(
         content_type="application/schema+json",
         parameters=[param_doc],
     )
-    doc = SignedDocument(metadata, content)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
 
 
 def campaign_parameters_doc(
@@ -220,17 +186,7 @@ def campaign_parameters_doc(
         template=campaign_parameters_form_template_doc,
         parameters=[param_doc],
     )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def campaign_parameters_form_template_doc(
@@ -243,17 +199,7 @@ def campaign_parameters_form_template_doc(
         content_type="application/schema+json",
         parameters=[param_doc],
     )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_doc(
@@ -266,17 +212,7 @@ def brand_parameters_doc(
         content_type="application/json",
         template=brand_parameters_form_template_doc,
     )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_form_template_doc(content: dict[str, Any], admin_key: AdminKey) -> SignedDocumentBase:
@@ -284,17 +220,7 @@ def brand_parameters_form_template_doc(content: dict[str, Any], admin_key: Admin
         doc_type=DocType.brand_parameters_form_template,
         content_type="application/schema+json",
     )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
-        f"Failed to publish document: {resp.status_code} - {resp.text}"
-    )
-
-    return doc
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def __create_metadata(
