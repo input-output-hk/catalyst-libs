@@ -50,14 +50,14 @@ class SignedDocumentBase:
         time.sleep(1)
         self.metadata["ver"] = uuid_v7()
 
-    def copy(self) -> SignedDocumentBase:
+
+class SignedDocument(SignedDocumentBase):
+    def copy(self) -> SignedDocument:
         return SignedDocument(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
         )
 
-
-class SignedDocument(SignedDocumentBase):
     # Build and sign document, returns hex str of document bytes
     def build_and_sign(
         self,
