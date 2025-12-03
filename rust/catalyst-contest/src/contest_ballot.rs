@@ -36,7 +36,11 @@ impl Encode<()> for ContentBallot {
         e: &mut Encoder<W>,
         ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.begin_map()?;
+        let len = self.choices.len() as u64
+            + self.column_proof.is_some() as u64
+            + self.matrix_proof.is_some() as u64
+            + self.voter_choices.is_some() as u64;
+        e.map(len)?;
 
         for (&key, val) in self.choices.iter() {
             e.u64(key)?.encode(val)?;
@@ -51,7 +55,6 @@ impl Encode<()> for ContentBallot {
             e.str("voter-choices")?.encode(voter_choices)?;
         }
 
-        e.end()?;
         Ok(())
     }
 }
