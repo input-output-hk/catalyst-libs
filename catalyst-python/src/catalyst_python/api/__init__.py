@@ -1,3 +1,6 @@
+"""Catalyst APIs module."""
+# ruff: noqa: D103
+
 import os
 
 CAT_API_URL = os.environ["CAT_API_URL"]

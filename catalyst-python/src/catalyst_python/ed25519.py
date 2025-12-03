@@ -1,3 +1,5 @@
+# ruff: noqa: D100, D103
+
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from pycardano.crypto.bip32 import BIP32ED25519PrivateKey
 

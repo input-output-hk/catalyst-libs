@@ -1,3 +1,5 @@
+# ruff: noqa: D100, D103
+
 from datetime import datetime, timezone
 from enum import IntEnum
 

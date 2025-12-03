@@ -1,7 +1,9 @@
+# ruff: noqa: S101, ERA001, D100, D103
+
 from catalyst_python import address
 
 
-def test_bech32_encoding():
+def test_bech32_encoding() -> None:
     addr = address.stake_public_key_to_address(
         # cspell: disable-next-line
         key="7d84a4ac0a98a10f92b8a11e76a5d33e5400a0ea77f0826f789fcb37db6365fb",

@@ -1,4 +1,5 @@
 # cspell: words urandom
+# ruff: noqa: D100, D103
 
 import time
 import os

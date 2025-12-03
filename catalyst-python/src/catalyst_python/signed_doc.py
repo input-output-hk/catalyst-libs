@@ -1,3 +1,5 @@
+# ruff: noqa: D100, D103
+
 from typing import Dict, Any
 from enum import StrEnum
 import copy

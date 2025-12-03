@@ -1,3 +1,5 @@
+# ruff: noqa: D100, D103
+
 from catalyst_python.api import cat_api_endpoint_url
 
 LIVE_URL = "api/v1/health/live"
