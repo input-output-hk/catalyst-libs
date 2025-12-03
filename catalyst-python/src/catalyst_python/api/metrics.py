@@ -1,8 +1,8 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D103, S113, I001
 
 import requests
 from catalyst_python.api import cat_api_endpoint_url
 
 
-def metrics():
+def metrics() -> requests.Response:
     return requests.get(cat_api_endpoint_url("metrics"))

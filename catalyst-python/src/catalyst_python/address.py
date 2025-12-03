@@ -1,5 +1,5 @@
 # cspell: words convertbits, segwit
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D103, I001, FBT001, PLR1714, SIM108
 
 from hashlib import blake2b
 from bitcoin.segwit_addr import bech32_encode, convertbits
@@ -7,7 +7,7 @@ from bitcoin.segwit_addr import bech32_encode, convertbits
 
 # according to [CIP-19](https://cips.cardano.org/cips/cip19/).
 def stake_public_key_to_address(key: str, is_stake: bool, network_type: str) -> str:
-    def stake_header(is_stake: bool, network_type: str):
+    def stake_header(is_stake: bool, network_type: str) -> str:
         if is_stake:
             # stake key hash
             typeid = int("1110", 2)

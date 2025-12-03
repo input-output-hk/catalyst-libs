@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D102, D107, I001
 
 from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.rbac_token import (
