@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D101, D102, D103, D107, S101, S603, PLW1510
 
 from typing import Dict, Any
 from enum import StrEnum
