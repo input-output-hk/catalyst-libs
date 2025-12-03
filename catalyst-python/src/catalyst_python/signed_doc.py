@@ -114,6 +114,7 @@ class SignedDocument(SignedDocumentBase):
 # Signed Docs Factory #
 # ------------------- #
 
+
 def proposal_doc(
     content: dict[str, Any],
     proposal_form_template_doc: SignedDocumentBase,
@@ -171,7 +172,6 @@ def category_parameters_form_template_doc(
         parameters=[param_doc],
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
-
 
 
 def campaign_parameters_doc(
