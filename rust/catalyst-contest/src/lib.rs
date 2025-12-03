@@ -5,7 +5,7 @@
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot/
 
 // TODO: FIXME:
-#![allow(unused_variables)]
+//#![allow(unused_variables)]
 
 mod choices;
 mod column_proof;

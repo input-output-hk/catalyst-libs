@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use cbork_utils::decode_helper::decode_map_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 use crate::{Choices, ColumnProof, EncryptedChoices, MatrixProof};
@@ -24,8 +25,11 @@ impl Decode<'_, ()> for ContentBallot {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        d.map()?;
+        let len = decode_map_len(d, "content ballot")?;
         // TODO: FIXME:
+        for _ in 0..len {
+            // TODO: FIXME:
+        }
         todo!()
     }
 }
@@ -34,7 +38,7 @@ impl Encode<()> for ContentBallot {
     fn encode<W: Write>(
         &self,
         e: &mut Encoder<W>,
-        ctx: &mut (),
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let len = self.choices.len() as u64
             + self.column_proof.is_some() as u64

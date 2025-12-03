@@ -37,8 +37,34 @@ impl Decode<'_, ()> for Choices {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        // TODO: FIXME:
-        todo!()
+        let len = decode_array_len(d, "choices")?;
+        if len < 2 {
+            return Err(minicbor::decode::Error::message(format!(
+                "Unexpected choices array length {len}, expected at least 2"
+            )));
+        }
+        match u8::decode(d, ctx)? {
+            0 => Ok(Self::Clear(<Vec<i64>>::decode(d, ctx)?)),
+            1 => {
+                let len = decode_array_len(d, "elgamal-ristretto255-encrypted-choices")?;
+                if len < 1 || len > 2 {
+                    return Err(minicbor::decode::Error::message(format!(
+                        "Unexpected elgamal-ristretto255-encrypted-choices array length {len}, expected 1 or 2"
+                    )));
+                }
+                let choices = <Vec<ElgamalRistretto255Choice>>::decode(d, ctx)?;
+                let mut row_proof = None;
+                if len == 2 {
+                    row_proof = Some(RowProof::decode(d, ctx)?);
+                }
+                Ok(Self::ElgamalRistretto255 { choices, row_proof })
+            },
+            val => {
+                Err(minicbor::decode::Error::message(format!(
+                    "Unexpected choices value: {val}"
+                )))
+            },
+        }
     }
 }
 
@@ -75,10 +101,10 @@ impl Decode<'_, ()> for ElgamalRistretto255Choice {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        let len = decode_array_len(d, "encrypted choices")?;
+        let len = decode_array_len(d, "elgamal ristretto255 choice")?;
         if len != 2 {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected encrypted choices array length: {len}, expected 2"
+                "Unexpected elgamal ristretto255 choice array length: {len}, expected 2"
             )));
         }
         let c1 = <[u8; 32]>::decode(d, ctx)?;
