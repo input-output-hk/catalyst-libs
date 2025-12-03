@@ -1,5 +1,6 @@
 //! Voters Choices.
 
+use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 /// Voters Choices.
@@ -74,8 +75,15 @@ impl Decode<'_, ()> for ElgamalRistretto255Choice {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        // TODO: FIXME:
-        todo!()
+        let len = decode_array_len(d, "encrypted choices")?;
+        if len != 2 {
+            return Err(minicbor::decode::Error::message(format!(
+                "Unexpected encrypted choices array length: {len}, expected 2"
+            )));
+        }
+        let c1 = <[u8; 32]>::decode(d, ctx)?;
+        let c2 = <[u8; 32]>::decode(d, ctx)?;
+        Ok(ElgamalRistretto255Choice { c1, c2 })
     }
 }
 
@@ -85,8 +93,9 @@ impl Encode<()> for ElgamalRistretto255Choice {
         e: &mut Encoder<W>,
         ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        // TODO: FIXME:
-        todo!()
+        e.array(2)?;
+        self.c1.encode(e, ctx)?;
+        self.c2.encode(e, ctx)
     }
 }
 
