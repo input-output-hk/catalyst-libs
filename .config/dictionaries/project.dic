@@ -260,6 +260,7 @@ pydot
 pyenv
 Pyflakes
 pypackages
+pyproject
 pytest
 pytype
 qpsg
