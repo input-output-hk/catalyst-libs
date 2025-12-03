@@ -110,7 +110,11 @@ class SignedDocument(SignedDocumentBase):
         )
 
 
-# return a Proposal document which is already published and the corresponding RoleID
+# ------------------- #
+# Signed Docs Factory #
+# ------------------- #
+
+
 def proposal_doc(
     content: Dict[str, Any],
     proposal_form_template_doc: SignedDocumentBase,
