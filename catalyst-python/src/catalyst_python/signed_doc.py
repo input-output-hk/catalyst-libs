@@ -309,8 +309,6 @@ def __create_metadata(
             "cid": "0x",
         }
     if parameters is not None:
-        metadata["parameters"] = list(
-            [{"id": p.metadata["id"], "ver": p.metadata["ver"], "cid": "0x"} for p in parameters]
-        )
+        metadata["parameters"] = [{"id": p.metadata["id"], "ver": p.metadata["ver"], "cid": "0x"} for p in parameters]
 
     return metadata
