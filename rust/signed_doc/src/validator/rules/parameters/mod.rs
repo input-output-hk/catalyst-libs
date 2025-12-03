@@ -3,6 +3,8 @@
 #[cfg(test)]
 mod tests;
 
+use std::collections::HashSet;
+
 use catalyst_signed_doc_spec::{
     DocSpecs, is_required::IsRequired, metadata::parameters::Parameters,
 };
@@ -10,8 +12,8 @@ use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument, DocType, DocumentRefs, providers::CatalystSignedDocumentProvider,
-    validator::rules::doc_ref::doc_refs_check,
+    CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
+    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
 };
 
 /// `parameters` field validation rule
@@ -207,39 +209,90 @@ where
         return Ok(true);
     };
 
+    // collect recursive lineage of expected parameters
+    let mut allowed_params: HashSet<DocumentRef> = HashSet::new();
+
+    for exp_doc_ref in exp_parameters.iter() {
+        let lineage = collect_parameter_lineage(exp_doc_ref, provider).await?;
+        allowed_params.extend(lineage);
+    }
+
     let mut all_valid = true;
 
     for doc_ref in ref_field.iter() {
-        if let Some(ref referred_doc) = provider.try_get_doc(doc_ref).await? {
-            let Some(referred_doc_parameters) = referred_doc.doc_meta().parameters() else {
-                report.missing_field(
-                    "parameters",
-                    &format!(
-                        "Referenced document via {field_name} must have `parameters` field. Referenced Document: {referred_doc}"
-                    ),
-                );
-                all_valid = false;
-                continue;
-            };
-
-            if exp_parameters != referred_doc_parameters {
-                report.invalid_value(
-                    "parameters",
-                    &format!("Reference doc param: {referred_doc_parameters}",),
-                    &format!("Doc param: {exp_parameters}"),
-                    &format!(
-                        "Referenced document via {field_name} `parameters` field must match. Referenced Document: {referred_doc}"
-                    ),
-                );
-                all_valid = false;
-            }
-        } else {
+        let Some(referred_doc) = provider.try_get_doc(doc_ref).await? else {
             report.functional_validation(
                 &format!("Cannot retrieve a document {doc_ref}"),
-                &format!("Referenced document link validation for the `{field_name}` field"),
+                &format!("Referenced document link validation for `{field_name}`"),
+            );
+            all_valid = false;
+            continue;
+        };
+
+        let Some(referred_doc_params) = referred_doc.doc_meta().parameters() else {
+            report.missing_field(
+                "parameters",
+                &format!(
+                    "Referenced document via `{field_name}` must have `parameters`. Doc: {referred_doc}"
+                ),
+            );
+            all_valid = false;
+            continue;
+        };
+
+        // reference parameters must be *subset of allowed lineage*
+        let mut valid = true;
+        for param_ref in referred_doc_params.iter() {
+            if !allowed_params.contains(param_ref) {
+                valid = false;
+                break;
+            }
+        }
+
+        if !valid {
+            report.invalid_value(
+                "parameters",
+                &format!("Reference doc parameters: {referred_doc_params}"),
+                &format!("Allowed recursive hierarchy: {:?}", allowed_params),
+                &format!(
+                    "Referenced document via `{field_name}` must have parameters within the recursive lineage"
+                ),
             );
             all_valid = false;
         }
     }
+
     Ok(all_valid)
+}
+
+/// Recursively collects the full parameter lineage for a parameter document.
+async fn collect_parameter_lineage<Provider>(
+    root: &DocumentRef,
+    provider: &Provider,
+) -> anyhow::Result<HashSet<DocumentRef>>
+where
+    Provider: CatalystSignedDocumentProvider,
+{
+    let mut visited = HashSet::new();
+    let mut stack = vec![root.clone()];
+
+    while let Some(current) = stack.pop() {
+        if visited.contains(&current) {
+            continue;
+        }
+
+        visited.insert(current.clone());
+
+        if let Some(doc) = provider.try_get_doc(&current).await? {
+            if let Some(params) = doc.doc_meta().parameters() {
+                for p in params.iter() {
+                    if !visited.contains(p) {
+                        stack.push(p.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(visited)
 }
