@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D101, D103, D105, RET505, UP017, PLR0913
 
 from datetime import datetime, timezone
 from enum import IntEnum
@@ -11,7 +11,7 @@ class RoleID(IntEnum):
     ROLE_0 = 0
     PROPOSER = 3
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{int(self)}"
 
 

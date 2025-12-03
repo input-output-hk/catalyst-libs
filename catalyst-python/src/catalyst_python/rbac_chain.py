@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D102, D101, D107
 
 from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.catalyst_id import generate_cat_id, RoleID
@@ -6,7 +6,7 @@ from catalyst_python.rbac_token import generate_rbac_auth_token
 
 
 class RBACChain:
-    def __init__(self, keys_map: dict, network: str, subnet: str):
+    def __init__(self, keys_map: dict, network: str, subnet: str) -> None:
         # corresponded to different roles bip32 extended ed25519 keys map
         self.keys_map = keys_map
         self.network = network

@@ -1,11 +1,11 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D102, D103, D107, RET505, PLR2004
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from pycardano.crypto.bip32 import BIP32ED25519PrivateKey
 
 
 class Ed25519Keys:
-    def __init__(self, sk_hex: str):
+    def __init__(self, sk_hex: str) -> None:
         self.sk_hex = sk_hex
 
     def pk_hex(self) -> str:

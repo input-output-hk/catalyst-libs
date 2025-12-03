@@ -1,6 +1,6 @@
 # ruff: noqa: D100, D101, D102, D103, D107, S101, S603, PLW1510
 
-from typing import Dict, Any
+from typing import Any
 from enum import StrEnum
 import copy
 import os
@@ -42,20 +42,19 @@ class DocType(StrEnum):
 
 
 class SignedDocumentBase:
-    def __init__(self, metadata: Dict[str, Any], content: Dict[str, Any]):
+    def __init__(self, metadata: dict[str, Any], content: dict[str, Any]) -> None:
         self.metadata = metadata
         self.content = content
 
-    def new_version(self):
+    def new_version(self) -> None:
         time.sleep(1)
         self.metadata["ver"] = uuid_v7()
 
-    def copy(self):
-        new_copy = SignedDocument(
+    def copy(self) -> SignedDocumentBase:
+        return SignedDocument(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
         )
-        return new_copy
 
 
 class SignedDocument(SignedDocumentBase):
@@ -101,24 +100,18 @@ class SignedDocument(SignedDocumentBase):
                 capture_output=True,
             )
 
-            signed_doc_hex = signed_doc_file.read().hex()
-            return signed_doc_hex
-
-        return build_signed_doc(
-            metadata_json=self.metadata,
-            doc_content_json=self.content,
-            key=key,
-            cat_id=cat_id,
-        )
+            return signed_doc_file.read().hex()
 
 
 # ------------------- #
 # Signed Docs Factory #
 # ------------------- #
 
+SUCCESSFULLY_SUBMITTED_STATUS_CODE = 201
+
 
 def proposal_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     proposal_form_template_doc: SignedDocumentBase,
     param_doc: SignedDocumentBase,
     rbac_chain: RBACChain,
@@ -137,13 +130,15 @@ def proposal_doc(
         data=doc.build_and_sign(cat_id, key),
         token=rbac_chain.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
 def proposal_form_template_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     param_doc: SignedDocumentBase,
     admin_key: AdminKey,
 ):
@@ -158,13 +153,15 @@ def proposal_form_template_doc(
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
 def category_parameters_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     category_parameters_form_template_doc: SignedDocumentBase,
     param_doc: SignedDocumentBase,
     admin_key: AdminKey,
@@ -181,13 +178,15 @@ def category_parameters_doc(
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
 def category_parameters_form_template_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     param_doc: SignedDocumentBase,
     admin_key: AdminKey,
 ) -> SignedDocumentBase:
@@ -202,13 +201,15 @@ def category_parameters_form_template_doc(
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
 def campaign_parameters_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     campaign_parameters_form_template_doc: SignedDocumentBase,
     param_doc: SignedDocumentBase,
     admin_key: AdminKey,
@@ -225,13 +226,15 @@ def campaign_parameters_doc(
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
 def campaign_parameters_form_template_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     param_doc: SignedDocumentBase,
     admin_key: AdminKey,
 ) -> SignedDocumentBase:
@@ -246,13 +249,15 @@ def campaign_parameters_form_template_doc(
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
 def brand_parameters_doc(
-    content: Dict[str, Any],
+    content: dict[str, Any],
     brand_parameters_form_template_doc: SignedDocumentBase,
     admin_key: AdminKey,
 ) -> SignedDocumentBase:
@@ -267,12 +272,14 @@ def brand_parameters_doc(
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 
 
-def brand_parameters_form_template_doc(content: Dict[str, Any], admin_key: AdminKey) -> SignedDocumentBase:
+def brand_parameters_form_template_doc(content: dict[str, Any], admin_key: AdminKey) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters_form_template,
         content_type="application/schema+json",
@@ -283,7 +290,9 @@ def brand_parameters_form_template_doc(content: Dict[str, Any], admin_key: Admin
         data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
         token=admin_key.auth_token(),
     )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+    assert resp.status_code == SUCCESSFULLY_SUBMITTED_STATUS_CODE, (
+        f"Failed to publish document: {resp.status_code} - {resp.text}"
+    )
 
     return doc
 

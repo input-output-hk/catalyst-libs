@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D103, A002
 
 import requests
 
@@ -8,7 +8,7 @@ URL = cat_api_endpoint_url("api/v2/document")
 
 
 # Signed document POST
-def post(filter: dict, limit=None, page=None):
+def post(filter: dict, limit: str | None = None, page: str | None = None):
     headers = {"Content-Type": "application/json"}
     url = f"{URL}/index"
     query_params = []
