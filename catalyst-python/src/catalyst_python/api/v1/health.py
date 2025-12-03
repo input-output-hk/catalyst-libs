@@ -6,9 +6,9 @@ LIVE_URL = "api/v1/health/live"
 READY_URL = "api/v1/health/ready"
 
 
-def live():
+def live() -> str:
     return cat_api_endpoint_url(LIVE_URL)
 
 
-def ready():
+def ready() -> str:
     return cat_api_endpoint_url(READY_URL)

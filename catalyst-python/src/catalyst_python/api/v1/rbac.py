@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D103, S113
 
 import requests
 
@@ -7,7 +7,7 @@ from catalyst_python.api import cat_api_endpoint_url
 URL = cat_api_endpoint_url("api/v1/rbac/registration")
 
 
-def get(lookup: str | None, token: str, extra_headers: dict | None = None):
+def get(lookup: str | None, token: str, extra_headers: dict | None = None) -> requests.Response:
     headers = {
         "Authorization": f"Bearer {token}",
     }

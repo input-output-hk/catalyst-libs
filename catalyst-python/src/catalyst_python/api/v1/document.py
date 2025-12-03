@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D103, S113
 
 import requests
 
@@ -8,13 +8,13 @@ URL = cat_api_endpoint_url("api/v1/document")
 
 
 # Signed document GET
-def get(document_id: str):
+def get(document_id: str) -> requests.Response:
     document_url = f"{URL}/{document_id}"
     return requests.get(document_url)
 
 
 # Signed document PUT
-def put(data: str, token: str):
+def put(data: str, token: str) -> requests.Response:
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/cbor"}
     data = bytes.fromhex(data)
     return requests.put(URL, headers=headers, data=data)

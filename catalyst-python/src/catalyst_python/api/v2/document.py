@@ -8,7 +8,7 @@ URL = cat_api_endpoint_url("api/v2/document")
 
 
 # Signed document POST
-def post(filter: dict, limit: str | None = None, page: str | None = None):
+def post(filter: dict, limit: str | None = None, page: str | None = None) -> requests.Response:
     headers = {"Content-Type": "application/json"}
     url = f"{URL}/index"
     query_params = []
