@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 from catalyst_python.admin import AdminKey
 from catalyst_python.catalyst_id import RoleID
 from catalyst_python.uuid import uuid_v7
-from catalyst_python.ed25519 import Ed25519Keyse
+from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.rbac_chain import RBACChain
 
 
