@@ -1,3 +1,5 @@
+# cspell: words bitcoinlib
+
 [project]
 name = "catalyst-python"
 version = "0.1.0"

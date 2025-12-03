@@ -1,3 +1,5 @@
+# cspell: words urandom
+
 import time
 import os
 
