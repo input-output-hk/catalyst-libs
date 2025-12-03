@@ -213,7 +213,7 @@ where
     let mut allowed_params: HashSet<DocumentRef> = HashSet::new();
 
     for exp_doc_ref in exp_parameters.iter() {
-        let lineage = collect_parameter_lineage(exp_doc_ref, provider).await?;
+        let lineage = collect_parameter_lineage(exp_doc_ref, field_name, provider, report).await?;
         allowed_params.extend(lineage);
     }
 
@@ -268,7 +268,9 @@ where
 /// Recursively collects the full parameter lineage for a parameter document.
 async fn collect_parameter_lineage<Provider>(
     root: &DocumentRef,
+    field_name: &str,
     provider: &Provider,
+    report: &ProblemReport,
 ) -> anyhow::Result<HashSet<DocumentRef>>
 where
     Provider: CatalystSignedDocumentProvider,
@@ -291,6 +293,11 @@ where
                     }
                 }
             }
+        } else {
+            report.functional_validation(
+                &format!("Cannot retrieve a document {current}"),
+                &format!("Referenced document link validation for `{field_name}`"),
+            );
         }
     }
 
