@@ -8,7 +8,7 @@ from catalyst_python.rbac_token import (
 
 
 class AdminKey:
-    def __init__(self, key: Ed25519Keys, network: str, subnet: str) -> None:
+    def __init__(self, key: Ed25519Keys, network: str, subnet: str | None = None) -> None:
         self.key = key
         self.network = network
         self.subnet = subnet

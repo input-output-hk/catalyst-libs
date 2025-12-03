@@ -6,7 +6,7 @@ from catalyst_python.rbac_token import generate_rbac_auth_token
 
 
 class RBACChain:
-    def __init__(self, keys_map: dict, network: str, subnet: str) -> None:
+    def __init__(self, keys_map: dict, network: str, subnet: str | None = None) -> None:
         # corresponded to different roles bip32 extended ed25519 keys map
         self.keys_map = keys_map
         self.network = network
