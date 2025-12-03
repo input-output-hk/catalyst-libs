@@ -1,6 +1,6 @@
 # ruff: noqa: D100, D101, D102, D103, D107, S603, PLW1510, I001
 
-from typing import Any
+from typing import Any, Self
 from enum import StrEnum
 import copy
 import os
@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 from catalyst_python.admin import AdminKey
 from catalyst_python.catalyst_id import RoleID
 from catalyst_python.uuid import uuid_v7
-from catalyst_python.ed25519 import Ed25519Keys
+from catalyst_python.ed25519 import Ed25519Keyse
 from catalyst_python.rbac_chain import RBACChain
 
 
@@ -59,7 +59,7 @@ class SignedDocumentBase:
 
 
 class SignedDocument(SignedDocumentBase):
-    def copy(self) -> SignedDocument:
+    def copy(self) -> Self:
         return SignedDocument(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
