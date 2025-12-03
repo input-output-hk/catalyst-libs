@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D101, D102, D103, D107, S101, S603, PLW1510
+# ruff: noqa: D100, D101, D102, D103, D107, S101, S603, PLW1510, I001
 
 from typing import Any
 from enum import StrEnum
@@ -141,7 +141,7 @@ def proposal_form_template_doc(
     content: dict[str, Any],
     param_doc: SignedDocumentBase,
     admin_key: AdminKey,
-):
+) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
         content_type="application/schema+json",

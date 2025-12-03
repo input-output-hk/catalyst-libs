@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103, A002
+# ruff: noqa: D100, D103, A002, S113
 
 import requests
 

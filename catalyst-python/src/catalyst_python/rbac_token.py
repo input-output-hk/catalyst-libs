@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D103
+# ruff: noqa: D100, D103, PLR0913, S105, SIM108
 
 from catalyst_python.catalyst_id import generate_cat_id
 from catalyst_python.ed25519 import Ed25519Keys
