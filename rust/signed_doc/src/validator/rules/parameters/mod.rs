@@ -240,7 +240,7 @@ where
             continue;
         };
 
-        // reference parameters must be *subset of allowed lineage*
+        // reference parameters must be subset of allowed params
         let mut valid = true;
         for param_ref in referred_doc_params.iter() {
             if !allowed_params.contains(param_ref) {
@@ -285,9 +285,9 @@ where
 
         if let Some(doc) = provider.try_get_doc(&current).await? {
             if let Some(params) = doc.doc_meta().parameters() {
-                for p in params.iter() {
-                    if !visited.contains(p) {
-                        stack.push(p.clone());
+                for param in params.iter() {
+                    if !visited.contains(param) {
+                        stack.push(param.clone());
                     }
                 }
             }
