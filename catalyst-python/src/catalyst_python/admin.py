@@ -6,22 +6,24 @@ from catalyst_python.rbac_token import (
 
 
 class AdminKey:
-    def __init__(self, key: Ed25519Keys):
+    def __init__(self, key: Ed25519Keys, network: str, subnet: str):
         self.key = key
+        self.network = network
+        self.subnet = subnet
 
     def cat_id(self) -> str:
         return generate_cat_id(
             scheme="admin.catalyst",
-            network="cardano",
-            subnet="preprod",
+            network=self.network,
+            subnet=self.subnet,
             role_0_key=self.key,
         )
 
     def auth_token(self) -> str:
         return generate_rbac_auth_token(
             scheme="admin.catalyst",
-            network="cardano",
-            subnet="preprod",
+            network=self.network,
+            subnet=self.subnet,
             role_0_key=self.key,
             signing_key=self.key,
         )

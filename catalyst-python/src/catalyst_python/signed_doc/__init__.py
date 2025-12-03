@@ -12,6 +12,7 @@ from catalyst_python.api.v1 import document
 from catalyst_python.catalyst_id import RoleID
 from catalyst_python.uuid import uuid_v7
 from catalyst_python.ed25519 import Ed25519Keys
+from catalyst_python.rbac_chain import RBACChain
 
 
 class DocType(StrEnum):
@@ -108,8 +109,192 @@ class SignedDocument(SignedDocumentBase):
             cat_id=cat_id,
         )
 
+# ------------------- #
+# Signed Docs Factory #
+# ------------------- #
 
-def create_metadata(
+
+# return a Proposal document which is already published to the cat-gateway and the corresponding RoleID
+def proposal_doc(
+    content: Dict[str, Any],
+    rbac_chain: RBACChain,
+    proposal_form_template_doc: SignedDocumentBase,
+    param_doc: SignedDocumentBase,
+) -> SignedDocument:
+    metadata = __create_metadata(
+        doc_type=DocType.proposal,
+        content_type="application/json",
+        template=proposal_form_template_doc,
+        parameters=[param_doc],
+    )
+
+    doc = SignedDocument(metadata, content)
+    (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
+
+    resp = document.put(
+        data=doc.build_and_sign(cat_id, key),
+        token=rbac_chain.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def proposal_form_template_doc(
+    content: Dict[str, Any],
+    admin_key: AdminKey,
+    brand_parameters_doc: SignedDocumentBase,
+):
+    param: SignedDocumentBase = brand_parameters_doc
+
+    metadata = __create_metadata(
+        doc_type=DocType.proposal_form_template,
+        content_type="application/schema+json",
+        parameters=[param],
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def category_parameters_doc(
+    content: Dict[str, Any],
+    admin_key: AdminKey,
+    category_parameters_form_template_doc: SignedDocumentBase,
+    campaign_parameters_doc: SignedDocumentBase,
+) -> SignedDocumentBase:
+    template: SignedDocumentBase = category_parameters_form_template_doc
+    param: SignedDocumentBase = campaign_parameters_doc
+
+    metadata = __create_metadata(
+        doc_type=DocType.category_parameters,
+        content_type="application/json",
+        template=template,
+        parameters=[param],
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def category_parameters_form_template_doc(
+    content: Dict[str, Any], admin_key: AdminKey, campaign_parameters_doc: SignedDocumentBase
+) -> SignedDocumentBase:
+    param: SignedDocumentBase = campaign_parameters_doc
+
+    metadata = __create_metadata(
+        doc_type=DocType.category_parameters_form_template,
+        content_type="application/schema+json",
+        parameters=[param],
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def campaign_parameters_doc(
+    content: Dict[str, Any],
+    admin_key: AdminKey,
+    campaign_parameters_form_template_doc: SignedDocumentBase,
+    brand_parameters_doc: SignedDocumentBase,
+) -> SignedDocumentBase:
+    template: SignedDocumentBase = campaign_parameters_form_template_doc
+    param: SignedDocumentBase = brand_parameters_doc
+
+    metadata = __create_metadata(
+        doc_type=DocType.campaign_parameters,
+        content_type="application/json",
+        template=template,
+        parameters=[param],
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def campaign_parameters_form_template_doc(
+    content: Dict[str, Any], admin_key: AdminKey, brand_parameters_doc: SignedDocumentBase
+) -> SignedDocumentBase:
+    param: SignedDocumentBase = brand_parameters_doc
+
+    metadata = __create_metadata(
+        doc_type=DocType.campaign_parameters_form_template,
+        content_type="application/schema+json",
+        parameters=[param],
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def brand_parameters_doc(
+    content: Dict[str, Any], admin_key: AdminKey, brand_parameters_form_template_doc: SignedDocumentBase
+) -> SignedDocumentBase:
+    template: SignedDocumentBase = brand_parameters_form_template_doc
+
+    metadata = __create_metadata(
+        doc_type=DocType.brand_parameters,
+        content_type="application/json",
+        template=template,
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def brand_parameters_form_template_doc(content: Dict[str, Any], admin_key: AdminKey) -> SignedDocumentBase:
+    metadata = __create_metadata(
+        doc_type=DocType.brand_parameters_form_template,
+        content_type="application/schema+json",
+    )
+    doc = SignedDocument(metadata, content)
+
+    resp = document.put(
+        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
+        token=admin_key.auth_token(),
+    )
+    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
+
+    return doc
+
+
+def __create_metadata(
     doc_type: DocType,
     content_type: str,
     template: SignedDocumentBase | None = None,
@@ -137,197 +322,3 @@ def create_metadata(
         )
 
     return metadata
-
-
-# ------------------- #
-# Signed Docs Factory #
-# ------------------- #
-
-
-# return a Proposal document which is already published to the cat-gateway and the corresponding RoleID
-# def proposal_doc_factory(
-#     rbac_chain_factory,
-#     proposal_form_template_doc,
-#     brand_parameters_doc,
-# ):
-#     def __factory__(role_id: RoleID) -> SignedDocument:
-#         param: SignedDocumentBase = brand_parameters_doc
-#         template: SignedDocumentBase = proposal_form_template_doc
-
-#         metadata = create_metadata(
-#             doc_type=DOC_TYPE["proposal"],
-#             content_type="application/json",
-#             template=template,
-#             parameters=[param],
-#         )
-
-#         with open("./test_data/signed_docs/proposal.json", "r") as json_file:
-#             content = json.load(json_file)
-
-#         rbac_chain = rbac_chain_factory()
-#         doc = SignedDocument(metadata, content)
-#         (cat_id, key) = rbac_chain.cat_id_for_role(role_id)
-
-#         resp = document.put(
-#             data=doc.build_and_sign(cat_id, key),
-#             token=rbac_chain.auth_token(),
-#         )
-#         assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-#         return doc
-
-#     return __factory__
-
-
-def proposal_form_template_doc(
-    content: Dict[str, Any],
-    admin_key: AdminKey,
-    brand_parameters_doc: SignedDocumentBase,
-):
-    param: SignedDocumentBase = brand_parameters_doc
-
-    metadata = create_metadata(
-        doc_type=DocType.proposal_form_template,
-        content_type="application/schema+json",
-        parameters=[param],
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
-
-
-def category_parameters_doc(
-    content: Dict[str, Any],
-    admin_key: AdminKey,
-    category_parameters_form_template_doc: SignedDocumentBase,
-    campaign_parameters_doc: SignedDocumentBase,
-) -> SignedDocumentBase:
-    template: SignedDocumentBase = category_parameters_form_template_doc
-    param: SignedDocumentBase = campaign_parameters_doc
-
-    metadata = create_metadata(
-        doc_type=DocType.category_parameters,
-        content_type="application/json",
-        template=template,
-        parameters=[param],
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
-
-
-def category_parameters_form_template_doc(
-    content: Dict[str, Any], admin_key: AdminKey, campaign_parameters_doc: SignedDocumentBase
-) -> SignedDocumentBase:
-    param: SignedDocumentBase = campaign_parameters_doc
-
-    metadata = create_metadata(
-        doc_type=DocType.category_parameters_form_template,
-        content_type="application/schema+json",
-        parameters=[param],
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
-
-
-def campaign_parameters_doc(
-    content: Dict[str, Any],
-    admin_key: AdminKey,
-    campaign_parameters_form_template_doc: SignedDocumentBase,
-    brand_parameters_doc: SignedDocumentBase,
-) -> SignedDocumentBase:
-    template: SignedDocumentBase = campaign_parameters_form_template_doc
-    param: SignedDocumentBase = brand_parameters_doc
-
-    metadata = create_metadata(
-        doc_type=DocType.campaign_parameters,
-        content_type="application/json",
-        template=template,
-        parameters=[param],
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
-
-
-def campaign_parameters_form_template_doc(
-    content: Dict[str, Any], admin_key: AdminKey, brand_parameters_doc: SignedDocumentBase
-) -> SignedDocumentBase:
-    param: SignedDocumentBase = brand_parameters_doc
-
-    metadata = create_metadata(
-        doc_type=DocType.campaign_parameters_form_template,
-        content_type="application/schema+json",
-        parameters=[param],
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
-
-
-def brand_parameters_doc(
-    content: Dict[str, Any], admin_key: AdminKey, brand_parameters_form_template_doc: SignedDocumentBase
-) -> SignedDocumentBase:
-    template: SignedDocumentBase = brand_parameters_form_template_doc
-
-    metadata = create_metadata(
-        doc_type=DocType.brand_parameters,
-        content_type="application/json",
-        template=template,
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
-
-
-def brand_parameters_form_template_doc(content: Dict[str, Any], admin_key: AdminKey) -> SignedDocumentBase:
-    metadata = create_metadata(
-        doc_type=DocType.brand_parameters_form_template,
-        content_type="application/schema+json",
-    )
-    doc = SignedDocument(metadata, content)
-
-    resp = document.put(
-        data=doc.build_and_sign(admin_key.cat_id(), admin_key.key),
-        token=admin_key.auth_token(),
-    )
-    assert resp.status_code == 201, f"Failed to publish document: {resp.status_code} - {resp.text}"
-
-    return doc
