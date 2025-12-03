@@ -7,6 +7,11 @@ use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 const ARRAY_LEN: u64 = 2;
 
 /// A universal encrypted matrix proof.
+///
+/// The CDDL schema:
+/// ```cddl
+/// matrix-proof = [ uint, undefined ]
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MatrixProof(pub u64);
 

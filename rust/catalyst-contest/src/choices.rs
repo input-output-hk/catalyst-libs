@@ -4,6 +4,21 @@ use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 /// Voters Choices.
+///
+/// The CDDL schema:
+/// ```cddl
+/// choices = [ 0, clear-choices ] /
+/// [ 1, elgamal-ristretto255-encrypted-choices ]
+///
+/// clear-choices = ( +clear-choice )
+///
+/// clear-choice = int
+///
+/// elgamal-ristretto255-encrypted-choices = [
+///     [+ elgamal-ristretto255-encrypted-choice]
+///     ? row-proof
+/// ]
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Choices {
     /// A universal unencrypted set of choices.
@@ -18,6 +33,16 @@ pub enum Choices {
 }
 
 /// An elgamal encrypted ciphertext `(c1, c2)`.
+///
+/// The CDDL schema:
+/// ```cddl
+/// elgamal-ristretto255-encrypted-choice = [
+///     c1: elgamal-ristretto255-group-element
+///     c2: elgamal-ristretto255-group-element
+/// ]
+///
+/// elgamal-ristretto255-group-element = bytes .size 32
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ElgamalRistretto255Choice {
     /// An individual Elgamal group element that composes the elgamal cipher text.
@@ -27,9 +52,29 @@ pub struct ElgamalRistretto255Choice {
 }
 
 /// A universal encrypted row proof.
+///
+/// The CDDL schema:
+/// ```cddl
+/// row-proof = [0, zkproof-elgamal-ristretto255-unit-vector-with-single-selection ]
+///
+/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection = [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]
+///
+/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item = ( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )
+///
+/// zkproof-elgamal-announcement = ( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )
+///
+/// zkproof-elgamal-group-element = bytes .size 32
+///
+/// zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
+///
+/// zkproof-ed25519-scalar = bytes .size 32
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct RowProof {
-    // TODO: FIXME:
+    /// A list of a single selection proofs.
+    selections: Vec<()>,
+    /// An individual Ed25519 scalar used in ZK proofs.
+    scalar: (),
 }
 
 impl Decode<'_, ()> for Choices {

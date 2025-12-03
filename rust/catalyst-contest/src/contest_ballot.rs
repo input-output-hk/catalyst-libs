@@ -8,6 +8,16 @@ use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use crate::{Choices, ColumnProof, EncryptedChoices, MatrixProof};
 
 /// An individual Ballot cast in a Contest by a registered user.
+///
+/// The CDDL schema:
+/// ```cddl
+/// contest-ballot-payload = {
+///     + uint => choices
+///     ? "column-proof" : column-proof
+///     ? "matrix-proof" : matrix-proof
+///     ? "voter-choice" : voter-choice
+/// }
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ContentBallot {
     /// A map of voters choices.

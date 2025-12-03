@@ -7,6 +7,11 @@ use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 const ARRAY_LEN: u64 = 2;
 
 /// A universal encrypted column proof.
+///
+/// The CDDL schema:
+/// ```cddl
+/// column-proof = [ uint, [ +undefined ] ]
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ColumnProof(pub u64);
 

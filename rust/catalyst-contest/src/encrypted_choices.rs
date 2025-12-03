@@ -7,10 +7,22 @@ use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 const ENCRYPTED_BLOCK_ARRAY_LEN: u64 = 16;
 
 /// Encrypted voter choices.
+///
+/// The CDDL schema:
+/// ```cddl
+/// voter-choice = [ 0, aes-ctr-encrypted-choices ]
+///
+/// aes-ctr-encrypted-choices = +aes-ctr-encrypted-block
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EncryptedChoices(pub Vec<EncryptedBlock>);
 
 /// An AES-CTR encrypted data block.
+///
+/// The CDDL schema:
+/// ```cddl
+/// aes-ctr-encrypted-block = bytes .size 16
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EncryptedBlock(pub [u8; ENCRYPTED_BLOCK_ARRAY_LEN as usize]);
 
@@ -25,10 +37,10 @@ impl Decode<'_, ()> for EncryptedChoices {
                 "Unexpected encrypted choices array length: {len}, expected at least 2"
             )));
         }
-        let val = u64::decode(d, ctx)?;
-        if val != 0 {
+        let version = u64::decode(d, ctx)?;
+        if version != 0 {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected encrypted choices array value: {val}, expected 0"
+                "Unexpected encrypted choices array value: {version}, expected 0"
             )));
         }
 
