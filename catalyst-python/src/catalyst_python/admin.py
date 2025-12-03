@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D102, D107, I001
+# ruff: noqa: D100, D101, D102, D107, I001
 
 from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.rbac_token import (
@@ -8,7 +8,7 @@ from catalyst_python.rbac_token import (
 
 
 class AdminKey:
-    def __init__(self, key: Ed25519Keys, network: str, subnet: str):
+    def __init__(self, key: Ed25519Keys, network: str, subnet: str) -> None:
         self.key = key
         self.network = network
         self.subnet = subnet
