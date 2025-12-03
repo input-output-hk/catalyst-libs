@@ -109,11 +109,13 @@ class SignedDocument(SignedDocumentBase):
             cat_id=cat_id,
         )
 
+
 # return a Proposal document which is already published and the corresponding RoleID
 def proposal_doc(
     content: Dict[str, Any],
     proposal_form_template_doc: SignedDocumentBase,
-    param_doc: SignedDocumentBase, rbac_chain: RBACChain,
+    param_doc: SignedDocumentBase,
+    rbac_chain: RBACChain,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal,
@@ -136,7 +138,8 @@ def proposal_doc(
 
 def proposal_form_template_doc(
     content: Dict[str, Any],
-    param_doc: SignedDocumentBase, admin_key: AdminKey,
+    param_doc: SignedDocumentBase,
+    admin_key: AdminKey,
 ):
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
@@ -157,7 +160,8 @@ def proposal_form_template_doc(
 def category_parameters_doc(
     content: Dict[str, Any],
     category_parameters_form_template_doc: SignedDocumentBase,
-    param_doc: SignedDocumentBase, admin_key: AdminKey,
+    param_doc: SignedDocumentBase,
+    admin_key: AdminKey,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters,
@@ -177,7 +181,9 @@ def category_parameters_doc(
 
 
 def category_parameters_form_template_doc(
-    content: Dict[str, Any], param_doc: SignedDocumentBase, admin_key: AdminKey,
+    content: Dict[str, Any],
+    param_doc: SignedDocumentBase,
+    admin_key: AdminKey,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters_form_template,
@@ -219,7 +225,9 @@ def campaign_parameters_doc(
 
 
 def campaign_parameters_form_template_doc(
-    content: Dict[str, Any], param_doc: SignedDocumentBase, admin_key: AdminKey, 
+    content: Dict[str, Any],
+    param_doc: SignedDocumentBase,
+    admin_key: AdminKey,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters_form_template,
@@ -238,7 +246,9 @@ def campaign_parameters_form_template_doc(
 
 
 def brand_parameters_doc(
-    content: Dict[str, Any], brand_parameters_form_template_doc: SignedDocumentBase, admin_key: AdminKey,
+    content: Dict[str, Any],
+    brand_parameters_form_template_doc: SignedDocumentBase,
+    admin_key: AdminKey,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters,
