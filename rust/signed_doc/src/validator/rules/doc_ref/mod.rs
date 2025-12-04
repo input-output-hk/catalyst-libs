@@ -5,6 +5,7 @@ mod tests;
 
 use catalyst_signed_doc_spec::{DocSpecs, is_required::IsRequired, metadata::doc_ref::Ref};
 use catalyst_types::problem_report::ProblemReport;
+use itertools::Itertools;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
@@ -219,9 +220,7 @@ fn referenced_doc_type_check(
         report.invalid_value(
             field_name,
             &ref_doc_type.to_string(),
-            &exp_ref_types
-                .iter()
-                .fold(String::new(), |s, v| format!("{s}, {v}")),
+            &exp_ref_types.iter().map(ToString::to_string).join(","),
             &format!("Invalid referenced document type, during validation of {field_name} field"),
         );
         return false;
