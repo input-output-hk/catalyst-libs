@@ -177,7 +177,7 @@
       ]
     },
     "collaborators": {
-      "comment": "Allowed Collaborators on the next subsequent version of a document.",
+      "comment": "Allowed Collaborators on the next subsequent version of a document.\nSorting for each array element follows the same sort order as specified for Map Keys,\nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),\nand all array elements are unique.",
       "def": "[ + catalyst_id_kid ]",
       "requires": [
         "catalyst_id_kid"
@@ -222,7 +222,7 @@
     },
     "contest-ballot-payload": {
       "comment": "Catalyst Vote Payload data object.",
-      "def": "{\n\t+ document_ref => choices\n\t? \"column-proof\" : column-proof\n\t? \"matrix-proof\" : matrix-proof\n\t? \"voter-choice\" : voter-choice\n}",
+      "def": "{\n\t+ uint => choices\n\t? \"column-proof\" : column-proof\n\t? \"matrix-proof\" : matrix-proof\n\t? \"voter-choice\" : voter-choice\n}",
       "description": "Catalyst Vote Payload data object.\n\nA vote payload that can hold both encrypted or unencrypted votes.",
       "examples": [
         {
@@ -237,7 +237,6 @@
         }
       ],
       "requires": [
-        "document_ref",
         "choices",
         "column-proof",
         "matrix-proof",
@@ -269,15 +268,15 @@
       ]
     },
     "document_refs": {
-      "comment": "Reference to one or more Signed Documents",
-      "def": "[ 1* document_ref ]",
+      "comment": "Reference to one or more Signed Documents.\nSorting for each array element follows the same sort order as specified for Map Keys,\nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),\nand all array elements are unique.",
+      "def": "[ + document_ref ]",
       "requires": [
         "document_ref"
       ]
     },
     "document_type": {
       "comment": "Document Type",
-      "def": "[ 1* uuid_v4 ]",
+      "def": "uuid_v4",
       "description": "Unique Document Type Identifier",
       "requires": [
         "uuid_v4"
@@ -618,6 +617,11 @@
         "changes": "* Added a new 'Contest Ballot' and 'Contest Ballot Checkpoint' document types.\n* Improved the specification for 'Contest Delegation' document type.\n* 'content encoding' metadata field become non optional for all document types where it was an optional field.\n* Added new 'payload.schema' type - CDDL schema, defined as string.",
         "modified": "2025-11-10",
         "version": "0.2.0"
+      },
+      {
+        "changes": "* Added missing `ref` metadata field definition.\n* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.",
+        "modified": "2025-12-02",
+        "version": "0.2.1"
       }
     ]
   },
@@ -661,7 +665,7 @@
         "coseLabel": "content-encoding",
         "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
         "format": "HTTP Content Encoding",
-        "required": "yes",
+        "required": "optional",
         "value": [
           "br"
         ]
@@ -674,7 +678,7 @@
     "signature_headers": {
       "kid": {
         "coseLabel": 4,
-        "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
+        "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\n\nThere may be **MULTIPLE** Cose Signatures attached to any document.\nIn the event there are **MULTIPLE** Cose Signatures `kid` attached, then they **MUST**\nbe sorted.\n\nSorting for each cose signature follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).",
         "format": "Catalyst ID",
         "required": "yes"
       }
@@ -709,7 +713,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -726,7 +730,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "optional",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -744,7 +748,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -834,7 +838,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -851,7 +855,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -869,7 +873,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -963,7 +967,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -980,7 +984,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "optional",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1001,7 +1005,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1091,7 +1095,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1108,7 +1112,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1131,7 +1135,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1225,7 +1229,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1242,7 +1246,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "optional",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1263,7 +1267,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1353,7 +1357,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1370,7 +1374,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1393,7 +1397,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1484,7 +1488,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1501,7 +1505,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1524,7 +1528,7 @@
           "type": [
             "Proposal Comment"
           ],
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1610,7 +1614,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1627,7 +1631,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1638,7 +1642,9 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
+          "linked_refs": [
+            "ref"
+          ],
           "multiple": false,
           "required": "yes",
           "type": "Contest Parameters",
@@ -1647,8 +1653,11 @@
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
-          "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "linked_refs": null,
+          "multiple": true,
+          "required": "yes",
+          "type": "Proposal",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1689,7 +1698,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.\n\nContents\n\n* `document_ref => choices`\n\t* The payload is a map keyed by a proposal `document_ref`.\n\t* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.\n\t* The value for each key is that voter’s `choices` for that proposal.\n\t* There is exactly one set of `choices` per referenced proposal (no duplicates).\n\n* `choices`\n\t* Discriminated union of unencrypted or encrypted choices.\n\n* `row-proof` (optional, inside encrypted choices)\n  \t* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.\n\n* `column-proof` (optional, top-level)\n\t* Placeholder for future column-level proofs across proposals.\n\t* Not defined at present; omit in implementations.\n\n* `matrix-proof` (optional, top-level)\n\t* Placeholder for future matrix-wide proofs across all proposals and positions.\n\t* Not defined at present; omit in implementations.\n\n* `voter-choice` (optional, top-level)\n\t* This is ONLY Not included when the vote is unencrypted.\n\t* Allows a voter to read back their ballot selections without decrypting the entire ballot.\n\nNotes\n\n* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.\n  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to\n  reflect an unwrapped COSE_Sign CBOR block.\n* The application defines the permissible range and semantics of `clear-choice` integers.\n* All CBOR must use core-deterministic encoding so that content addressing remains stable.",
+        "description": "The Payload is a CBOR document that must conform to the `contest-ballot-payload` CDDL.\n\nContents\n\n* `uint => choices`\n\t* The payload is a map keyed by a `uint` index to the array element from `ref` metadata field,\n\t  which is a proposal `document_ref`.\n\t* Each identifies one specific proposal via `[document_id, document_ver, document_locator]`.\n\t* The value for each key is that voter’s `choices` for that proposal.\n\t* There is exactly one set of `choices` per referenced proposal (no duplicates).\n\n* `choices`\n\t* Discriminated union of unencrypted or encrypted choices.\n\n* `row-proof` (optional, inside encrypted choices)\n  \t* Proves, without revealing contents, that the encrypted row encodes a unit vector with exactly one selection.\n\n* `column-proof` (optional, top-level)\n\t* Placeholder for future column-level proofs across proposals.\n\t* Not defined at present; omit in implementations.\n\n* `matrix-proof` (optional, top-level)\n\t* Placeholder for future matrix-wide proofs across all proposals and positions.\n\t* Not defined at present; omit in implementations.\n\n* `voter-choice` (optional, top-level)\n\t* This is ONLY Not included when the vote is unencrypted.\n\t* Allows a voter to read back their ballot selections without decrypting the entire ballot.\n\nNotes\n\n* `document_locator` uses a CBOR Tag 42 `cid` to locate the referenced proposal in content-addressed storage.\n  Implementations should constrain the CID to SHA2-256 multihash; the multicodec SHOULD be `cbor (0x51)` to\n  reflect an unwrapped COSE_Sign CBOR block.\n* The application defines the permissible range and semantics of `clear-choice` integers.\n* All CBOR must use core-deterministic encoding so that content addressing remains stable.",
         "examples": [
           {
             "description": "Example Shows:\n\n* Three Proposals\n* Two Encrypted Choices\n* Row Proofs for each proposal.\n* `aes-ctr-encrypted-choices` which reflects the choices.\n\nThe Contest Private Key was: 0x1234562343....\nThe Contest Public Key was: 0x1324354235...\nThe AES encryption key for the `aes-ctr-encrypted-choices` is 0x123456789...",
@@ -1723,6 +1732,11 @@
           "changes": "* Add Voting Ballots and Ballot Checkpoint Documents",
           "modified": "2025-11-03",
           "version": "0.1.5"
+        },
+        {
+          "changes": "* Added missing `ref` metadata field definition.\n* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.",
+          "modified": "2025-12-02",
+          "version": "0.2.1"
         }
       ]
     },
@@ -1748,7 +1762,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1765,7 +1779,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1791,7 +1805,7 @@
           "multiple": true,
           "required": "yes",
           "type": "Contest Ballot",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1897,7 +1911,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -1914,7 +1928,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -1940,7 +1954,7 @@
           "multiple": true,
           "required": "yes",
           "type": "Rep Nomination",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2074,7 +2088,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2091,7 +2105,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "optional",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -2116,7 +2130,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2206,7 +2220,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2223,7 +2237,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -2248,7 +2262,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2339,7 +2353,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2356,7 +2370,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -2381,7 +2395,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2557,7 +2571,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2574,7 +2588,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "optional",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -2601,7 +2615,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2660,7 +2674,7 @@
         }
       },
       "type": "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
-      "validation": "The first version of a Proposal *MUST* be signed by the original author.\nIt may optionally be co-signed by any of the listed `collaborators`.\nIt may not be signed by anyone else.\n\nSubsequent Versions can be signed/co-signed by either the Original Author of the first version,\nOR any of the listed `collaborators` in the immediately previous version.\nThis allows any collaborator to update the next version of a document, provided they are still a collaborator.\nIt is valid for a proposal to be signed by a collaborator \nwho is no longer listed as in the `collaborators`\nof the document they are signing, provided they are listed as a collaborator in the immediately previous document version.\nThis allows for a collaborator to make an update to the document which removes themselves\nfrom the `collaborators` list.\n\nAll versions of the document *MUST* list the author as the original author.\nThe Author can not be changed by any document revision.",
+      "validation": "The first version of a Proposal *MUST* be signed by the original author.\nIt may optionally be co-signed by any of the listed `collaborators`.\nIt may not be signed by anyone else.\n\nSubsequent Versions can be signed/co-signed by either the Original Author of the first version,\nOR any of the listed `collaborators` in the immediately previous version.\nThis allows any collaborator to update the next version of a document, provided they are still a collaborator.\nIt is valid for a proposal to be signed by a collaborator \nwho is no longer listed as in the `collaborators`\nof the document they are signing, provided they are listed as a collaborator in the immediately previous document version.\nThis allows for a collaborator to make an update to the document which removes themselves\nfrom the `collaborators` list.\n\nAll versions of the document are owned by the original author.\nThe Author can not be changed by any document revision.\n\nAny Proposal that lists a collaborator is an invitation for that collaborator to participate in the proposal.\nThey are considered to have accepted that invitation for **all** versions of the proposal that\nlist them as a collaborator where their latest\n[Proposal Submission Action](proposal_submission_action.md) for that proposal has an `action` of\n`draft` or `final`.\n\nIf a collaborator’s latest [Proposal Submission Action](proposal_submission_action.md) for the\nproposal has an `action` of `hide`, they **MUST** be treated as not having agreed to collaborate\nfor **any** version of that proposal (past, present, or future) until they later submit `draft`\nor `final` again.\n\nThe requirement for collaborator submissions when finalizing a proposal is controlled by a\nBrand/Campaign/Category parameter (name TBD). \nWhen configured for unanimous collaboration,\nevery collaborator listed on the submitted version **MUST** also publish a `final`\n[Proposal Submission Action](proposal_submission_action.md) alongside the author.\nWhen configured for opt-in collaboration (the default, and the behavior when the parameter is\nabsent), only collaborators who submit `final` for the referenced version are included as\ncollaborators on that submission; collaborators who do not submit `final` are not treated as\ncollaborators for that submission.\nIn all cases, a proposal cannot be final unless the original author has submitted `final`.\n\nThe `final` proposal itself may be signed by one or more Collaborators and/or the original Author.\nThe `final` proposal must never be signed by anyone else.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -2694,7 +2708,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2711,7 +2725,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -2742,7 +2756,7 @@
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2834,7 +2848,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2851,7 +2865,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -2876,7 +2890,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2967,7 +2981,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -2984,7 +2998,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3009,7 +3023,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -3100,7 +3114,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3117,7 +3131,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3138,7 +3152,7 @@
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -3205,10 +3219,10 @@
     "Proposal Submission Action": {
       "authors": {},
       "business_logic": {
-        "back_end": "A Submitted proposal with collaborators *MUST* have \na `final` submission by *ALL* listed `collaborators`.\nIf any `collaborator` has not submitted a `final` submission by the deadline, then the proposal \nis not considered `final` and will not be considered in the category it was being submitted to.",
-        "front_end": "A proposal with `collaborators` will not be shown as having a confirmed collaborator,\nunless there exists a `draft` or `final` proposal submission from that collaborator.\n\nAny document that lists a collaborator should be highlighted to that collaborator so\nthey can take appropriate action, such as:\n\n* Confirm they are a collaborator by submitting this document as `draft`\n* Agree to being a collaborator on the final submission by submitting this document as `final`\n* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`\n* Remove themselves permanently as a collaborator by publishing a new version with them removed.\n\nTo eliminate the necessity for collaborators to accept collaboration on every version, \nthey will be considered as agreeing to be a collaborator on any version of the document\nthat lists them, if their latest submission is `draft` or `final`.\n\nIf their latest submission on a document is `hide` they should be considered to not\nhave agreed to be a collaborator.\n\n*NOTE* `final` status ONLY applies to the exactly referenced document and version."
+        "back_end": "A Submitted proposal with collaborators *MUST* have, by the configured deadline:\n\n* A `final` submission from the author; and\n* Collaborator submissions as required by the Brand/Campaign/Category parameter that controls\n  collaborator finalization (parameter name TBD):\n\t* If set to unanimous, a `final` submission from every collaborator listed in\n\t  [`collaborators`](../metadata.md#collaborators) on the version of the proposal \n\t  referenced by [`ref`](../metadata.md#ref); or\n\t* If set to opt-in (the default, and the behavior when the parameter is absent), only\n\t  collaborators whose latest submission for that proposal version is `final` are included as\n\t  collaborators on the submission.\n* No required signer (author or any collaborator counted under the configured mode) whose latest\n  submission for that proposal is `hide`.\n\nIf the author has not submitted a `final` submission for that proposal version by the deadline,\nor if any collaborator required by the configured mode has not submitted a `final` submission, or\nif any required signer’s latest submission is `hide`, \nthen the proposal is not considered `final` and will not be considered in the \ncategory it was being submitted to.",
+        "front_end": "A proposal with `collaborators` will not be shown as having a confirmed collaborator,\nunless there exists a `draft` or `final` proposal submission from that collaborator.\n\nAny document that lists a collaborator should be highlighted to that collaborator so\nthey can take appropriate action, such as:\n\n* Confirm they are a collaborator by submitting this document as `draft`\n* Agree to being a collaborator on the final submission by submitting this document as `final`\n* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`\n* Remove themselves permanently as a collaborator by publishing a new version with them removed.\n\nTo eliminate the necessity for collaborators to accept collaboration on every version, \nthey will be considered as agreeing to be a collaborator on **any** version of the proposal that\nlists them in [`collaborators`](../metadata.md#collaborators), if their latest submission for that\nproposal is `draft` or `final`.\n\nIf their latest submission on a proposal is `hide` they **MUST** be considered to not have agreed\nto be a collaborator for **any** version of that proposal (past, present, or future) until they\nsubmit a new `draft` or `final` action.\n\nWhether collaborator submissions are required for finalization follows the\nBrand/Campaign/Category parameter described above.\nIf the parameter is absent, only collaborators who submit `final` for the referenced version are\ncounted as collaborators on that submission; listed collaborators who do not submit `final` are\nnot required for the proposal to be considered final.\n\n*NOTE* `final` status ONLY applies to the exactly referenced document and version."
       },
-      "description": "Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  \nUnless they all submit the same version of the proposal\nthe proposal will not be seen as submitted.\n\nThe payload is a fixed format.",
+      "description": "Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document is the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently.\nHow those submissions are counted is controlled by a parameter defined in the relevant\nBrand/Campaign/Category parameters (parameter name TBD):\n\n* If configured for unanimous collaboration, actions for a proposal version do not take\n  effect until the author and **all** listed collaborators have posted equivalent actions.\n* If configured for opt-in collaboration (the default, and the behavior when the parameter\n  is absent), the author must submit `final`, and collaborators are only counted on the\n  submission when they submit `final` for that version; other listed collaborators are not\n  required to post equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  \nUnder the unanimous configuration, unless they all submit the same version of the proposal\nthe proposal will not be seen as submitted.\nUnder the opt-in configuration, the author must submit `final` and whichever collaborators\nalso submit `final` for that version are counted as collaborators on that submission.\n\nThe required set of signers for a submitted proposal version is:\n\n* The original author of the proposal (the signer of the first version where\n  [`id`](../metadata.md#id) == [`ver`](../metadata.md#ver)); and\n* A collaborator set derived from the configuration described above.\n\nWhen collaborator unanimity is configured, that set is every collaborator listed in\n[`collaborators`](../metadata.md#collaborators) on the **exact** version of the proposal\nreferenced by [`ref`](../metadata.md#ref).\nWhen opt-in is configured (the default/fallback), only collaborators who submit `final`\nfor the referenced version are included as collaborators on that submission.\nIn all modes, a proposal is only final if the author has submitted `final`.\n\nThey may jointly sign a single Proposal Submission Action, or may submit multiple independent\nSubmission actions for the same document (which avoids the need for multi-sig coordination).\n\nThe payload is a fixed format.",
       "draft": false,
       "headers": {
         "content type": {
@@ -3222,7 +3236,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3239,7 +3253,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3269,7 +3283,7 @@
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -3310,7 +3324,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
+        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : Signer marks this proposal version as their final submission.\n            Whether all collaborators must also submit `final` is controlled by the\n            Brand/Campaign/Category parameter noted above.\n            If the parameter is absent, only collaborators who submit `final` for the referenced\n            version are counted as collaborators on the submission, but the author’s `final` is\n            always required.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
         "examples": [
           {
             "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
@@ -3422,7 +3436,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3439,7 +3453,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3465,7 +3479,7 @@
           "multiple": false,
           "required": "yes",
           "type": "Rep Profile",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -3549,7 +3563,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3566,7 +3580,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3587,7 +3601,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -3685,7 +3699,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3702,7 +3716,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3727,7 +3741,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -3811,7 +3825,7 @@
           "coseLabel": "content-encoding",
           "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
           "format": "HTTP Content Encoding",
-          "required": "yes",
+          "required": "optional",
           "value": [
             "br"
           ]
@@ -3828,7 +3842,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -3851,7 +3865,7 @@
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -9391,7 +9405,7 @@
         "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
         "format": "Collaborators Reference List",
         "required": "optional",
-        "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
       },
       "id": {
         "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
@@ -9444,7 +9458,7 @@
           "Contest Ballot",
           "Contest Ballot Checkpoint"
         ],
-        "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
       },
       "reply": {
         "description": "Reference to a Comment document type being referred to.",

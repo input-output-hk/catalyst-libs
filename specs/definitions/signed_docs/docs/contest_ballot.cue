@@ -48,9 +48,17 @@ docs: "Contest Ballot": {
 	}
 
 	metadata: {
+		ref: {
+			required: "yes"
+			type:     "Proposal"
+			multiple: true
+		}
 		parameters: {
 			required: "yes"
 			type:     "Contest Parameters"
+			linked_refs: [
+				"ref",
+			]
 		}
 		revocations: required: "optional"
 	}
@@ -63,9 +71,10 @@ docs: "Contest Ballot": {
 
 			Contents
 			
-			* `document_ref => choices`
-				* The payload is a map keyed by a proposal `document_ref`.
-				* Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.
+			* `uint => choices`
+				* The payload is a map keyed by a `uint` index to the array element from `ref` metadata field,
+				  which is a proposal `document_ref`.
+				* Each identifies one specific proposal via `[document_id, document_ver, document_locator]`.
 				* The value for each key is that voter’s `choices` for that proposal.
 				* There is exactly one set of `choices` per referenced proposal (no duplicates).
 
@@ -109,6 +118,14 @@ docs: "Contest Ballot": {
 			modified: "2025-11-03"
 			changes: """
 				* Add Voting Ballots and Ballot Checkpoint Documents
+				"""
+		},
+		{
+			version:  "0.2.1"
+			modified: "2025-12-02"
+			changes: """
+				* Added missing `ref` metadata field definition.
+				* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
 				"""
 		},
 	]

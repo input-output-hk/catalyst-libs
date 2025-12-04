@@ -13,7 +13,7 @@ async fn connect_node_a_upload_and_provide(
     println!("");
     let peer_id_a = hermes_ipfs.identity(None).await?;
     let addresses = hermes_ipfs.listening_addresses().await?;
-    println!("* Peer ID: {peer_id_a}");
+    println!("* Peer ID: {}", peer_id_a.peer_id);
     for addr in addresses {
         println!("    * {addr}");
     }
@@ -34,7 +34,7 @@ async fn connect_node_a_upload_and_provide(
     println!("***************************************");
     println!("* Providing content to DHT:");
     println!("");
-    println!("* Providing {cid} as peer {peer_id_a}");
+    println!("* Providing {cid} as peer {}", peer_id_a.peer_id);
     println!("***************************************");
     println!("");
     Ok((hermes_ipfs, ipfs_path))
@@ -48,7 +48,7 @@ async fn connect_node_b_to_node_a(node_a: &HermesIpfs) -> anyhow::Result<HermesI
     println!("");
     let peer_id_b = hermes_ipfs_b.identity(None).await?;
     // node_b.connect(peer_id_a).await?;
-    println!("* Peer ID: {peer_id_b}");
+    println!("* Peer ID: {}", peer_id_b.peer_id);
     println!("* Listening addresses:");
     let addresses = hermes_ipfs_b.listening_addresses().await?;
     for addr in addresses {
@@ -63,7 +63,7 @@ async fn connect_node_b_to_node_a(node_a: &HermesIpfs) -> anyhow::Result<HermesI
     let node_a_addresses = node_a.listening_addresses().await?;
     let peer_a = node_a.identity(None).await?;
     for addr in node_a_addresses {
-        hermes_ipfs_b.add_peer(peer_a, addr.clone()).await?;
+        hermes_ipfs_b.add_peer(peer_a.peer_id, addr.clone()).await?;
         println!("    * {addr} - CONNECTED");
     }
     println!("***************************************");
