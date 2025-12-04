@@ -111,7 +111,8 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 #### [`ver`](../metadata.md#ver) Validation
 
 1. The document version must always be >= the document ID.
-2. IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
+2. IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id)
+  then a document with [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 3. When a document with the same [`id`](../metadata.md#id) already exists, the new document's [`ver`](../metadata.md#ver) must be greater than
 the latest known submitted version for that [`id`](../metadata.md#id).
 4. When a document with the same [`id`](../metadata.md#id) already exists, the new document's [`type`](../metadata.md#type) must be the same as
