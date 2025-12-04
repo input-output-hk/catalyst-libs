@@ -136,16 +136,16 @@ impl EnvelopePayload {
     ///
     /// Returns an error if encoding fails (should not happen with `Vec<u8>` writers).
     pub fn to_bytes(&self) -> Result<Vec<u8>, minicbor::encode::Error<Infallible>> {
-        minicbor::to_vec_with(self, &mut CborContext::Tagged)
+        minicbor::to_vec(self)
     }
 
     /// Decodes `[peer, seq, ver, payload]` from the signed payload array.
-    fn decode_from_signed(
+    fn decode_from_signed<C>(
         decoder: &mut minicbor::Decoder<'_>,
-        ctx: &mut CborContext,
+        ctx: &mut C,
     ) -> Result<Self, minicbor::decode::Error> {
         let peer: PublicKey = decoder.decode_with(ctx)?;
-        let seq: UuidV7 = decoder.decode_with(ctx)?;
+        let seq: UuidV7 = decoder.decode_with(&mut CborContext::Tagged)?;
         let ver = decoder.u64()?;
 
         if ver != PROTOCOL_VERSION {
@@ -178,15 +178,15 @@ impl EnvelopePayload {
     }
 }
 
-impl Encode<CborContext> for EnvelopePayload {
+impl<C> Encode<C> for EnvelopePayload {
     fn encode<W: Write>(
         &self,
         e: &mut Encoder<W>,
-        ctx: &mut CborContext,
+        ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(4)?;
-        e.encode(&self.peer)?
-            .encode_with(self.seq, ctx)?
+        e.encode_with(&self.peer, ctx)?
+            .encode_with(self.seq, &mut CborContext::Tagged)?
             .u64(self.ver)?;
         <W as Write>::write_all(e.writer_mut(), &self.payload)
             .map_err(minicbor::encode::Error::write)?;
@@ -194,10 +194,10 @@ impl Encode<CborContext> for EnvelopePayload {
     }
 }
 
-impl<'b> Decode<'b, CborContext> for EnvelopePayload {
+impl<'b, C> Decode<'b, C> for EnvelopePayload {
     fn decode(
         d: &mut minicbor::Decoder<'b>,
-        ctx: &mut CborContext,
+        ctx: &mut C,
     ) -> Result<Self, minicbor::decode::Error> {
         let len = d.array()?;
         match len {
@@ -215,7 +215,7 @@ impl<'b> Decode<'b, CborContext> for EnvelopePayload {
         }
 
         let peer: PublicKey = d.decode_with(ctx)?;
-        let seq: UuidV7 = d.decode_with(ctx)?;
+        let seq: UuidV7 = d.decode_with(&mut CborContext::Tagged)?;
         let ver = d.u64()?;
 
         if ver != PROTOCOL_VERSION {
@@ -245,6 +245,32 @@ impl<'b> Decode<'b, CborContext> for EnvelopePayload {
             ver,
             payload: payload_slice.to_vec(),
         })
+    }
+}
+
+/// Helper struct for encoding the inner [peer, seq, ver, payload, sig] array.
+struct SignedPayloadView<'a> {
+    /// Reference to the envelope payload (providing peer, seq, ver, and body).
+    payload: &'a EnvelopePayload,
+    /// Reference to the signature verifying the payload.
+    signature: &'a Signature,
+}
+
+impl<C> Encode<C> for SignedPayloadView<'_> {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(5)?;
+        e.encode(&self.payload.peer)?;
+        e.encode_with(self.payload.seq, &mut CborContext::Tagged)?;
+        e.u64(self.payload.ver)?;
+        e.writer_mut()
+            .write_all(&self.payload.payload)
+            .map_err(minicbor::encode::Error::write)?;
+        e.encode(self.signature)?;
+        Ok(())
     }
 }
 
@@ -312,24 +338,7 @@ impl Envelope {
     ///
     /// Returns an error if encoding fails (should not happen with `Vec<u8>` writers).
     pub fn to_bytes(&self) -> Result<Vec<u8>, minicbor::encode::Error<Infallible>> {
-        let mut encoder = Encoder::new(Vec::new());
-        encoder.bytes(&self.signed_payload_bytes()?)?;
-        Ok(encoder.into_writer())
-    }
-
-    /// Encodes the `[peer, seq, ver, payload, signature]` array.
-    fn signed_payload_bytes(&self) -> Result<Vec<u8>, minicbor::encode::Error<Infallible>> {
-        let mut encoder = Encoder::new(Vec::new());
-        encoder.array(5)?;
-        encoder.encode(&self.payload.peer)?;
-        encoder.encode_with(self.payload.seq, &mut CborContext::Tagged)?;
-        encoder.u64(self.payload.ver)?;
-        encoder
-            .writer_mut()
-            .write_all(&self.payload.payload)
-            .map_err(minicbor::encode::Error::write)?;
-        encoder.encode(&self.signature)?;
-        Ok(encoder.into_writer())
+        minicbor::to_vec(self)
     }
 }
 
@@ -337,21 +346,25 @@ impl<C> Encode<C> for Envelope {
     fn encode<W: Write>(
         &self,
         e: &mut Encoder<W>,
-        _ctx: &mut C,
+        ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        // Spec framing: signed payload array wrapped inside an outer `bstr`.
-        let signed_bytes = self
-            .signed_payload_bytes()
-            .map_err(|err| minicbor::encode::Error::message(err.to_string()))?;
-        e.bytes(&signed_bytes)?;
+        let view = SignedPayloadView {
+            payload: &self.payload,
+            signature: &self.signature,
+        };
+
+        let inner_bytes = minicbor::to_vec_with(&view, ctx)
+            .map_err(|e| minicbor::encode::Error::message(e.to_string()))?;
+
+        e.bytes(&inner_bytes)?;
         Ok(())
     }
 }
 
-impl<'b> Decode<'b, CborContext> for Envelope {
+impl<'b, C> Decode<'b, C> for Envelope {
     fn decode(
         d: &mut minicbor::Decoder<'b>,
-        ctx: &mut CborContext,
+        ctx: &mut C,
     ) -> Result<Self, minicbor::decode::Error> {
         let signed_payload_bytes = d.bytes()?;
         let mut signed_decoder = minicbor::Decoder::new(signed_payload_bytes);
@@ -505,5 +518,81 @@ mod tests {
 
         let result = EnvelopePayload::new(signing_key.verifying_key(), payload_bytes);
         assert!(result.is_err(), "non-map payload must be rejected");
+    }
+
+    #[test]
+    fn decode_rejects_missing_outer_bstr() {
+        // Attempt to decode the array directly without the outer bstr wrapping
+        let signing_key = signing_key();
+        let payload_body = sample_payload_body();
+        let payload =
+            EnvelopePayload::new(signing_key.verifying_key(), payload_body).expect("payload");
+        let signature = signing_key
+            .try_sign(&payload.to_bytes().expect("bytes"))
+            .expect("signature");
+        let signature = Signature(signature);
+
+        let view = SignedPayloadView {
+            payload: &payload,
+            signature: &signature,
+        };
+        let encoded_array = minicbor::to_vec(&view).unwrap();
+
+        let mut decoder = Decoder::new(&encoded_array);
+        // We use () context here for simplicity
+        let result: Result<Envelope, _> = decoder.decode_with(&mut ());
+
+        // This should fail because `decode` expects `d.bytes()` (bstr) first,
+        // but it will encounter an array tag (0x85).
+        assert!(result.is_err(), "must reject content without outer bstr");
+    }
+
+    #[test]
+    fn decode_rejects_malformed_inner_array_len() {
+        let signing_key = signing_key();
+        let payload_body = sample_payload_body();
+        let payload =
+            EnvelopePayload::new(signing_key.verifying_key(), payload_body).expect("payload");
+
+        // Construct a fake array of length 4 instead of 5
+        let mut bad_array = Encoder::new(Vec::new());
+        bad_array.array(4).unwrap(); // Wrong length
+        bad_array.encode(&payload.peer).unwrap();
+        bad_array
+            .encode_with(payload.seq, &mut CborContext::Tagged)
+            .unwrap();
+        bad_array.u64(PROTOCOL_VERSION).unwrap();
+        // Skip payload & signature to force length error or skip signature
+
+        let mut envelope = Encoder::new(Vec::new());
+        envelope.bytes(&bad_array.into_writer()).unwrap();
+        let bytes = envelope.into_writer();
+
+        let mut decoder = Decoder::new(&bytes);
+        let result: Result<Envelope, _> = decoder.decode_with(&mut ());
+        assert!(result.is_err(), "must reject wrong array length");
+    }
+
+    #[test]
+    fn compiles_with_custom_context() {
+        // Verify that we can pass a custom struct as context C
+        struct MyMetrics {
+            _bytes_read: usize,
+        }
+
+        let signing_key = signing_key();
+        let payload_body = sample_payload_body();
+        let payload = EnvelopePayload::new(signing_key.verifying_key(), payload_body.clone())
+            .expect("payload");
+        let signature = signing_key.sign(&payload.to_bytes().unwrap());
+        let envelope = Envelope::new(payload, signature).expect("envelope");
+
+        let bytes = envelope.to_bytes().expect("bytes");
+
+        let mut ctx = MyMetrics { _bytes_read: 0 };
+        let mut decoder = Decoder::new(&bytes);
+
+        // This validates that the generic <C> is properly propagated
+        let _decoded: Envelope = decoder.decode_with(&mut ctx).expect("decode with context");
     }
 }
