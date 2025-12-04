@@ -2,7 +2,7 @@
 
 
 ; Document Type
-document_type = [ 1* uuid_v4 ]
+document_type = uuid_v4
 
 ; UUIDv4
 uuid_v4 = #6.37(bytes .size 16)
