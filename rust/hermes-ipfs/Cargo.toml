@@ -17,7 +17,8 @@ doc-sync = ["minicbor", "ed25519-dalek", "catalyst-types"]
 
 [dependencies]
 anyhow = "1.0.100"
-derive_more = {version = "2.0.1", features = ["from","into","display"] }
+bytemuck = { version = "1.23.2", features = ["derive", "extern_crate_alloc"] }
+derive_more = {version = "2.0.1", features = ["from", "into", "display", "try_from", "deref"] }
 ipld-core = { version = "0.4.1", features = ["serde"]}
 # A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
 # rev-26b99cb as at July 30, 2025
