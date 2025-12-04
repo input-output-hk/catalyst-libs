@@ -30,7 +30,7 @@ impl CatalystSignedDocumentValidationRule for ContentEncodingRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn CatalystProvider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc)
+        Ok(self.check_inner(doc))
     }
 }
 
@@ -64,7 +64,7 @@ impl ContentEncodingRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         let context = "Content Encoding Rule check";
         match self {
             Self::NotSpecified => {
@@ -76,7 +76,7 @@ impl ContentEncodingRule {
                             "{context}, document does not expect to have a content-encoding field"
                         ),
                     );
-                    return Ok(false);
+                    return false;
                 }
             },
             Self::Specified { exp, optional } => {
@@ -91,7 +91,7 @@ impl ContentEncodingRule {
                                 .join(", "),
                             "Invalid document content-encoding value",
                         );
-                        return Ok(false);
+                        return false;
                     }
                     if content_encoding.decode(doc.encoded_content()).is_err() {
                         doc.report().invalid_value(
@@ -100,18 +100,18 @@ impl ContentEncodingRule {
                             content_encoding.to_string().as_str(),
                             "Document content is not decodable with the expected content-encoding",
                         );
-                        return Ok(false);
+                        return false;
                     }
                 } else if !optional {
                     doc.report().missing_field(
                         "content-encoding",
                         "Document must have a content-encoding field",
                     );
-                    return Ok(false);
+                    return false;
                 }
             },
         }
-        Ok(true)
+        true
     }
 }
 
@@ -133,22 +133,22 @@ mod tests {
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .with_content(content_encoding.encode(&[1, 2, 3]).unwrap())
             .build();
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
 
         // empty content (empty bytes) could not be brotli decoded
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check_inner(&doc).unwrap());
+        assert!(!rule.check_inner(&doc));
 
         let doc = Builder::new().build();
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
 
         let rule = ContentEncodingRule::Specified {
             exp: vec![content_encoding],
             optional: false,
         };
-        assert!(!rule.check_inner(&doc).unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 
     #[test]
@@ -161,10 +161,10 @@ mod tests {
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check_inner(&doc).unwrap());
+        assert!(!rule.check_inner(&doc));
 
         // No content encoding
         let doc = Builder::new().build();
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
     }
 }

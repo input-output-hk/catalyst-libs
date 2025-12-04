@@ -17,7 +17,7 @@ fn cbor_with_trailing_bytes_test() {
         .with_content(buf)
         .build();
 
-    assert!(matches!(cbor_rule.check_inner(&doc), false));
+    assert!(!cbor_rule.check_inner(&doc));
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn malformed_cbor_bytes_test() {
         .with_content(invalid_bytes.into())
         .build();
 
-    assert!(matches!(cbor_rule.check_inner(&doc), false));
+    assert!(!cbor_rule.check_inner(&doc));
 }
 
 #[test]
@@ -46,26 +46,26 @@ fn content_type_cbor_rule_test() {
         .with_metadata_field(SupportedField::ContentType(content_type))
         .with_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
         .build();
-    assert!(matches!(cbor_rule.check_inner(&doc), false));
+    assert!(!cbor_rule.check_inner(&doc));
 
     // with cbor bytes
     let doc = Builder::new()
         .with_metadata_field(SupportedField::ContentType(content_type))
         .with_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
         .build();
-    assert!(matches!(cbor_rule.check_inner(&doc), true));
+    assert!(cbor_rule.check_inner(&doc));
 
     // without content
     let doc = Builder::new()
         .with_metadata_field(SupportedField::ContentType(content_type))
         .build();
-    assert!(matches!(cbor_rule.check_inner(&doc), false));
+    assert!(!cbor_rule.check_inner(&doc));
 
     // with empty content
     let doc = Builder::new()
         .with_metadata_field(SupportedField::ContentType(content_type))
         .build();
-    assert!(matches!(cbor_rule.check_inner(&doc), false));
+    assert!(!cbor_rule.check_inner(&doc));
 }
 
 #[test]
@@ -80,29 +80,29 @@ fn content_type_json_rule_test() {
         .with_metadata_field(SupportedField::ContentType(content_type))
         .with_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
         .build();
-    assert!(matches!(json_rule.check_inner(&doc), true));
+    assert!(json_rule.check_inner(&doc));
 
     // with cbor bytes
     let doc = Builder::new()
         .with_metadata_field(SupportedField::ContentType(content_type))
         .with_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
         .build();
-    assert!(matches!(json_rule.check_inner(&doc), false));
+    assert!(!json_rule.check_inner(&doc));
 
     // without content
     let doc = Builder::new()
         .with_metadata_field(SupportedField::ContentType(content_type))
         .build();
-    assert!(matches!(json_rule.check_inner(&doc), false));
+    assert!(!json_rule.check_inner(&doc));
 
     // with empty content
     let doc = Builder::new()
         .with_metadata_field(SupportedField::ContentType(content_type))
         .build();
-    assert!(matches!(json_rule.check_inner(&doc), false));
+    assert!(!json_rule.check_inner(&doc));
 
     let doc = Builder::new().build();
-    assert!(matches!(json_rule.check_inner(&doc), false));
+    assert!(!json_rule.check_inner(&doc));
 }
 
 #[test]

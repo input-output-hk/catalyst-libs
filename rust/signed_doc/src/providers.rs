@@ -29,17 +29,17 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
 
     /// Try to get the last known version of the `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
-    fn try_get_last_doc<'a>(
-        &'a self,
+    fn try_get_last_doc(
+        &self,
         id: UuidV7,
-    ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>>;
+    ) -> BoxFuture<'_, anyhow::Result<Option<CatalystSignedDocument>>>;
 
     /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver`
     /// are equal.
-    fn try_get_first_doc<'a>(
-        &'a self,
+    fn try_get_first_doc(
+        &self,
         id: UuidV7,
-    ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>>;
+    ) -> BoxFuture<'_, anyhow::Result<Option<CatalystSignedDocument>>>;
 
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
@@ -132,10 +132,10 @@ pub mod tests {
             async { Ok(self.signed_doc.get(doc_ref).cloned()) }.boxed()
         }
 
-        fn try_get_last_doc<'a>(
-            &'a self,
+        fn try_get_last_doc(
+            &self,
             id: catalyst_types::uuid::UuidV7,
-        ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>> {
+        ) -> BoxFuture<'_, anyhow::Result<Option<CatalystSignedDocument>>> {
             async move {
                 Ok(self
                     .signed_doc
@@ -147,10 +147,10 @@ pub mod tests {
             .boxed()
         }
 
-        fn try_get_first_doc<'a>(
-            &'a self,
+        fn try_get_first_doc(
+            &self,
             id: catalyst_types::uuid::UuidV7,
-        ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>> {
+        ) -> BoxFuture<'_, anyhow::Result<Option<CatalystSignedDocument>>> {
             async move {
                 Ok(self
                     .signed_doc
