@@ -12,7 +12,7 @@ use catalyst_signed_doc_spec::{
     signers::update::{Update, UpdatersType},
 };
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{CatalystSignedDocument, providers::CatalystProvider};
 
 /// Context for the validation problem report.
 const REPORT_CONTEXT: &str = "Document ownership validation";
@@ -58,14 +58,11 @@ impl DocumentOwnershipRule {
     }
 
     /// Check document ownership rule
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let doc_id = doc.doc_id()?;
         if doc_id == doc.doc_ver()? && doc.authors().len() != 1 {
             doc.report().functional_validation(

@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{CatalystSignedDocument, providers::CatalystProvider};
 
 /// Signed Document `ver` field validation rule
 #[derive(Debug)]
@@ -12,14 +12,11 @@ pub(crate) struct VerRule;
 impl VerRule {
     /// Validates document `ver` field on the timestamps:
     /// 1. document `ver` cannot be smaller than document `id` field
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(
                 "id",

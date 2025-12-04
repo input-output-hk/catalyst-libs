@@ -6,7 +6,7 @@ mod tests;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{CatalystSignedDocument, providers::CatalystProvider};
 
 /// Signed Document `id` field validation rule
 #[derive(Debug)]
@@ -20,14 +20,11 @@ impl IdRule {
     /// 2. If `provider.past_threshold()` not `None`, document `id` cannot be too far
     ///    behind (`past_threshold` arg) from `Utc::now()` based on the provided threshold
     #[allow(clippy::unused_async)]
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(
                 "id",

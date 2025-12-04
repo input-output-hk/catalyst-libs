@@ -1,16 +1,11 @@
 //! A list of validation rules for all metadata fields
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
-use std::fmt::Debug;
-
 use anyhow::Context;
 use catalyst_signed_doc_spec::{DocSpec, DocSpecs, cddl_definitions::CddlDefinitions};
-use futures::{FutureExt};
+use futures::FutureExt;
 
-use crate::{
-    CatalystSignedDocument,
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
-};
+use crate::{CatalystSignedDocument, providers::CatalystProvider};
 
 mod chain;
 mod collaborators;
@@ -45,15 +40,6 @@ pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::TemplateRule;
 pub(crate) use ver::VerRule;
 
-trait Rule: Send + Sync + Debug {
-    type Output: Future<Output = anyhow::Result<bool>> + Send;
-
-    fn check(
-        &self,
-        provicer: &(impl CatalystSignedDocumentProvider + CatalystIdProvider),
-    ) -> Self::Output;
-}
-
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {
     /// 'id' field validation rule
@@ -86,22 +72,15 @@ pub(crate) struct Rules {
     signature: SignatureRule,
     /// Original Author validation rule.
     ownership: DocumentOwnershipRule,
-    /// Something
-    extra: Box<dyn Fn(&'static CatalystSignedDocument) -> BoxFuture<'static, anyhow::Result<bool>>>,
-    /// Something 2
-    extra2: Box<dyn Rule>,
 }
 
 impl Rules {
     /// All field validation rules check
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let rules = [
             self.id.check(doc, provider).boxed(),
             self.ver.check(doc, provider).boxed(),

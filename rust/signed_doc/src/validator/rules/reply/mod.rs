@@ -8,7 +8,7 @@ use catalyst_signed_doc_spec::{
 };
 
 use crate::{
-    CatalystSignedDocument, DocType, providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument, DocType, providers::CatalystProvider,
     validator::rules::doc_ref::doc_refs_check,
 };
 
@@ -62,14 +62,11 @@ impl ReplyRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let context: &str = "Reply rule check";
         if let Self::Specified {
             allowed_type: exp_reply_type,

@@ -1,9 +1,10 @@
 //! Providers traits, which are used during different validation procedures.
 
-use std::{future::Future, time::Duration};
+use std::time::Duration;
 
 use catalyst_types::{catalyst_id::CatalystId, uuid::UuidV7};
 use ed25519_dalek::VerifyingKey;
+use futures::future::BoxFuture;
 
 use crate::{CatalystSignedDocument, DocumentRef};
 
@@ -12,33 +13,33 @@ pub trait CatalystIdProvider: Send + Sync {
     /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
     /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
     /// corresponding `RoleId` and `KeyRotation` has not been registered.
-    fn try_get_registered_key(
-        &self,
-        kid: &CatalystId,
-    ) -> impl Future<Output = anyhow::Result<Option<VerifyingKey>>> + Send;
+    fn try_get_registered_key<'a>(
+        &'a self,
+        kid: &'a CatalystId,
+    ) -> BoxFuture<'a, anyhow::Result<Option<VerifyingKey>>>;
 }
 
 /// `CatalystSignedDocument` Provider trait
 pub trait CatalystSignedDocumentProvider: Send + Sync {
     /// Try to get `CatalystSignedDocument` from document reference
-    fn try_get_doc(
-        &self,
-        doc_ref: &DocumentRef,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+    fn try_get_doc<'a>(
+        &'a self,
+        doc_ref: &'a DocumentRef,
+    ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>>;
 
     /// Try to get the last known version of the `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
-    fn try_get_last_doc(
-        &self,
+    fn try_get_last_doc<'a>(
+        &'a self,
         id: UuidV7,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+    ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>>;
 
     /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver`
     /// are equal.
-    fn try_get_first_doc(
-        &self,
+    fn try_get_first_doc<'a>(
+        &'a self,
         id: UuidV7,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+    ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>>;
 
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
@@ -51,16 +52,22 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
     fn past_threshold(&self) -> Option<Duration>;
 }
 
+/// Super trait of `CatalystSignedDocumentProvider` and `CatalystIdProvider`
+pub trait CatalystProvider: CatalystSignedDocumentProvider + CatalystIdProvider {}
+
+impl<T: CatalystSignedDocumentProvider + CatalystIdProvider> CatalystProvider for T {}
+
 pub mod tests {
     //! Simple providers implementation just for the testing purposes
 
     use std::{collections::HashMap, time::Duration};
 
     use ed25519_dalek::SigningKey;
+    use futures::FutureExt;
 
     use super::{
-        CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
-        VerifyingKey,
+        BoxFuture, CatalystId, CatalystIdProvider, CatalystSignedDocument,
+        CatalystSignedDocumentProvider, VerifyingKey,
     };
     use crate::DocumentRef;
 
@@ -118,35 +125,41 @@ pub mod tests {
     }
 
     impl CatalystSignedDocumentProvider for TestCatalystProvider {
-        async fn try_get_doc(
-            &self,
-            doc_ref: &DocumentRef,
-        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
-            Ok(self.signed_doc.get(doc_ref).cloned())
+        fn try_get_doc<'a>(
+            &'a self,
+            doc_ref: &'a DocumentRef,
+        ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>> {
+            async { Ok(self.signed_doc.get(doc_ref).cloned()) }.boxed()
         }
 
-        async fn try_get_last_doc(
-            &self,
+        fn try_get_last_doc<'a>(
+            &'a self,
             id: catalyst_types::uuid::UuidV7,
-        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
-            Ok(self
-                .signed_doc
-                .iter()
-                .filter(|(doc_ref, _)| doc_ref.id() == &id)
-                .max_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
-                .map(|(_, doc)| doc.clone()))
+        ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>> {
+            async move {
+                Ok(self
+                    .signed_doc
+                    .iter()
+                    .filter(|(doc_ref, _)| doc_ref.id() == &id)
+                    .max_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
+                    .map(|(_, doc)| doc.clone()))
+            }
+            .boxed()
         }
 
-        async fn try_get_first_doc(
-            &self,
+        fn try_get_first_doc<'a>(
+            &'a self,
             id: catalyst_types::uuid::UuidV7,
-        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
-            Ok(self
-                .signed_doc
-                .iter()
-                .filter(|(doc_ref, _)| doc_ref.id() == &id)
-                .min_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
-                .map(|(_, doc)| doc.clone()))
+        ) -> BoxFuture<'a, anyhow::Result<Option<CatalystSignedDocument>>> {
+            async move {
+                Ok(self
+                    .signed_doc
+                    .iter()
+                    .filter(|(doc_ref, _)| doc_ref.id() == &id)
+                    .min_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
+                    .map(|(_, doc)| doc.clone()))
+            }
+            .boxed()
         }
 
         fn future_threshold(&self) -> Option<std::time::Duration> {
@@ -159,11 +172,11 @@ pub mod tests {
     }
 
     impl CatalystIdProvider for TestCatalystProvider {
-        async fn try_get_registered_key(
-            &self,
-            kid: &CatalystId,
-        ) -> anyhow::Result<Option<VerifyingKey>> {
-            Ok(self.secret_key.get(kid).map(SigningKey::verifying_key))
+        fn try_get_registered_key<'a>(
+            &'a self,
+            kid: &'a CatalystId,
+        ) -> BoxFuture<'a, anyhow::Result<Option<VerifyingKey>>> {
+            async { Ok(self.secret_key.get(kid).map(SigningKey::verifying_key)) }.boxed()
         }
     }
 }

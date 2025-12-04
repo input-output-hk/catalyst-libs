@@ -7,7 +7,8 @@ use catalyst_signed_doc_spec::{
 };
 
 use crate::{
-    CatalystSignedDocument, Chain, providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument, Chain,
+    providers::{CatalystProvider, CatalystSignedDocumentProvider},
     validator::rules::doc_ref::doc_refs_check,
 };
 
@@ -49,14 +50,11 @@ impl ChainRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let chain = doc.doc_meta().chain();
 
         if let Self::Specified { optional } = self {
@@ -91,13 +89,11 @@ impl ChainRule {
     }
 
     /// `chain` metadata field checks
-    async fn chain_check<Provider>(
+    async fn chain_check(
         doc_chain: &Chain,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
+        provider: &dyn CatalystSignedDocumentProvider,
     ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
     {
         const CONTEXT: &str = "Chained Documents validation";
 

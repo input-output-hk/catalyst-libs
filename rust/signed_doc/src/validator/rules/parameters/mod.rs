@@ -10,7 +10,8 @@ use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument, DocType, DocumentRefs, providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument, DocType, DocumentRefs,
+    providers::{CatalystProvider, CatalystSignedDocumentProvider},
     validator::rules::doc_ref::doc_refs_check,
 };
 
@@ -73,14 +74,11 @@ impl ParametersRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         let context: &str = "Parameter rule check";
         if let Self::Specified {
             allowed_type: exp_parameters_type,
@@ -193,15 +191,13 @@ impl ParametersRule {
 ///   - the parameters mismatch the expected ones.
 ///
 /// - `Err(anyhow::Error)` if an unexpected error occurs while accessing the provider.
-pub(crate) async fn link_check<Provider>(
+pub(crate) async fn link_check(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
     field_name: &str,
-    provider: &Provider,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider,
 {
     let Some(ref_field) = ref_field else {
         return Ok(true);

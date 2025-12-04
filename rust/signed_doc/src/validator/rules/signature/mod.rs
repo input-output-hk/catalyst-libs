@@ -8,7 +8,7 @@ use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
     CatalystSignedDocument,
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystIdProvider, CatalystProvider},
     signature::{Signature, tbs_data},
 };
 
@@ -22,14 +22,11 @@ impl SignatureRule {
     ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
-    pub(crate) async fn check<Provider>(
+    pub(crate) async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
-    {
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
         if doc.signatures().is_empty() {
             doc.report().other(
                 "Catalyst Signed Document is unsigned",
@@ -55,14 +52,12 @@ impl SignatureRule {
 }
 
 /// A single signature validation function
-async fn validate_signature<Provider>(
+async fn validate_signature(
     doc: &CatalystSignedDocument,
     sign: &Signature,
-    provider: &Provider,
+    provider: &dyn CatalystIdProvider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
-where
-    Provider: CatalystIdProvider,
 {
     let kid = sign.kid();
 
