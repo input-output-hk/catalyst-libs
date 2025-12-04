@@ -40,7 +40,7 @@ fn content_rule_specified_test(doc_gen: impl FnOnce(Vec<u8>) -> CatalystSignedDo
 
     let rule = ContentRule::StaticSchema(content_schema);
     let doc = doc_gen(valid_content);
-    rule.check_inner(&doc).unwrap()
+    rule.check_inner(&doc)
 }
 
 #[test_case(
@@ -75,7 +75,7 @@ fn content_rule_specified_test(doc_gen: impl FnOnce(Vec<u8>) -> CatalystSignedDo
 fn template_rule_not_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = ContentRule::NotNil;
     let doc = doc_gen();
-    rule.check_inner(&doc).unwrap()
+    rule.check_inner(&doc)
 }
 
 #[test_case(
@@ -110,5 +110,5 @@ fn template_rule_not_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) 
 fn template_rule_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = ContentRule::Nil;
     let doc = doc_gen();
-    rule.check_inner(&doc).unwrap()
+    rule.check_inner(&doc)
 }

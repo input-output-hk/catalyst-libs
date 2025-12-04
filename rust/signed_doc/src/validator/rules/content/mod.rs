@@ -57,7 +57,7 @@ impl CatalystSignedDocumentValidationRule for ContentRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn CatalystProvider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc)
+        Ok(self.check_inner(doc))
     }
 }
 
@@ -92,14 +92,14 @@ impl ContentRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         const CONTEXT: &str = "Content rule check";
         if let Self::StaticSchema(content_schema) = self {
             match content_schema {
                 ContentSchema::Json(json_schema) => {
-                    return Ok(content_json_schema_check(doc, json_schema));
+                    return content_json_schema_check(doc, json_schema);
                 },
-                ContentSchema::Cddl => return Ok(true),
+                ContentSchema::Cddl => return true,
             }
         }
         if let Self::NotNil = self
@@ -107,16 +107,16 @@ impl ContentRule {
         {
             doc.report()
                 .functional_validation("Document must have a NOT CBOR `nil` content", CONTEXT);
-            return Ok(false);
+            return false;
         }
         if let Self::Nil = self
             && !doc.content().is_nil()
         {
             doc.report()
                 .functional_validation("Document must have a CBOR `nil` content", CONTEXT);
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }
