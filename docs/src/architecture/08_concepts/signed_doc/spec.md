@@ -565,7 +565,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-11-10 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -639,6 +639,11 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Improved the specification for 'Contest Delegation' document type.
 * 'content encoding' metadata field become non optional for all document types where it was an optional field.
 * Added new 'payload.schema' type - [CDDL][RFC8610] schema, defined as string.
+
+#### 0.2.1 (2025-12-02)
+
+* Added missing [`ref`](metadata.md#ref) metadata field definition.
+* Improved `payload` [cddl][RFC8610] definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

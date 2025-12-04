@@ -8,7 +8,6 @@ package cddl
 cddlDefinitions: {
 	"contest-ballot-payload": {
 		requires: [
-			"document_ref",
 			"choices",
 			"column-proof",
 			"matrix-proof",
@@ -16,10 +15,10 @@ cddlDefinitions: {
 		]
 		def: """
 			{
-				+ \(requires[0]) => \(requires[1])
+				+ uint => \(requires[0])
+				? "\(requires[1])" : \(requires[1])
 				? "\(requires[2])" : \(requires[2])
 				? "\(requires[3])" : \(requires[3])
-				? "\(requires[4])" : \(requires[4])
 			}
 			"""
 		description: """
