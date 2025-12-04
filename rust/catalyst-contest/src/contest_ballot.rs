@@ -35,12 +35,47 @@ impl Decode<'_, ()> for ContentBallot {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
+        use minicbor::data::Type;
+
         let len = decode_map_len(d, "content ballot")?;
-        // TODO: FIXME:
+
+        let mut choices = BTreeMap::new();
+        let mut column_proof = None;
+        let mut matrix_proof = None;
+        let mut voter_choices = None;
         for _ in 0..len {
-            // TODO: FIXME:
+            match d.datatype()? {
+                Type::U64 => {
+                    let key = d.u64()?;
+                    let val = Choices::decode(d, ctx)?;
+                    choices.insert(key, val);
+                },
+                Type::String => {
+                    match d.str()? {
+                        "column-proof" => column_proof = Some(ColumnProof::decode(d, ctx)?),
+                        "matrix-proof" => matrix_proof = Some(MatrixProof::decode(d, ctx)?),
+                        "voter-choices" => voter_choices = Some(EncryptedChoices::decode(d, ctx)?),
+                        key => {
+                            return Err(minicbor::decode::Error::message(format!(
+                                "Unexpected content ballot key value: {key:?}"
+                            )));
+                        },
+                    }
+                },
+                t => {
+                    return Err(minicbor::decode::Error::message(format!(
+                        "Unexpected content ballot key type: {t:?}"
+                    )));
+                },
+            }
         }
-        todo!()
+
+        Ok(Self {
+            choices,
+            column_proof,
+            matrix_proof,
+            voter_choices,
+        })
     }
 }
 
@@ -51,12 +86,12 @@ impl Encode<()> for ContentBallot {
         _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let len = self.choices.len() as u64
-            + self.column_proof.is_some() as u64
-            + self.matrix_proof.is_some() as u64
-            + self.voter_choices.is_some() as u64;
+            + u64::from(self.column_proof.is_some())
+            + u64::from(self.matrix_proof.is_some())
+            + u64::from(self.voter_choices.is_some());
         e.map(len)?;
 
-        for (&key, val) in self.choices.iter() {
+        for (&key, val) in &self.choices {
             e.u64(key)?.encode(val)?;
         }
         if let Some(column_proof) = self.column_proof.as_ref() {
@@ -76,7 +111,11 @@ impl Encode<()> for ContentBallot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{EncryptedBlock, RowProof, elgamal_ristretto255_choice::ElgamalRistretto255Choice};
+    use crate::{
+        EncryptedBlock, RowProof,
+        elgamal_ristretto255_choice::ElgamalRistretto255Choice,
+        row_proof::{ProofAnnouncement, ProofResponse, ProofScalar, SingleSelectionProof},
+    };
 
     #[test]
     fn roundtrip() {
@@ -86,7 +125,7 @@ mod tests {
         ];
         let original = ContentBallot {
             choices: [
-                (1, Choices::Clear(vec![1, 2, 3, -4, -5].into())),
+                (1, Choices::Clear(vec![1, 2, 3, -4, -5])),
                 (2, Choices::ElgamalRistretto255 {
                     choices: vec![ElgamalRistretto255Choice {
                         c1: bytes,
@@ -99,7 +138,17 @@ mod tests {
                         c1: bytes,
                         c2: bytes,
                     }],
-                    row_proof: Some(RowProof {}),
+                    row_proof: Some(RowProof {
+                        selections: vec![SingleSelectionProof {
+                            announcement: ProofAnnouncement {},
+                            choice: ElgamalRistretto255Choice {
+                                c1: bytes,
+                                c2: bytes,
+                            },
+                            response: ProofResponse {},
+                        }],
+                        scalar: ProofScalar(bytes),
+                    }),
                 }),
             ]
             .into(),

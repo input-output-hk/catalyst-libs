@@ -124,25 +124,9 @@ impl Encode<()> for RowProof {
 
 impl Decode<'_, ()> for SingleSelectionProof {
     fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
+        _d: &mut Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        let len = decode_array_len(d, "row proof")?;
-        if len != 3 {
-            return Err(minicbor::decode::Error::message(format!(
-                "Unexpected row proof array length {len}, expected 3"
-            )));
-        }
-
-        let announcement
-
-        /*
-        pub announcement: ProofAnnouncement,
-    /// An elgamal encrypted ciphertext.
-    pub choice: ElgamalRistretto255Choice,
-    /// A ZK proof response values for Ed25519.
-    pub response: ProofResponse,
-         */
         // TODO: FIXME:
         todo!()
     }
@@ -151,8 +135,8 @@ impl Decode<'_, ()> for SingleSelectionProof {
 impl Encode<()> for SingleSelectionProof {
     fn encode<W: Write>(
         &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
+        _e: &mut Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // TODO: FIXME:
         todo!()
@@ -184,7 +168,21 @@ mod tests {
 
     #[test]
     fn row_proof_roundtrip() {
-        let original = RowProof {};
+        let bytes = [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32,
+        ];
+        let original = RowProof {
+            selections: vec![SingleSelectionProof {
+                announcement: ProofAnnouncement {},
+                choice: ElgamalRistretto255Choice {
+                    c1: bytes,
+                    c2: bytes,
+                },
+                response: ProofResponse {},
+            }],
+            scalar: ProofScalar(bytes),
+        };
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
@@ -195,7 +193,18 @@ mod tests {
 
     #[test]
     fn single_selection_proof_roundtrip() {
-        let original = SingleSelectionProof {};
+        let bytes = [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32,
+        ];
+        let original = SingleSelectionProof {
+            announcement: ProofAnnouncement {},
+            choice: ElgamalRistretto255Choice {
+                c1: bytes,
+                c2: bytes,
+            },
+            response: ProofResponse {},
+        };
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())

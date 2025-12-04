@@ -49,7 +49,7 @@ impl Decode<'_, ()> for Choices {
             0 => Ok(Self::Clear(<Vec<i64>>::decode(d, ctx)?)),
             1 => {
                 let len = decode_array_len(d, "elgamal-ristretto255-encrypted-choices")?;
-                if len < 1 || len > 2 {
+                if !(1..=2).contains(&len) {
                     return Err(minicbor::decode::Error::message(format!(
                         "Unexpected elgamal-ristretto255-encrypted-choices array length {len}, expected 1 or 2"
                     )));
@@ -87,7 +87,7 @@ impl Encode<()> for Choices {
             Choices::ElgamalRistretto255 { choices, row_proof } => {
                 e.array(2)?;
                 1.encode(e, ctx)?;
-                e.array(choices.len() as u64 + row_proof.is_some() as u64)?;
+                e.array(choices.len() as u64 + u64::from(row_proof.is_some()))?;
                 choices.encode(e, ctx)?;
                 if let Some(row_proof) = row_proof {
                     row_proof.encode(e, ctx)?;
@@ -101,6 +101,7 @@ impl Encode<()> for Choices {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::row_proof::{ProofAnnouncement, ProofResponse, ProofScalar, SingleSelectionProof};
 
     #[test]
     fn clear_roundtrip() {
@@ -115,9 +116,23 @@ mod tests {
 
     #[test]
     fn elgamal_ristretto255_roundtrip() {
+        let bytes = [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32,
+        ];
         let original = Choices::ElgamalRistretto255 {
             choices: vec![],
-            row_proof: Some(RowProof {}),
+            row_proof: Some(RowProof {
+                selections: vec![SingleSelectionProof {
+                    announcement: ProofAnnouncement {},
+                    choice: ElgamalRistretto255Choice {
+                        c1: bytes,
+                        c2: bytes,
+                    },
+                    response: ProofResponse {},
+                }],
+                scalar: ProofScalar(bytes),
+            }),
         };
         let mut buffer = Vec::new();
         original
