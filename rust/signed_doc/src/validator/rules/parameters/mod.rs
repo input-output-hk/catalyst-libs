@@ -209,72 +209,45 @@ where
         return Ok(true);
     };
 
-    // collect recursive lineage of expected parameters
-    let mut allowed_params: HashSet<DocumentRef> = HashSet::new();
-
-    for exp_doc_ref in exp_parameters.iter() {
-        let lineage = collect_parameter_lineage(exp_doc_ref, field_name, provider, report).await?;
-        allowed_params.extend(lineage);
+    // collect recursively of expected parameters
+    let mut allowed_params: HashSet<DocumentRefs> = HashSet::new();
+    let mut all_valid = true;
+    for doc_ref in ref_field.iter() {
+        let (valid, result) =
+            collect_parameters_recursively(doc_ref, field_name, provider, report).await?;
+        all_valid &= valid;
+        allowed_params.extend(result);
     }
 
-    let mut all_valid = true;
+    all_valid &= allowed_params
+        .iter()
+        .any(|referred_params| exp_parameters == referred_params);
 
-    for doc_ref in ref_field.iter() {
-        let Some(referred_doc) = provider.try_get_doc(doc_ref).await? else {
-            report.functional_validation(
-                &format!("Cannot retrieve a document {doc_ref}"),
-                &format!("Referenced document link validation for `{field_name}`"),
-            );
-            all_valid = false;
-            continue;
-        };
-
-        let Some(referred_doc_params) = referred_doc.doc_meta().parameters() else {
-            report.missing_field(
-                "parameters",
-                &format!(
-                    "Referenced document via `{field_name}` must have `parameters`. Doc: {referred_doc}"
-                ),
-            );
-            all_valid = false;
-            continue;
-        };
-
-        // reference parameters must be subset of allowed params
-        let mut valid = true;
-        for param_ref in referred_doc_params.iter() {
-            if !allowed_params.contains(param_ref) {
-                valid = false;
-                break;
-            }
-        }
-
-        if !valid {
-            report.invalid_value(
-                "parameters",
-                &format!("Reference doc parameters: {referred_doc_params}"),
-                &format!("Allowed recursive hierarchy: {:?}", allowed_params),
-                &format!(
-                    "Referenced document via `{field_name}` must have parameters within the recursive lineage"
-                ),
-            );
-            all_valid = false;
-        }
+    if !all_valid {
+        report.invalid_value(
+            "parameters",
+            &format!("Reference doc param: {allowed_params:?}",),
+            &format!("Doc param: {exp_parameters}"),
+            &format!("Referenced document via {field_name} `parameters` field must match"),
+        );
+        all_valid = false;
     }
 
     Ok(all_valid)
 }
 
-/// Recursively collects the full parameter lineage for a parameter document.
-async fn collect_parameter_lineage<Provider>(
+/// Recursively collects the full underlying parameters from a given document reference.
+async fn collect_parameters_recursively<Provider>(
     root: &DocumentRef,
     field_name: &str,
     provider: &Provider,
     report: &ProblemReport,
-) -> anyhow::Result<HashSet<DocumentRef>>
+) -> anyhow::Result<(bool, HashSet<DocumentRefs>)>
 where
     Provider: CatalystSignedDocumentProvider,
 {
+    let mut all_valid = true;
+    let mut result = HashSet::new();
     let mut visited = HashSet::new();
     let mut stack = vec![root.clone()];
 
@@ -285,19 +258,30 @@ where
 
         if let Some(doc) = provider.try_get_doc(&current).await? {
             if let Some(params) = doc.doc_meta().parameters() {
+                result.insert(params.clone());
+
                 for param in params.iter() {
                     if !visited.contains(param) {
                         stack.push(param.clone());
                     }
                 }
+            } else {
+                report.missing_field(
+                    "parameters",
+                    &format!(
+                        "Referenced document via `{field_name}` must have `parameters`. Doc: {doc}"
+                    ),
+                );
+                all_valid = false;
             }
         } else {
             report.functional_validation(
                 &format!("Cannot retrieve a document {current}"),
                 &format!("Referenced document link validation for `{field_name}`"),
             );
+            all_valid = false;
         }
     }
 
-    Ok(visited)
+    Ok((all_valid, result))
 }
