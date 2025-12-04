@@ -210,7 +210,7 @@ where
     };
 
     // collect recursively of expected parameters
-    let mut allowed_params: HashSet<DocumentRefs> = HashSet::new();
+    let mut allowed_params = HashSet::new();
     let mut all_valid = true;
     for doc_ref in ref_field.iter() {
         let (valid, result) =
@@ -221,7 +221,7 @@ where
 
     all_valid &= allowed_params
         .iter()
-        .any(|referred_params| exp_parameters == referred_params);
+        .any(|ref_doc_parameters| exp_parameters == ref_doc_parameters);
 
     if !all_valid {
         report.invalid_value(
@@ -230,7 +230,6 @@ where
             &format!("Doc param: {exp_parameters}"),
             &format!("Referenced document via {field_name} `parameters` field must match"),
         );
-        all_valid = false;
     }
 
     Ok(all_valid)
