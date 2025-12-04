@@ -6,7 +6,6 @@ mod tests;
 use catalyst_signed_doc_spec::{
     DocSpecs, DocumentName, is_required::IsRequired, metadata::reply::Reply,
 };
-use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, DocType,
@@ -28,13 +27,14 @@ pub(crate) enum ReplyRule {
     NotSpecified,
 }
 
+#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ReplyRule {
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        provider: &'a dyn CatalystProvider,
-    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check_inner(doc, provider).await }.boxed()
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
     }
 }
 

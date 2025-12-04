@@ -4,7 +4,7 @@ pub(crate) mod rules;
 
 use std::{collections::HashMap, fmt::Debug, sync::LazyLock};
 
-use futures::{StreamExt, TryStreamExt, future::BoxFuture};
+use futures::{StreamExt, TryStreamExt};
 
 use crate::{
     CatalystSignedDocument,
@@ -14,15 +14,16 @@ use crate::{
 };
 
 /// `CatalystSignedDocument` validation rule trait
+#[async_trait::async_trait]
 pub trait CatalystSignedDocumentValidationRule: Send + Sync + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        provider: &'a dyn CatalystProvider,
-    ) -> BoxFuture<'a, anyhow::Result<bool>>;
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool>;
 }
 
 /// A table representing a full set or validation rules per document id.

@@ -5,7 +5,6 @@ mod tests;
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, providers::CatalystProvider,
@@ -16,13 +15,14 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct IdRule;
 
+#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for IdRule {
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        provider: &'a dyn CatalystProvider,
-    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check_inner(doc, provider) }.boxed()
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider)
     }
 }
 

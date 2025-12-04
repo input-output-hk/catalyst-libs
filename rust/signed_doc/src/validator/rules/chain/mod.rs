@@ -5,7 +5,6 @@ use catalyst_signed_doc_spec::{
     is_required::IsRequired,
     metadata::{chain::Chain as ChainSpec, collaborators::Collaborators},
 };
-use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, Chain,
@@ -28,13 +27,14 @@ pub(crate) enum ChainRule {
     NotSpecified,
 }
 
+#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ChainRule {
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        provider: &'a dyn CatalystProvider,
-    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check_inner(doc, provider).await }.boxed()
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
     }
 }
 

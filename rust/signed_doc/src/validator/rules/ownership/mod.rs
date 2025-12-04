@@ -11,7 +11,6 @@ use catalyst_signed_doc_spec::{
     is_required::IsRequired,
     signers::update::{Update, UpdatersType},
 };
-use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, providers::CatalystProvider,
@@ -32,13 +31,14 @@ pub(crate) enum DocumentOwnershipRule {
     OriginalAuthor,
 }
 
+#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        provider: &'a dyn CatalystProvider,
-    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check_inner(doc, provider).await }.boxed()
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
     }
 }
 

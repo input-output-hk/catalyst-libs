@@ -3,8 +3,6 @@
 #[cfg(test)]
 mod tests;
 
-use futures::FutureExt;
-
 use crate::{
     CatalystSignedDocument, providers::CatalystProvider,
     validator::CatalystSignedDocumentValidationRule,
@@ -14,13 +12,14 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct VerRule;
 
+#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for VerRule {
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        provider: &'a dyn CatalystProvider,
-    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check_inner(doc, provider).await }.boxed()
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
     }
 }
 

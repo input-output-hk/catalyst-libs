@@ -4,7 +4,6 @@
 mod tests;
 
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::collaborators::Collaborators};
-use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, providers::CatalystProvider,
@@ -23,13 +22,14 @@ pub(crate) enum CollaboratorsRule {
     NotSpecified,
 }
 
+#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
-    fn check<'a>(
-        &'a self,
-        doc: &'a CatalystSignedDocument,
-        _provider: &'a dyn CatalystProvider,
-    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check_inner(doc) }.boxed()
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc)
     }
 }
 
