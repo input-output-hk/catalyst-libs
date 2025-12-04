@@ -1,0 +1,72 @@
+; Catalyst Vote Payload data object.
+;
+; A vote payload that can hold both encrypted or unencrypted votes.
+
+
+; Catalyst Vote Payload data object.
+contest-ballot-payload = {
+    + uint => choices
+    ? "column-proof" : column-proof
+    ? "matrix-proof" : matrix-proof
+    ? "voter-choice" : voter-choice
+}
+
+; Voters Choices.
+choices = [ 0, clear-choices ] /
+[ 1, elgamal-ristretto255-encrypted-choices ]
+
+; Universal Unencrypted Set of Choices
+clear-choices = ( +clear-choice )
+
+; Universal Unencrypted Choice
+clear-choice = int
+
+; elgamal/ristretto255 Encrypted Choices
+elgamal-ristretto255-encrypted-choices = [
+  [+ elgamal-ristretto255-encrypted-choice]
+  ? row-proof
+]
+
+; The elgamal encrypted ciphertext `(c1, c2)`.
+elgamal-ristretto255-encrypted-choice = [
+  c1: elgamal-ristretto255-group-element
+  c2: elgamal-ristretto255-group-element
+]
+
+; An individual Elgamal group element that composes the elgamal cipher text.
+elgamal-ristretto255-group-element = bytes .size 32
+
+; Universal Encrypted Row Proof
+row-proof = [0, zkproof-elgamal-ristretto255-unit-vector-with-single-selection ]
+
+zkproof-elgamal-ristretto255-unit-vector-with-single-selection = [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]
+
+; Proof that the row is a unit vector with a single selection.
+zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item = ( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )
+
+; ZK Proof Announcement values for Elgamal.
+zkproof-elgamal-announcement = ( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )
+
+; An individual Elgamal group element used in ZK Proofs.
+zkproof-elgamal-group-element = bytes .size 32
+
+; ZK Proof Response values for Ed25519.
+zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
+
+; An individual Ed25519 scalar used in ZK Proofs.
+zkproof-ed25519-scalar = bytes .size 32
+
+; Universal Encrypted Column Proof (Placeholder)
+column-proof = [ uint, [ +undefined ] ]
+
+; Universal Encrypted Matrix Proof (Placeholder)
+matrix-proof = [ uint, undefined ]
+
+; Encrypted Voter Choice Payload
+voter-choice = [ 0, aes-ctr-encrypted-choices ]
+
+; Encrypted Voter Choices
+aes-ctr-encrypted-choices = +aes-ctr-encrypted-block
+
+; AES-CTR Encrypted Data Block
+aes-ctr-encrypted-block = bytes .size 16

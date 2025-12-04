@@ -1,0 +1,306 @@
+---
+Title: Proposals, Templates, and Pub/Sub Discovery
+Authors:
+    - Steven Johnson <steven.johnson@iohk.io>
+Created: 2025-11-05
+order: 2
+---
+
+## Abstract
+
+Shows how Proposal documents relate to their Templates, how submission state is determined, 
+and how all artifacts are discovered and validated in a decentralized pub/sub network.
+
+## Documents and Roles
+
+* [Proposal](../docs/proposal.md): the authored content.
+* [Proposal Form Template](../docs/proposal_form_template.md): defines schema and form hints.
+* [Proposal Submission Action](../docs/proposal_submission_action.md): signals `final`, `draft`, or `hide`.
+* *Optional [Proposal Comment](../docs/proposal_comment.md)* and 
+  *[Proposal Comment Form Template](../docs/proposal_comment_form_template.md)* artifacts exist;
+* *Optional [Proposal Moderation Action](../docs/proposal_moderation_action.md)* artifacts exist;
+
+## Relationships
+
+* A Proposal references a Proposal Form Template via [`metadata.template`](../metadata.md#template)
+  and a system parameters anchor via [`metadata.parameters`](../metadata.md#parameters).
+    * The template’s own [`parameters`](../metadata.md#parameters) must transitively align to the 
+      same Brand/Campaign/Category chain. 
+* A Proposal Submission Action references the Proposal via `metadata.ref` and repeats `metadata.parameters`, 
+  linked to [`ref`](../metadata.md#ref) for consistency.
+    * Multiple collaborators may exist; a Brand/Campaign/Category parameter (name TBD) controls whether 
+      all listed collaborators must submit equivalent `final` actions, or only collaborators who submit 
+      `final` for that version are counted as collaborators on the submission.
+      If the parameter is absent, default to the latter (opt-in) behavior while still requiring the
+      author’s `final` submission.
+
+The Deadline for a Proposal to be Final will be defined in the applicable parameters document(s),
+typically the Category Parameters document.
+
+## Versioning and Collaboration
+
+* Proposal [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are UUIDv7.
+* The first Proposal version must be signed by the original author;
+  later versions may be signed by the author or a collaborator from the immediately prior version. 
+  See: [Proposal validation](../docs/proposal.md#validation).
+* Collaborators are listed in `metadata.collaborators`; 
+  actions from collaborators confirm or rescind participation.
+  See: [Proposal Submission Action](../docs/proposal_submission_action.md).
+
+## Co‑Proposers, Submission, and Moderation
+
+### Co‑Proposers (`metadata.collaborators`)
+
+* Proposals may list *co‑proposers* as [`collaborators`](../metadata.md#collaborators).
+  This list grants permission for these accounts to co‑author new proposal versions and participate
+  in submission, but does not by itself mean they have accepted.
+* A collaborator is considered to have *accepted* collaboration for all proposal versions that list
+  them in [`collaborators`](../metadata.md#collaborators) when their latest
+  [Proposal Submission Action](../docs/proposal_submission_action.md) for that proposal is `draft`
+  or `final`.
+* If a collaborator’s latest submission action is `hide`, they are treated as *not* having agreed
+  to collaborate for any version of that proposal (past, present, or future) until they later
+  submit `draft` or `final` again.
+* The effective collaborator set can change over versions 
+  (by editing ['collaborators'](../metadata.md#collaborators));
+  the original author can never be removed as an allowed signer for new versions.
+  Nor is the original Author listed in the ['collaborators'](../metadata.md#collaborators) metadata.
+* The original Author is always and **ONLY** determined by the Author whom signed the first version
+  of a proposal where the [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) are equal.
+
+### Submission Documents (Proposal Submission Actions)
+
+* Submission state is tracked by [Proposal Submission Action](../docs/proposal_submission_action.md)
+  documents that:
+    * Reference the proposal via [`metadata.ref`](../metadata.md#ref); and
+    * Repeat [`metadata.parameters`](../metadata.md#parameters), linked to [`metadata.ref`](../metadata.md#ref).
+* The payload is a small JSON object with an `action` field:
+    * `final` – signer is submitting this exact proposal version as their final candidate.
+    * `draft` – signer confirms collaboration but leaves the proposal in draft.
+    * `hide` – signer requests that the proposal be hidden for themselves:
+        * For the author: hide the proposal from consideration and UI.
+        * For a collaborator: they do not wish to be listed as a collaborator.
+        * This means **ONLY** the author can control global visibility of a Proposal.
+          collaborators can control if they are listed against it.
+* Per signer, only the latest submission action (by time / [`ver`](../metadata.md#ver))
+  counts for status computation, and it applies to all versions of that proposal.
+* For a given submitted proposal version, the required signer set is:
+    * The original author (signer of the first version where [`id`](../metadata.md#id) equals
+      [`ver`](../metadata.md#ver)); and
+    * Collaborators as dictated by a Brand/Campaign/Category parameter (name TBD):
+        * Unanimous mode: every collaborator listed in [`collaborators`](../metadata.md#collaborators)
+          on that exact proposal version.
+        * Opt-in mode (default/fallback when the parameter is absent): only collaborators who submit
+          `final` for that version are counted as collaborators on the submission; listed collaborators
+          who do not submit `final` are not required.
+* A proposal with collaborators is treated as:
+    * **Final** only when the author has a latest `final` action for the same proposal version and
+      the collaborator requirements defined above are satisfied by the configured deadline, with none
+      of the counted signers having a latest `hide` action.
+    * **Draft** when at least one required signer is `draft` (or missing), and none has a latest
+      `hide`.
+    * **Hidden** when a `hide` from the author, or applicable moderation, marks it as not to be
+      displayed, even if technically valid.
+
+### Moderation Documents (Proposal Moderation Actions)
+
+* [Proposal Moderation Action](../docs/proposal_moderation_action.md) documents reference a proposal
+  via [`metadata.ref`](../metadata.md#ref) and are issued by authorized moderators.
+* The exact moderation outcomes (e.g., hide, disqualify, flag for review) are policy‑dependent and
+  may evolve; implementations should treat them as an overlay on top of submission status:
+    * A moderated‑hidden or disqualified proposal is excluded from candidate sets and UI listings,
+      even if all `final` submissions are present.
+    * Moderation can apply to proposals and their associated comments; UIs should consistently
+      reflect any hide/disqualify decision across all related artifacts.
+* Consumers should ensure that candidate selection first filters by valid submission (`final` from
+  all required signers) and then applies moderation results to derive the final visible and
+  eligible proposal set.
+
+### UI Queries for a Single Proposal
+
+For a given proposal (identified by `proposal.id`/`proposal.ver` and its `metadata.parameters`):
+
+* UIs can retrieve submission actions by querying for
+  [Proposal Submission Action](../docs/proposal_submission_action.md) documents where:
+    * [`metadata.ref`](../metadata.md#ref) points to the proposal’s [`id`](../metadata.md#id)
+      and optionally where required [`ver`](../metadata.md#ver); and
+    * [`metadata.parameters`](../metadata.md#parameters) matches the proposal’s parameters anchor.
+* UIs can retrieve moderation actions by querying for
+  [Proposal Moderation Action](../docs/proposal_moderation_action.md) documents where:
+    * [`metadata.ref`](../metadata.md#ref) points to the same proposal; and
+    * [`metadata.parameters`](../metadata.md#parameters) matches the same anchor.
+* In a pub/sub model, this typically means:
+    * Subscribe to the topic derived from the proposal’s parameters.
+    * Filter received documents by type and by `metadata.ref` targeting the proposal.
+* Locally, an index keyed by `(proposal-id, proposal-ver)` plus signer and document type allows the
+  UI to:
+    * Compute per‑signer latest submission action (`final`/`draft`/`hide`).
+    * Overlay any matching moderation actions.
+    * Present a synthesized status for the proposal and each collaborator.
+
+## Pub/Sub Discovery Model
+
+### Overview
+
+* Publication and topic routing are defined by the parameters anchor (brand/campaign/category).
+  See: [Parameters Hierarchy and Discovery](parameters_hierarchy_and_discovery.md) for topic
+  scope, naming, and subscription strategies.
+* Producers publish each document to the topic derived from its `metadata.parameters`.
+* Consumers subscribe to the relevant topics for their chosen anchor(s) and filter by document type.
+
+### Discovery Workflow
+
+1. Discover templates
+    * Subscribe to the anchor topic(s) and collect all
+      [Proposal Form Template](../docs/proposal_form_template.md) documents.
+    * For each `template.id`, select the latest `template.ver` (respecting `revocations`).
+    * The resulting set enumerates which proposal templates are enabled at the given anchor.
+2. Discover proposals
+    * Collect or Publish new [Proposal](../docs/proposal.md) documents that reference one of the
+      discovered templates via `metadata.template`.
+    * Enforce that `metadata.parameters` on the proposal matches the anchor and links to the same 
+      parameters chain as the template.
+3. Ingest submission actions
+    * Collect [Proposal Submission Action](../docs/proposal_submission_action.md) documents by 
+      proposal `metadata.ref`.
+    * Track the latest action per signer (author or listed collaborator): `final`, `draft`, or `hide`.
+    * A proposal is eligible to be “final” only if the author and the collaborator set defined by the
+      configured Brand/Campaign/Category parameter have latest `final` actions for the referenced
+      version by the configured deadline (defaulting to opt-in collaborators when the parameter is
+      absent).
+4. Apply moderation and policy
+    * If present, process [Proposal Moderation Action](../docs/proposal_moderation_action.md) 
+      artifacts that may hide or disqualify proposals (policy‑dependent).
+    * Respect `hide` semantics from submission actions and moderation decisions in UI and candidate 
+      selection.
+5. Handle revocations
+    * Honor [`revocations`](../metadata.md#revocations) on proposals or related artifacts.
+      Implementations should treat comments under a revoked proposal as revoked for visibility,
+      unless the proposal is re‑instated.
+6. Comments
+    * [Proposal Comment](../docs/proposal_comment.md) documents attach to a proposal;
+      replies attach to another comment.
+    * All comments and replies must link to the same proposal; cross‑proposal replies are invalid.
+    * Comments may be moderated via [Proposal Moderation Action](../docs/proposal_moderation_action.md) 
+      and hidden/redacted accordingly.
+
+### Finalization
+
+* At the configured moderation/finalization deadline (from parameters), compute the final set of
+  candidate proposals for the contest at the same anchor level.
+* The candidate set consists of proposals that are “final” (per the configured collaborator policy,
+  with the author always required and opt-in collaborators as the default) and not disqualified by
+  moderation.
+* These candidates feed into the contest voting process (described in the voting flow documentation).
+
+### Flow (Mermaid)
+
+```mermaid
+flowchart TD
+  A["Subscribe to Topics per Anchor<br/>(Brand/Campaign/Category)"] --> B[Discover Templates]
+  B --> C[Discover/Publish Proposals<br/>referencing template + parameters]
+  C --> D[Ingest/Publish Submission Actions<br/>author + collaborators]
+  D --> E{By deadline:<br/>all-final?}
+  E -- No --> F[Status: Draft/Hidden]
+  E -- Yes --> G[Status: Final Candidate]
+  C --> H[Ingest Moderation Actions]
+  H --> I{Moderated?}
+  I -- No --> K[No change]
+  I -- Yes --> J[Hide/Disqualify<br/>per policy]
+  G --> L[Candidate Set]
+  K --> L
+  L --> M[Contest Voting Inputs]
+```
+
+### Multi‑Sig and Moderation Sequence (Mermaid)
+
+```mermaid
+sequenceDiagram
+    participant Author
+    participant CollabA
+    participant CollabB
+    participant Moderator
+    participant PubSub_Indexer as Pub/Sub + Indexer
+    participant UI
+
+    Note over Author,PubSub_Indexer: Author drafts and publishes Proposal v1
+    Author->>PubSub_Indexer: Publish Proposal v1 (with collaborators A, B)
+    PubSub_Indexer-->>UI: Indexed proposal + collaborators list
+
+    Note over UI: UI highlights<br>collaborators A and B<br/>that have been invited
+    UI-->>CollabA: Show proposal, status: invited
+    UI-->>CollabB: Show proposal, status: invited
+
+    Note over CollabA,PubSub_Indexer: Collaborator A accepts collaboration
+    CollabA->>PubSub_Indexer: Publish Submission Action (draft, ref = Proposal v1)
+    PubSub_Indexer-->>UI: Updated latest actions per signer
+
+    Note over CollabB,PubSub_Indexer: Collaborator B later accepts and finalizes
+    CollabB->>PubSub_Indexer: Publish Submission Action (final, ref = Proposal v1)
+    PubSub_Indexer-->>UI: Updated latest actions per signer
+
+    Note over Author,PubSub_Indexer: Author finalizes the same version
+    Author->>PubSub_Indexer: Publish Submission Action (final, ref = Proposal v1)
+    PubSub_Indexer-->>UI: All required signers: final for v1
+
+    Note over Moderator,PubSub_Indexer: Optional moderation overlay
+    Moderator->>PubSub_Indexer: Publish Proposal Moderation Action (e.g., review/approve/hide)
+    PubSub_Indexer-->>UI: Apply moderation outcome on top of final status
+
+    Note over PubSub_Indexer: At deadline,<br>compute candidate set
+    PubSub_Indexer-->>UI: Proposal v1 is final candidate<br/>iff all required signers are final<br/>and not hidden or disqualified
+```
+
+### Consumer Pipeline
+
+1. Template intake
+    * Verify signature, type, id/ver, `metadata.parameters`, and payload schema validity.
+    * Index by `(template-id, ver)` and by anchor.
+2. Proposal intake
+    * Verify signature, `metadata.template`, `metadata.parameters` (linked to template), 
+      and payload against the template schema.
+    * Track authorship and collaborators; index by `(proposal-id, ver)` and by anchor.
+3. Submission Action intake
+    * Verify signature from author or collaborator; verify `metadata.ref` 
+      points to the intended proposal and `metadata.parameters` matches 
+      (linked_refs to [`metadata.ref`](../metadata.md#ref)).
+    * For each signer, record latest action: `final`, `draft`, or `hide`.
+    * A proposal is “final” iff the author and the collaborator set defined by the configured
+      Brand/Campaign/Category parameter have latest `final` actions for the referenced version by
+      the configured deadline (defaulting to opt-in collaborators when the parameter is absent).
+4. Moderation Action intake (optional)
+    * Verify signature and policy scope; verify `metadata.ref` points to the intended proposal and 
+      `metadata.parameters` matches.
+    * Apply moderation outcomes to proposal visibility and eligibility per policy.
+
+### Status Computation
+
+* Final Set: proposals where the author and the collaborator requirements defined by the configured
+  parameter have `final` actions, within configured windows defined by parameters, and not
+  disqualified by moderation.
+* Draft Only: proposals with at least one `draft` and no conflicting `final` from that signer.
+* Hidden: honor `hide` semantics (author hides the proposal; collaborator hide = collaborator does 
+  not wish to be shown), and apply moderation decisions.
+
+## Validation Summary
+
+* Verify `type`, `id`, `ver`, `kid`, `content type`, and (if present) `content-encoding`.
+* Verify `metadata.template` exists and aligns via `metadata.parameters` up the same chain.
+* Validate the proposal payload against the referenced template JSON Schema.
+* For submission actions, enforce signer rules and the configured collaborator finalization policy
+  (defaulting to opt-in collaborators when the parameter is absent, with the author always required).
+* Apply [`revocations`](../metadata.md#revocations) and prefer the highest valid 
+  [`ver`](../metadata.md#ver) per [`id`](../metadata.md#id).
+
+## Content Addressing and Retrieval
+
+* All documents carry a `document_ref` that includes a CBOR Tag 42 CID locator. 
+  See: [Document Reference](../metadata.md#document-reference).
+* Pub/sub provides dissemination; the CID enables retrieval from content-addressed 
+  storage and ensures immutability.
+
+## Operational Notes
+
+* Timelines and windows come from the applicable parameters (brand/campaign/category/contest); 
+  consumers should enforce submission cutoffs as configured.
+* Indexes: maintain by proposal, by anchor, and by template to accelerate UI queries.

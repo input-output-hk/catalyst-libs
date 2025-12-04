@@ -35,8 +35,33 @@ docs: #DocumentDefinitions & {
 			This allows for a collaborator to make an update to the document which removes themselves
 			from the `collaborators` list.
 
-			All versions of the document *MUST* list the author as the original author.
+			All versions of the document are owned by the original author.
 			The Author can not be changed by any document revision.
+
+			Any Proposal that lists a collaborator is an invitation for that collaborator to participate in the proposal.
+			They are considered to have accepted that invitation for **all** versions of the proposal that
+			list them as a collaborator where their latest
+			[Proposal Submission Action](proposal_submission_action.md) for that proposal has an `action` of
+			`draft` or `final`.
+
+			If a collaborator’s latest [Proposal Submission Action](proposal_submission_action.md) for the
+			proposal has an `action` of `hide`, they **MUST** be treated as not having agreed to collaborate
+			for **any** version of that proposal (past, present, or future) until they later submit `draft`
+			or `final` again.
+
+			The requirement for collaborator submissions when finalizing a proposal is controlled by a
+			Brand/Campaign/Category parameter (name TBD). 
+			When configured for unanimous collaboration,
+			every collaborator listed on the submitted version **MUST** also publish a `final`
+			[Proposal Submission Action](proposal_submission_action.md) alongside the author.
+			When configured for opt-in collaboration (the default, and the behavior when the parameter is
+			absent), only collaborators who submit `final` for the referenced version are included as
+			collaborators on that submission; collaborators who do not submit `final` are not treated as
+			collaborators for that submission.
+			In all cases, a proposal cannot be final unless the original author has submitted `final`.
+
+			The `final` proposal itself may be signed by one or more Collaborators and/or the original Author.
+			The `final` proposal must never be signed by anyone else.
 			"""
 
 		business_logic: {

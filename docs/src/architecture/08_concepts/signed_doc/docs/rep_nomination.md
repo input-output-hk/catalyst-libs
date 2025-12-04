@@ -74,16 +74,16 @@ to re-delegate to affirm the delegates latest nomination.
 * Allows a Representative to create or update their profile for a category.
 * The Representative sets their status to 'active' to be discoverable for delegation.
 * The Representative `revokes` the Nomination to signal they are no longer
-    participating in the category.
+  participating in the category.
 * Nominations are not valid if the latest Delegation by the Representative does NOT
-    reference their latest Nomination.
+  reference their latest Nomination.
 
 #### Back End
 
 * The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
 * The system will only consider Representatives as having valid Nominations if:
-  * Their latest Nomination in a Contest is not Revoked.
-  * Their latest Delegation in a Contest references their latest Nomination.
+    * Their latest Nomination in a Contest is not Revoked.
+    * Their latest Delegation in a Contest references their latest Nomination.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -181,6 +181,10 @@ The following must be true for a valid reference:
 * The Referenced Document **MUST** Exist
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+* In the event there are **MULTIPLE** [`ref`](../metadata.md#ref) listed, they **MUST** be sorted.
+
+Sorting for each element of [`ref`](../metadata.md#ref) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ### [`template`](../metadata.md#template)
 
@@ -212,7 +216,7 @@ Revoked documents are flagged as no longer valid, and should not be displayed.
 As a special case, if the revocations are set to `true` then all versions of the document
 are revoked, including the latest document.
 
-In this case, when the latest document is revoked, the payload may be empty.
+In this case, when the latest document is revoked, the payload may be `nil`.
 Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
 and its payload is to be assumed to be invalid.
 
@@ -256,8 +260,8 @@ levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
 * The Document referenced by [`template`](../metadata.md#template)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -280,7 +284,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -293,6 +297,7 @@ Only the original author can update and sign a new version of documents.
 * First Published Version
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

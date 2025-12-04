@@ -1,0 +1,8 @@
+title: Voting Process
+nav:
+  - Parameters Hierarchy and Pub/Sub Discovery: parameters_hierarchy_and_discovery.md
+  - Proposals, Templates, and Pub/Sub Discovery: proposals_templates_and_discovery.md
+  - dRep Delegation, Nominations, and Discovery: drep_delegation_and_discovery.md
+  - Voting, Bulletin Board, and Pub/Sub Tally: voting_bulletin_board_and_pubsub_tally.md
+  - Voting Protocol Cryptography Schema: crypto.md
+  - Jörmungandr Voting Transaction (Historical): jormungandr_vote_format_historical.md

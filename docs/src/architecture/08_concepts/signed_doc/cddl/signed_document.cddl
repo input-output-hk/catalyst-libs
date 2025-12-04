@@ -76,7 +76,7 @@ Signed_Document_Metadata_Headers = (
 )
 
 ; Document Type
-document_type = [ 1* uuid_v4 ]
+document_type = uuid_v4
 
 ; UUIDv4
 uuid_v4 = #6.37(bytes .size 16)
@@ -90,32 +90,49 @@ uuid_v7 = #6.37(bytes .size 16)
 ; Document Version
 document_ver = uuid_v7
 
-; Reference to one or more Signed Documents
-document_refs = [ 1* document_ref ]
+; Reference to one or more Signed Documents.
+; Sorting for each array element follows the same sort order as specified for Map Keys,
+; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+; and all array elements are unique.
+document_refs = [ + document_ref ]
 
 ; Reference to a single Signed Document
 document_ref = [
-  document_id,
-  document_ver,
+  document_id
+  document_ver
   document_locator
 ]
 
 ; Where a document can be located, must be a unique identifier.
 document_locator = {
-  "cid" => cid
+  "cid" : cid
 }
 
-; IPLD content identifier
-; TODO: add size limits if possible
-cid = #6.42(bytes)
+; IPLD content identifier.
+; Currently limited to SHA2-256 based CIDs.
+cid = #6.42(bytes .abnfb ("cid" .det cbor-cid ))
+
+; CIDv1 ABNF Constrained for SHA2-256
+cbor-cid = '
+    cid = cidv1 codec-cbor sha2-256 digest-32 digest
+    cidv1 = %x00 %x01
+    codec-cbor = %x51
+    sha2-256 = %x12
+    digest-32 = %x20
+    digest = 32(%x00-FF)
+'
 
 ; Reference to a section in a referenced document.
 section_ref = json_pointer
 
 ; RFC6901 Standard JSON Pointer
+; See: https://datatracker.ietf.org/doc/html/rfc6901
 json_pointer = text
 
 ; Allowed Collaborators on the next subsequent version of a document.
+; Sorting for each array element follows the same sort order as specified for Map Keys,
+; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+; and all array elements are unique.
 collaborators = [ + catalyst_id_kid ]
 
 ; UTF8 Catalyst ID URI encoded as a bytes string.

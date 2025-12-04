@@ -131,5 +131,23 @@ copyright: #copyrightNotice & {
 				* Changed spec `signers.update` property structure.
 				"""
 		},
+		{
+			version:  "0.2.0"
+			modified: "2025-11-10"
+			changes: """
+				* Added a new 'Contest Ballot' and 'Contest Ballot Checkpoint' document types.
+				* Improved the specification for 'Contest Delegation' document type.
+				* 'content encoding' metadata field become non optional for all document types where it was an optional field.
+				* Added new 'payload.schema' type - CDDL schema, defined as string.
+				"""
+		},
+		{
+			version:  "0.2.1"
+			modified: "2025-12-02"
+			changes: """
+				* Added missing `ref` metadata field definition.
+				* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
+				"""
+		},
 	]
 }

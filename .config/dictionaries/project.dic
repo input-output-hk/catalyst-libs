@@ -1,12 +1,14 @@
 aarch
 abcz
 ABNF
+abnfb
 addrr
 addrs
 adminer
 admon
 anypolicy
 apskhem
+asat
 Arissara
 asyncio
 Attributes
@@ -25,6 +27,7 @@ blockdiag
 blockfetch
 blosc
 bmac
+bytemuck
 Bogale
 bootstrapper
 BROTLI
@@ -32,6 +35,7 @@ Cabe
 cantopen
 cardano
 carryforward
+catid
 CBOR
 cbork
 cddlc
@@ -45,11 +49,13 @@ childs
 Chotivichit
 chrono
 cids
+cidv
 ciphertext
 ciphertexts
 Coap
 codegen
 codepoints
+Collab
 connexa
 coti
 coverallsapp
@@ -77,6 +83,7 @@ dockerhub
 docstrings
 doctests
 Dominik
+dorny
 dotenv
 dotenvy
 dotglob
@@ -84,7 +91,9 @@ drep
 dreps
 Earthfile
 elgamal
+encryptiondecryption
 encryptor
+endfilter
 Errno
 Eternl
 evalv
@@ -166,6 +175,9 @@ localizable
 logcall
 lookaside
 ltail
+ltdoc
+ltend
+ltstart
 maindbname
 mapref
 markdownlint
@@ -177,6 +189,7 @@ MDLINTS
 mdns
 MEMMAP
 memx
+Merkle
 Metadatum
 metno
 mgrybyk
@@ -196,7 +209,10 @@ moka
 MPMC
 msvc
 Multiaddr
+multibase
+multicodec
 multiera
+multihash
 mutlisig
 mypy
 nanos
@@ -238,6 +254,7 @@ pubk
 pubkey
 publickey
 pubspec
+pycardano
 pwrite
 pycodestyle
 pydantic
@@ -245,6 +262,7 @@ pydot
 pyenv
 Pyflakes
 pypackages
+pyproject
 pytest
 pytype
 qpsg
@@ -255,10 +273,12 @@ rankdir
 rapidoc
 readlinkat
 redoc
+rejectattr
 REMOVEDIR
 renameat
 Replayability
 Repr
+reqs
 reqwest
 retriggering
 ristretto
@@ -284,6 +304,7 @@ scanstatus
 Sched
 scrollability
 seckey
+selectattr
 Signdata
 sitedocs
 skiplist
@@ -332,6 +353,7 @@ utimensat
 UTXO
 uuidv4
 uuidv7
+varint
 venv
 vitss
 Vkey

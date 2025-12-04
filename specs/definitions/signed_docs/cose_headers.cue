@@ -51,8 +51,7 @@ cose: headerFormats: #metadataFormats & {
 	coseLabel:   int | string
 	description: string
 	format:      #coseHeaderTypesConstraint
-	//required:    "yes" | "optional" | "excluded"
-	required: optional.#field_without_default
+	required:    optional.#field_default_yes
 
 	if required != "excluded" {
 		if format == "Media Type" {
@@ -74,14 +73,13 @@ _coseHeaders: #coseHeaders & {
 	"content type": #coseField & {
 		coseLabel:   3
 		format:      "Media Type"
-		required:    _ | *"yes"
 		description: "Media Type/s allowed in the Payload"
 	}
 	// Documents Used content encodings
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
-		required:  _ | *"optional"
+		required:  "optional"
 		description: """
 			Supported HTTP Encodings of the Payload.
 			If no compression or encoding is used, then this field must not be present.
@@ -94,14 +92,20 @@ _coseSignatureHeaders: #coseHeaders & {
 	kid: #coseField & {
 		coseLabel: 4
 		format:    "Catalyst ID"
-		required:  "yes"
 		description: """
 			Catalyst ID URI identifying the Public Key.
 
 			The `kid` is a UTF-8 encoded Catalyst ID URI.
 			Any `kid` URI which conforms to the Catalyst ID specification may be used.
 			The Catalyst ID unambiguously defines both the signing keys and signing algorithm
-			used to sign the protected portion of the document.			
+			used to sign the protected portion of the document.		
+
+			There may be **MULTIPLE** Cose Signatures attached to any document.
+			In the event there are **MULTIPLE** Cose Signatures `kid` attached, then they **MUST**
+			be sorted.
+
+			Sorting for each cose signature follows the same sort order as specified for Map Keys, 
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
 			"""
 	}
 }

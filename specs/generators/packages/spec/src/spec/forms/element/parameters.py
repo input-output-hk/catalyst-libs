@@ -19,7 +19,7 @@ class Parameter(BaseModel):
     description: str
     required: OptionalField
     type: str
-    items: "None | Parameter" = Field(default=None)
+    items: None | Parameter = Field(default=None)
     choices: list[str] | list[int] | None = Field(default=None)
     format: str | None = Field(default=None)
     content_media_type: str | None = Field(default=None, alias="contentMediaType")
@@ -72,12 +72,12 @@ class Parameter(BaseModel):
 class Parameters(RootModel[dict[str, "Parameter | Parameters"]]):
     """All Parameters defined for an Element."""
 
-    root: dict[str, "Parameter | Parameters"]
+    root: dict[str, Parameter | Parameters]
     _element_name: str = PrivateAttr(default="Unknown")
 
     @computed_field
     @property
-    def all(self) -> list["Parameter | Parameters"]:
+    def all(self) -> list[Parameter | Parameters]:
         """All the Parameters of an Element Type."""
         return [self.root[prop] for prop in sorted(self.root.keys())]
 

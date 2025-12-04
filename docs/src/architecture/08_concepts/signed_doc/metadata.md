@@ -9,7 +9,7 @@ All Metadata fields use one of these types.
 
 A link to a previous document in a chained sequence.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [chain.cddl](cddl/chain.cddl)
@@ -17,13 +17,13 @@ A link to a previous document in a chained sequence.
     ``` cddl
     {{ include_file('./cddl/chain.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Collaborators Reference List
 
 A list of collaborators who can participate in drafting and submitting a document
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [collaborators.cddl](cddl/collaborators.cddl)
@@ -31,13 +31,13 @@ A list of collaborators who can participate in drafting and submitting a documen
     ``` cddl
     {{ include_file('./cddl/collaborators.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Id
 
 A unique document identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_id.cddl](cddl/document_id.cddl)
@@ -45,13 +45,13 @@ A unique document identifier
     ``` cddl
     {{ include_file('./cddl/document_id.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Reference
 
 A document reference identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_refs.cddl](cddl/document_refs.cddl)
@@ -59,13 +59,13 @@ A document reference identifier
     ``` cddl
     {{ include_file('./cddl/document_refs.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Type
 
 A document type identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_type.cddl](cddl/document_type.cddl)
@@ -73,13 +73,13 @@ A document type identifier
     ``` cddl
     {{ include_file('./cddl/document_type.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Document Ver
 
 A unique chronological document version
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [document_ver.cddl](cddl/document_ver.cddl)
@@ -87,13 +87,13 @@ A unique chronological document version
     ``` cddl
     {{ include_file('./cddl/document_ver.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Section Reference
 
 A document section reference identifier
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [section_ref.cddl](cddl/section_ref.cddl)
@@ -101,13 +101,13 @@ A document section reference identifier
     ``` cddl
     {{ include_file('./cddl/section_ref.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### [UUIDv4][RFC9562-V4]
 
 Version 4 formatted [UUID][RFC9562]
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [uuid_v4.cddl](cddl/uuid_v4.cddl)
@@ -115,13 +115,13 @@ Version 4 formatted [UUID][RFC9562]
     ``` cddl
     {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### [UUIDv7][RFC9562-V7]
 
 Version 7 formatted [UUID][RFC9562]
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [uuid_v7.cddl](cddl/uuid_v7.cddl)
@@ -129,13 +129,13 @@ Version 7 formatted [UUID][RFC9562]
     ``` cddl
     {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ### Version Revocations
 
 A list of all versions of this document which are 'revoked'.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "CDDL Specification"
 
     * [revocations.cddl](cddl/revocations.cddl)
@@ -143,7 +143,7 @@ A list of all versions of this document which are 'revoked'.
     ``` cddl
     {{ include_file('./cddl/revocations.cddl', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ## Individual Metadata field definitions
 
@@ -232,6 +232,8 @@ The document version must always be >= the document ID.
 |  | [Rep Nomination](./docs/rep_nomination.md) |
 |  | [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) |
 |  | [Contest Delegation](./docs/contest_delegation.md) |
+|  | [Contest Ballot](./docs/contest_ballot.md) |
+|  | [Contest Ballot Checkpoint](./docs/contest_ballot_checkpoint.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -264,6 +266,10 @@ The following must be true for a valid reference:
 * The Referenced Document **MUST** Exist
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+* In the event there are **MULTIPLE** [`ref`](metadata.md#ref) listed, they **MUST** be sorted.
+
+Sorting for each element of [`ref`](metadata.md#ref) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ### `template`
 
@@ -339,8 +345,23 @@ publish a new version of the document.
 
 This list does not imply these collaborators have consented to collaborate, only that the author/s
 are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
+How collaborators are counted on a final submission is determined by a parameter defined at the
+Brand/Campaign/Category level (parameter name TBD).
+Depending on that configuration:
+
+* All listed collaborators may be required to submit a `final` Submission Action in addition
+  to the author; **OR**
+* Only collaborators who submit a `final` Submission Action for the referenced version are
+  included as collaborators on that submission.
+
+If the parameter is not present, default to the latter mode (only final-signing collaborators are
+included).
+In all modes a document is only considered final when the original author has submitted `final`.
+
+In the event there are **MULTIPLE** [`collaborators`](metadata.md#collaborators) listed, they **MUST** be sorted.
+
+Sorting for each element of [`collaborators`](metadata.md#collaborators) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ### `revocations`
 
@@ -618,13 +639,14 @@ classDiagram
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4

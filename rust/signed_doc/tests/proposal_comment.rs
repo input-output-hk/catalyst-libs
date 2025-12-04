@@ -1,6 +1,6 @@
 //! Test for Proposal Comment document.
 //! Require fields: type, id, ver, ref, template, parameters
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment/>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal_comment>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -18,11 +18,11 @@ mod common;
 
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         proposal_comment_doc(&proposal, &template, &parameters, provider)
     }
     => true
@@ -31,13 +31,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         proposal_comment_doc(&proposal, &template, &parameters, provider)
     }
     => true
@@ -46,15 +46,15 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = category_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = category_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = campaign_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = campaign_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = category_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = category_parameters_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         proposal_comment_doc(&proposal, &template, &parameters, provider)
     }
     => true
@@ -63,15 +63,21 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let comment = proposal_comment_doc(&proposal, &template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let comment = proposal_comment_doc(&proposal, &template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+        let comment_ref = comment.doc_ref()?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -79,22 +85,10 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                },
-                "reply": {
-                    "id": comment.doc_id()?,
-                    "ver": comment.doc_ver()?
-                },
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref],
+                "reply": [comment_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -106,14 +100,19 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -121,18 +120,9 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                },
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -144,14 +134,19 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -159,18 +154,9 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref]
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -183,32 +169,28 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "template": [template_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -221,13 +203,17 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = proposal.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -235,14 +221,8 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "ref": [proposal_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -255,14 +235,18 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let proposal_ref = proposal.doc_ref()?;
+        let template_ref = template.doc_ref()?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -270,14 +254,8 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "ref": {
-                    "id": proposal.doc_id()?,
-                    "ver": proposal.doc_ver()?,
-                },
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
+                "ref": [proposal_ref],
+                "template": [template_ref],
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -290,12 +268,16 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
-        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(None, v).unwrap())?;
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
+
+        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
+
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -303,14 +285,8 @@ mod common;
                 "type": doc_types::PROPOSAL_COMMENT.clone(),
                 "id": id,
                 "ver": id,
-                "template": {
-                    "id": template.doc_id()?,
-                    "ver": template.doc_ver()?,
-                },
-                "parameters": {
-                    "id": parameters.doc_id()?,
-                    "ver": parameters.doc_ver()?,
-                }
+                "template": [template_ref],
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?

@@ -19,7 +19,7 @@ for data capture.
 
 The Base Form Template has the following format.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Form Template Base Schema"
 
     * [form_template.schema.json](schema/form_template.schema.json)
@@ -27,7 +27,7 @@ The Base Form Template has the following format.
     ``` json
     {{ include_file('./schema/form_template.schema.json', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### `"$schema"`
 
@@ -109,7 +109,7 @@ that are not present in the Form Template itself.
 This is an Example Form Template which has a property shown for every
 possible Form Element.
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
+<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Form Template Example Schema"
 
     * [form_template_example.schema.json](schema/form_template_example.schema.json)
@@ -117,7 +117,7 @@ possible Form Element.
     ``` json
     {{ include_file('./schema/form_template_example.schema.json', indent=4) }}
     ```
-<!-- markdownlint-enable max-one-sentence-per-line -->
+<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 ## Dictionary of all defined Form Elements
 
@@ -179,8 +179,11 @@ Form Templates may make use of the following sets of known assets.
  #icon_Unnamed .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
  #icon_Unnamed .gt_row_group_first td { border-top-width: 2px; }
  #icon_Unnamed .gt_row_group_first th { border-top-width: 2px; }
- #icon_Unnamed .gt_striped { background-color: #F4F4F4; }
+ #icon_Unnamed .gt_striped { color: #333333; background-color: #F4F4F4; }
  #icon_Unnamed .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #D5D5D5; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D5D5D5; }
+ #icon_Unnamed .gt_grand_summary_row { color: #333333; background-color: #929292; text-transform: inherit; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; }
+ #icon_Unnamed .gt_first_grand_summary_row_bottom { border-top-style: double; border-top-width: 6px; border-top-color: #D3D3D3; }
+ #icon_Unnamed .gt_last_grand_summary_row_top { border-bottom-style: double; border-bottom-width: 6px; border-bottom-color: #D3D3D3; }
  #icon_Unnamed .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
  #icon_Unnamed .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
  #icon_Unnamed .gt_left { text-align: left; }

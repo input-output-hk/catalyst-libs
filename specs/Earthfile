@@ -1,8 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.5.27 AS python-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.5.27 AS debian
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cue:v3.5.27 AS cue
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.6 AS python-ci
 
 IMPORT ../docs AS docs
 
@@ -12,7 +10,6 @@ builder:
 
     # Eval V3 currently broken with our specifications.
     ENV CUE_EXPERIMENT=evalv3=0
-    DO cue+INSTALL
 
 # Copy all the source we need to build the docs
 src:
@@ -23,12 +20,20 @@ src:
 
     SAVE ARTIFACT signed_doc.json
 
+GEN_JSON:
+    FUNCTION
+    ARG output=../signed_doc.json
+    RUN cd definitions; \
+        cue vet -Evc -s ./signed_docs/docs:signed_docs && \
+        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > $output
+
+
 # Regenerate the json spec file.
 regenerate-json:
     FROM +src
+
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
-    RUN cd definitions; \
-        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
+    DO +GEN_JSON
 
     SAVE ARTIFACT --keep-ts signed_doc.json
 
@@ -37,10 +42,6 @@ regenerate:
     FROM +src
 
     COPY +regenerate-json/signed_doc.json .
-
-    # Make sure keys are sorted so its both reproducible, AND diffs easily.
-    RUN cd definitions; \
-        cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
 
     RUN cd generators; \
         uv run docs -g -o "../../gen" ../signed_doc.json 
@@ -72,8 +73,13 @@ check:
 
     # RUN cd definitions; \
     #    cue vet ./cddl 
-    RUN cd definitions; \
-        cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+
+    # This does not work anymore.  Looks like a bug in the validator.
+    # so regenerate and compare the output.
+    #RUN cd definitions; \
+    #    cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+    DO +GEN_JSON --output=../signed_doc.check.json
+    RUN diff signed_doc.json signed_doc.check.json
 
     # Get the current docs
     COPY --keep-ts docs+generated-pages/signed_doc /docs

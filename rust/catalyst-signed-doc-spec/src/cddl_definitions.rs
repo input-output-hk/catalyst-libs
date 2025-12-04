@@ -2,7 +2,8 @@
 
 use std::{collections::HashMap, fmt::Display};
 
-use cbork_cddl_parser::validate_cddl;
+// TODO: Fix CDDL validation
+//use cbork_cddl_parser::validate_cddl;
 
 #[derive(serde::Deserialize)]
 pub struct CddlDefinitions(HashMap<CddlType, CddlDef>);
@@ -68,12 +69,14 @@ impl CddlDefinitions {
             }
         }
 
-        let mut spec = imports.values().fold(spec, |mut spec, import_spec| {
+        let spec = imports.values().fold(spec, |mut spec, import_spec| {
             spec.push_str(import_spec);
             spec
         });
 
-        validate_cddl(&mut spec, &cbork_cddl_parser::Extension::CDDL)?;
+        // This is incomplete and does not properly parse valid CDDL specs yet.
+        // TODO: improve CDDL validation before re-introduction.
+        // validate_cddl(&mut spec, &cbork_cddl_parser::Extension::CDDL)?;
         Ok(spec)
     }
 }

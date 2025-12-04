@@ -6,6 +6,8 @@ use common::create_dummy_key_pair;
 use minicbor::{Decode, Encoder, data::Tag};
 use rand::Rng;
 
+use crate::common::create_dummy_doc_ref;
+
 mod common;
 
 type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
@@ -25,7 +27,7 @@ struct TestCase {
 fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+    let doc_ref = create_dummy_doc_ref();
     TestCase {
         name: format!(
             "Catalyst Signed Doc with deprecated {field_name} version before v0.04 validating."
@@ -74,24 +76,15 @@ fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
         }),
         policy: CompatibilityPolicy::Accept,
         can_decode: true,
-        valid_doc: true,
-        post_checks: Some(Box::new({
-            move |doc| {
-                anyhow::ensure!(doc.is_deprecated()?);
-                Ok(())
-            }
-        })),
+        valid_doc: false,
+        post_checks: None,
     }
 }
 
 fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
-        UuidV7::new(),
-        UuidV7::new(),
-        DocLocator::default(),
-    )]);
+    let doc_ref = DocumentRefs::from(vec![create_dummy_doc_ref()]);
     let doc_ref_cloned = doc_ref.clone();
     TestCase {
         name: format!("Provided '{alias}' field should be processed as parameters."),
@@ -146,11 +139,11 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
 fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
     TestCase {
         name: format!("Catalyst Signed Doc with missing '{field}' header."),
         bytes_gen: Box::new({
             move || {
+                let doc_ref = create_dummy_doc_ref();
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
@@ -303,11 +296,11 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
 fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str]) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
     TestCase {
         name: format!("Multiple definitions of '{}' at once.", aliases.join(", ")),
         bytes_gen: Box::new({
             move || {
+                let doc_ref = create_dummy_doc_ref();
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
@@ -595,16 +588,13 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
 fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
-    let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
-        UuidV7::new(),
-        UuidV7::new(),
-        DocLocator::default(),
-    )]);
+    let doc_ref = DocumentRefs::from(vec![create_dummy_doc_ref()]);
     let doc_ref_cloned = doc_ref.clone();
     TestCase {
         name: "Catalyst Signed Doc with all metadata fields defined, signed (one signature), CBOR tagged.".to_string(),
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
+            let doc_ref = doc_ref.clone();
             move || {
                 let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
 

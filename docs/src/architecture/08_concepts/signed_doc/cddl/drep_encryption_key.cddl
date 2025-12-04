@@ -1,0 +1,6 @@
+; Placeholder to store the drep encryption key so drep votes can be decrypted if required.
+; Placeholder until formally defined.
+
+
+; Placeholder of drep encryption key.
+drep-encryption-key = undefined

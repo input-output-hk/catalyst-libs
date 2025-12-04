@@ -34,7 +34,7 @@ regenerate:
 # Validate the generated signed_docs.json is correct against the cue schema.
 validate:
     # Generate the intermediate compiled schema data.
-    cd definitions; CUE_EXPERIMENT=evalv3=0 cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+    cd definitions; cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
     # cd definitions; cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
     # Check the Model is valid.
     cd generators; uv run validator ../signed_doc.json

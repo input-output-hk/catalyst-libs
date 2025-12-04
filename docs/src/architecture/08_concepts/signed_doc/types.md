@@ -14,6 +14,8 @@ All Defined Document Types
 | [Category Parameters](docs/category_parameters.md) | 48c20109-362a-4d32-9bba-e0a9cf8b45be | `#6.37(h'48c20109362a4d329bbae0a9cf8b45be')` |
 | [Category Parameters Form Template](docs/category_parameters_form_template.md) | 65b1e8b0-51f1-46a5-9970-72cdf26884be | `#6.37(h'65b1e8b051f146a5997072cdf26884be')` |
 | [Comment Moderation Action](docs/comment_moderation_action.md) | 84a4b502-3b7e-47fd-84e4-6fee08794bd7 | `#6.37(h'84a4b5023b7e47fd84e46fee08794bd7')` |
+| [Contest Ballot](docs/contest_ballot.md) | de1284b8-8533-4f7a-81cc-ff4bde5ef8d0 | `#6.37(h'de1284b885334f7a81ccff4bde5ef8d0')` |
+| [Contest Ballot Checkpoint](docs/contest_ballot_checkpoint.md) | 58608925-bda3-47df-b39a-ae0d0a1dd6ed | `#6.37(h'58608925bda347dfb39aae0d0a1dd6ed')` |
 | [Contest Delegation](docs/contest_delegation.md) | 764f17fb-cc50-4979-b14a-b213dbac5994 | `#6.37(h'764f17fbcc504979b14ab213dbac5994')` |
 | [Contest Parameters](docs/contest_parameters.md) | 788ff4c6-d65a-451f-bb33-575fe056b411 | `#6.37(h'788ff4c6d65a451fbb33575fe056b411')` |
 | [Contest Parameters Form Template](docs/contest_parameters_form_template.md) | 08a1e16d-354d-4f64-8812-4692924b113b | `#6.37(h'08a1e16d354d4f6488124692924b113b')` |
@@ -40,7 +42,7 @@ All Defined Document Types
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-10-24 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

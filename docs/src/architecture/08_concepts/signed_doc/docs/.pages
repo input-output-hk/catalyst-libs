@@ -7,6 +7,8 @@ nav:
   - Category Parameters: category_parameters.md
   - Category Parameters Form Template: category_parameters_form_template.md
   - Comment Moderation Action: comment_moderation_action.md
+  - Contest Ballot: contest_ballot.md
+  - Contest Ballot Checkpoint: contest_ballot_checkpoint.md
   - Contest Delegation: contest_delegation.md
   - Contest Parameters: contest_parameters.md
   - Contest Parameters Form Template: contest_parameters_form_template.md
