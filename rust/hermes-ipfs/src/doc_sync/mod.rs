@@ -2,6 +2,8 @@
 
 mod envelope;
 
+pub mod payload;
+
 pub use envelope::{Envelope, EnvelopePayload};
 
 /// Current document synchronization protocol version.
