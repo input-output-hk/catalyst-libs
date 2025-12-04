@@ -2,6 +2,9 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
+#[cfg(feature = "doc-sync")]
+pub mod doc_sync;
+
 use std::{collections::HashSet, convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
