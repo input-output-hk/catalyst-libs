@@ -5,12 +5,26 @@ mod tests;
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
+use futures::FutureExt;
 
-use crate::{CatalystSignedDocument, providers::CatalystProvider};
+use crate::{
+    CatalystSignedDocument, providers::CatalystProvider,
+    validator::rules::CatalystSignedDocumentCheck,
+};
 
 /// Signed Document `id` field validation rule
 #[derive(Debug)]
 pub(crate) struct IdRule;
+
+impl CatalystSignedDocumentCheck for IdRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check(doc, provider) }.boxed()
+    }
+}
 
 impl IdRule {
     /// Validates document `id` field on the timestamps:
@@ -19,8 +33,7 @@ impl IdRule {
     ///    threshold
     /// 2. If `provider.past_threshold()` not `None`, document `id` cannot be too far
     ///    behind (`past_threshold` arg) from `Utc::now()` based on the provided threshold
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

@@ -1,9 +1,11 @@
 //! A list of validation rules for all metadata fields
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/meta/>
 
+use std::fmt::Debug;
+
 use anyhow::Context;
 use catalyst_signed_doc_spec::{DocSpec, DocSpecs, cddl_definitions::CddlDefinitions};
-use futures::FutureExt;
+use futures::{FutureExt, future::BoxFuture};
 
 use crate::{CatalystSignedDocument, providers::CatalystProvider};
 
@@ -39,6 +41,19 @@ pub(crate) use signature::SignatureRule;
 pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::TemplateRule;
 pub(crate) use ver::VerRule;
+
+/// `CatalystSignedDocument` check trait
+#[allow(dead_code)]
+pub trait CatalystSignedDocumentCheck: Send + Sync + Debug {
+    /// Validates `CatalystSignedDocument`, return `false` if the provided
+    /// `CatalystSignedDocument` violates some validation rules with properly filling the
+    /// problem report.
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> BoxFuture<'a, anyhow::Result<bool>>;
+}
 
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {

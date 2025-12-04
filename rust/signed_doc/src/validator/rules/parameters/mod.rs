@@ -197,8 +197,7 @@ pub(crate) async fn link_check(
     field_name: &str,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool>
-{
+) -> anyhow::Result<bool> {
     let Some(ref_field) = ref_field else {
         return Ok(true);
     };

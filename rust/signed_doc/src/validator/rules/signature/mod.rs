@@ -57,8 +57,7 @@ async fn validate_signature(
     sign: &Signature,
     provider: &dyn CatalystIdProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool>
-{
+) -> anyhow::Result<bool> {
     let kid = sign.kid();
 
     let Some(pk) = provider.try_get_registered_key(kid).await? else {

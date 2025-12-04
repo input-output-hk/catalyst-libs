@@ -4,6 +4,7 @@ pub(crate) mod rules;
 
 use std::{collections::HashMap, sync::LazyLock};
 
+pub use rules::CatalystSignedDocumentCheck;
 use rules::Rules;
 
 use crate::{

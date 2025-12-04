@@ -4,8 +4,11 @@ use uuid::{Timestamp, Uuid};
 
 use super::*;
 use crate::{
-    UuidV7, builder::tests::Builder, metadata::SupportedField,
-    providers::{tests::TestCatalystProvider, CatalystSignedDocumentProvider},
+    UuidV7,
+    builder::tests::Builder,
+    metadata::SupportedField,
+    providers::{CatalystSignedDocumentProvider, tests::TestCatalystProvider},
+    validator::CatalystSignedDocumentCheck,
 };
 
 #[test_case(

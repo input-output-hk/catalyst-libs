@@ -93,8 +93,7 @@ impl ChainRule {
         doc_chain: &Chain,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystSignedDocumentProvider,
-    ) -> anyhow::Result<bool>
-    {
+    ) -> anyhow::Result<bool> {
         const CONTEXT: &str = "Chained Documents validation";
 
         if doc_chain.document_ref().is_none() && doc_chain.height() != 0 {
