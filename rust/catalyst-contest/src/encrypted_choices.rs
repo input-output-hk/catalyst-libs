@@ -40,7 +40,7 @@ impl Decode<'_, ()> for EncryptedChoices {
         let version = u64::decode(d, ctx)?;
         if version != 0 {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected encrypted choices array value: {version}, expected 0"
+                "Unexpected encrypted choices version value: {version}, expected 0"
             )));
         }
 
@@ -73,7 +73,7 @@ impl Decode<'_, ()> for EncryptedBlock {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        <[u8; ENCRYPTED_BLOCK_ARRAY_LEN as usize]>::decode(d, ctx).map(EncryptedBlock)
+        <[u8; ENCRYPTED_BLOCK_ARRAY_LEN as usize]>::decode(d, ctx).map(Self)
     }
 }
 
