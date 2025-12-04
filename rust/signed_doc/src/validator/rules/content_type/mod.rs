@@ -8,7 +8,7 @@ use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, metadata::ContentType, providers::CatalystProvider,
-    validator::CatalystSignedDocumentCheck,
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// `content-type` field validation rule
@@ -23,7 +23,7 @@ pub(crate) enum ContentTypeRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for ContentTypeRule {
+impl CatalystSignedDocumentValidationRule for ContentTypeRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

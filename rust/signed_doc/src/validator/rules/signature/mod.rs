@@ -8,14 +8,17 @@ use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    providers::{CatalystIdProvider, CatalystProvider}, signature::{tbs_data, Signature}, validator::CatalystSignedDocumentCheck, CatalystSignedDocument
+    CatalystSignedDocument,
+    providers::{CatalystIdProvider, CatalystProvider},
+    signature::{Signature, tbs_data},
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// Signed Document signatures validation rule.
 #[derive(Debug)]
 pub(crate) struct SignatureRule;
 
-impl CatalystSignedDocumentCheck for SignatureRule {
+impl CatalystSignedDocumentValidationRule for SignatureRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

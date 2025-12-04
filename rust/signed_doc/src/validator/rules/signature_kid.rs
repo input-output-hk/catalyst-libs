@@ -6,7 +6,10 @@ use catalyst_signed_doc_spec::signers::roles::{Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use futures::FutureExt;
 
-use crate::{providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
+use crate::{
+    CatalystSignedDocument, providers::CatalystProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 ///  COSE signature `kid` (Catalyst Id) role validation
 #[derive(Debug)]
@@ -16,7 +19,7 @@ pub(crate) struct SignatureKidRule {
     allowed_roles: HashSet<RoleId>,
 }
 
-impl CatalystSignedDocumentCheck for SignatureKidRule {
+impl CatalystSignedDocumentValidationRule for SignatureKidRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

@@ -9,7 +9,9 @@ use catalyst_signed_doc_spec::{
 use futures::FutureExt;
 
 use crate::{
-    providers::CatalystProvider, validator::{rules::doc_ref::doc_refs_check, CatalystSignedDocumentCheck}, CatalystSignedDocument, DocType
+    CatalystSignedDocument, DocType,
+    providers::CatalystProvider,
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 /// `reply` field validation rule
@@ -26,7 +28,7 @@ pub(crate) enum ReplyRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for ReplyRule {
+impl CatalystSignedDocumentValidationRule for ReplyRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

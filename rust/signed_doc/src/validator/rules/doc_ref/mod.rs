@@ -10,7 +10,7 @@ use futures::FutureExt;
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
     providers::{CatalystProvider, CatalystSignedDocumentProvider},
-    validator::CatalystSignedDocumentCheck,
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// `ref` field validation rule
@@ -29,7 +29,7 @@ pub(crate) enum RefRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for RefRule {
+impl CatalystSignedDocumentValidationRule for RefRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

@@ -2,7 +2,10 @@
 
 use futures::FutureExt;
 
-use crate::{providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
+use crate::{
+    CatalystSignedDocument, providers::CatalystProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// `section` field validation rule
 #[derive(Debug)]
@@ -17,7 +20,7 @@ pub(crate) enum SectionRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for SectionRule {
+impl CatalystSignedDocumentValidationRule for SectionRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,
@@ -29,7 +32,7 @@ impl CatalystSignedDocumentCheck for SectionRule {
 
 impl SectionRule {
     /// Field validation rule
-   fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {

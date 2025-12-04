@@ -7,7 +7,8 @@ use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::collaborators:
 use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystProvider, validator::CatalystSignedDocumentCheck,
+    CatalystSignedDocument, providers::CatalystProvider,
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// `collaborators` field validation rule
@@ -22,7 +23,7 @@ pub(crate) enum CollaboratorsRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for CollaboratorsRule {
+impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

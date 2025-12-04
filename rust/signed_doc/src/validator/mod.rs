@@ -2,16 +2,28 @@
 
 pub(crate) mod rules;
 
-use std::{collections::HashMap, sync::LazyLock};
+use std::{collections::HashMap, fmt::Debug, sync::LazyLock};
 
-pub use rules::CatalystSignedDocumentCheck;
-use rules::Rules;
+use futures::{StreamExt, TryStreamExt, future::BoxFuture};
 
 use crate::{
     CatalystSignedDocument,
     metadata::DocType,
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystIdProvider, CatalystProvider, CatalystSignedDocumentProvider},
+    validator::rules::{Rules, documents_rules_from_spec},
 };
+
+/// `CatalystSignedDocument` validation rule trait
+pub trait CatalystSignedDocumentValidationRule: Send + Sync + Debug {
+    /// Validates `CatalystSignedDocument`, return `false` if the provided
+    /// `CatalystSignedDocument` violates some validation rules with properly filling the
+    /// problem report.
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> BoxFuture<'a, anyhow::Result<bool>>;
+}
 
 /// A table representing a full set or validation rules per document id.
 static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
@@ -19,7 +31,7 @@ static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(documen
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
 fn document_rules_init() -> HashMap<DocType, Rules> {
-    let document_rules_map: HashMap<DocType, Rules> = Rules::documents_rules()
+    let document_rules_map: HashMap<DocType, Rules> = documents_rules_from_spec()
         .expect("cannot fail to initialize validation rules")
         .collect();
 
@@ -57,7 +69,15 @@ where
         );
         return Ok(false);
     };
-    rules.check(doc, provider).await
+
+    let iter = rules.iter().map(|v| v.check(doc, provider));
+    let res = futures::stream::iter(iter)
+        .buffer_unordered(rules.len())
+        .try_collect::<Vec<_>>()
+        .await?
+        .iter()
+        .all(|res| *res);
+    Ok(res)
 }
 
 #[cfg(test)]

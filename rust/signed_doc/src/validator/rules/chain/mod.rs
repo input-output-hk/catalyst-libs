@@ -10,7 +10,7 @@ use futures::FutureExt;
 use crate::{
     CatalystSignedDocument, Chain,
     providers::{CatalystProvider, CatalystSignedDocumentProvider},
-    validator::{CatalystSignedDocumentCheck, rules::doc_ref::doc_refs_check},
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 #[cfg(test)]
@@ -28,7 +28,7 @@ pub(crate) enum ChainRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for ChainRule {
+impl CatalystSignedDocumentValidationRule for ChainRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

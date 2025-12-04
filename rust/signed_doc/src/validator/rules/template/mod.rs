@@ -10,7 +10,12 @@ use catalyst_types::json_schema::JsonSchema;
 use futures::FutureExt;
 
 use crate::{
-    providers::CatalystProvider, validator::{rules::{doc_ref::doc_refs_check, utils::content_json_schema_check}, CatalystSignedDocumentCheck}, CatalystSignedDocument, ContentType, DocType
+    CatalystSignedDocument, ContentType, DocType,
+    providers::CatalystProvider,
+    validator::{
+        CatalystSignedDocumentValidationRule,
+        rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
+    },
 };
 
 /// `reply` field validation rule
@@ -25,7 +30,7 @@ pub(crate) enum TemplateRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for TemplateRule {
+impl CatalystSignedDocumentValidationRule for TemplateRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

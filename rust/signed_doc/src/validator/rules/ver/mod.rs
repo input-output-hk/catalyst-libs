@@ -5,13 +5,16 @@ mod tests;
 
 use futures::FutureExt;
 
-use crate::{providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
+use crate::{
+    CatalystSignedDocument, providers::CatalystProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// Signed Document `ver` field validation rule
 #[derive(Debug)]
 pub(crate) struct VerRule;
 
-impl CatalystSignedDocumentCheck for VerRule {
+impl CatalystSignedDocumentValidationRule for VerRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

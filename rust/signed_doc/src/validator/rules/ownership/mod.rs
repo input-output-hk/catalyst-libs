@@ -14,7 +14,8 @@ use catalyst_signed_doc_spec::{
 use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystProvider, validator::CatalystSignedDocumentCheck,
+    CatalystSignedDocument, providers::CatalystProvider,
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// Context for the validation problem report.
@@ -31,7 +32,7 @@ pub(crate) enum DocumentOwnershipRule {
     OriginalAuthor,
 }
 
-impl CatalystSignedDocumentCheck for DocumentOwnershipRule {
+impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

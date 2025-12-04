@@ -16,7 +16,7 @@ use minicbor::Encode;
 use crate::{
     CatalystSignedDocument,
     providers::CatalystProvider,
-    validator::{CatalystSignedDocumentCheck, rules::utils::content_json_schema_check},
+    validator::{CatalystSignedDocumentValidationRule, rules::utils::content_json_schema_check},
 };
 
 /// Enum represents different content schemas, against which documents content would be
@@ -51,7 +51,7 @@ pub(crate) enum ContentRule {
     Nil,
 }
 
-impl CatalystSignedDocumentCheck for ContentRule {
+impl CatalystSignedDocumentValidationRule for ContentRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

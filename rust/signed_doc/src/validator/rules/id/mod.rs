@@ -9,14 +9,14 @@ use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, providers::CatalystProvider,
-    validator::rules::CatalystSignedDocumentCheck,
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// Signed Document `id` field validation rule
 #[derive(Debug)]
 pub(crate) struct IdRule;
 
-impl CatalystSignedDocumentCheck for IdRule {
+impl CatalystSignedDocumentValidationRule for IdRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

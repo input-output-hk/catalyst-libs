@@ -12,7 +12,7 @@ use futures::FutureExt;
 use crate::{
     CatalystSignedDocument, DocType, DocumentRefs,
     providers::{CatalystProvider, CatalystSignedDocumentProvider},
-    validator::{CatalystSignedDocumentCheck, rules::doc_ref::doc_refs_check},
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 /// `parameters` field validation rule
@@ -29,7 +29,7 @@ pub(crate) enum ParametersRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for ParametersRule {
+impl CatalystSignedDocumentValidationRule for ParametersRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,

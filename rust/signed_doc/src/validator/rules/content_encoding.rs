@@ -5,7 +5,10 @@ use std::string::ToString;
 use catalyst_signed_doc_spec::is_required::IsRequired;
 use futures::FutureExt;
 
-use crate::{metadata::ContentEncoding, providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
+use crate::{
+    CatalystSignedDocument, metadata::ContentEncoding, providers::CatalystProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// `content-encoding` field validation rule.
 #[derive(Debug)]
@@ -21,7 +24,7 @@ pub(crate) enum ContentEncodingRule {
     NotSpecified,
 }
 
-impl CatalystSignedDocumentCheck for ContentEncodingRule {
+impl CatalystSignedDocumentValidationRule for ContentEncodingRule {
     fn check<'a>(
         &'a self,
         doc: &'a CatalystSignedDocument,
