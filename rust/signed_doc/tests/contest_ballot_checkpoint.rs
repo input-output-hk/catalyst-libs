@@ -10,7 +10,8 @@ use crate::common::{
     brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
     campaign_parameters_form_template_doc, category_parameters_doc,
     category_parameters_form_template_doc, contest_ballot_checkpoint_doc, contest_ballot_doc,
-    contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair, proposal_form_template_doc, proposal_doc
+    contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair,
+    proposal_doc, proposal_form_template_doc,
 };
 
 mod common;

@@ -203,7 +203,7 @@ mod common;
         provider.add_sk(kid.clone(), sk.clone());
 
         let ref_ref = proposal.doc_ref()?;
-        
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Cbor,
