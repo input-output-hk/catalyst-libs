@@ -1,6 +1,8 @@
 //! `section` rule type impl.
 
-use crate::CatalystSignedDocument;
+use futures::FutureExt;
+
+use crate::{providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
 
 /// `section` field validation rule
 #[derive(Debug)]
@@ -15,10 +17,19 @@ pub(crate) enum SectionRule {
     NotSpecified,
 }
 
+impl CatalystSignedDocumentCheck for SectionRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        _provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc) }.boxed()
+    }
+}
+
 impl SectionRule {
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+   fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
@@ -50,33 +61,33 @@ mod tests {
     use super::*;
     use crate::{builder::tests::Builder, metadata::SupportedField};
 
-    #[tokio::test]
-    async fn section_rule_specified_test() {
+    #[test]
+    fn section_rule_specified_test() {
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
         let rule = SectionRule::Specified { optional: false };
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc).unwrap());
 
         let doc = Builder::new().build();
         let rule = SectionRule::Specified { optional: true };
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc).unwrap());
 
         let doc = Builder::new().build();
         let rule = SectionRule::Specified { optional: false };
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc).unwrap());
     }
 
-    #[tokio::test]
-    async fn section_rule_not_specified_test() {
+    #[test]
+    fn section_rule_not_specified_test() {
         let rule = SectionRule::NotSpecified;
 
         let doc = Builder::new().build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc).unwrap());
 
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc).unwrap());
     }
 }

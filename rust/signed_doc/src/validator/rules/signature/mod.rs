@@ -5,16 +5,25 @@ mod tests;
 
 use anyhow::Context;
 use catalyst_types::problem_report::ProblemReport;
+use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument,
-    providers::{CatalystIdProvider, CatalystProvider},
-    signature::{Signature, tbs_data},
+    providers::{CatalystIdProvider, CatalystProvider}, signature::{tbs_data, Signature}, validator::CatalystSignedDocumentCheck, CatalystSignedDocument
 };
 
 /// Signed Document signatures validation rule.
 #[derive(Debug)]
 pub(crate) struct SignatureRule;
+
+impl CatalystSignedDocumentCheck for SignatureRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc, provider).await }.boxed()
+    }
+}
 
 impl SignatureRule {
     /// Verify document signatures.
@@ -22,7 +31,7 @@ impl SignatureRule {
     ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
-    pub(crate) async fn check(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

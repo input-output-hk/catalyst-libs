@@ -11,8 +11,11 @@ use catalyst_signed_doc_spec::{
     is_required::IsRequired,
     signers::update::{Update, UpdatersType},
 };
+use futures::FutureExt;
 
-use crate::{CatalystSignedDocument, providers::CatalystProvider};
+use crate::{
+    CatalystSignedDocument, providers::CatalystProvider, validator::CatalystSignedDocumentCheck,
+};
 
 /// Context for the validation problem report.
 const REPORT_CONTEXT: &str = "Document ownership validation";
@@ -26,6 +29,16 @@ pub(crate) enum DocumentOwnershipRule {
     RefFieldBased,
     /// Collaborators are not allowed, only original author.
     OriginalAuthor,
+}
+
+impl CatalystSignedDocumentCheck for DocumentOwnershipRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc, provider).await }.boxed()
+    }
 }
 
 impl DocumentOwnershipRule {
@@ -58,7 +71,7 @@ impl DocumentOwnershipRule {
     }
 
     /// Check document ownership rule
-    pub(crate) async fn check(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

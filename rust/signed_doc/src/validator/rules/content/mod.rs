@@ -10,9 +10,14 @@ use catalyst_signed_doc_spec::{
     payload::{Payload, Schema},
 };
 use catalyst_types::json_schema::JsonSchema;
+use futures::FutureExt;
 use minicbor::Encode;
 
-use crate::{CatalystSignedDocument, validator::rules::utils::content_json_schema_check};
+use crate::{
+    CatalystSignedDocument,
+    providers::CatalystProvider,
+    validator::{CatalystSignedDocumentCheck, rules::utils::content_json_schema_check},
+};
 
 /// Enum represents different content schemas, against which documents content would be
 /// validated.
@@ -46,6 +51,16 @@ pub(crate) enum ContentRule {
     Nil,
 }
 
+impl CatalystSignedDocumentCheck for ContentRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        _provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc) }.boxed()
+    }
+}
+
 impl ContentRule {
     /// Generating `ContentRule` from specs
     pub(crate) fn new(
@@ -74,8 +89,7 @@ impl ContentRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {

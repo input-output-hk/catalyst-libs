@@ -5,11 +5,12 @@ use catalyst_signed_doc_spec::{
     is_required::IsRequired,
     metadata::{chain::Chain as ChainSpec, collaborators::Collaborators},
 };
+use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, Chain,
     providers::{CatalystProvider, CatalystSignedDocumentProvider},
-    validator::rules::doc_ref::doc_refs_check,
+    validator::{CatalystSignedDocumentCheck, rules::doc_ref::doc_refs_check},
 };
 
 #[cfg(test)]
@@ -25,6 +26,16 @@ pub(crate) enum ChainRule {
     },
     /// 'chain' is not specified
     NotSpecified,
+}
+
+impl CatalystSignedDocumentCheck for ChainRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc, provider).await }.boxed()
+    }
 }
 
 impl ChainRule {
@@ -50,7 +61,7 @@ impl ChainRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

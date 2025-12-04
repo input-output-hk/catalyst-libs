@@ -8,7 +8,6 @@ use crate::{
     builder::tests::Builder,
     metadata::SupportedField,
     providers::{CatalystSignedDocumentProvider, tests::TestCatalystProvider},
-    validator::CatalystSignedDocumentCheck,
 };
 
 #[test_case(
@@ -79,5 +78,5 @@ async fn id_test(doc_gen: impl FnOnce(&TestCatalystProvider) -> CatalystSignedDo
     let provider = TestCatalystProvider::default();
     let doc = doc_gen(&provider);
 
-    IdRule.check(&doc, &provider).await.unwrap()
+    IdRule.check_inner(&doc, &provider).unwrap()
 }

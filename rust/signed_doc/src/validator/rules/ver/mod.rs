@@ -3,16 +3,28 @@
 #[cfg(test)]
 mod tests;
 
-use crate::{CatalystSignedDocument, providers::CatalystProvider};
+use futures::FutureExt;
+
+use crate::{providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
 
 /// Signed Document `ver` field validation rule
 #[derive(Debug)]
 pub(crate) struct VerRule;
 
+impl CatalystSignedDocumentCheck for VerRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc, provider).await }.boxed()
+    }
+}
+
 impl VerRule {
     /// Validates document `ver` field on the timestamps:
     /// 1. document `ver` cannot be smaller than document `id` field
-    pub(crate) async fn check(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

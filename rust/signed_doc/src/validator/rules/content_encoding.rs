@@ -3,8 +3,9 @@
 use std::string::ToString;
 
 use catalyst_signed_doc_spec::is_required::IsRequired;
+use futures::FutureExt;
 
-use crate::{CatalystSignedDocument, metadata::ContentEncoding};
+use crate::{metadata::ContentEncoding, providers::CatalystProvider, validator::CatalystSignedDocumentCheck, CatalystSignedDocument};
 
 /// `content-encoding` field validation rule.
 #[derive(Debug)]
@@ -18,6 +19,16 @@ pub(crate) enum ContentEncodingRule {
     },
     /// Content Encoding field must not be present in the document.
     NotSpecified,
+}
+
+impl CatalystSignedDocumentCheck for ContentEncodingRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        _provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc) }.boxed()
+    }
 }
 
 impl ContentEncodingRule {
@@ -47,8 +58,7 @@ impl ContentEncodingRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
@@ -107,8 +117,8 @@ mod tests {
     use super::*;
     use crate::{builder::tests::Builder, metadata::SupportedField};
 
-    #[tokio::test]
-    async fn content_encoding_is_specified_rule_test() {
+    #[test]
+    fn content_encoding_is_specified_rule_test() {
         let content_encoding = ContentEncoding::Brotli;
 
         let rule = ContentEncodingRule::Specified {
@@ -120,26 +130,26 @@ mod tests {
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .with_content(content_encoding.encode(&[1, 2, 3]).unwrap())
             .build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc).unwrap());
 
         // empty content (empty bytes) could not be brotli decoded
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc).unwrap());
 
         let doc = Builder::new().build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc).unwrap());
 
         let rule = ContentEncodingRule::Specified {
             exp: vec![content_encoding],
             optional: false,
         };
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc).unwrap());
     }
 
-    #[tokio::test]
-    async fn content_encoding_is_not_specified_rule_test() {
+    #[test]
+    fn content_encoding_is_not_specified_rule_test() {
         let content_encoding = ContentEncoding::Brotli;
 
         let rule = ContentEncodingRule::NotSpecified;
@@ -148,10 +158,10 @@ mod tests {
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc).unwrap());
 
         // No content encoding
         let doc = Builder::new().build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc).unwrap());
     }
 }

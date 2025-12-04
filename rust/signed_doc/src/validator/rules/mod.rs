@@ -43,7 +43,6 @@ pub(crate) use template::TemplateRule;
 pub(crate) use ver::VerRule;
 
 /// `CatalystSignedDocument` check trait
-#[allow(dead_code)]
 pub trait CatalystSignedDocumentCheck: Send + Sync + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
@@ -97,20 +96,20 @@ impl Rules {
         provider: &dyn CatalystProvider,
     ) -> anyhow::Result<bool> {
         let rules = [
-            self.id.check(doc, provider).boxed(),
-            self.ver.check(doc, provider).boxed(),
-            self.content_type.check(doc).boxed(),
-            self.content_encoding.check(doc).boxed(),
-            self.template.check(doc, provider).boxed(),
+            self.id.check(doc, provider),
+            self.ver.check_inner(doc, provider).boxed(),
+            self.content_type.check(doc, provider),
+            self.content_encoding.check_inner(doc).boxed(),
+            self.template.check_inner(doc, provider).boxed(),
             self.doc_ref.check(doc, provider).boxed(),
             self.reply.check(doc, provider).boxed(),
-            self.section.check(doc).boxed(),
+            self.section.check_inner(doc).boxed(),
             self.parameters.check(doc, provider).boxed(),
             self.chain.check(doc, provider).boxed(),
-            self.collaborators.check(doc).boxed(),
-            self.content.check(doc).boxed(),
-            self.kid.check(doc).boxed(),
-            self.signature.check(doc, provider).boxed(),
+            self.collaborators.check(doc, provider).boxed(),
+            self.content.check(doc, provider).boxed(),
+            self.kid.check_inner(doc).boxed(),
+            self.signature.check_inner(doc, provider).boxed(),
             self.ownership.check(doc, provider).boxed(),
         ];
 

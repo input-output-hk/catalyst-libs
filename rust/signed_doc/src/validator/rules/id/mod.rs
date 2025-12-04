@@ -22,7 +22,7 @@ impl CatalystSignedDocumentCheck for IdRule {
         doc: &'a CatalystSignedDocument,
         provider: &'a dyn CatalystProvider,
     ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
-        async { self.check(doc, provider) }.boxed()
+        async { self.check_inner(doc, provider) }.boxed()
     }
 }
 
@@ -33,7 +33,7 @@ impl IdRule {
     ///    threshold
     /// 2. If `provider.past_threshold()` not `None`, document `id` cannot be too far
     ///    behind (`past_threshold` arg) from `Utc::now()` based on the provided threshold
-    fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

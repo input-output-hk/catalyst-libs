@@ -34,7 +34,7 @@ async fn section_rule_specified_optional_test(
     let rule = CollaboratorsRule::Specified { optional: true };
 
     let doc = doc_gen();
-    rule.check(&doc).await.unwrap()
+    rule.check_inner(&doc).unwrap()
 }
 
 #[test_case(
@@ -64,7 +64,7 @@ async fn section_rule_specified_not_optional_test(
     let rule = CollaboratorsRule::Specified { optional: false };
 
     let doc = doc_gen();
-    rule.check(&doc).await.unwrap()
+    rule.check_inner(&doc).unwrap()
 }
 
 #[test_case(
@@ -92,5 +92,5 @@ async fn section_rule_not_specified_test(doc_gen: impl FnOnce() -> CatalystSigne
     let rule = CollaboratorsRule::NotSpecified;
 
     let doc = doc_gen();
-    rule.check(&doc).await.unwrap()
+    rule.check_inner(&doc).unwrap()
 }

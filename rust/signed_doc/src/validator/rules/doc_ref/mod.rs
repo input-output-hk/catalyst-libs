@@ -5,10 +5,12 @@ mod tests;
 
 use catalyst_signed_doc_spec::{DocSpecs, is_required::IsRequired, metadata::doc_ref::Ref};
 use catalyst_types::problem_report::ProblemReport;
+use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
     providers::{CatalystProvider, CatalystSignedDocumentProvider},
+    validator::CatalystSignedDocumentCheck,
 };
 
 /// `ref` field validation rule
@@ -26,6 +28,17 @@ pub(crate) enum RefRule {
     /// 'ref' is not specified
     NotSpecified,
 }
+
+impl CatalystSignedDocumentCheck for RefRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc, provider).await }.boxed()
+    }
+}
+
 impl RefRule {
     /// Generating `RefRule` from specs
     pub(crate) fn new(
@@ -68,7 +81,7 @@ impl RefRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

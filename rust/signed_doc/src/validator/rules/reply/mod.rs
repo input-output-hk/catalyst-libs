@@ -6,10 +6,10 @@ mod tests;
 use catalyst_signed_doc_spec::{
     DocSpecs, DocumentName, is_required::IsRequired, metadata::reply::Reply,
 };
+use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument, DocType, providers::CatalystProvider,
-    validator::rules::doc_ref::doc_refs_check,
+    providers::CatalystProvider, validator::{rules::doc_ref::doc_refs_check, CatalystSignedDocumentCheck}, CatalystSignedDocument, DocType
 };
 
 /// `reply` field validation rule
@@ -24,6 +24,16 @@ pub(crate) enum ReplyRule {
     },
     /// 'reply' is not specified
     NotSpecified,
+}
+
+impl CatalystSignedDocumentCheck for ReplyRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc, provider).await }.boxed()
+    }
 }
 
 impl ReplyRule {
@@ -62,7 +72,7 @@ impl ReplyRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,

@@ -4,8 +4,11 @@
 mod tests;
 
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::collaborators::Collaborators};
+use futures::FutureExt;
 
-use crate::CatalystSignedDocument;
+use crate::{
+    CatalystSignedDocument, providers::CatalystProvider, validator::CatalystSignedDocumentCheck,
+};
 
 /// `collaborators` field validation rule
 #[derive(Debug)]
@@ -17,6 +20,16 @@ pub(crate) enum CollaboratorsRule {
     },
     /// 'collaborators' is not specified
     NotSpecified,
+}
+
+impl CatalystSignedDocumentCheck for CollaboratorsRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        _provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc) }.boxed()
+    }
 }
 
 impl CollaboratorsRule {
@@ -34,8 +47,7 @@ impl CollaboratorsRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {

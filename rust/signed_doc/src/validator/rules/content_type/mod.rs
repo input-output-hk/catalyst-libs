@@ -4,8 +4,12 @@
 mod tests;
 
 use catalyst_types::json_schema::JsonSchema;
+use futures::FutureExt;
 
-use crate::{CatalystSignedDocument, metadata::ContentType};
+use crate::{
+    CatalystSignedDocument, metadata::ContentType, providers::CatalystProvider,
+    validator::CatalystSignedDocumentCheck,
+};
 
 /// `content-type` field validation rule
 #[derive(Debug)]
@@ -17,6 +21,16 @@ pub(crate) enum ContentTypeRule {
     },
     /// Content Type field must not be present in the document.
     NotSpecified,
+}
+
+impl CatalystSignedDocumentCheck for ContentTypeRule {
+    fn check<'a>(
+        &'a self,
+        doc: &'a CatalystSignedDocument,
+        _provider: &'a dyn CatalystProvider,
+    ) -> futures::future::BoxFuture<'a, anyhow::Result<bool>> {
+        async { self.check_inner(doc) }.boxed()
+    }
 }
 
 impl ContentTypeRule {
@@ -48,8 +62,7 @@ impl ContentTypeRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
     ) -> anyhow::Result<bool> {
