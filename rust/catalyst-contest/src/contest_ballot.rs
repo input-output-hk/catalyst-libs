@@ -76,7 +76,7 @@ impl Encode<()> for ContentBallot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ElgamalRistretto255Choice, EncryptedBlock, RowProof};
+    use crate::{EncryptedBlock, RowProof, elgamal_ristretto255_choice::ElgamalRistretto255Choice};
 
     #[test]
     fn roundtrip() {

@@ -10,13 +10,15 @@
 mod choices;
 mod column_proof;
 mod contest_ballot;
+mod elgamal_ristretto255_choice;
 mod encrypted_choices;
 mod matrix_proof;
 
 pub use crate::{
-    choices::{Choices, ElgamalRistretto255Choice, RowProof},
+    choices::{Choices, RowProof},
     column_proof::ColumnProof,
     contest_ballot::ContentBallot,
+    elgamal_ristretto255_choice::ElgamalRistretto255Choice,
     encrypted_choices::{EncryptedBlock, EncryptedChoices},
     matrix_proof::MatrixProof,
 };
