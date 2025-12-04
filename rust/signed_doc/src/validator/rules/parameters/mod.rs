@@ -279,11 +279,9 @@ where
     let mut stack = vec![root.clone()];
 
     while let Some(current) = stack.pop() {
-        if visited.contains(&current) {
+        if !visited.insert(current.clone()) {
             continue;
         }
-
-        visited.insert(current.clone());
 
         if let Some(doc) = provider.try_get_doc(&current).await? {
             if let Some(params) = doc.doc_meta().parameters() {
