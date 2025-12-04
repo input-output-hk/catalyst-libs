@@ -35,6 +35,7 @@ ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
 tracing = "0.1.40"
 thiserror = "2.0.11"
 chrono = "0.4.42"
+itertools = "0.14.0"
 
 # CID v1 support
 cid = "0.11.1"
