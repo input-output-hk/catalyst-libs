@@ -108,6 +108,52 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
+### [`ref`](../metadata.md#ref)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Multiple References | True |
+| Valid References | [Proposal](proposal.md) |
+<!-- markdownlint-enable MD033 -->
+Reference to a Linked Document or Documents.
+This is the primary hierarchical reference to a related document.
+
+If a reference is defined as required, there must be at least 1 reference specified.
+Some documents allow multiple references, and they are documented as required.
+
+The document reference serves two purposes:
+
+1. It ensures that the document referenced by an ID/Version is not substituted.
+    In other words, that the document intended to be referenced, is actually referenced.
+2. It Allows the document to be unambiguously located in decentralized storage systems.
+
+There can be any number of Document Locations in any reference.
+The currently defined locations are:
+
+* `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+* Others may be added when further storage mechanisms are defined.
+
+The document location does not guarantee that the document is actually stored.
+It only defines that if it were stored, this is the identifier
+that is required to retrieve it.
+Therefore it is required that Document References
+are unique and reproducible, given a documents contents.
+
+#### [`ref`](../metadata.md#ref) Validation
+
+The following must be true for a valid reference:
+
+* The Referenced Document **MUST** Exist
+* Every value in the `document_locator` must consistently reference the exact same document.
+* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+* In the event there are **MULTIPLE** [`ref`](../metadata.md#ref) listed, they **MUST** be sorted.
+
+Sorting for each element of [`ref`](../metadata.md#ref) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
+
 ### [`revocations`](../metadata.md#revocations)
 
 <!-- markdownlint-disable MD033 -->
@@ -144,6 +190,7 @@ Such documents may never be submitted.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Contest Parameters](contest_parameters.md) |
+| Linked Reference Metadata | [`ref`](#ref) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -164,15 +211,20 @@ The profile template, or proposal templates could be defined at any of these
 levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
+* The Document referenced by [`ref`](../metadata.md#ref)
+    * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+    * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
+
 ## Payload
 
 The Payload is a [CBOR][RFC8949] document that must conform to the `contest-ballot-payload` [CDDL][RFC8610].
 
 Contents
 
-* `document_ref => choices`
-    * The payload is a map keyed by a proposal `document_ref`.
-    * Each key identifies one specific proposal via `[document_id, document_ver, document_locator]`.
+* `uint => choices`
+    * The payload is a map keyed by a `uint` index to the array element from [`ref`](../metadata.md#ref) metadata field,
+      which is a proposal `document_ref`.
+    * Each identifies one specific proposal via `[document_id, document_ver, document_locator]`.
     * The value for each key is that voter’s `choices` for that proposal.
     * There is exactly one set of `choices` per referenced proposal (no duplicates).
 
@@ -214,76 +266,6 @@ Notes
 <!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 #### Sub-schemas
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: document_ref"
-
-    * [document_ref.cddl](../cddl/document_ref.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/document_ref.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: document_id"
-
-    * [document_id.cddl](../cddl/document_id.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/document_id.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: uuid_v7"
-
-    * [uuid_v7.cddl](../cddl/uuid_v7.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/uuid_v7.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: document_ver"
-
-    * [document_ver.cddl](../cddl/document_ver.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/document_ver.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: document_locator"
-
-    * [document_locator.cddl](../cddl/document_locator.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/document_locator.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: cid"
-
-    * [cid.cddl](../cddl/cid.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/cid.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
-
-<!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
-??? note "Required Definition: cbor-cid"
-
-    * [cbor_cid.cddl](../cddl/cbor_cid.cddl)
-
-    ``` cddl
-    {{ include_file('./../cddl/cbor_cid.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line MD046 MD013 -->
 
 <!-- markdownlint-disable max-one-sentence-per-line MD046 MD013 -->
 ??? note "Required Definition: choices"
@@ -479,7 +461,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-11-10 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -491,8 +473,16 @@ Only the original author can update and sign a new version of documents.
 
 * Add Voting Ballots and Ballot Checkpoint Documents
 
+#### 0.2.1 (2025-12-02)
+
+* Added missing [`ref`](../metadata.md#ref) metadata field definition.
+* Improved `payload` [cddl][RFC8610] definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
+
+[CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
 [RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
