@@ -27,6 +27,7 @@ blockdiag
 blockfetch
 blosc
 bmac
+bytemuck
 Bogale
 bootstrapper
 BROTLI
