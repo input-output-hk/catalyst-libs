@@ -114,7 +114,10 @@ mod tests {
     use crate::{
         EncryptedBlock, RowProof,
         elgamal_ristretto255_choice::ElgamalRistretto255Choice,
-        row_proof::{ProofAnnouncement, ProofResponse, ProofScalar, SingleSelectionProof},
+        row_proof::{
+            ProofAnnouncement, ProofAnnouncementElement, ProofResponse, ProofScalar,
+            SingleSelectionProof,
+        },
     };
 
     #[test]
@@ -140,12 +143,20 @@ mod tests {
                     }],
                     row_proof: Some(RowProof {
                         selections: vec![SingleSelectionProof {
-                            announcement: ProofAnnouncement {},
+                            announcement: ProofAnnouncement(
+                                ProofAnnouncementElement(bytes),
+                                ProofAnnouncementElement(bytes),
+                                ProofAnnouncementElement(bytes),
+                            ),
                             choice: ElgamalRistretto255Choice {
                                 c1: bytes,
                                 c2: bytes,
                             },
-                            response: ProofResponse {},
+                            response: ProofResponse(
+                                ProofScalar(bytes),
+                                ProofScalar(bytes),
+                                ProofScalar(bytes),
+                            ),
                         }],
                         scalar: ProofScalar(bytes),
                     }),

@@ -101,7 +101,10 @@ impl Encode<()> for Choices {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::row_proof::{ProofAnnouncement, ProofResponse, ProofScalar, SingleSelectionProof};
+    use crate::row_proof::{
+        ProofAnnouncement, ProofAnnouncementElement, ProofResponse, ProofScalar,
+        SingleSelectionProof,
+    };
 
     #[test]
     fn clear_roundtrip() {
@@ -124,12 +127,20 @@ mod tests {
             choices: vec![],
             row_proof: Some(RowProof {
                 selections: vec![SingleSelectionProof {
-                    announcement: ProofAnnouncement {},
+                    announcement: ProofAnnouncement(
+                        ProofAnnouncementElement(bytes),
+                        ProofAnnouncementElement(bytes),
+                        ProofAnnouncementElement(bytes),
+                    ),
                     choice: ElgamalRistretto255Choice {
                         c1: bytes,
                         c2: bytes,
                     },
-                    response: ProofResponse {},
+                    response: ProofResponse(
+                        ProofScalar(bytes),
+                        ProofScalar(bytes),
+                        ProofScalar(bytes),
+                    ),
                 }],
                 scalar: ProofScalar(bytes),
             }),
