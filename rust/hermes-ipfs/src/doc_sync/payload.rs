@@ -20,7 +20,11 @@ impl<C> Encode<C> for CborCid {
         e: &mut Encoder<W>,
         _: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        e.bytes(&self.0.to_bytes())?.ok()
+        if super::validate_cid(&self.0) {
+            e.bytes(&self.0.to_bytes())?.ok()
+        } else {
+            Err(encode::Error::message("CID not supported by Doc Sync"))
+        }
     }
 }
 
@@ -33,6 +37,13 @@ impl<C> Decode<'_, C> for CborCid {
             .and_then(|bytes| {
                 Cid::try_from(bytes)
                     .map_err(|err| minicbor::decode::Error::custom(err).at(d.position()))
+            })
+            .and_then(|cid| {
+                if super::validate_cid(&cid) {
+                    Ok(cid)
+                } else {
+                    Err(decode::Error::message("CID not supported by Doc Sync").at(d.position()))
+                }
             })
             .map(Self)
     }
@@ -277,9 +288,23 @@ impl DocumentDisseminationBodyKind {
 
 /// Decodes `docs` field of [`DocumentDisseminationBody::Docs`].
 fn decode_docs(d: &mut Decoder<'_>) -> Result<Vec<Cid>, decode::Error> {
+    /// Field value is not allowed to exceed 1 MiB.
+    const MAX_SIZE: usize = usize::pow(2, 20);
+
     if d.decode::<NumericKeys>()
         .is_ok_and(|key| matches!(key, NumericKeys::Docs))
     {
+        let size = {
+            let mut probe = d.probe();
+            probe.skip()?;
+            probe.position()
+        }
+        .saturating_sub(d.position());
+
+        if size > MAX_SIZE {
+            Err(decode::Error::message("Value of `docs` field is too large"))?;
+        }
+
         d.decode::<Vec<CborCid>>().map(CborCid::peel_vec)
     } else {
         Err(decode::Error::message("Expected `docs` key").at(d.position()))
