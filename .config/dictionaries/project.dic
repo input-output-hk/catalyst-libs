@@ -8,6 +8,7 @@ adminer
 admon
 anypolicy
 apskhem
+asat
 Arissara
 asyncio
 Attributes
@@ -33,6 +34,7 @@ Cabe
 cantopen
 cardano
 carryforward
+catid
 CBOR
 cbork
 cddlc
@@ -251,6 +253,7 @@ pubk
 pubkey
 publickey
 pubspec
+pycardano
 pwrite
 pycodestyle
 pydantic
@@ -258,6 +261,7 @@ pydot
 pyenv
 Pyflakes
 pypackages
+pyproject
 pytest
 pytype
 qpsg

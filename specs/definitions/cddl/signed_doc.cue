@@ -5,7 +5,7 @@ package cddl
 
 cddlDefinitions: #cddlDefinitions & {
 	document_type: {
-		def: "[ 1* \(requires[0]) ]"
+		def: "\(requires[0])"
 		requires: ["uuid_v4"]
 		description: "Unique Document Type Identifier"
 		comment:     "Document Type"
@@ -32,11 +32,16 @@ cddlDefinitions: #cddlDefinitions & {
 		comment: "Where a document can be located, must be a unique identifier."
 	}
 	document_refs: {
-		def: "[ 1* \(requires[0]) ]"
+		def: "[ + \(requires[0]) ]"
 		requires: [
 			"document_ref",
 		]
-		comment: "Reference to one or more Signed Documents"
+		comment: """
+			Reference to one or more Signed Documents.
+			Sorting for each array element follows the same sort order as specified for Map Keys,
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+			and all array elements are unique.
+			"""
 	}
 	document_ref: {
 		def: """
@@ -61,7 +66,12 @@ cddlDefinitions: #cddlDefinitions & {
 	collaborators: {
 		def: "[ + \(requires[0]) ]"
 		requires: ["catalyst_id_kid"]
-		comment: "Allowed Collaborators on the next subsequent version of a document."
+		comment: """
+			Allowed Collaborators on the next subsequent version of a document.
+			Sorting for each array element follows the same sort order as specified for Map Keys,
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+			and all array elements are unique.
+			"""
 	}
 	revocations: {
 		def: "[ * \(requires[0]) ] / true "
