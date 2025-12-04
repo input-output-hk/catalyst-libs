@@ -25,7 +25,7 @@ impl CatalystSignedDocumentValidationRule for SectionRule {
         doc: & CatalystSignedDocument,
         _provider: & dyn CatalystProvider,
     ) ->  anyhow::Result<bool> {
-        self.check_inner(doc)
+        Ok(self.check_inner(doc))
     }
 }
 
@@ -34,14 +34,14 @@ impl SectionRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         if let Self::Specified { optional } = self
             && doc.doc_meta().section().is_none()
             && !optional
         {
             doc.report()
                 .missing_field("section", "Document must have a section field");
-            return Ok(false);
+            return false;
         }
         if let Self::NotSpecified = self
             && let Some(section) = doc.doc_meta().section()
@@ -51,10 +51,10 @@ impl SectionRule {
                 &section.to_string(),
                 "Document does not expect to have a section field",
             );
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }
 
@@ -69,15 +69,15 @@ mod tests {
             .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
         let rule = SectionRule::Specified { optional: false };
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
 
         let doc = Builder::new().build();
         let rule = SectionRule::Specified { optional: true };
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
 
         let doc = Builder::new().build();
         let rule = SectionRule::Specified { optional: false };
-        assert!(!rule.check_inner(&doc).unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 
     #[test]
@@ -85,11 +85,11 @@ mod tests {
         let rule = SectionRule::NotSpecified;
 
         let doc = Builder::new().build();
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
 
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
-        assert!(!rule.check_inner(&doc).unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 }

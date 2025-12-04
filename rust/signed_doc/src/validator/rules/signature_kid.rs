@@ -25,7 +25,7 @@ impl CatalystSignedDocumentValidationRule for SignatureKidRule {
         doc: & CatalystSignedDocument,
         _provider: & dyn CatalystProvider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc)
+        Ok(self.check_inner(doc))
     }
 }
 
@@ -57,7 +57,7 @@ impl SignatureKidRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         let contains_exp_role = doc.authors().iter().enumerate().all(|(i, kid)| {
             if self.allowed_roles.is_empty() {
                 let res = kid.is_admin();
@@ -91,10 +91,10 @@ impl SignatureKidRule {
             }
         });
         if !contains_exp_role {
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }
 
@@ -131,9 +131,9 @@ mod tests {
             .unwrap()
             .build();
 
-        assert!(rule.check_inner(&doc).unwrap());
+        assert!(rule.check_inner(&doc));
 
         rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
-        assert!(!rule.check_inner(&doc).unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 }

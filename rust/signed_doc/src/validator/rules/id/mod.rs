@@ -22,7 +22,7 @@ impl CatalystSignedDocumentValidationRule for IdRule {
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        Self::check_inner(doc, provider)
     }
 }
 
@@ -34,7 +34,6 @@ impl IdRule {
     /// 2. If `provider.past_threshold()` not `None`, document `id` cannot be too far
     ///    behind (`past_threshold` arg) from `Utc::now()` based on the provided threshold
     fn check_inner(
-        &self,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystProvider,
     ) -> anyhow::Result<bool> {

@@ -78,5 +78,5 @@ async fn id_test(doc_gen: impl FnOnce(&TestCatalystProvider) -> CatalystSignedDo
     let provider = TestCatalystProvider::default();
     let doc = doc_gen(&provider);
 
-    IdRule.check_inner(&doc, &provider).unwrap()
+    IdRule::check_inner(&doc, &provider).unwrap()
 }

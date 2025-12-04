@@ -29,7 +29,7 @@ impl CatalystSignedDocumentValidationRule for ContentTypeRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn CatalystProvider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc)
+        Ok(self.check_inner(doc))
     }
 }
 
@@ -65,7 +65,7 @@ impl ContentTypeRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         if let Self::NotSpecified = &self
             && let Some(content_type) = doc.doc_content_type()
         {
@@ -74,7 +74,7 @@ impl ContentTypeRule {
                 content_type.to_string().as_str(),
                 "document does not expect to have the content type field",
             );
-            return Ok(false);
+            return false;
         }
         if let Self::Specified { exp } = &self {
             let Some(content_type) = doc.doc_content_type() else {
@@ -82,7 +82,7 @@ impl ContentTypeRule {
                     "content-type",
                     "Cannot get a content type field during the field validation",
                 );
-                return Ok(false);
+                return false;
             };
 
             if content_type != *exp {
@@ -92,14 +92,14 @@ impl ContentTypeRule {
                     exp.to_string().as_str(),
                     "Invalid Document content-type value",
                 );
-                return Ok(false);
+                return false;
             }
             let Ok(content) = doc.decoded_content() else {
                 doc.report().functional_validation(
                     "Invalid Document content, cannot get decoded bytes",
                     "Cannot get a document content during the content type field validation",
                 );
-                return Ok(false);
+                return false;
             };
             if !validate(*exp, &content) {
                 doc.report().invalid_value(
@@ -108,10 +108,10 @@ impl ContentTypeRule {
                     &format!("Invalid Document content, should {content_type} encodable"),
                     "Invalid Document content",
                 );
-                return Ok(false);
+                return false;
             }
         }
-        Ok(true)
+        true
     }
 }
 
