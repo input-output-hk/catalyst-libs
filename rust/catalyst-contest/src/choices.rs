@@ -3,7 +3,7 @@
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::elgamal_ristretto255_choice::ElgamalRistretto255Choice;
+use crate::{elgamal_ristretto255_choice::ElgamalRistretto255Choice, row_proof::RowProof};
 
 /// Voters Choices.
 ///
@@ -32,32 +32,6 @@ pub enum Choices {
         /// A universal encrypted row proof.
         row_proof: Option<RowProof>,
     },
-}
-
-/// A universal encrypted row proof.
-///
-/// The CDDL schema:
-/// ```cddl
-/// row-proof = [0, zkproof-elgamal-ristretto255-unit-vector-with-single-selection ]
-///
-/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection = [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]
-///
-/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item = ( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )
-///
-/// zkproof-elgamal-announcement = ( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )
-///
-/// zkproof-elgamal-group-element = bytes .size 32
-///
-/// zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
-///
-/// zkproof-ed25519-scalar = bytes .size 32
-/// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct RowProof {
-    /// A list of a single selection proofs.
-    selections: Vec<()>,
-    /// An individual Ed25519 scalar used in ZK proofs.
-    scalar: (),
 }
 
 impl Decode<'_, ()> for Choices {
@@ -124,33 +98,12 @@ impl Encode<()> for Choices {
     }
 }
 
-impl Decode<'_, ()> for RowProof {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
-        // TODO: FIXME:
-        todo!()
-    }
-}
-
-impl Encode<()> for RowProof {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        // TODO: FIXME:
-        todo!()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn clear_choices_roundtrip() {
+    fn clear_roundtrip() {
         let original = Choices::Clear(vec![1, 2, 3]);
         let mut buffer = Vec::new();
         original
@@ -161,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn elgamal_ristretto255_choices_roundtrip() {
+    fn elgamal_ristretto255_roundtrip() {
         let original = Choices::ElgamalRistretto255 {
             choices: vec![],
             row_proof: Some(RowProof {}),
@@ -171,17 +124,6 @@ mod tests {
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
         let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
-    }
-
-    #[test]
-    fn row_proof_roundtrip() {
-        let original = RowProof {};
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let decoded = RowProof::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
         assert_eq!(original, decoded);
     }
 }
