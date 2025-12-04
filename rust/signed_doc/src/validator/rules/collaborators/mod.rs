@@ -6,7 +6,7 @@ mod tests;
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::collaborators::Collaborators};
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystProvider,
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -27,9 +27,9 @@ impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystProvider,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc)
+        Ok(self.check_inner(doc))
     }
 }
 
@@ -51,7 +51,7 @@ impl CollaboratorsRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         if let Self::Specified { optional } = self
             && doc.doc_meta().collaborators().is_empty()
             && !optional
@@ -60,7 +60,7 @@ impl CollaboratorsRule {
                 "collaborators",
                 "Document must have at least one entry in 'collaborators' field",
             );
-            return Ok(false);
+            return false;
         }
         if let Self::NotSpecified = self
             && !doc.doc_meta().collaborators().is_empty()
@@ -77,9 +77,9 @@ impl CollaboratorsRule {
                 ),
                 "Document does not expect to have a 'collaborators' field",
             );
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }

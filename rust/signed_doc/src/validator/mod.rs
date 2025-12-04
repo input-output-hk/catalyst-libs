@@ -9,7 +9,10 @@ use futures::{StreamExt, TryStreamExt};
 use crate::{
     CatalystSignedDocument,
     metadata::DocType,
-    providers::{CatalystIdProvider, CatalystProvider, CatalystSignedDocumentProvider},
+    providers::{
+        CatalystIdProvider, CatalystSignedDocumentAndCatalystIdProvider,
+        CatalystSignedDocumentProvider,
+    },
     validator::rules::{Rules, documents_rules_from_spec},
 };
 
@@ -22,7 +25,7 @@ pub trait CatalystSignedDocumentValidationRule: Send + Sync + Debug {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool>;
 }
 

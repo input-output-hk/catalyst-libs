@@ -11,7 +11,7 @@ use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRefs,
-    providers::{CatalystProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
     validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
@@ -34,7 +34,7 @@ impl CatalystSignedDocumentValidationRule for ParametersRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -88,7 +88,7 @@ impl ParametersRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
         let context: &str = "Parameter rule check";
         if let Self::Specified {

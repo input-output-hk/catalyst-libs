@@ -1,7 +1,7 @@
 //! `section` rule type impl.
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystProvider,
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -22,9 +22,9 @@ pub(crate) enum SectionRule {
 impl CatalystSignedDocumentValidationRule for SectionRule {
     async fn check(
         &self,
-        doc: & CatalystSignedDocument,
-        _provider: & dyn CatalystProvider,
-    ) ->  anyhow::Result<bool> {
+        doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }
 }

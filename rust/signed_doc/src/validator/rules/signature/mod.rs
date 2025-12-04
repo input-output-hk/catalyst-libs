@@ -8,7 +8,7 @@ use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
     CatalystSignedDocument,
-    providers::{CatalystIdProvider, CatalystProvider},
+    providers::{CatalystIdProvider, CatalystSignedDocumentAndCatalystIdProvider},
     signature::{Signature, tbs_data},
     validator::CatalystSignedDocumentValidationRule,
 };
@@ -22,7 +22,7 @@ impl CatalystSignedDocumentValidationRule for SignatureRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -37,7 +37,7 @@ impl SignatureRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
         if doc.signatures().is_empty() {
             doc.report().other(

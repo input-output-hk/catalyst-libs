@@ -4,7 +4,7 @@
 mod tests;
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystProvider,
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -17,7 +17,7 @@ impl CatalystSignedDocumentValidationRule for VerRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -29,7 +29,7 @@ impl VerRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystProvider,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(
