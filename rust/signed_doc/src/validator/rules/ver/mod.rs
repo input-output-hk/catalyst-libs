@@ -24,8 +24,14 @@ impl CatalystSignedDocumentValidationRule for VerRule {
 }
 
 impl VerRule {
-    /// Validates document `ver` field on the timestamps:
-    /// 1. document `ver` cannot be smaller than document `id` field
+    /// Validates document `ver` field according to the following rules:
+    /// 1. Document `ver` cannot be smaller than document `id` field
+    /// 2. IF `ver` does not == `id` then a document with `id` and `ver` being equal
+    ///    *MUST* exist
+    /// 3. When a document with the same `id` already exists, the new document's `ver`
+    ///    must be greater than the latest known submitted version for that `id`
+    /// 4. When a document with the same `id` already exists, the new document's `type`
+    ///    must be the same as the latest known submitted document's `type` for that `id`
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
