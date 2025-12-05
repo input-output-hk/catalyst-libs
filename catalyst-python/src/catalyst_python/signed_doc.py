@@ -131,15 +131,19 @@ class SignedDocument(SignedDocumentBase):
 
 def proposal_doc(
     content: dict[str, Any],
-    proposal_form_template_doc: SignedDocumentBase,
-    param_doc: SignedDocumentBase,
+    proposal_form_template_doc: DocumentRef,
+    param_ref: DocumentRef,
     rbac_chain: RBACChain,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal,
         content_type="application/json",
         template=proposal_form_template_doc,
-        parameters=[param_doc],
+        parameters=[param_ref],
+        id=id,
+        ver=ver,
     )
 
     (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
@@ -148,13 +152,17 @@ def proposal_doc(
 
 def proposal_form_template_doc(
     content: dict[str, Any],
-    param_doc: SignedDocumentBase,
+    param_ref: DocumentRef,
     admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
         content_type="application/schema+json",
-        parameters=[param_doc],
+        parameters=[param_ref],
+        id=id,
+        ver=ver,
     )
 
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
@@ -162,43 +170,55 @@ def proposal_form_template_doc(
 
 def category_parameters_doc(
     content: dict[str, Any],
-    category_parameters_form_template_doc: SignedDocumentBase,
-    param_doc: SignedDocumentBase,
+    category_parameters_form_template_doc: DocumentRef,
+    param_ref: DocumentRef,
     admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters,
         content_type="application/json",
         template=category_parameters_form_template_doc,
-        parameters=[param_doc],
+        parameters=[param_ref],
+        id=id,
+        ver=ver,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_form_template_doc(
     content: dict[str, Any],
-    param_doc: SignedDocumentBase,
+    param_ref: DocumentRef,
     admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters_form_template,
         content_type="application/schema+json",
-        parameters=[param_doc],
+        parameters=[param_ref],
+        id=id,
+        ver=ver,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def campaign_parameters_doc(
     content: dict[str, Any],
-    campaign_parameters_form_template_doc: SignedDocumentBase,
-    param_doc: SignedDocumentBase,
+    campaign_parameters_form_template_doc: DocumentRef,
+    param_ref: DocumentRef,
     admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters,
         content_type="application/json",
         template=campaign_parameters_form_template_doc,
-        parameters=[param_doc],
+        parameters=[param_ref],
+        id=id,
+        ver=ver,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
@@ -207,11 +227,15 @@ def campaign_parameters_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters_form_template,
         content_type="application/schema+json",
         parameters=[param_ref],
+        id=id,
+        ver=ver,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
@@ -220,11 +244,15 @@ def brand_parameters_doc(
     content: dict[str, Any],
     brand_parameters_form_template_ref: DocumentRef,
     admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters,
         content_type="application/json",
         template=brand_parameters_form_template_ref,
+        id=id,
+        ver=ver,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
