@@ -40,6 +40,20 @@ class DocType(StrEnum):
     rep_profile_form_template = "564cbea3-44d3-4303-b75a-d9fdda7e5a80"
 
 
+class DocumentRef:
+    def __init__(self, id: str, ver: str) -> None:
+        self.id = id
+        self.ver = ver
+        self.cid = "0x"
+
+    def to_json(self) -> dict:
+        return {
+            "id": self.id,
+            "ver": self.ver,
+            "cid": self.cid,
+        }
+
+
 class SignedDocumentBase:
     def __init__(
         self,
@@ -191,26 +205,26 @@ def campaign_parameters_doc(
 
 def campaign_parameters_form_template_doc(
     content: dict[str, Any],
-    param_doc: SignedDocumentBase,
+    param_ref: DocumentRef,
     admin_key: AdminKey,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters_form_template,
         content_type="application/schema+json",
-        parameters=[param_doc],
+        parameters=[param_ref],
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_doc(
     content: dict[str, Any],
-    brand_parameters_form_template_doc: SignedDocumentBase,
+    brand_parameters_form_template_ref: DocumentRef,
     admin_key: AdminKey,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters,
         content_type="application/json",
-        template=brand_parameters_form_template_doc,
+        template=brand_parameters_form_template_ref,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
@@ -235,8 +249,8 @@ def __create_metadata(
     content_type: str,
     id: str | None,
     ver: str | None,
-    template: SignedDocumentBase | None = None,
-    parameters: list[SignedDocumentBase] | None = None,
+    template: DocumentRef | None = None,
+    parameters: list[DocumentRef] | None = None,
 ) -> dict[str, Any]:
     if id is None:
         id = uuid_v7()
@@ -252,12 +266,8 @@ def __create_metadata(
     }
 
     if template is not None:
-        metadata["template"] = {
-            "id": template.metadata["id"],
-            "ver": template.metadata["ver"],
-            "cid": "0x",
-        }
+        metadata["template"] = template.to_json()
     if parameters is not None:
-        metadata["parameters"] = [{"id": p.metadata["id"], "ver": p.metadata["ver"], "cid": "0x"} for p in parameters]
+        metadata["parameters"] = [p.to_json() for p in parameters]
 
     return metadata
