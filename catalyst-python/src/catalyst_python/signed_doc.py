@@ -59,12 +59,12 @@ class SignedDocumentBase:
         self,
         metadata: dict[str, Any],
         content: dict[str, Any],
-        cat_doc_id: str,
+        cat_id: str,
         key: Ed25519Keys,
     ) -> None:
         self.metadata = metadata
         self.content = content
-        self.cat_doc_id = cat_doc_id
+        self.cat_id = cat_id
         self.key = key
 
     def doc_ref(self) -> DocumentRef:
@@ -80,7 +80,7 @@ class SignedDocument(SignedDocumentBase):
         return SignedDocument(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
-            cat_doc_id=copy.deepcopy(self.cat_doc_id),
+            cat_id=copy.deepcopy(self.cat_id),
             key=copy.deepcopy(self.key),
         )
 
@@ -119,7 +119,7 @@ class SignedDocument(SignedDocumentBase):
                     "sign",
                     signed_doc_file.name,
                     self.key.sk_hex,
-                    self.cat_doc_id,
+                    self.cat_id,
                 ],
                 capture_output=True,
             )
@@ -149,8 +149,8 @@ def proposal_doc(
         doc_doc_ver=doc_doc_ver,
     )
 
-    (cat_doc_id, key) = rbac_chain.cat_doc_id_for_role(RoleID.PROPOSER)
-    return SignedDocument(metadata, content, cat_doc_id, key)
+    (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
+    return SignedDocument(metadata, content, cat_id, key)
 
 
 def proposal_form_template_doc(
@@ -168,7 +168,7 @@ def proposal_form_template_doc(
         doc_ver=doc_ver,
     )
 
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def proposal_comment_form_template_doc(
@@ -186,7 +186,7 @@ def proposal_comment_form_template_doc(
         doc_ver=doc_ver,
     )
 
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_doc(
@@ -205,7 +205,7 @@ def category_parameters_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_form_template_doc(
@@ -222,7 +222,7 @@ def category_parameters_form_template_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def campaign_parameters_doc(
@@ -241,7 +241,7 @@ def campaign_parameters_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def campaign_parameters_form_template_doc(
@@ -258,7 +258,7 @@ def campaign_parameters_form_template_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_doc(
@@ -275,7 +275,7 @@ def brand_parameters_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_form_template_doc(
@@ -290,7 +290,7 @@ def brand_parameters_form_template_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def __create_metadata(
