@@ -215,10 +215,17 @@ def brand_parameters_doc(
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
-def brand_parameters_form_template_doc(content: dict[str, Any], admin_key: AdminKey) -> SignedDocumentBase:
+def brand_parameters_form_template_doc(
+    content: dict[str, Any],
+    admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
+) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters_form_template,
         content_type="application/schema+json",
+        id=id,
+        ver=ver,
     )
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
@@ -226,16 +233,21 @@ def brand_parameters_form_template_doc(content: dict[str, Any], admin_key: Admin
 def __create_metadata(
     doc_type: DocType,
     content_type: str,
+    id: str | None,
+    ver: str | None,
     template: SignedDocumentBase | None = None,
     parameters: list[SignedDocumentBase] | None = None,
 ) -> dict[str, Any]:
-    doc_id = uuid_v7()
+    if id is None:
+        id = uuid_v7()
+    if ver is None:
+        ver = uuid_v7()
 
     metadata: dict[str, Any] = {
         "content-encoding": "br",
         "content-type": content_type,
-        "id": doc_id,
-        "ver": doc_id,
+        "id": id,
+        "ver": ver,
         "type": doc_type,
     }
 
