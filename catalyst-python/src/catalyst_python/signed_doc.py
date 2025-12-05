@@ -67,6 +67,9 @@ class SignedDocumentBase:
         self.cat_id = cat_id
         self.key = key
 
+    def doc_ref(self) -> DocumentRef:
+        return DocumentRef(self.metadata["id"], self.metadata["ver"])
+
     def new_version(self) -> None:
         time.sleep(1)
         self.metadata["ver"] = uuid_v7()
@@ -159,6 +162,23 @@ def proposal_form_template_doc(
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
+        content_type="application/schema+json",
+        parameters=[param_ref],
+        id=id,
+        ver=ver,
+    )
+
+    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+
+def proposal_comment_form_template_doc(
+    content: dict[str, Any],
+    param_ref: DocumentRef,
+    admin_key: AdminKey,
+    id: str | None,
+    ver: str | None,
+) -> SignedDocument:
+    metadata = __create_metadata(
+        doc_type=DocType.proposal_comment_form_template,
         content_type="application/schema+json",
         parameters=[param_ref],
         id=id,
