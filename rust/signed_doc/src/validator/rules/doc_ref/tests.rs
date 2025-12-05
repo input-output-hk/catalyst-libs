@@ -182,7 +182,7 @@ async fn ref_multiple_specified_test(
         multiple: true,
         optional: false,
     }
-    .check(&doc, &provider)
+    .check_inner(&doc, &provider)
     .await
     .unwrap();
 
@@ -191,7 +191,7 @@ async fn ref_multiple_specified_test(
         multiple: true,
         optional: true,
     }
-    .check(&doc, &provider)
+    .check_inner(&doc, &provider)
     .await
     .unwrap();
 
@@ -269,7 +269,7 @@ async fn ref_non_multiple_specified_test(
         multiple: false,
         optional: false,
     }
-    .check(&doc, &provider)
+    .check_inner(&doc, &provider)
     .await
     .unwrap();
 
@@ -278,7 +278,7 @@ async fn ref_non_multiple_specified_test(
         multiple: false,
         optional: true,
     }
-    .check(&doc, &provider)
+    .check_inner(&doc, &provider)
     .await
     .unwrap();
 
@@ -296,7 +296,7 @@ async fn ref_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).await.unwrap());
 
     let provider = TestCatalystProvider::default();
     let rule = RefRule::Specified {
@@ -306,7 +306,7 @@ async fn ref_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
 }
 
 #[tokio::test]
@@ -315,10 +315,10 @@ async fn ref_rule_not_specified_test() {
     let provider = TestCatalystProvider::default();
 
     let doc = Builder::new().build();
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).await.unwrap());
 
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Ref(vec![create_dummy_doc_ref()].into()))
         .build();
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
 }

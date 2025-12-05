@@ -8,13 +8,25 @@ use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
     CatalystSignedDocument,
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystIdProvider, CatalystSignedDocumentAndCatalystIdProvider},
     signature::{Signature, tbs_data},
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// Signed Document signatures validation rule.
 #[derive(Debug)]
 pub(crate) struct SignatureRule;
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for SignatureRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
+}
 
 impl SignatureRule {
     /// Verify document signatures.
@@ -22,14 +34,11 @@ impl SignatureRule {
     ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         if doc.signatures().is_empty() {
             doc.report().other(
                 "Catalyst Signed Document is unsigned",
@@ -55,15 +64,12 @@ impl SignatureRule {
 }
 
 /// A single signature validation function
-async fn validate_signature<Provider>(
+async fn validate_signature(
     doc: &CatalystSignedDocument,
     sign: &Signature,
-    provider: &Provider,
+    provider: &dyn CatalystIdProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool>
-where
-    Provider: CatalystIdProvider,
-{
+) -> anyhow::Result<bool> {
     let kid = sign.kid();
 
     let Some(pk) = provider.try_get_registered_key(kid).await? else {

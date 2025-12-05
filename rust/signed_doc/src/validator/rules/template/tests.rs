@@ -248,7 +248,7 @@ async fn template_specified_test(
     let doc = doc_gen(allowed_type.clone(), &mut provider);
 
     TemplateRule::Specified { allowed_type }
-        .check(&doc, &provider)
+        .check_inner(&doc, &provider)
         .await
         .unwrap()
 }
@@ -296,7 +296,7 @@ async fn reply_rule_not_specified_test(
 
     let doc = doc_gen(allowed_type, &mut provider);
     TemplateRule::NotSpecified
-        .check(&doc, &provider)
+        .check_inner(&doc, &provider)
         .await
         .unwrap()
 }

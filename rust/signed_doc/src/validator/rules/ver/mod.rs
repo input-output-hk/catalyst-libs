@@ -3,11 +3,25 @@
 #[cfg(test)]
 mod tests;
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// Signed Document `ver` field validation rule
 #[derive(Debug)]
 pub(crate) struct VerRule;
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for VerRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
+}
 
 impl VerRule {
     /// Validates document `ver` field according to the following rules:
@@ -18,14 +32,11 @@ impl VerRule {
     ///    must be greater than the latest known submitted version for that `id`
     /// 4. When a document with the same `id` already exists, the new document's `type`
     ///    must be the same as the latest known submitted document's `type` for that `id`
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(
                 "id",

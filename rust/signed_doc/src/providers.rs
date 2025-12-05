@@ -1,6 +1,6 @@
 //! Providers traits, which are used during different validation procedures.
 
-use std::{future::Future, time::Duration};
+use std::time::Duration;
 
 use catalyst_types::{catalyst_id::CatalystId, uuid::UuidV7};
 use ed25519_dalek::VerifyingKey;
@@ -8,37 +8,39 @@ use ed25519_dalek::VerifyingKey;
 use crate::{CatalystSignedDocument, DocumentRef};
 
 /// `CatalystId` Provider trait
+#[async_trait::async_trait]
 pub trait CatalystIdProvider: Send + Sync {
     /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
     /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
     /// corresponding `RoleId` and `KeyRotation` has not been registered.
-    fn try_get_registered_key(
+    async fn try_get_registered_key(
         &self,
         kid: &CatalystId,
-    ) -> impl Future<Output = anyhow::Result<Option<VerifyingKey>>> + Send;
+    ) -> anyhow::Result<Option<VerifyingKey>>;
 }
 
 /// `CatalystSignedDocument` Provider trait
+#[async_trait::async_trait]
 pub trait CatalystSignedDocumentProvider: Send + Sync {
     /// Try to get `CatalystSignedDocument` from document reference
-    fn try_get_doc(
+    async fn try_get_doc(
         &self,
         doc_ref: &DocumentRef,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+    ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Try to get the last known version of the `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
-    fn try_get_last_doc(
+    async fn try_get_last_doc(
         &self,
         id: UuidV7,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+    ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver`
     /// are equal.
-    fn try_get_first_doc(
+    async fn try_get_first_doc(
         &self,
         id: UuidV7,
-    ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+    ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
@@ -49,6 +51,17 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
     /// field that it is not too far behind.
     /// If `None` is returned, skips "too far behind" validation.
     fn past_threshold(&self) -> Option<Duration>;
+}
+
+/// Super trait of `CatalystSignedDocumentProvider` and `CatalystIdProvider`
+pub trait CatalystSignedDocumentAndCatalystIdProvider:
+    CatalystSignedDocumentProvider + CatalystIdProvider
+{
+}
+
+impl<T: CatalystSignedDocumentProvider + CatalystIdProvider>
+    CatalystSignedDocumentAndCatalystIdProvider for T
+{
 }
 
 pub mod tests {
@@ -117,6 +130,7 @@ pub mod tests {
         }
     }
 
+    #[async_trait::async_trait]
     impl CatalystSignedDocumentProvider for TestCatalystProvider {
         async fn try_get_doc(
             &self,
@@ -158,6 +172,7 @@ pub mod tests {
         }
     }
 
+    #[async_trait::async_trait]
     impl CatalystIdProvider for TestCatalystProvider {
         async fn try_get_registered_key(
             &self,

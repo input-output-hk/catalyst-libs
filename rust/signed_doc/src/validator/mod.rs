@@ -2,23 +2,44 @@
 
 pub(crate) mod rules;
 
-use std::{collections::HashMap, sync::LazyLock};
+use std::{fmt::Debug, sync::LazyLock};
 
-use rules::Rules;
+use dashmap::DashMap;
+use futures::{StreamExt, TryStreamExt};
 
 use crate::{
     CatalystSignedDocument,
     metadata::DocType,
-    providers::{CatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{
+        CatalystIdProvider, CatalystSignedDocumentAndCatalystIdProvider,
+        CatalystSignedDocumentProvider,
+    },
+    validator::rules::documents_rules_from_spec,
 };
 
+/// `CatalystSignedDocument` validation rule trait
+#[async_trait::async_trait]
+pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
+    /// Validates `CatalystSignedDocument`, return `false` if the provided
+    /// `CatalystSignedDocument` violates some validation rules with properly filling the
+    /// problem report.
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool>;
+}
+
+/// Struct represented a collection of rules
+pub(crate) type Rules = Vec<Box<dyn CatalystSignedDocumentValidationRule>>;
+
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<DashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
 
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
-fn document_rules_init() -> HashMap<DocType, Rules> {
-    let document_rules_map: HashMap<DocType, Rules> = Rules::documents_rules()
+fn document_rules_init() -> DashMap<DocType, Rules> {
+    let document_rules_map: DashMap<DocType, Rules> = documents_rules_from_spec()
         .expect("cannot fail to initialize validation rules")
         .collect();
 
@@ -56,7 +77,26 @@ where
         );
         return Ok(false);
     };
-    rules.check(doc, provider).await
+
+    let iter = rules.iter().map(|v| v.check(doc, provider));
+    let res = futures::stream::iter(iter)
+        .buffer_unordered(rules.len())
+        .try_collect::<Vec<_>>()
+        .await?
+        .iter()
+        .all(|res| *res);
+    Ok(res)
+}
+
+/// Extend the current defined validation rules set for the provided document type.
+pub fn extend_rules_per_document(
+    doc_type: DocType,
+    rule: impl CatalystSignedDocumentValidationRule,
+) {
+    DOCUMENT_RULES
+        .entry(doc_type)
+        .or_default()
+        .push(Box::new(rule));
 }
 
 #[cfg(test)]

@@ -10,8 +10,9 @@ use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
 
 use crate::{
-    CatalystSignedDocument, DocType, DocumentRefs, providers::CatalystSignedDocumentProvider,
-    validator::rules::doc_ref::doc_refs_check,
+    CatalystSignedDocument, DocType, DocumentRefs,
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 /// `parameters` field validation rule
@@ -26,6 +27,17 @@ pub(crate) enum ParametersRule {
     },
     /// `parameters` is not specified
     NotSpecified,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ParametersRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
 }
 
 impl ParametersRule {
@@ -73,14 +85,11 @@ impl ParametersRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let context: &str = "Parameter rule check";
         if let Self::Specified {
             allowed_type: exp_parameters_type,
@@ -193,16 +202,13 @@ impl ParametersRule {
 ///   - the parameters mismatch the expected ones.
 ///
 /// - `Err(anyhow::Error)` if an unexpected error occurs while accessing the provider.
-pub(crate) async fn link_check<Provider>(
+pub(crate) async fn link_check(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
     field_name: &str,
-    provider: &Provider,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+) -> anyhow::Result<bool> {
     let Some(ref_field) = ref_field else {
         return Ok(true);
     };

@@ -1,6 +1,9 @@
 //! `section` rule type impl.
 
-use crate::CatalystSignedDocument;
+use crate::{
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// `section` field validation rule
 #[derive(Debug)]
@@ -15,20 +18,30 @@ pub(crate) enum SectionRule {
     NotSpecified,
 }
 
-impl SectionRule {
-    /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for SectionRule {
+    async fn check(
         &self,
         doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
     ) -> anyhow::Result<bool> {
+        Ok(self.check_inner(doc))
+    }
+}
+
+impl SectionRule {
+    /// Field validation rule
+    fn check_inner(
+        &self,
+        doc: &CatalystSignedDocument,
+    ) -> bool {
         if let Self::Specified { optional } = self
             && doc.doc_meta().section().is_none()
             && !optional
         {
             doc.report()
                 .missing_field("section", "Document must have a section field");
-            return Ok(false);
+            return false;
         }
         if let Self::NotSpecified = self
             && let Some(section) = doc.doc_meta().section()
@@ -38,10 +51,10 @@ impl SectionRule {
                 &section.to_string(),
                 "Document does not expect to have a section field",
             );
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }
 
@@ -50,33 +63,33 @@ mod tests {
     use super::*;
     use crate::{builder::tests::Builder, metadata::SupportedField};
 
-    #[tokio::test]
-    async fn section_rule_specified_test() {
+    #[test]
+    fn section_rule_specified_test() {
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
         let rule = SectionRule::Specified { optional: false };
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
 
         let doc = Builder::new().build();
         let rule = SectionRule::Specified { optional: true };
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
 
         let doc = Builder::new().build();
         let rule = SectionRule::Specified { optional: false };
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 
-    #[tokio::test]
-    async fn section_rule_not_specified_test() {
+    #[test]
+    fn section_rule_not_specified_test() {
         let rule = SectionRule::NotSpecified;
 
         let doc = Builder::new().build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
 
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 }

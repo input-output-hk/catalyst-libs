@@ -5,7 +5,10 @@ use std::collections::HashSet;
 use catalyst_signed_doc_spec::signers::roles::{Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
-use crate::CatalystSignedDocument;
+use crate::{
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 ///  COSE signature `kid` (Catalyst Id) role validation
 #[derive(Debug)]
@@ -13,6 +16,17 @@ pub(crate) struct SignatureKidRule {
     /// expected `RoleId` values for the `kid` field.
     /// if empty, document must be signed by admin kid
     allowed_roles: HashSet<RoleId>,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for SignatureKidRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        Ok(self.check_inner(doc))
+    }
 }
 
 impl SignatureKidRule {
@@ -40,11 +54,10 @@ impl SignatureKidRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         let contains_exp_role = doc.authors().iter().enumerate().all(|(i, kid)| {
             if self.allowed_roles.is_empty() {
                 let res = kid.is_admin();
@@ -78,10 +91,10 @@ impl SignatureKidRule {
             }
         });
         if !contains_exp_role {
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }
 
@@ -96,8 +109,8 @@ mod tests {
     use super::*;
     use crate::{ContentType, builder::tests::Builder, metadata::SupportedField};
 
-    #[tokio::test]
-    async fn signature_kid_rule_test() {
+    #[test]
+    fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
             allowed_roles: [RoleId::Role0, RoleId::DelegatedRepresentative]
                 .into_iter()
@@ -118,9 +131,9 @@ mod tests {
             .unwrap()
             .build();
 
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
 
         rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 }
