@@ -10,8 +10,8 @@ import json
 from tempfile import NamedTemporaryFile
 
 from catalyst_python.admin import AdminKey
-from catalyst_python.catalyst_doc_id import Roledoc_id
-from catalyst_python.uudoc_id import uudoc_id_v7
+from catalyst_python.catalyst_id import RoleId
+from catalyst_python.uuid import uuid_v7
 from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.rbac_chain import RBACChain
 
@@ -72,7 +72,7 @@ class SignedDocumentBase:
 
     def new_doc_version(self) -> None:
         time.sleep(1)
-        self.metadata["doc_ver"] = uudoc_id_v7()
+        self.metadata["doc_ver"] = uuid_v7()
 
 
 class SignedDocument(SignedDocumentBase):
@@ -149,7 +149,7 @@ def proposal_doc(
         doc_doc_ver=doc_doc_ver,
     )
 
-    (cat_doc_id, key) = rbac_chain.cat_doc_id_for_role(Roledoc_id.PROPOSER)
+    (cat_doc_id, key) = rbac_chain.cat_doc_id_for_role(RoleId.PROPOSER)
     return SignedDocument(metadata, content, cat_doc_id, key)
 
 
@@ -302,9 +302,9 @@ def __create_metadata(
     parameters: list[DocumentRef] | None = None,
 ) -> dict[str, Any]:
     if doc_id is None:
-        doc_id = uudoc_id_v7()
+        doc_id = uuid_v7()
     if doc_ver is None:
-        doc_ver = uudoc_id_v7()
+        doc_ver = uuid_v7()
 
     metadata: dict[str, Any] = {
         "content-encoding": "br",
