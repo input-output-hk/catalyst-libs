@@ -170,6 +170,7 @@ def proposal_form_template_doc(
 
     return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
 
+
 def proposal_comment_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
