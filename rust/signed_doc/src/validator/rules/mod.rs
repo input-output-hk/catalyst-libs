@@ -37,10 +37,7 @@ pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::TemplateRule;
 pub(crate) use ver::VerRule;
 
-use crate::validator::CatalystSignedDocumentValidationRule;
-
-/// Struct represented a collection of rules
-pub(crate) type Rules = Vec<Box<dyn CatalystSignedDocumentValidationRule>>;
+use crate::validator::Rules;
 
 /// Creating a rules instances from the provided specs.
 fn rules_for_doc(
