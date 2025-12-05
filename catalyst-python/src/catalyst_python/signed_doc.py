@@ -1,4 +1,4 @@
-# ruff: noqa: D100, D101, D102, D103, D107, S603, PLW1510, I001
+# ruff: noqa: A002, D100, D101, D102, D103, D107, S603, PLW1510, I001
 
 from typing import Any, Self
 from enum import StrEnum
@@ -10,8 +10,8 @@ import json
 from tempfile import NamedTemporaryFile
 
 from catalyst_python.admin import AdminKey
-from catalyst_python.catalyst_id import RoleID
-from catalyst_python.uuid import uuid_v7
+from catalyst_python.catalyst_doc_id import Roledoc_id
+from catalyst_python.uudoc_id import uudoc_id_v7
 from catalyst_python.ed25519 import Ed25519Keys
 from catalyst_python.rbac_chain import RBACChain
 
@@ -41,15 +41,15 @@ class DocType(StrEnum):
 
 
 class DocumentRef:
-    def __init__(self, id: str, ver: str) -> None:
-        self.id = id
-        self.ver = ver
+    def __init__(self, doc_doc_id: str, doc_doc_ver: str) -> None:
+        self.doc_doc_id = doc_doc_id
+        self.doc_doc_ver = doc_doc_ver
         self.cid = "0x"
 
     def to_json(self) -> dict:
         return {
-            "id": self.id,
-            "ver": self.ver,
+            "id": self.doc_doc_id,
+            "ver": self.doc_doc_ver,
             "cid": self.cid,
         }
 
@@ -59,20 +59,20 @@ class SignedDocumentBase:
         self,
         metadata: dict[str, Any],
         content: dict[str, Any],
-        cat_id: str,
+        cat_doc_id: str,
         key: Ed25519Keys,
     ) -> None:
         self.metadata = metadata
         self.content = content
-        self.cat_id = cat_id
+        self.cat_doc_id = cat_doc_id
         self.key = key
 
     def doc_ref(self) -> DocumentRef:
         return DocumentRef(self.metadata["id"], self.metadata["ver"])
 
-    def new_version(self) -> None:
+    def new_doc_version(self) -> None:
         time.sleep(1)
-        self.metadata["ver"] = uuid_v7()
+        self.metadata["doc_ver"] = uudoc_id_v7()
 
 
 class SignedDocument(SignedDocumentBase):
@@ -80,7 +80,7 @@ class SignedDocument(SignedDocumentBase):
         return SignedDocument(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
-            cat_id=copy.deepcopy(self.cat_id),
+            cat_doc_id=copy.deepcopy(self.cat_doc_id),
             key=copy.deepcopy(self.key),
         )
 
@@ -119,7 +119,7 @@ class SignedDocument(SignedDocumentBase):
                     "sign",
                     signed_doc_file.name,
                     self.key.sk_hex,
-                    self.cat_id,
+                    self.cat_doc_id,
                 ],
                 capture_output=True,
             )
@@ -137,56 +137,56 @@ def proposal_doc(
     proposal_form_template_doc: DocumentRef,
     param_ref: DocumentRef,
     rbac_chain: RBACChain,
-    id: str | None,
-    ver: str | None,
+    doc_doc_id: str | None,
+    doc_doc_ver: str | None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal,
         content_type="application/json",
         template=proposal_form_template_doc,
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_doc_id=doc_doc_id,
+        doc_doc_ver=doc_doc_ver,
     )
 
-    (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
-    return SignedDocument(metadata, content, cat_id, key)
+    (cat_doc_id, key) = rbac_chain.cat_doc_id_for_role(Roledoc_id.PROPOSER)
+    return SignedDocument(metadata, content, cat_doc_id, key)
 
 
 def proposal_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
         content_type="application/schema+json",
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
 
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def proposal_comment_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_comment_form_template,
         content_type="application/schema+json",
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
 
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def category_parameters_doc(
@@ -194,35 +194,35 @@ def category_parameters_doc(
     category_parameters_form_template_doc: DocumentRef,
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters,
         content_type="application/json",
         template=category_parameters_form_template_doc,
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def category_parameters_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters_form_template,
         content_type="application/schema+json",
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def campaign_parameters_doc(
@@ -230,87 +230,87 @@ def campaign_parameters_doc(
     campaign_parameters_form_template_doc: DocumentRef,
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters,
         content_type="application/json",
         template=campaign_parameters_form_template_doc,
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def campaign_parameters_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters_form_template,
         content_type="application/schema+json",
         parameters=[param_ref],
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def brand_parameters_doc(
     content: dict[str, Any],
     brand_parameters_form_template_ref: DocumentRef,
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters,
         content_type="application/json",
         template=brand_parameters_form_template_ref,
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def brand_parameters_form_template_doc(
     content: dict[str, Any],
     admin_key: AdminKey,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters_form_template,
         content_type="application/schema+json",
-        id=id,
-        ver=ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocument(metadata, content, admin_key.cat_doc_id(), admin_key.key)
 
 
 def __create_metadata(
     doc_type: DocType,
     content_type: str,
-    id: str | None,
-    ver: str | None,
+    doc_id: str | None,
+    doc_ver: str | None,
     template: DocumentRef | None = None,
     parameters: list[DocumentRef] | None = None,
 ) -> dict[str, Any]:
-    if id is None:
-        id = uuid_v7()
-    if ver is None:
-        ver = uuid_v7()
+    if doc_id is None:
+        doc_id = uudoc_id_v7()
+    if doc_ver is None:
+        doc_ver = uudoc_id_v7()
 
     metadata: dict[str, Any] = {
         "content-encoding": "br",
         "content-type": content_type,
-        "id": id,
-        "ver": ver,
+        "id": doc_id,
+        "ver": doc_ver,
         "type": doc_type,
     }
 
