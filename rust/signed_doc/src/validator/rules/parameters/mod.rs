@@ -209,7 +209,6 @@ where
         return Ok(true);
     };
 
-    // collect recursively of expected parameters
     let mut allowed_params = HashSet::new();
     let mut all_valid = true;
     for doc_ref in ref_field.iter() {
@@ -219,6 +218,10 @@ where
         allowed_params.extend(result);
     }
 
+    if !all_valid {
+        return Ok(false);
+    }
+
     all_valid &= allowed_params
         .iter()
         .any(|ref_doc_parameters| exp_parameters == ref_doc_parameters);
@@ -226,9 +229,9 @@ where
     if !all_valid {
         report.invalid_value(
             "parameters",
-            &format!("Reference doc param: {allowed_params:?}",),
-            &format!("Doc param: {exp_parameters}"),
-            &format!("Referenced document via {field_name} `parameters` field must match"),
+            &format!("Reference doc params: {allowed_params:?}",),
+            &format!("Doc params: {exp_parameters}"),
+            &format!("Referenced document via {field_name} `parameters` field must match one of the allowed params"),
         );
     }
 
@@ -264,14 +267,6 @@ where
                         stack.push(param.clone());
                     }
                 }
-            } else {
-                report.missing_field(
-                    "parameters",
-                    &format!(
-                        "Referenced document via `{field_name}` must have `parameters`. Doc: {doc}"
-                    ),
-                );
-                all_valid = false;
             }
         } else {
             report.functional_validation(
