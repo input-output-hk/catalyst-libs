@@ -177,11 +177,11 @@ impl ParametersRule {
     }
 }
 
-/// Performs a parameter link validation between a given reference field and the expected
-/// parameters.
+/// Validates that all documents referenced by `ref_field` recursively contain
+/// `parameters` matching the expected `exp_parameters`.
 ///
-/// Validates that all referenced documents
-/// have matching `parameters` with the current document's expected `exp_parameters`.
+/// The check expands each referenced document's parameter chain and succeeds
+/// if any discovered parameter set equals `exp_parameters`.
 ///
 /// # Returns
 /// - `Ok(true)` if:
@@ -238,7 +238,15 @@ where
     Ok(all_valid)
 }
 
-/// Recursively collects the full underlying parameters from a given document reference.
+/// Recursively traverses the parameter chain starting from `root`,
+/// collecting all discovered `parameters` sets.
+///
+/// Returns:
+/// - `(true, set)` if all referenced documents are retrievable.
+/// - `(false, set)` if any underlying document cannot be fetched.
+///
+/// All encountered parameter lists are returned; traversal is cycle-safe
+/// and explores deeper parameter references recursively.
 async fn collect_parameters_recursively<Provider>(
     root: &DocumentRef,
     field_name: &str,
