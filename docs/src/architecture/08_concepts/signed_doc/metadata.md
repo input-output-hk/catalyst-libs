@@ -414,6 +414,98 @@ The profile template, or proposal templates could be defined at any of these
 levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
+### `conditions`
+
+> **DRAFT STATUS**  
+> This metadata field is currently in **DRAFT** status. Development should **NOT** begin until this specification is formally released.  
+> This specification is subject to change without notice.
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](metadata.md#document-reference) |
+| Multiple References | yes |
+| Valid References | [Conditions](./docs/conditions.md) |
+<!-- markdownlint-enable MD033 -->
+An array of references to [Conditions](./docs/conditions.md) documents that define terms and conditions.
+
+The `conditions` metadata field serves two distinct purposes depending on the document type:
+
+1. **On Parameter Documents** (Brand Parameters, Campaign Parameters, Category Parameters, Contest Parameters):
+   * Lists the required condition documents for that level of the system hierarchy
+   * Specifies which terms users must accept when submitting documents at this level
+   * The field is optional - if not present, no conditions are required at that level
+
+2. **On User-Submitted Documents** (Proposals, Proposal Comments, etc.):
+   * References all condition documents that the user has accepted
+   * Must include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest)
+   * The act of listing these references and signing the document serves as the user's digital signature and acceptance
+   * The field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified
+
+#### `conditions` Validation
+
+**For Parameter Documents:**
+
+* The `conditions` field is optional
+* If present, must be an array of valid [Conditions](./docs/conditions.md) document references
+* All referenced documents must exist and be of type "Conditions"
+* The array must be sorted according to [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering)
+* All array elements must be unique
+
+**For User-Submitted Documents:**
+
+The validation process for user-submitted documents involves transitive collection of required conditions:
+
+1. Extract the [`parameters`](metadata.md#parameters) reference from the user document
+2. Follow the parameter chain: Contest → Category → Campaign → Brand
+3. Collect all `conditions` arrays from each parameter level in the hierarchy
+4. Union all condition references (removing duplicates based on document ID and version)
+5. Sort the unioned list according to [CBOR Deterministic Encoding][CBOR-LFD-ENCODING]
+6. Compare the user document's `conditions` array with this unioned, sorted list
+7. Validation succeeds only if they match exactly
+
+**Validation Rules:**
+
+* The user document's `conditions` array must exactly match the union of all required conditions from the parameter hierarchy
+* All referenced Conditions documents must exist and be valid
+* All referenced Conditions documents must not be revoked
+* The array must be sorted (CBOR deterministic encoding order)
+* All array elements must be unique
+
+**Validation Failures:**
+
+The document will be rejected if:
+* Missing required conditions (conditions specified in parameter hierarchy but not in user document)
+* Includes extra conditions (conditions in user document not in parameter hierarchy)
+* Array is not sorted correctly
+* Any referenced condition document doesn't exist or is invalid
+* Any referenced condition document is revoked
+* Array contains duplicate references
+
+**Edge Cases:**
+
+* **Parameter documents with no `conditions` field**: User documents don't need to include conditions at that level
+* **Empty `conditions` arrays**: Valid if no conditions are required by any level in the parameter hierarchy
+* **Revoked condition documents**: User documents referencing revoked conditions must be rejected
+* **Multiple conditions at same level**: All conditions from a parameter level are required
+* **Conditions at multiple levels**: User must accept all conditions from all levels (Brand, Campaign, Category, Contest)
+
+**Example:**
+
+A user submitting a Proposal to a Category must accept:
+* All conditions from the Contest Parameters (if any)
+* All conditions from the Category Parameters (if any)
+* All conditions from the Campaign Parameters (if any)
+* All conditions from the Brand Parameters (if any)
+
+The Proposal's `conditions` array must contain the union of all these conditions, sorted and deduplicated.
+
+In the event there are **MULTIPLE** [`conditions`](metadata.md#conditions) listed, they **MUST** be sorted.
+
+Sorting for each element of [`conditions`](metadata.md#conditions) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
+
 ### `chain`
 
 <!-- markdownlint-disable MD033 -->

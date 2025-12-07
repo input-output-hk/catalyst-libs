@@ -744,6 +744,16 @@
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
+        "conditions": {
+          "description": "An array of references to Conditions documents that define terms and conditions required at this level.\n\nLists the required condition documents for this level of the system hierarchy.\nSpecifies which terms users must accept when submitting documents at this level.\nThe field is optional - if not present, no conditions are required at that level.",
+          "format": "Document Reference",
+          "required": "optional",
+          "multiple": true,
+          "type": [
+            "Conditions"
+          ],
+          "validation": "If present, must be an array of valid Conditions document references.\nAll referenced documents must exist and be of type \"Conditions\".\nThe array must be sorted according to CBOR Deterministic Encoding rules.\nAll array elements must be unique."
+        },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
@@ -1000,6 +1010,16 @@
           "required": "yes",
           "type": "Brand Parameters",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "conditions": {
+          "description": "An array of references to Conditions documents that define terms and conditions required at this level.\n\nLists the required condition documents for this level of the system hierarchy.\nSpecifies which terms users must accept when submitting documents at this level.\nThe field is optional - if not present, no conditions are required at that level.",
+          "format": "Document Reference",
+          "required": "optional",
+          "multiple": true,
+          "type": [
+            "Conditions"
+          ],
+          "validation": "If present, must be an array of valid Conditions document references.\nAll referenced documents must exist and be of type \"Conditions\".\nThe array must be sorted according to CBOR Deterministic Encoding rules.\nAll array elements must be unique."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1588,6 +1608,105 @@
         {
           "changes": "* First Published Version",
           "modified": "2025-04-04",
+          "version": "0.01"
+        }
+      ]
+    },
+    "Conditions": {
+      "authors": {
+        "Nathan Bogale": "nathan.bogale@iohk.io",
+        "Steven Johnson": "steven.johnson@iohk.io"
+      },
+      "description": "Conditions documents define terms and conditions that users must accept before submitting documents to the system. Supports multiple condition types (TOU, license agreements, operational guidelines, regional restrictions).\n\nThe payload of a Conditions document contains the text of the terms and conditions, typically in Markdown or HTML format. This allows for rich formatting while maintaining human readability.\n\nConditions documents are versioned and can be revoked, enabling administrators to update terms over time while maintaining an auditable history of what terms were in effect at any given time.",
+      "draft": true,
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "text/markdown"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "optional",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHow collaborators are counted on a final submission is determined by a parameter defined at the\nBrand/Campaign/Category level (parameter name TBD). \nDepending on that configuration:\n\n* All listed collaborators may be required to submit a `final` Submission Action in addition\n  to the author; **OR**\n* Only collaborators who submit a `final` Submission Action for the referenced version are\n  included as collaborators on that submission.\n\nIf the parameter is not present, default to the latter mode (only final-signing collaborators are\nincluded).\nIn all modes a document is only considered final when the original author has submitted `final`.\n\nIn the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.\n\nSorting for each element of `collaborators` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the\ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "The document ID validation is performed based on timestamp thresholds:\n\n* If `future_threshold` is configured,\nthe document `id` cannot be too far in the future from the\ncurrent time.\n* If `past_threshold` is configured, the document `id` cannot be too far in the past from the\ncurrent time."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.\n\nThis field may be used to reference related documents, such as:\n* Related Conditions documents (e.g., a privacy policy that references a terms of use)\n* Legal documents or regulations that the conditions are based on\n* Other relevant documentation",
+          "format": "Document Reference",
+          "required": "optional",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document.\n* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.\n\nSorting for each element of `ref` follows the same sort order as specified for Map Keys, \nas defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be `nil`.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.\nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted.\n\n**Important**: User-submitted documents that reference revoked Conditions documents *MUST* be rejected during validation."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "1. The document version must always be >= the document ID.\n2. IF `ver` does not == `id`\n  then a document with `id` and `ver` being equal *MUST* exist.\n3. When a document with the same `id` already exists,\n  the new document's `ver` must be greater than\n  the latest known submitted version for that `id`.\n4. When a document with the same `id` already exists,\n  the new document's `type` must be the same as\n  the latest known submitted document's `type` for that `id`."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The Conditions document payload contains the text of the terms and conditions.\n\nThe payload *MUST* be valid according to the content type specified in the COSE header:\n\n* If `content-type` is `text/markdown`, the payload must be valid Markdown\n* If `content-type` is `text/html`, the payload must be valid HTML5\n\nThe payload is compressed using Brotli compression (`br` encoding) as specified in the `content-encoding` header.\n\nThe payload content should be human-readable and clearly state:\n* The purpose of the conditions\n* What users are agreeing to\n* Any obligations or restrictions\n* Effective dates or version information\n* Contact information for questions",
+        "nil": false
+      },
+      "signers": {
+        "roles": {
+          "admin": [
+            "Brand Admin",
+            "Campaign Admin",
+            "Category Admin",
+            "Contest Admin"
+          ],
+          "user": []
+        },
+        "update": {
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
+          "type": "author"
+        }
+      },
+      "type": "b664afc2-6472-4028-b90f-875bf6eefab8",
+      "validation": "The Conditions document *MUST* be a valid signed document according to the Signed Document Standard.\n\nWhen a Conditions document is referenced in a parameter document's `conditions` metadata field, the referenced document *MUST* exist and be of type \"Conditions\".\n\nWhen a Conditions document is referenced in a user-submitted document's `conditions` metadata field, the referenced document *MUST* exist, be of type \"Conditions\", and not be revoked.",
+      "versions": [
+        {
+          "changes": "* First Published Version (DRAFT)",
+          "modified": "2025-01-XX",
           "version": "0.01"
         }
       ]
@@ -2611,6 +2730,16 @@
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
+        "conditions": {
+          "description": "An array of references to all Conditions documents that the user has accepted.\n\nMust include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).\nThe act of listing these references and signing the document serves as the user's digital signature and acceptance.\nThe field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified.",
+          "format": "Document Reference",
+          "required": "optional",
+          "multiple": true,
+          "type": [
+            "Conditions"
+          ],
+          "validation": "Must exactly match the union of all required conditions from the parameter hierarchy.\n\nValidation process:\n1. Extract the `parameters` reference from the user document\n2. Follow the parameter chain: Contest → Category → Campaign → Brand\n3. Collect all `conditions` arrays from each parameter level in the hierarchy\n4. Union all condition references (removing duplicates based on document ID and version)\n5. Sort the unioned list according to CBOR Deterministic Encoding\n6. Compare the user document's `conditions` array with this unioned, sorted list\n7. Validation succeeds only if they match exactly\n\nAll referenced Conditions documents must exist, be valid, and not be revoked.\nThe array must be sorted (CBOR deterministic encoding order).\nAll array elements must be unique.\n\nValidation fails if:\n* Missing required conditions (conditions specified in parameter hierarchy but not in user document)\n* Includes extra conditions (conditions in user document not in parameter hierarchy)\n* Array is not sorted correctly\n* Any referenced condition document doesn't exist or is invalid\n* Any referenced condition document is revoked\n* Array contains duplicate references"
+        },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
@@ -2748,6 +2877,16 @@
             "Category Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "conditions": {
+          "description": "An array of references to all Conditions documents that the user has accepted.\n\nMust include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).\nThe act of listing these references and signing the document serves as the user's digital signature and acceptance.\nThe field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified.",
+          "format": "Document Reference",
+          "required": "optional",
+          "multiple": true,
+          "type": [
+            "Conditions"
+          ],
+          "validation": "Must exactly match the union of all required conditions from the parameter hierarchy.\n\nValidation process:\n1. Extract the `parameters` reference from the user document\n2. Follow the parameter chain: Contest → Category → Campaign → Brand\n3. Collect all `conditions` arrays from each parameter level in the hierarchy\n4. Union all condition references (removing duplicates based on document ID and version)\n5. Sort the unioned list according to CBOR Deterministic Encoding\n6. Compare the user document's `conditions` array with this unioned, sorted list\n7. Validation succeeds only if they match exactly\n\nAll referenced Conditions documents must exist, be valid, and not be revoked.\nThe array must be sorted (CBOR deterministic encoding order).\nAll array elements must be unique.\n\nValidation fails if:\n* Missing required conditions (conditions specified in parameter hierarchy but not in user document)\n* Includes extra conditions (conditions in user document not in parameter hierarchy)\n* Array is not sorted correctly\n* Any referenced condition document doesn't exist or is invalid\n* Any referenced condition document is revoked\n* Array contains duplicate references"
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
