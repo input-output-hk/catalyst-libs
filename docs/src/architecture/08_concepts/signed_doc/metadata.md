@@ -417,7 +417,8 @@ hierarchy they are all valid.
 ### `conditions`
 
 > **DRAFT STATUS**  
-> This metadata field is currently in **DRAFT** status. Development should **NOT** begin until this specification is formally released.  
+> This metadata field is currently in **DRAFT** status.
+> Development should **NOT** begin until this specification is formally released.  
 > This specification is subject to change without notice.
 
 <!-- markdownlint-disable MD033 -->
@@ -460,9 +461,10 @@ The validation process for user-submitted documents involves transitive collecti
 1. Extract the [`parameters`](metadata.md#parameters) reference from the user document
 2. Follow the parameter chain: Contest → Category → Campaign → Brand
 3. Collect all `conditions` arrays from each parameter level in the hierarchy
-4. Union all condition references (removing duplicates based on document ID and version)
-5. Sort the unioned list according to [CBOR Deterministic Encoding][CBOR-LFD-ENCODING]
-6. Compare the user document's `conditions` array with this unioned, sorted list
+4. Union all condition references (removing duplicates based on document ID and
+   version)
+5. Sort the unified list according to [CBOR Deterministic Encoding][CBOR-LFD-ENCODING]
+6. Compare the user document's `conditions` array with this unified, sorted list
 7. Validation succeeds only if they match exactly
 
 **Validation Rules:**
@@ -476,8 +478,11 @@ The validation process for user-submitted documents involves transitive collecti
 **Validation Failures:**
 
 The document will be rejected if:
-* Missing required conditions (conditions specified in parameter hierarchy but not in user document)
-* Includes extra conditions (conditions in user document not in parameter hierarchy)
+
+* Missing required conditions (conditions specified in parameter hierarchy but not
+  in user document)
+* Includes extra conditions (conditions in user document not in parameter
+  hierarchy)
 * Array is not sorted correctly
 * Any referenced condition document doesn't exist or is invalid
 * Any referenced condition document is revoked
@@ -494,6 +499,7 @@ The document will be rejected if:
 **Example:**
 
 A user submitting a Proposal to a Category must accept:
+
 * All conditions from the Contest Parameters (if any)
 * All conditions from the Category Parameters (if any)
 * All conditions from the Campaign Parameters (if any)

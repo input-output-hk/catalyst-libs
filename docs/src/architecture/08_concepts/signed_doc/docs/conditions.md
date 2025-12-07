@@ -1,12 +1,15 @@
 # Conditions
 
 > **DRAFT STATUS**  
-> This document is currently in **DRAFT** status. Development should **NOT** begin until this specification is formally released.  
+> This document is currently in **DRAFT** status.
+> Development should **NOT** begin until this specification is formally released.  
 > This specification is subject to change without notice.
 
 ## Description
 
-Conditions documents are simple document types published by authoritative parties (such as Catalyst admins) to define terms and conditions that users must accept before submitting documents to the system.
+Conditions documents are simple document types published by authoritative parties
+(such as Catalyst admins) to define terms and conditions that users must accept
+before submitting documents to the system.
 
 The Conditions document type supports multiple condition documents for different purposes, such as:
 
@@ -17,11 +20,21 @@ The Conditions document type supports multiple condition documents for different
 * Privacy policies
 * Other legal or operational requirements
 
-The payload of a Conditions document contains the text of the terms and conditions, typically in Markdown or HTML format. This allows for rich formatting while maintaining human readability.
+The payload of a Conditions document contains the text of the terms and
+conditions, typically in Markdown or HTML format.
+This allows for rich formatting while maintaining human readability.
 
-Conditions documents are versioned and can be revoked, enabling administrators to update terms over time while maintaining an auditable history of what terms were in effect at any given time.
+Conditions documents are versioned and can be revoked, enabling administrators to
+update terms over time while maintaining an auditable history of what terms were
+in effect at any given time.
 
-Conditions documents are referenced by parameter documents (Brand, Campaign, Category, and Contest Parameters) to specify which conditions are required at each level of the system hierarchy. User-submitted documents (such as Proposals and Comments) must reference all required conditions from their parameter hierarchy, with the act of listing these references and signing the document serving as the user's digital signature and acceptance.
+Conditions documents are referenced by parameter documents (Brand, Campaign,
+Category, and Contest Parameters) to specify which conditions are required at each
+level of the system hierarchy.
+User-submitted documents (such as Proposals and Comments) must reference all
+required conditions from their parameter hierarchy, with the act of listing these
+references and signing the document serving as the user's digital signature and
+acceptance.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -34,11 +47,16 @@ Conditions documents are referenced by parameter documents (Brand, Campaign, Cat
 
 ### Validation
 
-The Conditions document *MUST* be a valid signed document according to the Signed Document Standard.
+The Conditions document *MUST* be a valid signed document according to the
+Signed Document Standard.
 
-When a Conditions document is referenced in a parameter document's [`conditions`](../metadata.md#conditions) metadata field, the referenced document *MUST* exist and be of type "Conditions".
+When a Conditions document is referenced in a parameter document's
+[`conditions`](../metadata.md#conditions) metadata field, the referenced document
+*MUST* exist and be of type "Conditions".
 
-When a Conditions document is referenced in a user-submitted document's [`conditions`](../metadata.md#conditions) metadata field, the referenced document *MUST* exist, be of type "Conditions", and not be revoked.
+When a Conditions document is referenced in a user-submitted document's
+[`conditions`](../metadata.md#conditions) metadata field, the referenced document
+*MUST* exist, be of type "Conditions", and not be revoked.
 
 ### Business Logic
 
@@ -56,13 +74,18 @@ Front-end applications should:
 
 Back-end validation must:
 
-* Verify that all Conditions documents referenced in user-submitted documents exist and are valid
-* Collect all required conditions from the parameter hierarchy (Brand → Campaign → Category → Contest)
-* Ensure user-submitted documents include exactly the union of all required conditions from their parameter hierarchy
+* Verify that all Conditions documents referenced in user-submitted documents
+  exist and are valid
+* Collect all required conditions from the parameter hierarchy
+  (Brand → Campaign → Category → Contest)
+* Ensure user-submitted documents include exactly the union of all required
+  conditions from their parameter hierarchy
 * Reject documents that reference revoked Conditions documents
-* Reject documents that are missing required conditions or include conditions not in the parameter hierarchy
+* Reject documents that are missing required conditions or include conditions not
+  in the parameter hierarchy
 
-The decentralized system (Hermes) will also reject documents without the required conditions, ensuring validation occurs at multiple layers.
+The decentralized system (Hermes) will also reject documents without the required
+conditions, ensuring validation occurs at multiple layers.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -144,7 +167,9 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 Reference to a Linked Document or Documents.
 
 This field may be used to reference related documents, such as:
-* Related Conditions documents (e.g., a privacy policy that references a terms of use)
+
+* Related Conditions documents (e.g., a privacy policy that references a terms of
+  use)
 * Legal documents or regulations that the conditions are based on
 * Other relevant documentation
 
@@ -199,9 +224,11 @@ The payload *MUST* be valid according to the content type specified in the COSE 
 * If `content-type` is `text/markdown`, the payload must be valid Markdown
 * If `content-type` is `text/html`, the payload must be valid HTML5
 
-The payload is compressed using Brotli compression (`br` encoding) as specified in the `content-encoding` header.
+The payload is compressed using Brotli compression (`br` encoding) as specified
+in the `content-encoding` header.
 
 The payload content should be human-readable and clearly state:
+
 * The purpose of the conditions
 * What users are agreeing to
 * Any obligations or restrictions
@@ -217,11 +244,16 @@ The following Admin roles may sign documents of this type:
 * Category Admin
 * Contest Admin
 
-The specific admin role required depends on the level at which the Conditions document is intended to be used. For example:
+The specific admin role required depends on the level at which the Conditions
+document is intended to be used.
+For example:
+
 * Brand-level conditions should be signed by Brand Admin
 * Campaign-level conditions should be signed by Campaign Admin or Brand Admin
-* Category-level conditions should be signed by Category Admin or a parent-level admin
-* Contest-level conditions should be signed by Contest Admin or a parent-level admin
+* Category-level conditions should be signed by Category Admin or a parent-level
+  admin
+* Contest-level conditions should be signed by Contest Admin or a parent-level
+  admin
 
 Updates are allowed by the original author and from the 'collaborators' metadata field
 of the previous submitted document's version.
@@ -229,8 +261,10 @@ of the previous submitted document's version.
 ## JSON Specification Requirements
 
 > **DRAFT STATUS**  
-> The following JSON specification changes are documented here but **MUST NOT** be implemented until this specification is formally released.  
-> The `signed_doc.json` file is the source of truth for code generation and must be marked as `draft: true` when these changes are added.
+> The following JSON specification changes are documented here but **MUST NOT** be
+> implemented until this specification is formally released.  
+> The `signed_doc.json` file is the source of truth for code generation and must
+> be marked as `draft: true` when these changes are added.
 
 ### Required Changes to `signed_doc.json`
 
@@ -319,15 +353,19 @@ Add a new entry to the `docs` section with the following structure:
 ```
 
 **Important Notes:**
-- Generate a new UUIDv4 for the `type` field
-- Set `draft: true` as required by Steven Johnson
-- The `value` for `content type` may be `text/markdown` or `text/html` (consider supporting both)
+
+* Generate a new UUIDv4 for the `type` field
+* Set `draft: true` as required by Steven Johnson
+* The `value` for `content type` may be `text/markdown` or `text/html`
+  (consider supporting both)
 
 #### 2. Add "conditions" Metadata Field
 
 Add the `conditions` metadata field to the following document types in their `metadata` sections:
 
-**Parameter Documents** (Brand Parameters, Campaign Parameters, Category Parameters, Contest Parameters):
+**Parameter Documents** (Brand Parameters, Campaign Parameters, Category
+Parameters, Contest Parameters):
+
 ```json
 "conditions": {
   "description": "An array of references to Conditions documents that define terms and conditions required at this level.",
@@ -335,26 +373,37 @@ Add the `conditions` metadata field to the following document types in their `me
   "required": "optional",
   "multiple": true,
   "type": ["Conditions"],
-  "validation": "If present, must be an array of valid Conditions document references. All referenced documents must exist and be of type 'Conditions'. The array must be sorted according to CBOR Deterministic Encoding rules."
+  "validation": "If present, must be an array of valid Conditions document
+references. All referenced documents must exist and be of type 'Conditions'. The
+array must be sorted according to CBOR Deterministic Encoding rules."
 }
 ```
 
 **User-Submitted Documents** (Proposal, Proposal Comment, etc.):
+
 ```json
 "conditions": {
-  "description": "An array of references to all Conditions documents that the user has accepted. Must include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).",
+  "description": "An array of references to all Conditions documents that the
+user has accepted. Must include ALL conditions required by the parameter
+hierarchy (Brand → Campaign → Category → Contest).",
   "format": "Document Reference",
   "required": "optional",
   "multiple": true,
   "type": ["Conditions"],
-  "validation": "Must exactly match the union of all required conditions from the parameter hierarchy. All referenced documents must exist, be valid, and not be revoked. The array must be sorted according to CBOR Deterministic Encoding rules."
+  "validation": "Must exactly match the union of all required conditions from
+the parameter hierarchy. All referenced documents must exist, be valid, and not
+be revoked. The array must be sorted according to CBOR Deterministic Encoding
+rules."
 }
 ```
 
 **Important Notes:**
-- Set `multiple: true` to allow arrays of document references
-- Set `required: "optional"` (but required when conditions are specified in parameter hierarchy for user documents)
-- The validation logic for user documents requires transitive collection from parameter hierarchy
+
+* Set `multiple: true` to allow arrays of document references
+* Set `required: "optional"` (but required when conditions are specified in
+  parameter hierarchy for user documents)
+* The validation logic for user documents requires transitive collection from
+  parameter hierarchy
 
 #### 3. Update Document Types Table
 
@@ -362,13 +411,16 @@ The `types.md` file will be automatically regenerated from the JSON specificatio
 
 ### Code Generation Impact
 
-Once these changes are made to `signed_doc.json` and the specification is released (draft status removed), the following code will need to be updated:
+Once these changes are made to `signed_doc.json` and the specification is
+released (draft status removed), the following code will need to be updated:
 
-- **Rust**: Add `conditions` field to metadata structs and implement validation rules
-- **Python**: Add `conditions` to `DocType` enum and metadata handling
-- **Dart**: Add `conditions` to `DocumentType` enum
-- **Backend Validation**: Implement transitive condition collection and matching logic
-- **CLI Tools**: Add condition querying and acceptance prompts
+* **Rust**: Add `conditions` field to metadata structs and implement validation
+  rules
+* **Python**: Add `conditions` to `DocType` enum and metadata handling
+* **Dart**: Add `conditions` to `DocumentType` enum
+* **Backend Validation**: Implement transitive condition collection and matching
+  logic
+* **CLI Tools**: Add condition querying and acceptance prompts
 
 ## Copyright
 
@@ -390,4 +442,3 @@ Once these changes are made to `signed_doc.json` and the specification is releas
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-
