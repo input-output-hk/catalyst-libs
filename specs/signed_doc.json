@@ -1283,6 +1283,16 @@
           "type": "Campaign Parameters",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
+        "conditions": {
+          "description": "An array of references to Conditions documents that define terms and conditions required at this level.\n\nLists the required condition documents for this level of the system hierarchy.\nSpecifies which terms users must accept when submitting documents at this level.\nThe field is optional - if not present, no conditions are required at that level.",
+          "format": "Document Reference",
+          "required": "optional",
+          "multiple": true,
+          "type": [
+            "Conditions"
+          ],
+          "validation": "If present, must be an array of valid Conditions document references.\nAll referenced documents must exist and be of type \"Conditions\".\nThe array must be sorted according to CBOR Deterministic Encoding rules.\nAll array elements must be unique."
+        },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "format": "Document Reference",
@@ -2244,6 +2254,16 @@
             "Category Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
+        },
+        "conditions": {
+          "description": "An array of references to Conditions documents that define terms and conditions required at this level.\n\nLists the required condition documents for this level of the system hierarchy.\nSpecifies which terms users must accept when submitting documents at this level.\nThe field is optional - if not present, no conditions are required at that level.",
+          "format": "Document Reference",
+          "required": "optional",
+          "multiple": true,
+          "type": [
+            "Conditions"
+          ],
+          "validation": "If present, must be an array of valid Conditions document references.\nAll referenced documents must exist and be of type \"Conditions\".\nThe array must be sorted according to CBOR Deterministic Encoding rules.\nAll array elements must be unique."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
