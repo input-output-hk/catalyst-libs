@@ -253,5 +253,5 @@ async fn ver_test(
     let mut provider = TestCatalystProvider::default();
     let doc = doc_gen(&mut provider);
 
-    VerRule.check(&doc, &provider).await.unwrap()
+    VerRule.check_inner(&doc, &provider).await.unwrap()
 }

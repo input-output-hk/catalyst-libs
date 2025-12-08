@@ -10,8 +10,11 @@ use catalyst_types::json_schema::JsonSchema;
 
 use crate::{
     CatalystSignedDocument, ContentType, DocType,
-    providers::CatalystSignedDocumentProvider,
-    validator::rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
+    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::{
+        CatalystSignedDocumentValidationRule,
+        rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
+    },
 };
 
 /// `reply` field validation rule
@@ -24,6 +27,17 @@ pub(crate) enum TemplateRule {
     },
     /// 'template' field is not specified
     NotSpecified,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for TemplateRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
 }
 
 impl TemplateRule {
@@ -59,14 +73,11 @@ impl TemplateRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let context = "Template rule check";
 
         if let Self::Specified { allowed_type } = self {
