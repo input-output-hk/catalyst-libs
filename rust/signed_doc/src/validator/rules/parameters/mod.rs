@@ -207,8 +207,6 @@ pub(crate) async fn link_check(
         return Ok(true);
     };
 
-    eprintln!("l0::{ref_field:?}");
-
     let mut allowed_params = HashSet::new();
     let mut all_valid = true;
     for doc_ref in ref_field.iter() {
