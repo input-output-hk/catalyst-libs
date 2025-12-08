@@ -4,7 +4,11 @@ use std::string::ToString;
 
 use catalyst_signed_doc_spec::is_required::IsRequired;
 
-use crate::{CatalystSignedDocument, metadata::ContentEncoding};
+use crate::{
+    CatalystSignedDocument, metadata::ContentEncoding,
+    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// `content-encoding` field validation rule.
 #[derive(Debug)]
@@ -18,6 +22,17 @@ pub(crate) enum ContentEncodingRule {
     },
     /// Content Encoding field must not be present in the document.
     NotSpecified,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ContentEncodingRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        Ok(self.check_inner(doc))
+    }
 }
 
 impl ContentEncodingRule {
@@ -47,11 +62,10 @@ impl ContentEncodingRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         let context = "Content Encoding Rule check";
         match self {
             Self::NotSpecified => {
@@ -63,7 +77,7 @@ impl ContentEncodingRule {
                             "{context}, document does not expect to have a content-encoding field"
                         ),
                     );
-                    return Ok(false);
+                    return false;
                 }
             },
             Self::Specified { exp, optional } => {
@@ -78,7 +92,7 @@ impl ContentEncodingRule {
                                 .join(", "),
                             "Invalid document content-encoding value",
                         );
-                        return Ok(false);
+                        return false;
                     }
                     if content_encoding.decode(doc.encoded_content()).is_err() {
                         doc.report().invalid_value(
@@ -87,18 +101,18 @@ impl ContentEncodingRule {
                             content_encoding.to_string().as_str(),
                             "Document content is not decodable with the expected content-encoding",
                         );
-                        return Ok(false);
+                        return false;
                     }
                 } else if !optional {
                     doc.report().missing_field(
                         "content-encoding",
                         "Document must have a content-encoding field",
                     );
-                    return Ok(false);
+                    return false;
                 }
             },
         }
-        Ok(true)
+        true
     }
 }
 
@@ -107,8 +121,8 @@ mod tests {
     use super::*;
     use crate::{builder::tests::Builder, metadata::SupportedField};
 
-    #[tokio::test]
-    async fn content_encoding_is_specified_rule_test() {
+    #[test]
+    fn content_encoding_is_specified_rule_test() {
         let content_encoding = ContentEncoding::Brotli;
 
         let rule = ContentEncodingRule::Specified {
@@ -120,26 +134,26 @@ mod tests {
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .with_content(content_encoding.encode(&[1, 2, 3]).unwrap())
             .build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
 
         // empty content (empty bytes) could not be brotli decoded
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc));
 
         let doc = Builder::new().build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
 
         let rule = ContentEncodingRule::Specified {
             exp: vec![content_encoding],
             optional: false,
         };
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc));
     }
 
-    #[tokio::test]
-    async fn content_encoding_is_not_specified_rule_test() {
+    #[test]
+    fn content_encoding_is_not_specified_rule_test() {
         let content_encoding = ContentEncoding::Brotli;
 
         let rule = ContentEncodingRule::NotSpecified;
@@ -148,10 +162,10 @@ mod tests {
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(!rule.check_inner(&doc));
 
         // No content encoding
         let doc = Builder::new().build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(rule.check_inner(&doc));
     }
 }

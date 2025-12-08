@@ -169,7 +169,7 @@ async fn reply_specified_test(
         allowed_type: exp_type.clone(),
         optional: false,
     }
-    .check(&doc, &provider)
+    .check_inner(&doc, &provider)
     .await
     .unwrap();
 
@@ -177,7 +177,7 @@ async fn reply_specified_test(
         allowed_type: exp_type.clone(),
         optional: true,
     }
-    .check(&doc, &provider)
+    .check_inner(&doc, &provider)
     .await
     .unwrap();
 
@@ -194,7 +194,7 @@ async fn reply_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).await.unwrap());
 
     let provider = TestCatalystProvider::default();
     let rule = ReplyRule::Specified {
@@ -203,7 +203,7 @@ async fn reply_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
 }
 
 #[tokio::test]
@@ -212,10 +212,10 @@ async fn reply_rule_not_specified_test() {
     let provider = TestCatalystProvider::default();
 
     let doc = Builder::new().build();
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).await.unwrap());
 
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Reply(vec![create_dummy_doc_ref()].into()))
         .build();
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
 }

@@ -12,7 +12,11 @@ use catalyst_signed_doc_spec::{
 use catalyst_types::json_schema::JsonSchema;
 use minicbor::Encode;
 
-use crate::{CatalystSignedDocument, validator::rules::utils::content_json_schema_check};
+use crate::{
+    CatalystSignedDocument,
+    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::{CatalystSignedDocumentValidationRule, rules::utils::content_json_schema_check},
+};
 
 /// Enum represents different content schemas, against which documents content would be
 /// validated.
@@ -46,6 +50,17 @@ pub(crate) enum ContentRule {
     Nil,
 }
 
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ContentRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        Ok(self.check_inner(doc))
+    }
+}
+
 impl ContentRule {
     /// Generating `ContentRule` from specs
     pub(crate) fn new(
@@ -74,18 +89,17 @@ impl ContentRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         const CONTEXT: &str = "Content rule check";
         if let Self::StaticSchema(content_schema) = self {
             match content_schema {
                 ContentSchema::Json(json_schema) => {
-                    return Ok(content_json_schema_check(doc, json_schema));
+                    return content_json_schema_check(doc, json_schema);
                 },
-                ContentSchema::Cddl => return Ok(true),
+                ContentSchema::Cddl => return true,
             }
         }
         if let Self::NotNil = self
@@ -93,16 +107,16 @@ impl ContentRule {
         {
             doc.report()
                 .functional_validation("Document must have a NOT CBOR `nil` content", CONTEXT);
-            return Ok(false);
+            return false;
         }
         if let Self::Nil = self
             && !doc.content().is_nil()
         {
             doc.report()
                 .functional_validation("Document must have a CBOR `nil` content", CONTEXT);
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 }
