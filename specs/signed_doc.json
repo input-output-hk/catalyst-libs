@@ -689,7 +689,8 @@
       "docs": [
         "Brand Parameters",
         "Campaign Parameters",
-        "Category Parameters"
+        "Category Parameters",
+        "Contest Parameters"
       ]
     }
   },
@@ -1635,7 +1636,10 @@
           "description": "Media Type/s allowed in the Payload",
           "format": "Media Type",
           "required": "yes",
-          "value": "text/markdown"
+          "value": [
+            "text/markdown; charset=utf-8",
+            "text/html; charset=utf-8"
+          ]
         },
         "content-encoding": {
           "coseLabel": "content-encoding",
@@ -1693,7 +1697,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "The Conditions document payload contains the text of the terms and conditions.\n\nThe payload *MUST* be valid according to the content type specified in the COSE header:\n\n* If `content-type` is `text/markdown`, the payload must be valid Markdown\n* If `content-type` is `text/html`, the payload must be valid HTML5\n\nThe payload is compressed using Brotli compression (`br` encoding) as specified in the `content-encoding` header.\n\nThe payload content should be human-readable and clearly state:\n* The purpose of the conditions\n* What users are agreeing to\n* Any obligations or restrictions\n* Effective dates or version information\n* Contact information for questions",
+        "description": "The Conditions document payload contains the text of the terms and conditions.\n\nThe payload *MUST* be valid according to the content type specified in the COSE header:\n\n* If `content-type` is `text/markdown; charset=utf-8`, the payload must be valid Markdown\n* If `content-type` is `text/html; charset=utf-8`, the payload must be valid HTML5\n\nThe payload is compressed using Brotli compression (`br` encoding) as specified in the `content-encoding` header.\n\nThe payload content should be human-readable and clearly state:\n* The purpose of the conditions\n* What users are agreeing to\n* Any obligations or restrictions\n* Effective dates or version information\n* Contact information for questions",
         "nil": false
       },
       "signers": {
@@ -1707,7 +1711,7 @@
           "user": []
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the previous submitted document's version.",
+          "description": "Only the original author can update and sign a new version of documents.",
           "type": "author"
         }
       },
@@ -2251,7 +2255,8 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
@@ -2393,7 +2398,8 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
@@ -2526,7 +2532,8 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
@@ -2746,19 +2753,20 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
         "conditions": {
-          "description": "An array of references to all Conditions documents that the user has accepted.\n\nMust include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).\nThe act of listing these references and signing the document serves as the user's digital signature and acceptance.\nThe field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified.",
+          "description": "An array of references to all Conditions documents that the user has accepted.\n\nMust include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).\nThe act of listing these references and signing the document serves as the user's digital signature and acceptance.\n\n**Schema-level requirement**: This field is marked as optional in the schema, allowing documents to be created without it.\n\n**Validation-level requirement**: During validation, this field becomes required when the parameter hierarchy specifies conditions.\nIf conditions are required by any level in the parameter hierarchy (Brand, Campaign, Category, or Contest),\nthe field must be present and must exactly match all required conditions. If no conditions are specified\nin the parameter hierarchy, the field may be omitted.",
           "format": "Document Reference",
           "required": "optional",
           "multiple": true,
           "type": [
             "Conditions"
           ],
-          "validation": "Must exactly match the union of all required conditions from the parameter hierarchy.\n\nValidation process:\n1. Extract the `parameters` reference from the user document\n2. Follow the parameter chain: Contest → Category → Campaign → Brand\n3. Collect all `conditions` arrays from each parameter level in the hierarchy\n4. Union all condition references (removing duplicates based on document ID and version)\n5. Sort the unified list according to CBOR Deterministic Encoding\n6. Compare the user document's `conditions` array with this unified, sorted list\n7. Validation succeeds only if they match exactly\n\nAll referenced Conditions documents must exist, be valid, and not be revoked.\nThe array must be sorted (CBOR deterministic encoding order).\nAll array elements must be unique.\n\nValidation fails if:\n* Missing required conditions (conditions specified in parameter hierarchy but not in user document)\n* Includes extra conditions (conditions in user document not in parameter hierarchy)\n* Array is not sorted correctly\n* Any referenced condition document doesn't exist or is invalid\n* Any referenced condition document is revoked\n* Array contains duplicate references"
+          "validation": "Must exactly match the union of all required conditions from the parameter hierarchy.\n\nValidation process:\n1. Extract the `parameters` reference from the user document\n2. Starting from the referenced parameters document, follow the parent chain upward to Brand:\n   * If the document references Contest Parameters, follow: Contest → (its parent: Brand/Campaign/Category) → Campaign (if parent was Category) → Brand\n   * If the document references Category Parameters, follow: Category → Campaign → Brand\n   * If the document references Campaign Parameters, follow: Campaign → Brand\n   * If the document references Brand Parameters, only Brand is included\n3. Collect all `conditions` arrays from each parameter level encountered in the upward chain\n4. Union all condition references (removing duplicates based on document ID and version)\n5. Sort the unified list according to CBOR Deterministic Encoding\n6. Compare the user document's `conditions` array with this unified, sorted list\n7. Validation succeeds only if they match exactly\n\nImportant: The chain traversal always moves UPWARD from the document's referenced parameters document to Brand. Contest Parameters are only included if the document directly references them. The chain order depends on where the document is anchored in the hierarchy.\n\nAll referenced Conditions documents must exist, be valid, and not be revoked.\nThe array must be sorted (CBOR deterministic encoding order).\nAll array elements must be unique.\n\nValidation fails if:\n* Missing required conditions (conditions specified in parameter hierarchy but not in user document)\n* Includes extra conditions (conditions in user document not in parameter hierarchy)\n* Array is not sorted correctly\n* Any referenced condition document doesn't exist or is invalid\n* Any referenced condition document is revoked\n* Array contains duplicate references"
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -2894,19 +2902,20 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
         "conditions": {
-          "description": "An array of references to all Conditions documents that the user has accepted.\n\nMust include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).\nThe act of listing these references and signing the document serves as the user's digital signature and acceptance.\nThe field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified.",
+          "description": "An array of references to all Conditions documents that the user has accepted.\n\nMust include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest).\nThe act of listing these references and signing the document serves as the user's digital signature and acceptance.\n\n**Schema-level requirement**: This field is marked as optional in the schema, allowing documents to be created without it.\n\n**Validation-level requirement**: During validation, this field becomes required when the parameter hierarchy specifies conditions.\nIf conditions are required by any level in the parameter hierarchy (Brand, Campaign, Category, or Contest),\nthe field must be present and must exactly match all required conditions. If no conditions are specified\nin the parameter hierarchy, the field may be omitted.",
           "format": "Document Reference",
           "required": "optional",
           "multiple": true,
           "type": [
             "Conditions"
           ],
-          "validation": "Must exactly match the union of all required conditions from the parameter hierarchy.\n\nValidation process:\n1. Extract the `parameters` reference from the user document\n2. Follow the parameter chain: Contest → Category → Campaign → Brand\n3. Collect all `conditions` arrays from each parameter level in the hierarchy\n4. Union all condition references (removing duplicates based on document ID and version)\n5. Sort the unified list according to CBOR Deterministic Encoding\n6. Compare the user document's `conditions` array with this unified, sorted list\n7. Validation succeeds only if they match exactly\n\nAll referenced Conditions documents must exist, be valid, and not be revoked.\nThe array must be sorted (CBOR deterministic encoding order).\nAll array elements must be unique.\n\nValidation fails if:\n* Missing required conditions (conditions specified in parameter hierarchy but not in user document)\n* Includes extra conditions (conditions in user document not in parameter hierarchy)\n* Array is not sorted correctly\n* Any referenced condition document doesn't exist or is invalid\n* Any referenced condition document is revoked\n* Array contains duplicate references"
+          "validation": "Must exactly match the union of all required conditions from the parameter hierarchy.\n\nValidation process:\n1. Extract the `parameters` reference from the user document\n2. Starting from the referenced parameters document, follow the parent chain upward to Brand:\n   * If the document references Contest Parameters, follow: Contest → (its parent: Brand/Campaign/Category) → Campaign (if parent was Category) → Brand\n   * If the document references Category Parameters, follow: Category → Campaign → Brand\n   * If the document references Campaign Parameters, follow: Campaign → Brand\n   * If the document references Brand Parameters, only Brand is included\n3. Collect all `conditions` arrays from each parameter level encountered in the upward chain\n4. Union all condition references (removing duplicates based on document ID and version)\n5. Sort the unified list according to CBOR Deterministic Encoding\n6. Compare the user document's `conditions` array with this unified, sorted list\n7. Validation succeeds only if they match exactly\n\nImportant: The chain traversal always moves UPWARD from the document's referenced parameters document to Brand. Contest Parameters are only included if the document directly references them. The chain order depends on where the document is anchored in the hierarchy.\n\nAll referenced Conditions documents must exist, be valid, and not be revoked.\nThe array must be sorted (CBOR deterministic encoding order).\nAll array elements must be unique.\n\nValidation fails if:\n* Missing required conditions (conditions specified in parameter hierarchy but not in user document)\n* Includes extra conditions (conditions in user document not in parameter hierarchy)\n* Array is not sorted correctly\n* Any referenced condition document doesn't exist or is invalid\n* Any referenced condition document is revoked\n* Array contains duplicate references"
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.\nThis is the primary hierarchical reference to a related document.\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n\n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -3041,7 +3050,8 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
@@ -3174,7 +3184,8 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
@@ -3431,7 +3442,8 @@
           "type": [
             "Brand Parameters",
             "Campaign Parameters",
-            "Category Parameters"
+            "Category Parameters",
+            "Contest Parameters"
           ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },

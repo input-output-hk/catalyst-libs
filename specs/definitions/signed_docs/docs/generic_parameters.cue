@@ -47,6 +47,8 @@ _parameters_payload_description: """
 		revocations: required: "optional"
 
 		parameters: required: _ | *"yes"
+
+		conditions: required: "optional"
 	}
 
 	headers: "content type": value: "application/json"

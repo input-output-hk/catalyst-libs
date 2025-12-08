@@ -442,7 +442,10 @@ The `conditions` metadata field serves two distinct purposes depending on the do
    * References all condition documents that the user has accepted
    * Must include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest)
    * The act of listing these references and signing the document serves as the user's digital signature and acceptance
-   * The field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified
+   * **Schema-level**: The field is marked as optional in the schema, allowing documents to be created without it
+   * **Validation-level**: During validation, this field becomes required when the parameter hierarchy specifies conditions.
+     If conditions are required by any level in the parameter hierarchy, the field must be present and must exactly
+     match all required conditions. If no conditions are specified in the parameter hierarchy, the field may be omitted
 
 #### `conditions` Validation
 
@@ -456,16 +459,29 @@ The `conditions` metadata field serves two distinct purposes depending on the do
 
 **For User-Submitted Documents:**
 
+**Important**: While the `conditions` field is optional at the schema level, validation enforces conditional requirements
+based on the parameter hierarchy. This validation occurs at runtime, not during schema validation.
+
 The validation process for user-submitted documents involves transitive collection of required conditions:
 
 1. Extract the [`parameters`](metadata.md#parameters) reference from the user document
-2. Follow the parameter chain: Contest → Category → Campaign → Brand
-3. Collect all `conditions` arrays from each parameter level in the hierarchy
+2. Starting from the referenced parameters document, follow the parent chain upward to Brand:
+   * If the document references **Contest Parameters**, follow: Contest → (its parent: Brand/Campaign/Category) → Campaign (if parent was Category) → Brand
+   * If the document references **Category Parameters**, follow: Category → Campaign → Brand
+   * If the document references **Campaign Parameters**, follow: Campaign → Brand
+   * If the document references **Brand Parameters**, only Brand is included
+3. Collect all `conditions` arrays from each parameter level encountered in the upward chain
 4. Union all condition references (removing duplicates based on document ID and
    version)
 5. Sort the unified list according to [CBOR Deterministic Encoding][CBOR-LFD-ENCODING]
 6. Compare the user document's `conditions` array with this unified, sorted list
 7. Validation succeeds only if they match exactly
+
+**Important**: The chain traversal always moves UPWARD from the document's referenced parameters document to Brand. Contest Parameters are only included if the document directly references them. The chain order depends on where the document is anchored in the hierarchy.
+
+**If the unified list is non-empty** (conditions are required by the parameter hierarchy), the `conditions` field
+becomes required and must be present in the user document. **If the unified list is empty** (no conditions are
+required), the `conditions` field may be omitted.
 
 **Validation Rules:**
 
@@ -500,12 +516,13 @@ The document will be rejected if:
 
 A user submitting a Proposal to a Category must accept:
 
-* All conditions from the Contest Parameters (if any)
 * All conditions from the Category Parameters (if any)
 * All conditions from the Campaign Parameters (if any)
 * All conditions from the Brand Parameters (if any)
 
 The Proposal's `conditions` array must contain the union of all these conditions, sorted and deduplicated.
+
+Note: Contest Parameters are below Category in the hierarchy, so they do not apply to documents at the Category level. If a Proposal is submitted to a Contest, then Contest Parameters would be included in the chain (Contest → Category → Campaign → Brand).
 
 In the event there are **MULTIPLE** [`conditions`](metadata.md#conditions) listed, they **MUST** be sorted.
 

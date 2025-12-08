@@ -87,6 +87,7 @@ _metadataNames: [
 	"collaborators",
 	"revocations",
 	"parameters",
+	"conditions",
 	"chain",
 ]
 
@@ -275,6 +276,71 @@ _allMetadataNames: or([
 			"""
 	}
 
+	conditions: {
+		format: "Document Reference"
+		description: """
+			An array of references to Conditions documents that define terms and conditions.
+
+			The `conditions` metadata field serves two distinct purposes depending on the document type:
+
+			1. **On Parameter Documents** (Brand Parameters, Campaign Parameters, Category Parameters, Contest Parameters):
+			   * Lists the required condition documents for that level of the system hierarchy
+			   * Specifies which terms users must accept when submitting documents at this level
+			   * The field is optional - if not present, no conditions are required at that level
+
+			2. **On User-Submitted Documents** (Proposals, Proposal Comments, etc.):
+			   * References all condition documents that the user has accepted
+			   * Must include ALL conditions required by the parameter hierarchy (Brand → Campaign → Category → Contest)
+			   * The act of listing these references and signing the document serves as the user's digital signature and acceptance
+			   * The field is optional when no conditions are required by the parameter hierarchy, but required when conditions are specified
+			"""
+		validation: """
+			**For Parameter Documents:**
+
+			* The `conditions` field is optional
+			* If present, must be an array of valid Conditions document references
+			* All referenced documents must exist and be of type "Conditions"
+			* The array must be sorted according to CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering)
+			* All array elements must be unique
+
+			**For User-Submitted Documents:**
+
+			The validation process for user-submitted documents involves transitive collection of required conditions:
+
+			1. Extract the `parameters` reference from the user document
+			2. Starting from the referenced parameters document, follow the parent chain upward to Brand:
+			   * If the document references Contest Parameters, follow: Contest → (its parent: Brand/Campaign/Category) → Campaign (if parent was Category) → Brand
+			   * If the document references Category Parameters, follow: Category → Campaign → Brand
+			   * If the document references Campaign Parameters, follow: Campaign → Brand
+			   * If the document references Brand Parameters, only Brand is included
+			3. Collect all `conditions` arrays from each parameter level encountered in the upward chain
+			4. Union all condition references (removing duplicates based on document ID and version)
+			5. Sort the unified list according to CBOR Deterministic Encoding
+			6. Compare the user document's `conditions` array with this unified, sorted list
+			7. Validation succeeds only if they match exactly
+
+			Important: The chain traversal always moves UPWARD from the document's referenced parameters document to Brand. Contest Parameters are only included if the document directly references them. The chain order depends on where the document is anchored in the hierarchy.
+
+			**Validation Rules:**
+
+			* The user document's `conditions` array must exactly match the union of all required conditions from the parameter hierarchy
+			* All referenced Conditions documents must exist and be valid
+			* All referenced Conditions documents must not be revoked
+			* The array must be sorted (CBOR deterministic encoding order)
+			* All array elements must be unique
+
+			**Validation Failures:**
+
+			The document will be rejected if:
+			* Missing required conditions (conditions specified in parameter hierarchy but not in user document)
+			* Includes extra conditions (conditions in user document not in parameter hierarchy)
+			* Array is not sorted correctly
+			* Any referenced condition document doesn't exist or is invalid
+			* Any referenced condition document is revoked
+			* Array contains duplicate references
+			"""
+	}
+
 }
 
 // Note: we make all normally excluded fields optional at the global level, because they are globally optional
@@ -288,6 +354,12 @@ metadata: headers: {
 	reply: type:             signed_doc_types.commentDocNamesList
 	section: required:       "optional"
 	collaborators: required: "optional"
+	conditions: {
+		required: "optional"
+		format:   "Document Reference"
+		type:     ["Conditions"]
+		multiple: true
+	}
 }
 
 // Preferred display order

@@ -30,6 +30,7 @@ allDocTypes: {
 	"Contest Delegation":                "764f17fb-cc50-4979-b14a-b213dbac5994"
 	"Contest Ballot":                    "de1284b8-8533-4f7a-81cc-ff4bde5ef8d0"
 	"Contest Ballot Checkpoint":         "58608925-bda3-47df-b39a-ae0d0a1dd6ed"
+	"Conditions":                         "b664afc2-6472-4028-b90f-875bf6eefab8"
 	//"Rep Profile Moderation Action":    "0e20010b-eeaf-4938-a7ee-ceb3df9e8af6" // speculative
 	//"Rep Nomination Moderation Action": "d27ecb44-bd4d-42bb-9273-5e5433cdfdb6" // speculative
 }
