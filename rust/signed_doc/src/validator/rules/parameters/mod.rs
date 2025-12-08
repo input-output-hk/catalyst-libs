@@ -13,7 +13,8 @@ use futures::FutureExt;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
-    providers::CatalystSignedDocumentProvider, validator::rules::doc_ref::doc_refs_check,
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 /// `parameters` field validation rule
@@ -195,7 +196,7 @@ impl ParametersRule {
 /// - `Ok(true)` if `ref_field` is `None` or yield a matching parameter set.
 /// - `Ok(false)` if no recursive parameter set matches the expected one.
 /// - `Err` if an unexpected provider error occurs.
-pub(crate) async fn link_check<Provider>(
+pub(crate) async fn link_check(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
     field_name: &str,
@@ -246,15 +247,12 @@ pub(crate) async fn link_check<Provider>(
 ///
 /// All encountered parameter lists are returned; traversal is cycle-safe
 /// and explores deeper parameter references recursively.
-async fn collect_parameters_recursively<Provider>(
+async fn collect_parameters_recursively(
     root: &DocumentRef,
     field_name: &str,
-    provider: &Provider,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<(bool, HashSet<DocumentRefs>)>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+) -> anyhow::Result<(bool, HashSet<DocumentRefs>)> {
     let mut all_valid = true;
     let mut result = HashSet::new();
     let mut visited = HashSet::new();
