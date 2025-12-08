@@ -30,6 +30,17 @@ pub(crate) enum ParametersRule {
     NotSpecified,
 }
 
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ParametersRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
+}
+
 impl ParametersRule {
     /// Generating `ParametersRule` from specs
     pub(crate) fn new(
@@ -75,14 +86,11 @@ impl ParametersRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let context: &str = "Parameter rule check";
         if let Self::Specified {
             allowed_type: exp_parameters_type,
@@ -191,12 +199,9 @@ pub(crate) async fn link_check<Provider>(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
     field_name: &str,
-    provider: &Provider,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+) -> anyhow::Result<bool> {
     let Some(ref_field) = ref_field else {
         return Ok(true);
     };

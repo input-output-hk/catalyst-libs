@@ -11,7 +11,7 @@ _template_description: """
 	Reference to the template used to create and/or validate this document.
 	"""
 _template_validation: """
-	In addition to the validation performed for `Document Reference` type fields, 
+	In addition to the validation performed for `Document Reference` type fields,
 	The document payload is not valid if it does not validate completely against the referenced template.
 	"""
 

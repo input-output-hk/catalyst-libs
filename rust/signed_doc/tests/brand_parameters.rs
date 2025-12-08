@@ -95,8 +95,7 @@ mod common;
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
-    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
-    => ignore["non-optional `content-type`"] true
+    => true
     ;
     "missing 'content-encoding' (optional)"
 )]

@@ -5,10 +5,12 @@ mod tests;
 
 use catalyst_signed_doc_spec::{DocSpecs, is_required::IsRequired, metadata::doc_ref::Ref};
 use catalyst_types::problem_report::ProblemReport;
+use itertools::Itertools;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
-    providers::CatalystSignedDocumentProvider,
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    validator::CatalystSignedDocumentValidationRule,
 };
 
 /// `ref` field validation rule
@@ -26,6 +28,18 @@ pub(crate) enum RefRule {
     /// 'ref' is not specified
     NotSpecified,
 }
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for RefRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
+}
+
 impl RefRule {
     /// Generating `RefRule` from specs
     pub(crate) fn new(
@@ -68,14 +82,11 @@ impl RefRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let context: &str = "Ref rule check";
         if let Self::Specified {
             allowed_type: exp_ref_types,
@@ -118,17 +129,16 @@ impl RefRule {
 /// Validate all the document references by the defined validation rules,
 /// plus conducting additional validations with the provided `validator`.
 /// Document all possible error in doc report (no fail fast)
-pub(crate) async fn doc_refs_check<Provider, Validator>(
+pub(crate) async fn doc_refs_check<Validator>(
     doc_refs: &DocumentRefs,
     exp_ref_types: &[DocType],
     multiple: bool,
     field_name: &str,
-    provider: &Provider,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
     validator: Validator,
 ) -> anyhow::Result<bool>
 where
-    Provider: CatalystSignedDocumentProvider,
     Validator: Fn(&CatalystSignedDocument) -> bool,
 {
     let mut all_valid = true;
@@ -219,9 +229,7 @@ fn referenced_doc_type_check(
         report.invalid_value(
             field_name,
             &ref_doc_type.to_string(),
-            &exp_ref_types
-                .iter()
-                .fold(String::new(), |s, v| format!("{s}, {v}")),
+            &exp_ref_types.iter().map(ToString::to_string).join(","),
             &format!("Invalid referenced document type, during validation of {field_name} field"),
         );
         return false;

@@ -197,8 +197,7 @@ mod common;
             .build()?;
         Ok(doc)
     }
-    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
-    => ignore["non-optional `content-type`"] true
+    => true
     ;
     "missing content-encoding (optional)"
 )]

@@ -11,6 +11,7 @@ use crate::common::{
     campaign_parameters_form_template_doc, category_parameters_doc,
     category_parameters_form_template_doc, contest_ballot_checkpoint_doc, contest_ballot_doc,
     contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair,
+    proposal_doc, proposal_form_template_doc,
 };
 
 mod common;
@@ -21,7 +22,9 @@ mod common;
         let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         contest_ballot_checkpoint_doc(&linked_doc, &parameters, provider)
     }
     => true
@@ -36,7 +39,9 @@ mod common;
         let campaign = campaign_parameters_doc(&campaign, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = contest_parameters_form_template_doc(&campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = contest_parameters_doc(&template, &campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         contest_ballot_checkpoint_doc(&linked_doc, &parameters, provider)
     }
     => true
@@ -53,7 +58,9 @@ mod common;
         let category = category_parameters_doc(&category, &campaign, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = contest_parameters_form_template_doc(&category, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = contest_parameters_doc(&template, &category, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         contest_ballot_checkpoint_doc(&linked_doc, &parameters, provider)
     }
     => true
@@ -62,9 +69,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
@@ -94,9 +105,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
@@ -126,9 +141,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
@@ -151,16 +170,19 @@ mod common;
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
             .build()
     }
-    // TODO: Re-enable this test case after the `content-type` fields becomes optional again.
-    => ignore["non-optional `content-type`"] true
+    => true
     ;
     "missing 'content-encoding' (optional)"
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
@@ -188,8 +210,10 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
@@ -217,9 +241,13 @@ mod common;
 )]
 #[test_case(
     |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let linked_doc = contest_ballot_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let linked_doc = contest_ballot_doc(&proposal, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
