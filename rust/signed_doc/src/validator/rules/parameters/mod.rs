@@ -183,18 +183,10 @@ impl ParametersRule {
 /// The check expands each referenced document's parameter chain and succeeds
 /// if any discovered parameter set equals `exp_parameters`.
 ///
-/// # Returns
-/// - `Ok(true)` if:
-///   - `ref_field` is `None`, or
-///   - all referenced documents are successfully retrieved **and** each has a
-///     `parameters` field that matches `exp_parameters`.
-///
-/// - `Ok(false)` if:
-///   - any referenced document cannot be retrieved,
-///   - a referenced document is missing its `parameters` field, or
-///   - the parameters mismatch the expected ones.
-///
-/// - `Err(anyhow::Error)` if an unexpected error occurs while accessing the provider.
+/// Returns:
+/// - `Ok(true)` if `ref_field` is `None` or yield a matching parameter set.
+/// - `Ok(false)` if no recursive parameter set matches the expected one.
+/// - `Err` if an unexpected provider error occurs.
 pub(crate) async fn link_check<Provider>(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
@@ -208,6 +200,8 @@ where
     let Some(ref_field) = ref_field else {
         return Ok(true);
     };
+
+    eprintln!("l0::{ref_field:?}");
 
     let mut allowed_params = HashSet::new();
     let mut all_valid = true;
@@ -238,8 +232,8 @@ where
     Ok(all_valid)
 }
 
-/// Recursively traverses the parameter chain starting from `root`,
-/// collecting all discovered `parameters` sets.
+/// Recursively traverses the parameter chain starting from a given `root` document
+/// reference, collecting all discovered `parameters` sets.
 ///
 /// Returns:
 /// - `(true, set)` if all referenced documents are retrievable.
