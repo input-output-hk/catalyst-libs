@@ -301,6 +301,9 @@ def __create_metadata(
     template: DocumentRef | None = None,
     parameters: list[DocumentRef] | None = None,
 ) -> dict[str, Any]:
+    if doc_id is None and doc_ver is None:
+        doc_id = uuid_v7()
+        doc_ver = doc_id
     if doc_id is None:
         doc_id = uuid_v7()
     if doc_ver is None:
