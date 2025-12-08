@@ -22,11 +22,11 @@ derive_more = {version = "2.0.1", features = ["from", "into", "display", "try_fr
 ipld-core = { version = "0.4.1", features = ["serde"]}
 # A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
 # rev-26b99cb as at July 30, 2025
-rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs", rev = "0a6269e05a4ccfaa547a47a56f92171e4abc0564" }
+rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs", rev = "0a6269e05a4ccfaa547a47a56f92171e4abc0564", features = ["tcp", "quic", "dns", "noise"] }
 tokio = "1.46.0"
 futures = "0.3.31"
 libp2p = "0.56.0"
-connexa = { version = "0.4.1", features = ["identify", "dcutr", "gossipsub", "autonat", "relay", "kad", "keypair_base64_encoding", "ping", "request-response", "request-response-misc", "rendezvous", "mdns"] }
+connexa = { version = "0.4.1", features = ["full"] }
 minicbor = { version = "0.25.1", features = ["alloc"], optional = true }
 ed25519-dalek = { version = "2.1.1", optional = true}
 catalyst-types = { version = "0.0.11", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.11", optional = true }
