@@ -41,15 +41,15 @@ class DocType(StrEnum):
 
 
 class DocumentRef:
-    def __init__(self, doc_doc_id: str, doc_doc_ver: str) -> None:
-        self.doc_doc_id = doc_doc_id
-        self.doc_doc_ver = doc_doc_ver
+    def __init__(self, doc_id: str, doc_ver: str) -> None:
+        self.doc_id = doc_id
+        self.doc_ver = doc_ver
         self.cid = "0x"
 
     def to_json(self) -> dict:
         return {
-            "id": self.doc_doc_id,
-            "ver": self.doc_doc_ver,
+            "id": self.doc_id,
+            "ver": self.doc_ver,
             "cid": self.cid,
         }
 
@@ -137,16 +137,16 @@ def proposal_doc(
     proposal_form_template_doc: DocumentRef,
     param_ref: DocumentRef,
     rbac_chain: RBACChain,
-    doc_doc_id: str | None,
-    doc_doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal,
         content_type="application/json",
         template=proposal_form_template_doc,
         parameters=[param_ref],
-        doc_doc_id=doc_doc_id,
-        doc_doc_ver=doc_doc_ver,
+        doc_id=doc_id,
+        doc_ver=doc_ver,
     )
 
     (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
@@ -157,8 +157,8 @@ def proposal_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
@@ -175,8 +175,8 @@ def proposal_comment_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocument:
     metadata = __create_metadata(
         doc_type=DocType.proposal_comment_form_template,
@@ -194,8 +194,8 @@ def category_parameters_doc(
     category_parameters_form_template_doc: DocumentRef,
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters,
@@ -212,8 +212,8 @@ def category_parameters_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters_form_template,
@@ -230,8 +230,8 @@ def campaign_parameters_doc(
     campaign_parameters_form_template_doc: DocumentRef,
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters,
@@ -248,8 +248,8 @@ def campaign_parameters_form_template_doc(
     content: dict[str, Any],
     param_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters_form_template,
@@ -265,8 +265,8 @@ def brand_parameters_doc(
     content: dict[str, Any],
     brand_parameters_form_template_ref: DocumentRef,
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters,
@@ -281,8 +281,8 @@ def brand_parameters_doc(
 def brand_parameters_form_template_doc(
     content: dict[str, Any],
     admin_key: AdminKey,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
 ) -> SignedDocumentBase:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters_form_template,
@@ -296,11 +296,14 @@ def brand_parameters_form_template_doc(
 def __create_metadata(
     doc_type: DocType,
     content_type: str,
-    doc_id: str | None,
-    doc_ver: str | None,
+    doc_id: str | None = None,
+    doc_ver: str | None = None,
     template: DocumentRef | None = None,
     parameters: list[DocumentRef] | None = None,
 ) -> dict[str, Any]:
+    if doc_id is None and doc_ver is None:
+        doc_id = uuid_v7()
+        doc_ver = doc_id
     if doc_id is None:
         doc_id = uuid_v7()
     if doc_ver is None:
