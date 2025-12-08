@@ -123,7 +123,7 @@ async fn ownership_test(
     let doc = doc_gen(&mut provider);
 
     let res = DocumentOwnershipRule::RefFieldBased
-        .check(&doc, &provider)
+        .check_inner(&doc, &provider)
         .await
         .unwrap();
     println!("{:?}", doc.report());

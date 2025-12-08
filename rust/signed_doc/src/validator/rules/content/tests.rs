@@ -33,17 +33,14 @@ use crate::builder::tests::Builder;
     ;
     "missing content"
 )]
-#[tokio::test]
-async fn content_rule_specified_test(
-    doc_gen: impl FnOnce(Vec<u8>) -> CatalystSignedDocument
-) -> bool {
+fn content_rule_specified_test(doc_gen: impl FnOnce(Vec<u8>) -> CatalystSignedDocument) -> bool {
     let schema = JsonSchema::try_from(&serde_json::json!({})).unwrap();
     let content_schema = ContentSchema::Json(schema);
     let valid_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
     let rule = ContentRule::StaticSchema(content_schema);
     let doc = doc_gen(valid_content);
-    rule.check(&doc).await.unwrap()
+    rule.check_inner(&doc)
 }
 
 #[test_case(
@@ -75,11 +72,10 @@ async fn content_rule_specified_test(
     ;
     "not expected nil content"
 )]
-#[tokio::test]
-async fn template_rule_not_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
+fn template_rule_not_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = ContentRule::NotNil;
     let doc = doc_gen();
-    rule.check(&doc).await.unwrap()
+    rule.check_inner(&doc)
 }
 
 #[test_case(
@@ -111,9 +107,8 @@ async fn template_rule_not_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocu
     ;
     "non expected not nil empty"
 )]
-#[tokio::test]
-async fn template_rule_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
+fn template_rule_nil_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = ContentRule::Nil;
     let doc = doc_gen();
-    rule.check(&doc).await.unwrap()
+    rule.check_inner(&doc)
 }

@@ -7,8 +7,9 @@ use catalyst_signed_doc_spec::{
 };
 
 use crate::{
-    CatalystSignedDocument, Chain, providers::CatalystSignedDocumentProvider,
-    validator::rules::doc_ref::doc_refs_check,
+    CatalystSignedDocument, Chain,
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 #[cfg(test)]
@@ -24,6 +25,17 @@ pub(crate) enum ChainRule {
     },
     /// 'chain' is not specified
     NotSpecified,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ChainRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
 }
 
 impl ChainRule {
@@ -49,14 +61,11 @@ impl ChainRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let chain = doc.doc_meta().chain();
 
         if let Self::Specified { optional } = self {
@@ -91,14 +100,11 @@ impl ChainRule {
     }
 
     /// `chain` metadata field checks
-    async fn chain_check<Provider>(
+    async fn chain_check(
         doc_chain: &Chain,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<bool> {
         const CONTEXT: &str = "Chained Documents validation";
 
         if doc_chain.document_ref().is_none() && doc_chain.height() != 0 {
