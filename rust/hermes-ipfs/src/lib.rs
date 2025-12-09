@@ -34,6 +34,7 @@ use rust_ipfs::{
     GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
     dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
 };
+use libp2p::gossipsub::Config as GossipsubConfig;
 
 #[derive(Debug, Display, From, Into)]
 /// `PubSub` Message ID.
@@ -74,6 +75,25 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     /// Set the default configuration for the IPFS node.
     pub fn with_default(self) -> Self {
         Self(self.0.with_default())
+    }
+
+    #[must_use]
+    /// Set configuration with small Gossipsub mesh for testing (2-3 node environments).
+    ///
+    /// This configures Gossipsub with mesh parameters suitable for small test networks:
+    /// - mesh_n_low: 1 (minimum peers)
+    /// - mesh_n: 2 (target peers)
+    /// - mesh_n_high: 3 (maximum peers)
+    ///
+    /// Use this instead of `with_default()` in test environments with few nodes.
+    pub fn with_small_mesh_config(self) -> Self {
+        let config = GossipsubConfig::default()
+            .mesh_n_low(1)
+            .mesh_n(2)
+            .mesh_n_high(3)
+            .mesh_outbound_min(1);
+
+        Self(self.0.with_default().set_gossipsub_config(config))
     }
 
     #[must_use]
