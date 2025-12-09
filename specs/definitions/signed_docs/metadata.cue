@@ -309,7 +309,10 @@ _allMetadataNames: or([
 
 			1. Extract the `parameters` reference from the user document
 			2. Starting from the referenced parameters document, follow the parent chain upward to Brand:
-			   * If the document references Contest Parameters, follow: Contest → (its parent: Brand/Campaign/Category) → Campaign (if parent was Category) → Brand
+			   * If the document references Contest Parameters, determine its parent and follow the appropriate path:
+			     - If Contest's parent is Brand: Contest → Brand
+			     - If Contest's parent is Campaign: Contest → Campaign → Brand
+			     - If Contest's parent is Category: Contest → Category → Campaign → Brand
 			   * If the document references Category Parameters, follow: Category → Campaign → Brand
 			   * If the document references Campaign Parameters, follow: Campaign → Brand
 			   * If the document references Brand Parameters, only Brand is included
