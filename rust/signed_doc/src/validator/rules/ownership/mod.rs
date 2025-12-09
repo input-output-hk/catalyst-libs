@@ -12,7 +12,10 @@ use catalyst_signed_doc_spec::{
     signers::update::{Update, UpdatersType},
 };
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{
+    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// Context for the validation problem report.
 const REPORT_CONTEXT: &str = "Document ownership validation";
@@ -26,6 +29,17 @@ pub(crate) enum DocumentOwnershipRule {
     RefFieldBased,
     /// Collaborators are not allowed, only original author.
     OriginalAuthor,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
 }
 
 impl DocumentOwnershipRule {
@@ -58,14 +72,11 @@ impl DocumentOwnershipRule {
     }
 
     /// Check document ownership rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let doc_id = doc.doc_id()?;
         if doc_id == doc.doc_ver()? && doc.authors().len() != 1 {
             doc.report().functional_validation(

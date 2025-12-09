@@ -17,6 +17,7 @@ COPY_SRC:
         cbork cbork-abnf-parser cbork-cddl-parser cbork-utils \
         hermes-ipfs \
         signed_doc \
+        catalyst-contest \
         catalyst-signed-doc-macro \
         catalyst-signed-doc-spec \
         rbac-registration \

@@ -71,6 +71,24 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     }
 
     #[must_use]
+    /// Enable TCP transport.
+    pub fn enable_tcp(self) -> Self {
+        Self(self.0.enable_tcp())
+    }
+
+    #[must_use]
+    /// Enable QUIC transport.
+    pub fn enable_quic(self) -> Self {
+        Self(self.0.enable_quic())
+    }
+
+    #[must_use]
+    /// Enable DNS resolution.
+    pub fn enable_dns(self) -> Self {
+        Self(self.0.enable_dns())
+    }
+
+    #[must_use]
     /// Set the storage type for the IPFS node to local disk.
     ///
     /// ## Parameters
@@ -110,7 +128,10 @@ impl HermesIpfs {
     ///
     /// Returns an error if the IPFS daemon fails to start.
     pub async fn start() -> anyhow::Result<Self> {
-        let node: Ipfs = HermesIpfsBuilder::<dummy::Behaviour>::new()
+        let node = HermesIpfsBuilder::<dummy::Behaviour>::new()
+            .enable_tcp()
+            .enable_quic()
+            .enable_dns()
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed

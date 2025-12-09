@@ -128,6 +128,12 @@ impl EnvelopePayload {
         &self.payload
     }
 
+    /// Returns the decoded payload body.
+    #[must_use]
+    pub fn payload<T: for<'a> Decode<'a, ()>>(&self) -> Result<(), minicbor::decode::Error> {
+        minicbor::decode(self.payload_bytes())
+    }
+
     /// Returns CBOR bytes for `[peer, seq, ver, payload]`.
     ///
     /// These are the bytes the spec signs over.

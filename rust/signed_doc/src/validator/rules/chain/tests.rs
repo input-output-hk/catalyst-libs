@@ -291,5 +291,5 @@ async fn test_invalid_chained_documents(
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
 
-    rule.check(&doc, &provider).await.unwrap()
+    rule.check_inner(&doc, &provider).await.unwrap()
 }

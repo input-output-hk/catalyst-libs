@@ -1,5 +1,5 @@
 // Signed Document Definitions
-// 
+//
 // Metadata Types and Constraints
 // `ver`
 @extern(embed)
@@ -16,10 +16,10 @@ _ver_description_complete: """
 	`ver` represents either:
 
 	* when a document changes over time, such as
-		with a new version of a particular document that supersedes an 
+		with a new version of a particular document that supersedes an
 		earlier one.
 	* when a new document in a sequence of documents is produced.
-		
+
 	Because the most common use `ver` is a new version of the same document
 	this is to be assumed unless the document specifies its representing
 	a sequence of documents.
@@ -44,7 +44,15 @@ _ver_description_sequenced: """
 		format:      "Document Ver"
 		description: string | *_ver_description_versioned
 		validation: """
-			The document version must always be >= the document ID.
+			1. The document version must always be >= the document ID.
+			2. IF `ver` does not == `id`
+			  then a document with `id` and `ver` being equal *MUST* exist.
+			3. When a document with the same `id` already exists,
+			  the new document's `ver` must be greater than
+			  the latest known submitted version for that `id`.
+			4. When a document with the same `id` already exists,
+			  the new document's `type` must be the same as
+			  the latest known submitted document's `type` for that `id`.
 			"""
 	}
 }
