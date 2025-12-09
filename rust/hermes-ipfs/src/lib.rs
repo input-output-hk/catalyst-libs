@@ -34,7 +34,6 @@ use rust_ipfs::{
     GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
     dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
 };
-use libp2p::gossipsub::Config as GossipsubConfig;
 
 #[derive(Debug, Display, From, Into)]
 /// `PubSub` Message ID.
@@ -84,16 +83,24 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     /// - mesh_n_low: 1 (minimum peers)
     /// - mesh_n: 2 (target peers)
     /// - mesh_n_high: 3 (maximum peers)
+    /// - mesh_outbound_min: 1
     ///
     /// Use this instead of `with_default()` in test environments with few nodes.
     pub fn with_small_mesh_config(self) -> Self {
-        let config = GossipsubConfig::default()
-            .mesh_n_low(1)
-            .mesh_n(2)
-            .mesh_n_high(3)
-            .mesh_outbound_min(1);
+        use connexa::builder::Builder;
 
-        Self(self.0.with_default().set_gossipsub_config(config))
+        Self(
+            self.0
+                .with_default_behaviour()
+                .with_gossipsub_with_config(|keypair, mut config| {
+                    config
+                        .mesh_n_low(1)
+                        .mesh_n(2)
+                        .mesh_n_high(3)
+                        .mesh_outbound_min(1);
+                    (config, libp2p::gossipsub::MessageAuthenticity::Signed(keypair.clone()))
+                })
+        )
     }
 
     #[must_use]
