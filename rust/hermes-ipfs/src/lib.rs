@@ -59,6 +59,18 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     }
 
     #[must_use]
+    /// Create a new `IpfsBuilder` with an existing keypair.
+    ///
+    /// ## Parameters
+    /// - `keypair`: An existing keypair (can be libp2p::identity::Keypair or compatible type)
+    ///
+    /// ## Errors
+    /// Returns an error if the keypair is invalid.
+    pub fn with_keypair(keypair: impl connexa::builder::IntoKeypair) -> std::io::Result<Self> {
+        Ok(Self(IpfsBuilder::with_keypair(keypair)?))
+    }
+
+    #[must_use]
     /// Set the default configuration for the IPFS node.
     pub fn with_default(self) -> Self {
         Self(self.0.with_default())
