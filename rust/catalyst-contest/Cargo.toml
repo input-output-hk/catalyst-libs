@@ -13,3 +13,5 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+anyhow = "1.0.100"
+catalyst-signed-doc = { version = "0.0.10", path = "../signed_doc" }
