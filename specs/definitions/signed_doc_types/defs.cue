@@ -38,12 +38,13 @@ allDocNames: [...#docName] & [
 #DocClusters: [string]: #DocumentCluster
 
 doc_clusters: #DocClusters & {
-	// System parameters define the system, excludes Contests.
+	// System parameters define the system hierarchy.
 	"System Parameters": {
 		docs: [
 			"Brand Parameters",
 			"Campaign Parameters",
 			"Category Parameters",
+			"Contest Parameters",
 		]
 	}
 }
