@@ -309,13 +309,15 @@ _allMetadataNames: or([
 
 			1. Extract the `parameters` reference from the user document
 			2. Starting from the referenced parameters document, follow the parent chain upward to Brand:
-			   * If the document references Contest Parameters, determine its parent and follow the appropriate path:
+			   * If the document references Contest Parameters, determine its parent by examining the Contest Parameters document's `parameters` metadata field, then follow the appropriate path:
 			     - If Contest's parent is Brand: Contest → Brand
 			     - If Contest's parent is Campaign: Contest → Campaign → Brand
 			     - If Contest's parent is Category: Contest → Category → Campaign → Brand
 			   * If the document references Category Parameters, follow: Category → Campaign → Brand
 			   * If the document references Campaign Parameters, follow: Campaign → Brand
 			   * If the document references Brand Parameters, only Brand is included
+
+			   Note: Contest Parameters can anchor to Brand, Campaign, or Category (as specified in the Contest Parameters document's `parameters` field). The validation must examine the actual Contest Parameters document to determine which parent chain applies. This is not a fixed hierarchy - the path depends on where the specific Contest is anchored.
 			3. Collect all `conditions` arrays from each parameter level encountered in the upward chain
 			4. Union all condition references (removing duplicates based on document ID and version)
 			5. Sort the unified list according to CBOR Deterministic Encoding
