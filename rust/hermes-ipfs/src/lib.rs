@@ -77,33 +77,6 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     }
 
     #[must_use]
-    /// Set configuration with small Gossipsub mesh for testing (2-3 node environments).
-    ///
-    /// This configures Gossipsub with mesh parameters suitable for small test networks:
-    /// - mesh_n_low: 1 (minimum peers)
-    /// - mesh_n: 2 (target peers)
-    /// - mesh_n_high: 3 (maximum peers)
-    /// - mesh_outbound_min: 1
-    ///
-    /// Use this instead of `with_default()` in test environments with few nodes.
-    pub fn with_small_mesh_config(self) -> Self {
-        use connexa::builder::Builder;
-
-        Self(
-            self.0
-                .with_default_behaviour()
-                .with_gossipsub_with_config(|keypair, mut config| {
-                    config
-                        .mesh_n_low(1)
-                        .mesh_n(2)
-                        .mesh_n_high(3)
-                        .mesh_outbound_min(1);
-                    (config, libp2p::gossipsub::MessageAuthenticity::Signed(keypair.clone()))
-                })
-        )
-    }
-
-    #[must_use]
     /// Set the default listener for the IPFS node.
     pub fn set_default_listener(self) -> Self {
         Self(self.0.set_default_listener())
