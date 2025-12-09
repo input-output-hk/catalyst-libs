@@ -255,8 +255,8 @@ For example:
 * Contest-level conditions should be signed by Contest Admin or a parent-level
   admin
 
-Updates are allowed by the original author and from the 'collaborators' metadata field
-of the previous submitted document's version.
+Updates are allowed only by the original author of the document.
+Collaborators listed in the `collaborators` metadata field do not have permission to update Conditions documents.
 
 ## JSON Specification Requirements
 
@@ -337,7 +337,7 @@ Add a new entry to the `docs` section with the following structure:
       "user": []
     },
     "update": {
-      "description": "Updates are allowed by the original author and from the 'collaborators' metadata field of the previous submitted document's version.",
+      "description": "Only the original author can update and sign a new version of documents.",
       "type": "author"
     }
   },

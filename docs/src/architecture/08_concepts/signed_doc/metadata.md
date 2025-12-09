@@ -488,6 +488,18 @@ The validation process for user-submitted documents involves transitive collecti
 becomes required and must be present in the user document. **If the unified list is empty** (no conditions are
 required), the `conditions` field may be omitted.
 
+**Drafts Requirement**: Conditions must be included on **every submission**, including draft versions of proposals
+or other documents. This ensures positive and current assent at every stage of document creation. Without this
+requirement, a user could accept terms for the first draft, change their mind, and then submit a subsequent draft
+without the terms, meaning their assent is no longer positively asserted. It also ensures that rules, such as those
+against objectionable material, apply to the document at every stage of its creation.
+
+**Collaborators Exclusion**: The acceptance of terms is tied to the act of submission by an individual. The terms
+and conditions apply only to the individual who signs and submits the document. Collaborators listed on the
+document are **not required** to accept the conditions. This mirrors how contracts typically work, where each
+party must sign individually. Only the document author (signer) must include the `conditions` field to indicate
+their acceptance.
+
 **Validation Rules:**
 
 * The user document's `conditions` array must exactly match the union of all required conditions from the parameter hierarchy

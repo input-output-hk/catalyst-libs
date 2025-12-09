@@ -84,6 +84,29 @@ docs: #DocumentDefinitions & {
 				type:     signed_doc_types.allDocNames
 			}
 
+			collaborators: {
+				required: "optional"
+				description: """
+					A list of collaborators who may be associated with this document.
+
+					**Important**: For Conditions documents, only the original author can update
+					and sign new versions. Collaborators listed here do not have permission to
+					publish updates to this document. This field is optional and may be used for
+					documentation or organizational purposes only.
+				"""
+				validation: """
+					For Conditions documents, collaborators do not have update permissions.
+					Only the original author can create new versions of Conditions documents.
+
+					In the event there are **MULTIPLE** `collaborators` listed, they **MUST** be
+					sorted.
+
+					Sorting for each element of `collaborators` follows the same sort order as
+					specified for Map Keys, as defined by CBOR Deterministic Encoding
+					(4.3.2 Length-First Map Key Ordering).
+				"""
+			}
+
 			revocations: required: "optional"
 		}
 
