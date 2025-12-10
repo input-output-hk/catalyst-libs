@@ -218,7 +218,7 @@ pub(crate) async fn link_check(
     }
 
     for doc_ref in ref_field.iter() {
-        if let Some(referenced_doc) = provider.try_get_doc(&doc_ref).await? {
+        if let Some(referenced_doc) = provider.try_get_doc(doc_ref).await? {
             if let Some(ref_params) = referenced_doc.doc_meta().parameters() {
                 if !ref_params.iter().all(|v| allowed_params.contains(v)) {
                     report.invalid_value(
@@ -231,7 +231,7 @@ pub(crate) async fn link_check(
                 }
             } else {
                 report.missing_field(
-                    &format!("'parameters'"),
+                    "'parameters'",
                     &format!("Referenced document {doc_ref} must have `parameters` field"),
                 );
                 all_valid = false;
