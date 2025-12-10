@@ -15,6 +15,7 @@ pub mod proposal_comment;
 pub mod proposal_comment_form_template;
 pub mod proposal_form_template;
 pub mod proposal_submission_action;
+pub mod rep_nomination_form_template;
 pub mod rep_profile;
 pub mod rep_profile_form_template;
 
@@ -40,6 +41,7 @@ pub use proposal_comment::proposal_comment_doc;
 pub use proposal_comment_form_template::proposal_comment_form_template_doc;
 pub use proposal_form_template::proposal_form_template_doc;
 pub use proposal_submission_action::proposal_submission_action_doc;
+pub use rep_nomination_form_template::rep_nomination_form_template_doc;
 pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
 
