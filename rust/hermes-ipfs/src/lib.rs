@@ -62,7 +62,8 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     /// Create a new `IpfsBuilder` with an existing keypair.
     ///
     /// ## Parameters
-    /// - `keypair`: An existing keypair (can be libp2p::identity::Keypair or compatible type)
+    /// - `keypair`: An existing keypair (can be libp2p::identity::Keypair or compatible
+    ///   type)
     ///
     /// ## Errors
     /// Returns an error if the keypair is invalid.
