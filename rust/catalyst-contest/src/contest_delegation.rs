@@ -13,13 +13,10 @@ use catalyst_signed_doc::{
 pub struct ContestDelegation {
     /// Document reference info
     doc_ref: DocumentRef,
-
     /// A corresponding `CatalystId` of the delegator (author of the document).
     delegator: Option<CatalystId>,
-
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
-    #[allow(dead_code)]
     report: ProblemReport,
 }
 
@@ -66,12 +63,7 @@ impl TryFrom<CatalystSignedDocument> for ContestDelegation {
         let report = ProblemReport::new("Contest Delegation");
         let doc_ref = v.doc_ref()?;
 
-        let authors = v.authors();
-        let delegator = if let &[delegator] = authors.as_slice() {
-            Some(delegator)
-        } else {
-            None
-        };
+        let delegator = v.authors().into_iter().next();
 
         Ok(ContestDelegation {
             doc_ref,
