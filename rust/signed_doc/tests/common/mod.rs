@@ -40,6 +40,7 @@ pub use proposal_comment::proposal_comment_doc;
 pub use proposal_comment_form_template::proposal_comment_form_template_doc;
 pub use proposal_form_template::proposal_form_template_doc;
 pub use proposal_submission_action::proposal_submission_action_doc;
+pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
 
 pub fn get_doc_kid_and_sk(
