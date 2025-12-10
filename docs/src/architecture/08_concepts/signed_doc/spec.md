@@ -397,7 +397,7 @@ Supported HTTP Encodings of the Payload
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">optional</td>
     <td class="gt_row gt_left">Is the field required?</td>
   </tr>
   <tr>
@@ -453,6 +453,13 @@ The `kid` is a [UTF-8][RFC3629] encoded Catalyst ID [URI][RFC3986].
 Any `kid` [URI][RFC3986] which conforms to the Catalyst ID specification may be used.
 The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 used to sign the protected portion of the document.
+
+There may be **MULTIPLE** [Cose][RFC9052] Signatures attached to any document.
+In the event there are **MULTIPLE** [Cose][RFC9052] Signatures `kid` attached, then they **MUST**
+be sorted.
+
+Sorting for each [cose][RFC9052] signature follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 <!---HTML START-->
 <!-- markdownlint-disable -->
@@ -558,7 +565,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-11-10 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -632,6 +639,11 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Improved the specification for 'Contest Delegation' document type.
 * 'content encoding' metadata field become non optional for all document types where it was an optional field.
 * Added new 'payload.schema' type - [CDDL][RFC8610] schema, defined as string.
+
+#### 0.2.1 (2025-12-02)
+
+* Added missing [`ref`](metadata.md#ref) metadata field definition.
+* Improved `payload` [cddl][RFC8610] definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

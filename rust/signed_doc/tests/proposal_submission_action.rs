@@ -1,6 +1,6 @@
 //! Test for Proposal Submission Action.
 //! Require fields: type, id, ver, ref, parameters
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -300,7 +300,7 @@ async fn test_proposal_submission_action_doc(
     );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert_eq!(is_valid, !doc.problem_report().is_problematic());
-    println!("{:?}", doc.problem_report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
+    println!("{:?}", doc.report());
     is_valid
 }

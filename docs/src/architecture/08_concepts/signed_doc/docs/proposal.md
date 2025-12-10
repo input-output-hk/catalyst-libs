@@ -37,8 +37,33 @@ of the document they are signing, provided they are listed as a collaborator in 
 This allows for a collaborator to make an update to the document which removes themselves
 from the [`collaborators`](../metadata.md#collaborators) list.
 
-All versions of the document *MUST* list the author as the original author.
+All versions of the document are owned by the original author.
 The Author can not be changed by any document revision.
+
+Any Proposal that lists a collaborator is an invitation for that collaborator to participate in the proposal.
+They are considered to have accepted that invitation for **all** versions of the proposal that
+list them as a collaborator where their latest
+[Proposal Submission Action](proposal_submission_action.md) for that proposal has an `action` of
+`draft` or `final`.
+
+If a collaborator’s latest [Proposal Submission Action](proposal_submission_action.md) for the
+proposal has an `action` of `hide`, they **MUST** be treated as not having agreed to collaborate
+for **any** version of that proposal (past, present, or future) until they later submit `draft`
+or `final` again.
+
+The requirement for collaborator submissions when finalizing a proposal is controlled by a
+Brand/Campaign/Category parameter (name TBD).
+When configured for unanimous collaboration,
+every collaborator listed on the submitted version **MUST** also publish a `final`
+[Proposal Submission Action](proposal_submission_action.md) alongside the author.
+When configured for opt-in collaboration (the default, and the behavior when the parameter is
+absent), only collaborators who submit `final` for the referenced version are included as
+collaborators on that submission; collaborators who do not submit `final` are not treated as
+collaborators for that submission.
+In all cases, a proposal cannot be final unless the original author has submitted `final`.
+
+The `final` proposal itself may be signed by one or more Collaborators and/or the original Author.
+The `final` proposal must never be signed by anyone else.
 
 ### Business Logic
 
@@ -95,8 +120,13 @@ timestamp of when the document was created.
 
 #### [`id`](../metadata.md#id) Validation
 
-IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
-[`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
+The document ID validation is performed based on timestamp thresholds:
+
+* If `future_threshold` is configured,
+the document [`id`](../metadata.md#id) cannot be too far in the future from the
+current time.
+* If `past_threshold` is configured, the document [`id`](../metadata.md#id) cannot be too far in the past from the
+current time.
 
 ### [`ver`](../metadata.md#ver)
 
@@ -113,7 +143,15 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 #### [`ver`](../metadata.md#ver) Validation
 
-The document version must always be >= the document ID.
+1. The document version must always be >= the document ID.
+2. IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id)
+  then a document with [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
+3. When a document with the same [`id`](../metadata.md#id) already exists,
+  the new document's [`ver`](../metadata.md#ver) must be greater than
+  the latest known submitted version for that [`id`](../metadata.md#id).
+4. When a document with the same [`id`](../metadata.md#id) already exists,
+  the new document's [`type`](../metadata.md#type) must be the same as
+  the latest known submitted document's [`type`](../metadata.md#type) for that [`id`](../metadata.md#id).
 
 ### [`template`](../metadata.md#template)
 
@@ -150,8 +188,23 @@ publish a new version of the document.
 
 This list does not imply these collaborators have consented to collaborate, only that the author/s
 are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
+How collaborators are counted on a final submission is determined by a parameter defined at the
+Brand/Campaign/Category level (parameter name TBD).
+Depending on that configuration:
+
+* All listed collaborators may be required to submit a `final` Submission Action in addition
+  to the author; **OR**
+* Only collaborators who submit a `final` Submission Action for the referenced version are
+  included as collaborators on that submission.
+
+If the parameter is not present, default to the latter mode (only final-signing collaborators are
+included).
+In all modes a document is only considered final when the original author has submitted `final`.
+
+In the event there are **MULTIPLE** [`collaborators`](../metadata.md#collaborators) listed, they **MUST** be sorted.
+
+Sorting for each element of [`collaborators`](../metadata.md#collaborators) follows the same sort order as specified for Map Keys,
+as defined by [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] (4.3.2 Length-First Map Key Ordering).
 
 ### [`revocations`](../metadata.md#revocations)
 
@@ -238,7 +291,7 @@ of the previous submitted document's version.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-11-10 |
+| Modified | 2025-12-02 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -254,6 +307,7 @@ of the previous submitted document's version.
 
 * Use generalized parameters.
 
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7

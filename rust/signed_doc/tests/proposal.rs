@@ -1,6 +1,6 @@
 //! Integration test for proposal document validation part.
 //! Require fields: type, id, ver, template, parameters
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -210,7 +210,7 @@ async fn test_proposal_doc(
     assert_eq!(*doc.doc_type().unwrap(), doc_types::PROPOSAL.clone());
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert_eq!(is_valid, !doc.problem_report().is_problematic());
-    println!("{:?}", doc.problem_report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
+    println!("{:?}", doc.report());
     is_valid
 }

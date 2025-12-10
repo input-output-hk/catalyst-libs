@@ -5,7 +5,11 @@ mod tests;
 
 use catalyst_types::json_schema::JsonSchema;
 
-use crate::{CatalystSignedDocument, metadata::ContentType};
+use crate::{
+    CatalystSignedDocument, metadata::ContentType,
+    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::CatalystSignedDocumentValidationRule,
+};
 
 /// `content-type` field validation rule
 #[derive(Debug)]
@@ -17,6 +21,17 @@ pub(crate) enum ContentTypeRule {
     },
     /// Content Type field must not be present in the document.
     NotSpecified,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ContentTypeRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        Ok(self.check_inner(doc))
+    }
 }
 
 impl ContentTypeRule {
@@ -48,11 +63,10 @@ impl ContentTypeRule {
     }
 
     /// Field validation rule
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    ) -> bool {
         if let Self::NotSpecified = &self
             && let Some(content_type) = doc.doc_content_type()
         {
@@ -61,7 +75,7 @@ impl ContentTypeRule {
                 content_type.to_string().as_str(),
                 "document does not expect to have the content type field",
             );
-            return Ok(false);
+            return false;
         }
         if let Self::Specified { exp } = &self {
             let Some(content_type) = doc.doc_content_type() else {
@@ -69,7 +83,7 @@ impl ContentTypeRule {
                     "content-type",
                     "Cannot get a content type field during the field validation",
                 );
-                return Ok(false);
+                return false;
             };
 
             if content_type != *exp {
@@ -79,14 +93,14 @@ impl ContentTypeRule {
                     exp.to_string().as_str(),
                     "Invalid Document content-type value",
                 );
-                return Ok(false);
+                return false;
             }
             let Ok(content) = doc.decoded_content() else {
                 doc.report().functional_validation(
                     "Invalid Document content, cannot get decoded bytes",
                     "Cannot get a document content during the content type field validation",
                 );
-                return Ok(false);
+                return false;
             };
             if !validate(*exp, &content) {
                 doc.report().invalid_value(
@@ -95,10 +109,10 @@ impl ContentTypeRule {
                     &format!("Invalid Document content, should {content_type} encodable"),
                     "Invalid Document content",
                 );
-                return Ok(false);
+                return false;
             }
         }
-        Ok(true)
+        true
     }
 }
 

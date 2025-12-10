@@ -1,0 +1,15 @@
+[package]
+name = "catalyst-contest"
+description = "Catalyst voting (contest)"
+keywords = ["cardano", "catalyst", "voting", "contest"]
+version = "0.0.1"
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]

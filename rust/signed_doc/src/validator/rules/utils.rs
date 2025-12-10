@@ -42,7 +42,7 @@ pub(crate) fn content_json_schema_check(
     if !schema_validation_errors.is_empty() {
         doc.report().functional_validation(
             &format!(
-                "Proposal document content does not compliant with the json schema. [{schema_validation_errors}]"
+                "Document content does not compliant with the json schema. [{schema_validation_errors}]"
             ),
             CONTEXT,
         );

@@ -1,5 +1,5 @@
 //! Integration test for brand parameters form template document validation part.
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/brand_parameters_form_template>
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/brand_parameters_form_template>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -94,7 +94,7 @@ async fn test_brand_parameters_form_template_doc(
     );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert_eq!(is_valid, !doc.problem_report().is_problematic());
-    println!("{:?}", doc.problem_report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
+    println!("{:?}", doc.report());
     is_valid
 }

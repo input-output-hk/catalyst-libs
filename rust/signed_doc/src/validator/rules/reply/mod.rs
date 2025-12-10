@@ -8,8 +8,9 @@ use catalyst_signed_doc_spec::{
 };
 
 use crate::{
-    CatalystSignedDocument, DocType, providers::CatalystSignedDocumentProvider,
-    validator::rules::doc_ref::doc_refs_check,
+    CatalystSignedDocument, DocType,
+    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
 /// `reply` field validation rule
@@ -24,6 +25,17 @@ pub(crate) enum ReplyRule {
     },
     /// 'reply' is not specified
     NotSpecified,
+}
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ReplyRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
 }
 
 impl ReplyRule {
@@ -62,14 +74,11 @@ impl ReplyRule {
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let context: &str = "Reply rule check";
         if let Self::Specified {
             allowed_type: exp_reply_type,

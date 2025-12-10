@@ -33,7 +33,7 @@ COSE_Document_Header_Map = {
 ; COSE Standard headers used by a Document
 COSE_Document_Standard_Headers = (
   3 => media_type
-  "content-encoding" => http_content_encoding
+  ?"content-encoding" => http_content_encoding
 )
 
 ; Supported Content Media Types.
@@ -76,7 +76,7 @@ Signed_Document_Metadata_Headers = (
 )
 
 ; Document Type
-document_type = [ 1* uuid_v4 ]
+document_type = uuid_v4
 
 ; UUIDv4
 uuid_v4 = #6.37(bytes .size 16)
@@ -90,8 +90,11 @@ uuid_v7 = #6.37(bytes .size 16)
 ; Document Version
 document_ver = uuid_v7
 
-; Reference to one or more Signed Documents
-document_refs = [ 1* document_ref ]
+; Reference to one or more Signed Documents.
+; Sorting for each array element follows the same sort order as specified for Map Keys,
+; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+; and all array elements are unique.
+document_refs = [ + document_ref ]
 
 ; Reference to a single Signed Document
 document_ref = [
@@ -127,6 +130,9 @@ section_ref = json_pointer
 json_pointer = text
 
 ; Allowed Collaborators on the next subsequent version of a document.
+; Sorting for each array element follows the same sort order as specified for Map Keys,
+; as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering),
+; and all array elements are unique.
 collaborators = [ + catalyst_id_kid ]
 
 ; UTF8 Catalyst ID URI encoded as a bytes string.

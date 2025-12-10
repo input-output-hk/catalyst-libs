@@ -2,10 +2,13 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
-use std::{convert::Infallible, str::FromStr};
+#[cfg(feature = "doc-sync")]
+pub mod doc_sync;
+
+use std::{collections::HashSet, convert::Infallible, str::FromStr};
 
 use derive_more::{Display, From, Into};
-use futures::{StreamExt, pin_mut, stream::BoxStream};
+use futures::{StreamExt, TryStreamExt, pin_mut, stream::BoxStream};
 /// IPFS Content Identifier.
 pub use ipld_core::cid::Cid;
 /// IPLD
@@ -55,6 +58,18 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
         Self(IpfsBuilder::new())
     }
 
+    /// Create a new `IpfsBuilder` with an existing keypair.
+    ///
+    /// ## Parameters
+    /// - `keypair`: An existing keypair (can be `libp2p::identity::Keypair` or compatible
+    ///   type)
+    ///
+    /// ## Errors
+    /// Returns an error if the keypair is invalid.
+    pub fn with_keypair(keypair: impl connexa::builder::IntoKeypair) -> std::io::Result<Self> {
+        Ok(Self(IpfsBuilder::with_keypair(keypair)?))
+    }
+
     #[must_use]
     /// Set the default configuration for the IPFS node.
     pub fn with_default(self) -> Self {
@@ -65,6 +80,24 @@ where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
     /// Set the default listener for the IPFS node.
     pub fn set_default_listener(self) -> Self {
         Self(self.0.set_default_listener())
+    }
+
+    #[must_use]
+    /// Enable TCP transport.
+    pub fn enable_tcp(self) -> Self {
+        Self(self.0.enable_tcp())
+    }
+
+    #[must_use]
+    /// Enable QUIC transport.
+    pub fn enable_quic(self) -> Self {
+        Self(self.0.enable_quic())
+    }
+
+    #[must_use]
+    /// Enable DNS resolution.
+    pub fn enable_dns(self) -> Self {
+        Self(self.0.enable_dns())
     }
 
     #[must_use]
@@ -107,7 +140,10 @@ impl HermesIpfs {
     ///
     /// Returns an error if the IPFS daemon fails to start.
     pub async fn start() -> anyhow::Result<Self> {
-        let node: Ipfs = HermesIpfsBuilder::<dummy::Behaviour>::new()
+        let node = HermesIpfsBuilder::<dummy::Behaviour>::new()
+            .enable_tcp()
+            .enable_quic()
+            .enable_dns()
             .with_default()
             .set_default_listener()
             // TODO(saibatizoku): Re-Enable default transport config when libp2p Cert bug is fixed
@@ -259,8 +295,8 @@ impl HermesIpfs {
     pub async fn identity(
         &self,
         peer_id: Option<PeerId>,
-    ) -> anyhow::Result<PeerId> {
-        self.node.identity(peer_id).await.map(|p| p.peer_id)
+    ) -> anyhow::Result<PeerInfo> {
+        self.node.identity(peer_id).await
     }
 
     /// Add peer to address book.
@@ -395,11 +431,65 @@ impl HermesIpfs {
     ) -> anyhow::Result<Vec<u8>> {
         let record_stream = self.node.dht_get(key).await?;
         pin_mut!(record_stream);
+        // TODO: We only ever return a single value from the stream. We might want to improve
+        // this.
         let record = record_stream
             .next()
             .await
             .ok_or(anyhow::anyhow!("No record found"))?;
         Ok(record.value)
+    }
+
+    /// Announce this node as a provider for the given DHT key.
+    ///
+    /// ## Parameters
+    ///
+    /// * `key` - Key identifying the content or resource to provide on the DHT.
+    ///
+    /// ## Returns
+    ///
+    /// * `Result<()>` — Indicates whether the provider announcement succeeded.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if announcing provider information to the DHT fails.
+    pub async fn dht_provide(
+        &self,
+        key: impl AsRef<[u8]> + ToRecordKey,
+    ) -> anyhow::Result<()> {
+        self.node.dht_provide(key).await
+    }
+
+    /// Retrieve all providers for the given DHT key.
+    ///
+    /// ## Parameters
+    ///
+    /// * `key` - Key identifying the content or resource in the DHT.
+    ///
+    /// ## Returns
+    ///
+    /// * `Result<HashSet<PeerId>>` — A set containing all `PeerId`s reported as providers
+    ///   for the given key.
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if the provider stream fails or if retrieving provider
+    /// information from the DHT encounters an underlying error.
+    pub async fn dht_get_providers(
+        &self,
+        key: impl AsRef<[u8]> + ToRecordKey,
+    ) -> anyhow::Result<HashSet<PeerId>> {
+        Ok(self
+            .node
+            .dht_get_providers(key)
+            .await?
+            .try_fold(HashSet::new(), |mut acc, set| {
+                async move {
+                    acc.extend(set);
+                    Ok(acc)
+                }
+            })
+            .await?)
     }
 
     /// Add address to bootstrap nodes.

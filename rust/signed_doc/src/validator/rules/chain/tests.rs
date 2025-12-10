@@ -1,3 +1,4 @@
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain as ChainSpec};
 use catalyst_types::uuid::{UuidV4, UuidV7};
 use test_case::test_case;
 
@@ -46,6 +47,17 @@ async fn test_without_chaining_documents() {
     assert!(rule.check(&doc, &provider).await.unwrap());
     let rule = ChainRule::Specified { optional: false };
     assert!(!rule.check(&doc, &provider).await.unwrap());
+}
+
+#[tokio::test]
+async fn chain_rule_collaborators_rule_conflict() {
+    let chain = ChainSpec {
+        required: IsRequired::Optional,
+    };
+    let collaborators = Collaborators {
+        required: IsRequired::Optional,
+    };
+    ChainRule::new(&chain, &collaborators).unwrap_err();
 }
 
 #[test_case(
@@ -279,5 +291,5 @@ async fn test_invalid_chained_documents(
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
 
-    rule.check(&doc, &provider).await.unwrap()
+    rule.check_inner(&doc, &provider).await.unwrap()
 }

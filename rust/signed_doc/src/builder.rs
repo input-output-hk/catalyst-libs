@@ -81,6 +81,34 @@ impl ContentBuilder {
         self.into_signatures_builder()
     }
 
+    /// Sets the provided CBOR content, applying already set `content-encoding`.
+    ///
+    /// # Errors
+    ///  - Verifies that `content-type` field is set to CBOR.
+    ///  - Cannot serialize provided JSON.
+    ///  - Compression failure.
+    pub fn with_cbor_content<T: minicbor::Encode<()>>(
+        mut self,
+        content: T,
+    ) -> anyhow::Result<SignaturesBuilder> {
+        anyhow::ensure!(
+            self.metadata.content_type() == Some(ContentType::Cbor),
+            "Already set metadata field `content-type` is not CBOR value"
+        );
+
+        let mut buffer = Vec::new();
+        let mut encoder = minicbor::Encoder::new(&mut buffer);
+        content.encode(&mut encoder, &mut ())?;
+
+        if let Some(encoding) = self.metadata.content_encoding() {
+            self.content = encoding.encode(&buffer)?.into();
+        } else {
+            self.content = buffer.into();
+        }
+
+        self.into_signatures_builder()
+    }
+
     /// Set the provided JSON content, applying already set `content-encoding`.
     ///
     /// # Errors
@@ -189,9 +217,9 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
 
     fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
         Ok(Self {
-            metadata: value.inner.metadata.clone(),
-            content: value.inner.content.clone(),
-            signatures: value.inner.signatures.clone(),
+            metadata: value.0.metadata.clone(),
+            content: value.0.content.clone(),
+            signatures: value.0.signatures.clone(),
         })
     }
 }

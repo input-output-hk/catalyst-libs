@@ -8,6 +8,7 @@ adminer
 admon
 anypolicy
 apskhem
+asat
 Arissara
 asyncio
 Attributes
@@ -26,6 +27,7 @@ blockdiag
 blockfetch
 blosc
 bmac
+bytemuck
 Bogale
 bootstrapper
 BROTLI
@@ -33,6 +35,7 @@ Cabe
 cantopen
 cardano
 carryforward
+catid
 CBOR
 cbork
 cddlc
@@ -52,6 +55,7 @@ ciphertexts
 Coap
 codegen
 codepoints
+Collab
 connexa
 coti
 coverallsapp
@@ -250,6 +254,7 @@ pubk
 pubkey
 publickey
 pubspec
+pycardano
 pwrite
 pycodestyle
 pydantic
@@ -257,6 +262,7 @@ pydot
 pyenv
 Pyflakes
 pypackages
+pyproject
 pytest
 pytype
 qpsg

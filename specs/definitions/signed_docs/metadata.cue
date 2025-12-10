@@ -1,5 +1,5 @@
 // Signed Document Definitions
-// 
+//
 // Metadata Types and Constraints
 @extern(embed)
 package signed_docs
@@ -135,32 +135,37 @@ _allMetadataNames: or([
 		format:   "Document Id"
 		description: """
 			Document ID, created the first time the document is created.
-			This must be a properly created UUIDv7 which contains the 
+			This must be a properly created UUIDv7 which contains the
 			timestamp of when the document was created.
 			"""
 		validation: """
-			IF `ver` does not == `id` then a document with 
-			`id` and `ver` being equal *MUST* exist.
+			The document ID validation is performed based on timestamp thresholds:
+			
+			* If `future_threshold` is configured,
+			the document `id` cannot be too far in the future from the
+			current time.
+			* If `past_threshold` is configured, the document `id` cannot be too far in the past from the
+			current time.
 			"""
 	}
 
 	ref: {
 		description: """
-			Reference to a Linked Document or Documents.  
-			This is the primary hierarchical reference to a related document.			
+			Reference to a Linked Document or Documents.
+			This is the primary hierarchical reference to a related document.
 
 			If a reference is defined as required, there must be at least 1 reference specified.
 			Some documents allow multiple references, and they are documented as required.
 
 			The document reference serves two purposes:
-			  
+
 			1. It ensures that the document referenced by an ID/Version is not substituted.
 				In other words, that the document intended to be referenced, is actually referenced.
 			2. It Allows the document to be unambiguously located in decentralized storage systems.
-			
+
 			There can be any number of Document Locations in any reference.
 			The currently defined locations are:
-			
+
 			* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).
 			* Others may be added when further storage mechanisms are defined.
 
@@ -176,13 +181,17 @@ _allMetadataNames: or([
 			* The Referenced Document **MUST** Exist
 			* Every value in the `document_locator` must consistently reference the exact same document.
 			* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+			* In the event there are **MULTIPLE** `ref` listed, they **MUST** be sorted.
+
+			Sorting for each element of `ref` follows the same sort order as specified for Map Keys, 
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
 			"""
 	}
 
 	template: {
 		description: "Reference to the template used to create and/or validate this document."
 		validation: """
-			In addition to the validation performed for `Document Reference` type fields, 
+			In addition to the validation performed for `Document Reference` type fields,
 			The document payload is not valid if it does not validate completely against the referenced template.
 			"""
 	}
@@ -192,7 +201,7 @@ _allMetadataNames: or([
 			Reference to a Comment document type being referred to.
 			"""
 		validation: """
-			In addition to the validation performed for `Document Reference` type fields, 
+			In addition to the validation performed for `Document Reference` type fields,
 			The `ref` of the `reply` document must be the same as
 			the original comment document.
 			"""
@@ -222,8 +231,23 @@ _allMetadataNames: or([
 		validation: """
 			This list does not imply these collaborators have consented to collaborate, only that the author/s
 			are permitting these potential collaborators to participate in the drafting and submission process.
-			However, any document submission referencing a proposal MUST be signed by all collaborators in
-			addition to the author.
+			How collaborators are counted on a final submission is determined by a parameter defined at the
+			Brand/Campaign/Category level (parameter name TBD). 
+			Depending on that configuration:
+
+			* All listed collaborators may be required to submit a `final` Submission Action in addition
+			  to the author; **OR**
+			* Only collaborators who submit a `final` Submission Action for the referenced version are
+			  included as collaborators on that submission.
+
+			If the parameter is not present, default to the latter mode (only final-signing collaborators are
+			included).
+			In all modes a document is only considered final when the original author has submitted `final`.
+
+			In the event there are **MULTIPLE** `collaborators` listed, they **MUST** be sorted.
+
+			Sorting for each element of `collaborators` follows the same sort order as specified for Map Keys, 
+			as defined by CBOR Deterministic Encoding (4.3.2 Length-First Map Key Ordering).
 			"""
 	}
 
@@ -242,7 +266,7 @@ _allMetadataNames: or([
 
 			This allows for an entire document and any/all published versions to be revoked.
 			A new version of the document that is published after this, may reinstate prior
-			document versions, by not listing them as revoked.  
+			document versions, by not listing them as revoked.
 			However, any document where revocations was set `true` can never be reinstated.
 			"""
 		validation: """

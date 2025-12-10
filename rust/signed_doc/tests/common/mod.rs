@@ -6,11 +6,20 @@ pub mod campaign_parameters;
 pub mod campaign_parameters_form_template;
 pub mod category_parameters;
 pub mod category_parameters_form_template;
+pub mod contest_ballot;
+pub mod contest_ballot_checkpoint;
+pub mod contest_delegation;
+pub mod contest_parameters;
+pub mod contest_parameters_form_template;
 pub mod proposal;
 pub mod proposal_comment;
 pub mod proposal_comment_form_template;
 pub mod proposal_form_template;
 pub mod proposal_submission_action;
+pub mod rep_nomination;
+pub mod rep_nomination_form_template;
+pub mod rep_profile;
+pub mod rep_profile_form_template;
 
 use std::str::FromStr;
 
@@ -25,11 +34,20 @@ use catalyst_types::{
 };
 pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
+pub use contest_ballot::contest_ballot_doc;
+pub use contest_ballot_checkpoint::contest_ballot_checkpoint_doc;
+pub use contest_delegation::contest_delegation_doc;
+pub use contest_parameters::contest_parameters_doc;
+pub use contest_parameters_form_template::contest_parameters_form_template_doc;
 pub use proposal::proposal_doc;
 pub use proposal_comment::proposal_comment_doc;
 pub use proposal_comment_form_template::proposal_comment_form_template_doc;
 pub use proposal_form_template::proposal_form_template_doc;
 pub use proposal_submission_action::proposal_submission_action_doc;
+pub use rep_nomination::rep_nomination_doc;
+pub use rep_nomination_form_template::rep_nomination_form_template_doc;
+pub use rep_profile::rep_profile_doc;
+pub use rep_profile_form_template::rep_profile_form_template_doc;
 
 pub fn get_doc_kid_and_sk(
     provider: &TestCatalystProvider,

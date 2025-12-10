@@ -1,8 +1,16 @@
 //! `chain` rule type impl.
 
-use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::chain::Chain};
+use anyhow::ensure;
+use catalyst_signed_doc_spec::{
+    is_required::IsRequired,
+    metadata::{chain::Chain as ChainSpec, collaborators::Collaborators},
+};
 
-use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
+use crate::{
+    CatalystSignedDocument, Chain,
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
+};
 
 #[cfg(test)]
 mod tests;
@@ -19,33 +27,46 @@ pub(crate) enum ChainRule {
     NotSpecified,
 }
 
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ChainRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        self.check_inner(doc, provider).await
+    }
+}
+
 impl ChainRule {
     /// Generating `ChainRule` from specs
-    pub(crate) fn new(spec: &Chain) -> Self {
+    pub(crate) fn new(
+        spec: &ChainSpec,
+        collaborators_spec: &Collaborators,
+    ) -> anyhow::Result<Self> {
         let optional = match spec.required {
             IsRequired::Yes => false,
             IsRequired::Optional => true,
             IsRequired::Excluded => {
-                return Self::NotSpecified;
+                return Ok(Self::NotSpecified);
             },
         };
 
-        Self::Specified { optional }
+        ensure!(
+            matches!(collaborators_spec.required, IsRequired::Excluded),
+            "Chained Documents do not support collaborators"
+        );
+
+        Ok(Self::Specified { optional })
     }
 
     /// Field validation rule
-    pub(crate) async fn check<Provider>(
+    async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
         let chain = doc.doc_meta().chain();
-
-        // TODO: the current implementation is only for the direct chained doc,
-        // make it recursively checks the entire chain with the same `id` docs.
 
         if let Self::Specified { optional } = self {
             if chain.is_none() && !optional {
@@ -56,85 +77,7 @@ impl ChainRule {
 
             // perform integrity validation
             if let Some(doc_chain) = chain {
-                if doc_chain.document_ref().is_none() && doc_chain.height() != 0 {
-                    doc.report().functional_validation(
-                        "The chain height must be zero when there is no chained doc",
-                        "Chained Documents validation",
-                    );
-                    return Ok(false);
-                }
-                if doc_chain.height() == 0 && doc_chain.document_ref().is_some() {
-                    doc.report().functional_validation(
-                        "The next Chained Document must not exist while the height is zero",
-                        "Chained Documents validation",
-                    );
-                    return Ok(false);
-                }
-
-                if let Some(chained_ref) = doc_chain.document_ref() {
-                    let Some(chained_doc) = provider.try_get_doc(chained_ref).await? else {
-                        doc.report().other(
-                            &format!(
-                                "Cannot find the Chained Document ({chained_ref}) from the provider"
-                            ),
-                            "Chained Documents validation",
-                        );
-                        return Ok(false);
-                    };
-
-                    // have the same id as the document being chained to.
-                    if chained_doc.doc_id()? != doc.doc_id()? {
-                        doc.report().functional_validation(
-                            "Must have the same id as the document being chained to",
-                            "Chained Documents validation",
-                        );
-                        return Ok(false);
-                    }
-
-                    // have a ver that is greater than the ver being chained to.
-                    if chained_doc.doc_ver()? > doc.doc_ver()? {
-                        doc.report().functional_validation(
-                            "Must have a ver that is greater than the ver being chained to",
-                            "Chained Documents validation",
-                        );
-                        return Ok(false);
-                    }
-
-                    // have the same type as the chained document.
-                    if chained_doc.doc_type()? != doc.doc_type()? {
-                        doc.report().functional_validation(
-                            "Must have the same type as the chained document",
-                            "Chained Documents validation",
-                        );
-                        return Ok(false);
-                    }
-
-                    if let Some(chained_height) =
-                        chained_doc.doc_meta().chain().map(crate::Chain::height)
-                    {
-                        // chain doc must not be negative
-                        if chained_height < 0 {
-                            doc.report().functional_validation(
-                                "The height of the document being chained to must be positive number",
-                                "Chained Documents validation",
-                            );
-                            return Ok(false);
-                        }
-
-                        // have its absolute height exactly one more than the height of the
-                        // document being chained to.
-                        if !matches!(
-                            i32::abs(doc_chain.height()).checked_sub(i32::abs(chained_height)),
-                            Some(1)
-                        ) {
-                            doc.report().functional_validation(
-                                "Must have its absolute height exactly one more than the height of the document being chained to",
-                                "Chained Documents validation",
-                            );
-                            return Ok(false);
-                        }
-                    }
-                }
+                return Self::chain_check(doc_chain, doc, provider).await;
             }
         }
         if let Self::NotSpecified = self
@@ -151,6 +94,121 @@ impl ChainRule {
                 "Document does not expect to have 'chain' field",
             );
             return Ok(false);
+        }
+
+        Ok(true)
+    }
+
+    /// `chain` metadata field checks
+    async fn chain_check(
+        doc_chain: &Chain,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<bool> {
+        const CONTEXT: &str = "Chained Documents validation";
+
+        if doc_chain.document_ref().is_none() && doc_chain.height() != 0 {
+            doc.report().functional_validation(
+                "The chain height must be zero when there is no chained doc",
+                CONTEXT,
+            );
+            return Ok(false);
+        }
+        if doc_chain.height() == 0 && doc_chain.document_ref().is_some() {
+            doc.report().functional_validation(
+                "The next Chained Document must not exist while the height is zero",
+                CONTEXT,
+            );
+            return Ok(false);
+        }
+
+        if let Some(chained_ref) = doc_chain.document_ref() {
+            let Ok(expected_doc_type) = doc.doc_type() else {
+                doc.report().missing_field("type", CONTEXT);
+                return Ok(false);
+            };
+
+            let chain_validator = |chained_doc: &CatalystSignedDocument| {
+                let Ok(doc_id) = doc.doc_id() else {
+                    doc.report()
+                        .missing_field("id", "Missing id field in the document");
+                    return false;
+                };
+                let Ok(chained_id) = chained_doc.doc_id() else {
+                    doc.report()
+                        .missing_field("id", "Missing id field in the chained document");
+                    return false;
+                };
+                // have the same id as the document being chained to.
+                if chained_id != doc_id {
+                    doc.report().functional_validation(
+                        "Must have the same id as the document being chained to",
+                        CONTEXT,
+                    );
+                    return false;
+                }
+
+                let Ok(doc_ver) = doc.doc_ver() else {
+                    doc.report()
+                        .missing_field("ver", "Missing ver field in the document");
+                    return false;
+                };
+                let Ok(chained_ver) = chained_doc.doc_ver() else {
+                    doc.report()
+                        .missing_field("ver", "Missing ver field in the chained document");
+                    return false;
+                };
+                // have a ver that is greater than the ver being chained to.
+                if chained_ver > doc_ver {
+                    doc.report().functional_validation(
+                        "Must have a ver that is greater than the ver being chained to",
+                        CONTEXT,
+                    );
+                    return false;
+                }
+
+                let Some(chained_height) = chained_doc.doc_meta().chain().map(crate::Chain::height)
+                else {
+                    doc.report()
+                        .missing_field("chain", "Missing chain field in the chained document");
+                    return false;
+                };
+
+                // chain doc must not be negative
+                if chained_height < 0 {
+                    doc.report().functional_validation(
+                        "The height of the document being chained to must be positive number",
+                        CONTEXT,
+                    );
+                    return false;
+                }
+
+                // have its absolute height exactly one more than the height of the
+                // document being chained to.
+                if !matches!(
+                    i32::abs(doc_chain.height()).checked_sub(i32::abs(chained_height)),
+                    Some(1)
+                ) {
+                    doc.report().functional_validation(
+                                "Must have its absolute height exactly one more than the height of the document being chained to",
+                                CONTEXT,
+                            );
+                    return false;
+                }
+
+                true
+            };
+
+            return doc_refs_check(
+                &vec![chained_ref.clone()].into(),
+                std::slice::from_ref(expected_doc_type),
+                false,
+                "chain",
+                provider,
+                doc.report(),
+                chain_validator,
+            )
+            .await;
         }
 
         Ok(true)
