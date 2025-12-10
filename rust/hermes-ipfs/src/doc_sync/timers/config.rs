@@ -58,16 +58,19 @@ impl Default for SyncTimersConfig {
 
 impl SyncTimersConfig {
     /// Generates backoff/jitter for .syn
+    #[must_use]
     pub fn random_syn_jitter(&self) -> Duration {
         Self::random_duration(&self.syn_jitter)
     }
 
     /// Generates responder jitter for .dif (and .prv)
+    #[must_use]
     pub fn random_responder_jitter(&self) -> Duration {
         Self::random_duration(&self.responder_jitter)
     }
 
     /// Generates quiet period
+    #[must_use]
     pub fn random_quiet(&self) -> Duration {
         Self::random_duration(&self.quiet_period)
     }

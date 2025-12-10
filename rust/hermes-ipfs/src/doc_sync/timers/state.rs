@@ -15,7 +15,7 @@ pub struct SyncTimersState {
     cfg: SyncTimersConfig,
     /// Callback to invoke when a keepalive is sent.
     send_new_keepalive: KeepaliveCallback,
-    /// Handle for the background quiet-period keepalive task.
+    /// Handle for the background quiet period keepalive task.
     keepalive_task: Mutex<Option<JoinHandle<()>>>,
     /// Notification for resetting the quiet timer.
     reset_new_notify: Notify,
@@ -58,7 +58,7 @@ impl SyncTimersState {
             return;
         }
 
-        let this = Arc::clone(self);
+        let this = self.clone();
         let handle = std::thread::spawn(move || {
             let rt = match tokio::runtime::Builder::new_current_thread()
                 .enable_time()
@@ -109,14 +109,14 @@ impl SyncTimersState {
         }
     }
 
-    /// Reset quiet-period timer (call on every received or posted .new)
+    /// Reset quiet period timer (call on every received or posted .new)
     pub fn reset_quiet_timer(&self) {
         tracing::trace!("Resetting quiet timer");
         // Notify the background task to reset its sleep loop
         self.reset_new_notify.notify_waiters();
     }
 
-    /// Stop the quiet-period background task, if running.
+    /// Stop the quiet period background task, if running.
     pub fn stop_quiet_timer(&self) {
         self.keepalive_task.blocking_lock().take();
     }
