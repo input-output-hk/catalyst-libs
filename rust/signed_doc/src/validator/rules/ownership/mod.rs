@@ -113,13 +113,11 @@ impl DocumentOwnershipRule {
                     };
                     allowed_authors.extend(first_doc.authors());
 
-                    let Some(last_doc) = provider.try_get_last_doc(doc_id).await? else {
-                        doc.report().other(
-                            "A latest version of the document must exist if a first version exists",
-                            REPORT_CONTEXT,
-                        );
-                        return Ok(false);
-                    };
+                    let last_doc = provider.try_get_last_doc(doc_id).await?.ok_or(
+                        anyhow::anyhow!(
+                            "A latest version of the document must exist if a first version exists"
+                        ),
+                    )?;
 
                     allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
                 }
@@ -143,13 +141,13 @@ impl DocumentOwnershipRule {
                 };
                 allowed_authors.extend(first_ref_doc.authors());
 
-                let Some(last_doc) = provider.try_get_last_doc(*doc_ref.id()).await? else {
-                    doc.report().other(
-                        "A latest version of the document must exist if a first version exists",
-                        REPORT_CONTEXT,
-                    );
-                    return Ok(false);
-                };
+                let last_doc =
+                    provider
+                        .try_get_last_doc(*doc_ref.id())
+                        .await?
+                        .ok_or(anyhow::anyhow!(
+                            "A latest version of the document must exist if a first version exists"
+                        ))?;
 
                 allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
             },
