@@ -6,31 +6,30 @@ use tokio::sync::{Mutex, Notify};
 
 use super::config::SyncTimersConfig;
 
+/// Keepalive callback type
+type KeepaliveCallback = Arc<dyn Fn() -> Result<(), anyhow::Error> + Send + Sync>;
+
 /// State managing timers (Quiet period background task + helpers for one-off jitters).
-pub struct SyncTimersState<F>
-where F: Fn() -> Result<(), anyhow::Error> + Send + Sync + 'static
-{
+pub struct SyncTimersState {
     /// Timer configuration
     cfg: SyncTimersConfig,
     /// Callback to invoke when a keepalive is sent.
-    send_new_keepalive: Arc<F>,
+    send_new_keepalive: KeepaliveCallback,
     /// Handle for the background quiet period keepalive task.
     keepalive_task: Mutex<Option<JoinHandle<()>>>,
     /// Notification for resetting the quiet timer.
     reset_new_notify: Notify,
 }
 
-impl<F> SyncTimersState<F>
-where F: Fn() -> Result<(), anyhow::Error> + Send + Sync + 'static
-{
+impl SyncTimersState {
     /// Create a timer state.
     pub fn new(
         cfg: SyncTimersConfig,
-        send_new_keepalive: F,
+        send_new_keepalive: KeepaliveCallback,
     ) -> Arc<Self> {
         Arc::new(Self {
             cfg,
-            send_new_keepalive: Arc::new(send_new_keepalive),
+            send_new_keepalive,
             keepalive_task: Mutex::new(None),
             reset_new_notify: Notify::new(),
         })
@@ -142,13 +141,13 @@ mod tests {
     async fn test_start_quiet_timer_count_keepalive() {
         // Track how many times the callback is called
         let callback_count = Arc::new(AtomicU32::new(0)).clone();
-        let callback = {
+        let callback: KeepaliveCallback = Arc::new({
             let counter = callback_count.clone();
             move || {
                 counter.fetch_add(1, Ordering::Relaxed);
                 Ok(())
             }
-        };
+        });
 
         let state = SyncTimersState::new(timer_config(), callback);
         let state_clone = state.clone();
