@@ -1,4 +1,4 @@
-//! Integration test for brand parameters document validation part.
+//! Integration test for rep profile document validation part.
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/brand_parameters>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};

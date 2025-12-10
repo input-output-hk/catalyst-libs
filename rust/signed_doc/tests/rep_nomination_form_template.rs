@@ -1,4 +1,4 @@
-//! Integration test for rep profile form template document validation part.
+//! Integration test for rep nomination form template document validation part.
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/rep_profile_form_template/>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
