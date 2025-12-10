@@ -287,7 +287,7 @@ async fn contest_ballot_checkpoint(
     );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert_eq!(is_valid, !doc.problem_report().is_problematic());
-    println!("{:?}", doc.problem_report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
+    println!("{:?}", doc.report());
     is_valid
 }
