@@ -276,8 +276,6 @@ async fn collect_parameters_recursively(
 
         if let Some(doc) = provider.try_get_doc(&current).await? {
             if let Some(params) = doc.doc_meta().parameters() {
-                // result.extend(params.iter().cloned());
-
                 for param in params.iter() {
                     if !visited.contains(param) {
                         stack.push(param.clone());
@@ -291,6 +289,8 @@ async fn collect_parameters_recursively(
             );
             all_valid = false;
         }
+
+        result.insert(current);
     }
 
     Ok((all_valid, result))
