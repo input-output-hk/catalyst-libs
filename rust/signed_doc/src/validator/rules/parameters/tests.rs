@@ -527,7 +527,7 @@ async fn parameter_specified_test(
     .await
     .unwrap();
 
-    println!("{:?}", doc.problem_report());
+    println!("{:?}", doc.report());
     assert_eq!(non_optional_res, optional_res);
     non_optional_res
 }
