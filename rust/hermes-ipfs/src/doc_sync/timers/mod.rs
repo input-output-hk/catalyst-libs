@@ -1,4 +1,4 @@
 //! Timers for document synchronization.
 
-mod config;
+pub mod config;
 pub mod state;
