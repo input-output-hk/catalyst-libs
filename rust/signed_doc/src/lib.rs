@@ -207,10 +207,10 @@ impl CatalystSignedDocument {
     /// validation and signature verification.
     ///
     /// # Note:
-    /// Be carefull, underlying `ProblemReport` state thread safe and wrapped under the
-    /// `Arc`, meaning you could easilly change the internal state by non-mutubal
+    /// Be careful, underlying `ProblemReport` state thread safe and wrapped under the
+    /// `Arc`, meaning you could easily change the internal state by non-mutable
     /// reference. Any modifications to the returned object would also affect on the
-    /// "validity" of the currect `CatalystSignedDocument` instance.
+    /// "validity" of the correct `CatalystSignedDocument` instance.
     #[must_use]
     pub fn report(&self) -> &ProblemReport {
         &self.0.report
