@@ -246,7 +246,7 @@ async fn test_brand_parameters_doc(
     assert_eq!(*doc.doc_type().unwrap(), doc_types::REP_NOMINATION.clone());
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert_eq!(is_valid, !doc.problem_report().is_problematic());
-    println!("{:?}", doc.problem_report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
+    println!("{:?}", doc.report());
     is_valid
 }
