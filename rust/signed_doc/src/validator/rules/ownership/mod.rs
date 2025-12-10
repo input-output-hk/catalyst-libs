@@ -91,20 +91,26 @@ impl DocumentOwnershipRule {
             Self::OriginalAuthor => {
                 // only run check for the non first version of the document
                 if doc_id != doc.doc_ver()? {
-                    let first_doc = provider
-                        .try_get_first_doc(doc_id)
-                        .await?
-                        .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
+                    let Some(first_doc) = provider.try_get_first_doc(doc_id).await? else {
+                        doc.report().other(
+                            "Cannot find a first version of the referenced document",
+                            REPORT_CONTEXT,
+                        );
+                        return Ok(false);
+                    };
                     allowed_authors.extend(first_doc.authors());
                 }
             },
             Self::CollaboratorsFieldBased => {
                 // only run check for the non first version of the document
                 if doc_id != doc.doc_ver()? {
-                    let first_doc = provider
-                        .try_get_first_doc(doc_id)
-                        .await?
-                        .ok_or(anyhow::anyhow!("cannot get a first version document"))?;
+                    let Some(first_doc) = provider.try_get_first_doc(doc_id).await? else {
+                        doc.report().other(
+                            "Cannot find a first version of the referenced document",
+                            REPORT_CONTEXT,
+                        );
+                        return Ok(false);
+                    };
                     allowed_authors.extend(first_doc.authors());
 
                     let last_doc = provider.try_get_last_doc(doc_id).await?.ok_or(
