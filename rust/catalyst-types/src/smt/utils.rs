@@ -78,7 +78,7 @@ pub(super) fn node_key(
 mod tests {
     use test_case::test_case;
 
-    use crate::utils::{MAX_HEIGHT, coarse_height, node_key};
+    use crate::smt::utils::{MAX_HEIGHT, coarse_height, node_key};
 
     #[test_case(0 => 1)]
     #[test_case(1 => 1)]

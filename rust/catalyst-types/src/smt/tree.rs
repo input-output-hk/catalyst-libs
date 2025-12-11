@@ -8,12 +8,9 @@ use sparse_merkle_tree::{
 };
 pub use sparse_merkle_tree::{H256, MerkleProof};
 
-use crate::{
-    hasher::Hasher,
-    utils,
-    value::{Value, ValueWrapper},
-};
+use crate::smt::{Value, hasher::Hasher, utils, value::ValueWrapper};
 
+/// Sparse Merkle Tree
 pub struct Tree<V> {
     inner: SparseMerkleTree<Hasher, ValueWrapper, DefaultStore<ValueWrapper>>,
     phantom: PhantomData<V>,
@@ -230,12 +227,12 @@ fn materialized_nodes_at_height<V>(
 mod tests {
     use sparse_merkle_tree::H256;
 
-    use crate::tree::Tree;
+    use crate::smt::{Tree, Value};
 
     #[derive(Default, Debug, Clone, PartialEq)]
     struct IntValue(i32);
 
-    impl crate::Value for IntValue {
+    impl Value for IntValue {
         fn to_bytes(&self) -> Vec<u8> {
             self.0.to_be_bytes().into_iter().collect()
         }
