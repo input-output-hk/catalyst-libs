@@ -1413,11 +1413,11 @@ fn catalyst_signed_doc_decoding_test() {
         );
         if let Ok(doc) = doc_res {
             assert_eq!(
-                !doc.problem_report().is_problematic(),
+                !doc.report().is_problematic(),
                 case.valid_doc,
                 "Case: [{}]. Problem report: {:?}",
                 case.name,
-                doc.problem_report()
+                doc.report()
             );
 
             if let Some(post_checks) = &case.post_checks {

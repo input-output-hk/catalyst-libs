@@ -1,5 +1,5 @@
-//! Integration test for brand parameters document validation part.
-//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/brand_parameters>
+//! Integration test for rep profile form template document validation part.
+//! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/rep_profile_form_template/>
 
 use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -8,6 +8,7 @@ use test_case::test_case;
 
 use crate::common::{
     brand_parameters_doc, brand_parameters_form_template_doc, create_dummy_key_pair,
+    rep_profile_form_template_doc,
 };
 
 mod common;
@@ -15,7 +16,8 @@ mod common;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        brand_parameters_doc(&template, provider)
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        rep_profile_form_template_doc(&parameters, provider)
     }
     => true
     ;
@@ -24,20 +26,21 @@ mod common;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
-        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json,
+                "content-type": ContentType::SchemaJson,
                 "content-encoding": ContentEncoding::Brotli,
                 "id": id,
                 "ver": id,
-                "type": doc_types::BRAND_PARAMETERS.clone(),
-                "template": [template_ref],
+                "type": doc_types::REP_PROFILE_FORM_TEMPLATE.clone(),
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -50,20 +53,21 @@ mod common;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
-        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json,
+                "content-type": ContentType::SchemaJson,
                 "content-encoding": ContentEncoding::Brotli,
                 "id": id,
                 "ver": id,
-                "type": doc_types::BRAND_PARAMETERS.clone(),
-                "template": [template_ref],
+                "type": doc_types::REP_PROFILE_FORM_TEMPLATE.clone(),
+                "parameters": [parameters_ref]
             }))?
             .empty_content()?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -76,20 +80,20 @@ mod common;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
-        let template_ref = template.doc_ref()?;
+        let parameters_ref = parameters.doc_ref()?;
 
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json,
-                "content-encoding": ContentEncoding::Brotli,
+                "content-type": ContentType::SchemaJson,
                 "id": id,
                 "ver": id,
-                "type": doc_types::BRAND_PARAMETERS.clone(),
-                "template": [template_ref],
+                "type": doc_types::REP_PROFILE_FORM_TEMPLATE.clone(),
+                "parameters": [parameters_ref]
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -104,13 +108,14 @@ mod common;
         let id = UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
+
         Builder::new()
             .with_json_metadata(serde_json::json!({
-                "content-type": ContentType::Json,
+                "content-type": ContentType::SchemaJson,
                 "content-encoding": ContentEncoding::Brotli,
                 "id": id,
                 "ver": id,
-                "type": doc_types::BRAND_PARAMETERS.clone(),
+                "type": doc_types::REP_PROFILE_FORM_TEMPLATE.clone(),
             }))?
             .with_json_content(&serde_json::json!({}))?
             .add_signature(|m| sk.sign(&m).to_vec(), kid)?
@@ -118,11 +123,11 @@ mod common;
     }
     => false
     ;
-    "missing 'template'"
+    "missing 'parameters'"
 )]
 #[tokio::test]
 #[allow(clippy::unwrap_used)]
-async fn test_brand_parameters_doc(
+async fn test_category_parameters_form_template_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -130,7 +135,7 @@ async fn test_brand_parameters_doc(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(
         *doc.doc_type().unwrap(),
-        doc_types::BRAND_PARAMETERS.clone()
+        doc_types::REP_PROFILE_FORM_TEMPLATE.clone()
     );
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
