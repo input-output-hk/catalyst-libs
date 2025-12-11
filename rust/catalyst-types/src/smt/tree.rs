@@ -6,12 +6,11 @@ use std::{collections::HashMap, marker::PhantomData};
 use sparse_merkle_tree::{
     BranchKey, BranchNode, SparseMerkleTree,
     default_store::DefaultStore,
-    error::Error,
     merge::{self},
 };
 pub use sparse_merkle_tree::{H256, MerkleProof};
 
-use crate::smt::{Value, hasher::Hasher, utils, value::ValueWrapper};
+use crate::smt::{Error, Value, hasher::Hasher, utils, value::ValueWrapper};
 
 /// Sparse Merkle Tree
 pub struct Tree<V> {
@@ -119,7 +118,7 @@ where V: Default + Value + Clone
     pub fn horizontal_slice_at(
         &self,
         height: u8,
-    ) -> impl Iterator<Item = Option<H256>> {
+    ) -> impl Iterator<Item = Result<Option<H256>, Error>> {
         let store = self.inner.store();
 
         // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
@@ -184,7 +183,7 @@ where V: Default + Value + Clone
 fn horizontal_slice<V, H>(
     store: &DefaultStore<V>,
     target_height: u8,
-) -> impl Iterator<Item = Option<H256>>
+) -> impl Iterator<Item = Result<Option<H256>, Error>>
 where
     V: Clone,
     H: sparse_merkle_tree::traits::Hasher + Default,
@@ -205,14 +204,14 @@ where
     // For a given height we need to iterate through `width` number of positions,
     // even if some nodes are not materialized.
     (0..width).map(move |horizontal_position| {
-        let node_key = utils::node_key(key_prefix_length, horizontal_position);
+        let node_key = utils::node_key(key_prefix_length, horizontal_position)?;
         let key = BranchKey::new(target_height, node_key);
 
-        materialized_nodes.get(&node_key).map(|node| {
+        Ok(materialized_nodes.get(&node_key).map(|node| {
             // Recreate the node identity using the provided hasher.
             let mv = merge::merge::<H>(key.height, &key.node_key, &node.left, &node.right);
             mv.hash::<H>()
-        })
+        }))
         // If node is not materialized, returns None (virtual zero branch)
     })
 }
@@ -251,6 +250,7 @@ fn materialized_nodes_at_height<V>(
 #[cfg(test)]
 mod tests {
     use sparse_merkle_tree::H256;
+    use test_case::test_case;
 
     use crate::smt::{Tree, Value};
 
@@ -306,5 +306,19 @@ mod tests {
         let non_existing_key = H256::zero();
         let non_existing = smt.get(&non_existing_key).expect("should retrieve");
         assert!(non_existing.is_none());
+    }
+
+    #[test_case(0 => 1)]
+    #[test_case(1 => 2)]
+    #[test_case(2 => 4)]
+    #[test_case(7 => 128)]
+    #[test_case(10 => 1024)]
+    fn horizontal_slice_has_expected_length(height: u8) -> usize {
+        let smt = Tree::<IntValue>::new();
+        let hashes = smt
+            .horizontal_slice_at(height)
+            .collect::<Result<Vec<_>, _>>()
+            .expect("should get a slice");
+        hashes.len()
     }
 }

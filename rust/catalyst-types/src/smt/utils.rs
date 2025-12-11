@@ -2,6 +2,8 @@
 
 use sparse_merkle_tree::H256;
 
+use crate::smt::Error;
+
 /// Maximum coarse height for the Sparse Merkle Tree, needed to limit the number of
 /// batches.
 const MAX_COARSE_HEIGHT: u8 = 14;
@@ -63,19 +65,23 @@ pub(super) fn coarse_height(count: usize) -> u8 {
 pub(super) fn node_key(
     key_prefix_length: u8,
     position_from_left: u32,
-) -> H256 {
+) -> Result<H256, Error> {
     let mut node_key = H256::zero();
 
     for bit_index_msb in 0..key_prefix_length {
-        let bit_index_lsb = key_prefix_length - 1 - bit_index_msb;
+        let bit_index_lsb = key_prefix_length
+            .checked_sub(1)
+            .and_then(|v| v.checked_sub(bit_index_msb))
+            .ok_or(Error::InvalidKeyPrefixLength)?;
         let mask = 1 << bit_index_lsb;
         let bit_is_set = (position_from_left & mask) != 0;
 
         if bit_is_set {
+            #[allow(clippy::arithmetic_side_effects)]
             node_key.set_bit(u8::MAX - bit_index_msb);
         }
     }
-    node_key
+    Ok(node_key)
 }
 
 #[cfg(test)]
@@ -106,7 +112,8 @@ mod tests {
         key_prefix_length: u8,
         horizontal_position: u32,
     ) -> [u8; 32] {
-        let node_key = node_key(key_prefix_length, horizontal_position);
+        let node_key =
+            node_key(key_prefix_length, horizontal_position).expect("should create node key");
         node_key
             .as_slice()
             .try_into()

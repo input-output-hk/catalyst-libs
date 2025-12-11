@@ -5,7 +5,10 @@ use thiserror::Error;
 /// Error type
 #[derive(Debug, Error)]
 pub enum Error {
-    /// Internal sparse-merkle-tree error.
+    /// Inner implementation error
     #[error(transparent)]
-    InnerTree(sparse_merkle_tree::error::Error),
+    InnerTree(#[from] sparse_merkle_tree::error::Error),
+    /// Invalid key prefix length
+    #[error("invalid key prefix length")]
+    InvalidKeyPrefixLength,
 }
