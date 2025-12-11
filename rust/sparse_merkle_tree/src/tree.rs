@@ -109,6 +109,14 @@ where V: Default + Value + Clone
     }
 }
 
+impl<V> Default for Tree<V>
+where V: Default + Value + Clone
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Generates a complete horizontal slice of the Sparse Merkle Tree at a specified height.
 //
 // This function creates an iterator representing all possible node positions at a given
@@ -227,12 +235,6 @@ mod tests {
     #[derive(Default, Debug, Clone, PartialEq)]
     struct IntValue(i32);
 
-    impl IntValue {
-        fn new(i: i32) -> Self {
-            IntValue(i)
-        }
-    }
-
     impl crate::Value for IntValue {
         fn to_bytes(&self) -> Vec<u8> {
             self.0.to_be_bytes().into_iter().collect()
@@ -253,16 +255,16 @@ mod tests {
             let current_root = *smt.root();
             assert!(!root_hashes.contains(&current_root));
             root_hashes.push(current_root);
-            smt.insert(&IntValue(i));
+            smt.insert(&IntValue(i)).expect("should insert");
         }
     }
 
     #[test]
     fn update_with_same_value_does_not_change_root_hash() {
         let mut smt = Tree::new();
-        smt.insert(&IntValue(1));
+        smt.insert(&IntValue(1)).expect("should insert");
         let prev_root = *smt.root();
-        smt.insert(&IntValue(1));
+        smt.insert(&IntValue(1)).expect("should insert");
         let current_root = *smt.root();
         assert_eq!(prev_root, current_root);
     }
