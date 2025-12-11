@@ -37,7 +37,7 @@ The payload of a profile is controlled by its template.
 
 ### Validation
 
-* The signer MUST be a registered 'Representative' and MUST be the same as the author of the referenced Rep Profile document.
+* The signer MUST be a registered 'Representative' (the signature MUST use the Representative role from the Catalyst ID, not the normal Role0 signature) and MUST be the same as the author of the referenced Rep Profile document.
 * The 'ref' metadata field MUST point to a valid 'Representative Profile' document.
 * The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.
 * The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.
