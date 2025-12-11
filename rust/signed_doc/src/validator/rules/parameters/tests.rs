@@ -420,27 +420,29 @@ use crate::{
 )]
 #[test_case(
     |exp_param_types, provider| {
-        let parameter_doc = Builder::new()
+        let p1_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
-        provider.add_document(&parameter_doc).unwrap();
+        provider.add_document(&p1_doc).unwrap();
 
-        let params_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()].into();
 
-        let t1_doc = Builder::new()
+        let p2_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(params_field.clone()))
+            .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![p1_doc.doc_ref().unwrap()].into()
+            ))
             .build();
-        provider.add_document(&t1_doc).unwrap();
+        provider.add_document(&p2_doc).unwrap();
 
         let t2_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Parameters(
-                vec![t1_doc.doc_ref().unwrap()].into()
+                vec![p1_doc.doc_ref().unwrap()].into()
             ))
             .build();
         provider.add_document(&t2_doc).unwrap();
@@ -450,35 +452,38 @@ use crate::{
             .with_metadata_field(SupportedField::Ref(
                 vec![t2_doc.doc_ref().unwrap()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(params_field))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![p2_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => true
     ;
-    // doc (p1) -> t2 -> t1 (p1)
     "valid reference to valid one-level recursion parameters field"
 )]
 #[test_case(
     |exp_param_types, provider| {
-        let parameter_doc = Builder::new()
+        let p1_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
-        provider.add_document(&parameter_doc).unwrap();
+        provider.add_document(&p1_doc).unwrap();
 
-        let params_field: DocumentRefs = vec![parameter_doc.doc_ref().unwrap()].into();
 
-        let t1_doc = Builder::new()
+        let p2_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(params_field.clone()))
+            .with_metadata_field(SupportedField::Type(exp_param_types[1].clone()))
             .build();
-        provider.add_document(&t1_doc).unwrap();
+        provider.add_document(&p2_doc).unwrap();
 
         let t2_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![p1_doc.doc_ref().unwrap()].into()
+            ))
             .build();
         provider.add_document(&t2_doc).unwrap();
 
@@ -487,55 +492,14 @@ use crate::{
             .with_metadata_field(SupportedField::Ref(
                 vec![t2_doc.doc_ref().unwrap()].into()
             ))
-            .with_metadata_field(SupportedField::Parameters(params_field))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![p2_doc.doc_ref().unwrap()].into()
+            ))
             .build()
     }
     => false
     ;
-    // doc (p1) -> t2 x-> t1 (p1)
-    "reference to non-linked one-level recursion parameters field"
-)]
-#[test_case(
-    |exp_param_types, provider| {
-        let parameter_doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(UuidV7::new()))
-            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Type(exp_param_types[0].clone()))
-            .build();
-        provider.add_document(&parameter_doc).unwrap();
-
-        let t1_doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(UuidV7::new()))
-            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(
-                vec![parameter_doc.doc_ref().unwrap()].into()
-            ))
-            .build();
-        provider.add_document(&t1_doc).unwrap();
-
-        let t2_doc = Builder::new()
-            .with_metadata_field(SupportedField::Id(UuidV7::new()))
-            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
-            .with_metadata_field(SupportedField::Parameters(
-                vec![parameter_doc.doc_ref().unwrap(), t1_doc.doc_ref().unwrap()].into()
-            ))
-            .build();
-        provider.add_document(&t2_doc).unwrap();
-
-
-        Builder::new()
-            .with_metadata_field(SupportedField::Ref(
-                vec![t2_doc.doc_ref().unwrap()].into()
-            ))
-            .with_metadata_field(SupportedField::Parameters(
-                vec![parameter_doc.doc_ref().unwrap()].into()
-            ))
-            .build()
-    }
-    => true
-    ;
-    // doc (p1) -> t2 (p1) -> t1 (p1)
-    "valid reference to valid one-level recursion parameters field, with the same parameters"
+    "reference to non-linked parameters field"
 )]
 #[tokio::test]
 async fn parameter_specified_test(
@@ -563,6 +527,7 @@ async fn parameter_specified_test(
     .await
     .unwrap();
 
+    println!("{:?}", doc.report());
     assert_eq!(non_optional_res, optional_res);
     non_optional_res
 }

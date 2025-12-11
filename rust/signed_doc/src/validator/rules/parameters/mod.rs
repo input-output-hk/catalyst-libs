@@ -10,6 +10,7 @@ use catalyst_signed_doc_spec::{
 };
 use catalyst_types::problem_report::ProblemReport;
 use futures::FutureExt;
+use itertools::Itertools;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
@@ -209,28 +210,39 @@ pub(crate) async fn link_check(
 
     let mut allowed_params = HashSet::new();
     let mut all_valid = true;
-    for doc_ref in ref_field.iter() {
+    for doc_ref in exp_parameters.iter() {
         let (valid, result) =
             collect_parameters_recursively(doc_ref, field_name, provider, report).await?;
         all_valid &= valid;
         allowed_params.extend(result);
     }
 
-    if !all_valid {
-        return Ok(false);
-    }
-
-    all_valid &= allowed_params
-        .iter()
-        .any(|ref_doc_parameters| exp_parameters == ref_doc_parameters);
-
-    if !all_valid {
-        report.invalid_value(
-            "parameters",
-            &format!("Reference doc params: {allowed_params:?}",),
-            &format!("Doc params: {exp_parameters}"),
-            &format!("Referenced document via {field_name} `parameters` field must match one of the allowed params"),
-        );
+    for doc_ref in ref_field.iter() {
+        if let Some(referenced_doc) = provider.try_get_doc(doc_ref).await? {
+            if let Some(ref_params) = referenced_doc.doc_meta().parameters() {
+                if !ref_params.iter().all(|v| allowed_params.contains(v)) {
+                    report.invalid_value(
+                        "parameters",
+                        &format!("[{}]", ref_params.iter().map(ToString::to_string).join(",")),
+                        &format!("[{}]", allowed_params.iter().map(ToString::to_string).join(",")),
+                        &format!("Referenced document {doc_ref} via {field_name} `parameters` field must match one of the allowed params"),
+                    );
+                    all_valid = false;
+                }
+            } else {
+                report.missing_field(
+                    "'parameters'",
+                    &format!("Referenced document {doc_ref} must have `parameters` field"),
+                );
+                all_valid = false;
+            }
+        } else {
+            report.functional_validation(
+                &format!("Cannot retrieve a document {doc_ref}"),
+                &format!("Referenced document link validation for `{field_name}`"),
+            );
+            all_valid = false;
+        }
     }
 
     Ok(all_valid)
@@ -250,9 +262,9 @@ async fn collect_parameters_recursively(
     field_name: &str,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<(bool, HashSet<DocumentRefs>)> {
+) -> anyhow::Result<(bool, HashSet<DocumentRef>)> {
     let mut all_valid = true;
-    let mut result = HashSet::new();
+    let mut result: HashSet<_> = HashSet::new();
     let mut visited = HashSet::new();
     let mut stack = vec![root.clone()];
 
@@ -260,11 +272,10 @@ async fn collect_parameters_recursively(
         if !visited.insert(current.clone()) {
             continue;
         }
+        result.insert(current.clone());
 
         if let Some(doc) = provider.try_get_doc(&current).await? {
             if let Some(params) = doc.doc_meta().parameters() {
-                result.insert(params.clone());
-
                 for param in params.iter() {
                     if !visited.contains(param) {
                         stack.push(param.clone());
@@ -278,6 +289,8 @@ async fn collect_parameters_recursively(
             );
             all_valid = false;
         }
+
+        result.insert(current);
     }
 
     Ok((all_valid, result))
