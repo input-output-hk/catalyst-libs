@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use cbork_utils::decode_helper::decode_map_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::{Choices, ColumnProof, EncryptedChoices, MatrixProof};
+use crate::{Choices, EncryptedChoices};
 
 /// An individual Ballot cast in a Contest by a registered user.
 ///
@@ -23,9 +23,13 @@ pub struct ContentBallot {
     /// A map of voters choices.
     pub choices: BTreeMap<u64, Choices>,
     /// A universal encrypted column proof.
-    pub column_proof: Option<ColumnProof>,
+    ///
+    /// This is a placeholder for now and should always be `None`.
+    pub column_proof: Option<()>,
     /// A universal encrypted matrix proof.
-    pub matrix_proof: Option<MatrixProof>,
+    ///
+    /// This is a placeholder for now and should always be `None`.
+    pub matrix_proof: Option<()>,
     /// An encrypted voter choice payload.
     pub voter_choices: Option<EncryptedChoices>,
 }
@@ -40,8 +44,8 @@ impl Decode<'_, ()> for ContentBallot {
         let len = decode_map_len(d, "content ballot")?;
 
         let mut choices = BTreeMap::new();
-        let mut column_proof = None;
-        let mut matrix_proof = None;
+        let column_proof = None;
+        let matrix_proof = None;
         let mut voter_choices = None;
         for _ in 0..len {
             match d.datatype()? {
@@ -52,8 +56,16 @@ impl Decode<'_, ()> for ContentBallot {
                 },
                 Type::String => {
                     match d.str()? {
-                        "column-proof" => column_proof = Some(ColumnProof::decode(d, ctx)?),
-                        "matrix-proof" => matrix_proof = Some(MatrixProof::decode(d, ctx)?),
+                        "column-proof" => {
+                            return Err(minicbor::decode::Error::message(
+                                "column-proof is a placeholder and shouldn't be used",
+                            ));
+                        },
+                        "matrix-proof" => {
+                            return Err(minicbor::decode::Error::message(
+                                "matrix-proof is a placeholder and shouldn't be used",
+                            ));
+                        },
                         "voter-choices" => voter_choices = Some(EncryptedChoices::decode(d, ctx)?),
                         key => {
                             return Err(minicbor::decode::Error::message(format!(
@@ -155,8 +167,8 @@ mod tests {
                 }),
             ]
             .into(),
-            column_proof: Some(ColumnProof(1)),
-            matrix_proof: Some(MatrixProof(2)),
+            column_proof: None,
+            matrix_proof: None,
             voter_choices: Some(EncryptedChoices(vec![
                 EncryptedBlock([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
                 EncryptedBlock([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),

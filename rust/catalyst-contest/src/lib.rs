@@ -8,17 +8,13 @@
 //#![allow(unused_variables)]
 
 mod choices;
-mod column_proof;
 mod contest_ballot;
 mod encrypted_choices;
-mod matrix_proof;
 mod row_proof;
 
 pub use crate::{
     choices::Choices,
-    column_proof::ColumnProof,
     contest_ballot::ContentBallot,
     encrypted_choices::{EncryptedBlock, EncryptedChoices},
-    matrix_proof::MatrixProof,
     row_proof::RowProof,
 };
