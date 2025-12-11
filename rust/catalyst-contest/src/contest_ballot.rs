@@ -110,10 +110,11 @@ impl Encode<()> for ContentBallot {
 
 #[cfg(test)]
 mod tests {
+    use catalyst_voting::crypto::elgamal::Ciphertext;
+
     use super::*;
     use crate::{
         EncryptedBlock, RowProof,
-        elgamal_ristretto255_choice::ElgamalRistretto255Choice,
         row_proof::{
             ProofAnnouncement, ProofAnnouncementElement, ProofResponse, ProofScalar,
             SingleSelectionProof,
@@ -130,17 +131,11 @@ mod tests {
             choices: [
                 (1, Choices::Clear(vec![1, 2, 3, -4, -5])),
                 (2, Choices::ElgamalRistretto255 {
-                    choices: vec![ElgamalRistretto255Choice {
-                        c1: bytes,
-                        c2: bytes,
-                    }],
+                    choices: vec![Ciphertext::zero()],
                     row_proof: None,
                 }),
                 (3, Choices::ElgamalRistretto255 {
-                    choices: vec![ElgamalRistretto255Choice {
-                        c1: bytes,
-                        c2: bytes,
-                    }],
+                    choices: vec![Ciphertext::zero()],
                     row_proof: Some(RowProof {
                         selections: vec![SingleSelectionProof {
                             announcement: ProofAnnouncement(
@@ -148,10 +143,7 @@ mod tests {
                                 ProofAnnouncementElement(bytes),
                                 ProofAnnouncementElement(bytes),
                             ),
-                            choice: ElgamalRistretto255Choice {
-                                c1: bytes,
-                                c2: bytes,
-                            },
+                            choice: Ciphertext::zero(),
                             response: ProofResponse(
                                 ProofScalar(bytes),
                                 ProofScalar(bytes),

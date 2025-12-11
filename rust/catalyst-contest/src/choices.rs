@@ -1,9 +1,10 @@
 //! Voters Choices.
 
+use catalyst_voting::crypto::elgamal::Ciphertext;
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::{elgamal_ristretto255_choice::ElgamalRistretto255Choice, row_proof::RowProof};
+use crate::row_proof::RowProof;
 
 /// Voters Choices.
 ///
@@ -28,7 +29,7 @@ pub enum Choices {
     /// ElGamal/Ristretto255 encrypted choices.
     ElgamalRistretto255 {
         /// ElGamal/Ristretto255 encrypted choices.
-        choices: Vec<ElgamalRistretto255Choice>,
+        choices: Vec<Ciphertext>,
         /// A universal encrypted row proof.
         row_proof: Option<RowProof>,
     },
@@ -54,7 +55,7 @@ impl Decode<'_, ()> for Choices {
                         "Unexpected elgamal-ristretto255-encrypted-choices array length {len}, expected 1 or 2"
                     )));
                 }
-                let choices = <Vec<ElgamalRistretto255Choice>>::decode(d, ctx)?;
+                let choices = <Vec<Ciphertext>>::decode(d, ctx)?;
                 let mut row_proof = None;
                 if len == 2 {
                     row_proof = Some(RowProof::decode(d, ctx)?);
@@ -132,10 +133,7 @@ mod tests {
                         ProofAnnouncementElement(bytes),
                         ProofAnnouncementElement(bytes),
                     ),
-                    choice: ElgamalRistretto255Choice {
-                        c1: bytes,
-                        c2: bytes,
-                    },
+                    choice: Ciphertext::zero(),
                     response: ProofResponse(
                         ProofScalar(bytes),
                         ProofScalar(bytes),

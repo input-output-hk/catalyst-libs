@@ -1,9 +1,8 @@
 //! A universal encrypted row proof.
 
+use catalyst_voting::crypto::elgamal::Ciphertext;
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
-
-use crate::ElgamalRistretto255Choice;
 
 /// A length of the underlying CBOR array of the `ProofScalar` type.
 const SCALAR_PROOF_LEN: u64 = 32;
@@ -50,7 +49,7 @@ pub struct SingleSelectionProof {
     /// A ZK proof announcement values for Elgamal.
     pub announcement: ProofAnnouncement,
     /// An elgamal encrypted ciphertext.
-    pub choice: ElgamalRistretto255Choice,
+    pub choice: Ciphertext,
     /// A ZK proof response values for Ed25519.
     pub response: ProofResponse,
 }
@@ -156,7 +155,7 @@ impl Decode<'_, ()> for SingleSelectionProof {
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let announcement = ProofAnnouncement::decode(d, ctx)?;
-        let choice = ElgamalRistretto255Choice::decode(d, ctx)?;
+        let choice = Ciphertext::decode(d, ctx)?;
         let response = ProofResponse::decode(d, ctx)?;
 
         Ok(Self {
@@ -284,10 +283,7 @@ mod tests {
                     ProofAnnouncementElement(bytes),
                     ProofAnnouncementElement(bytes),
                 ),
-                choice: ElgamalRistretto255Choice {
-                    c1: bytes,
-                    c2: bytes,
-                },
+                choice: Ciphertext::zero(),
                 response: ProofResponse(ProofScalar(bytes), ProofScalar(bytes), ProofScalar(bytes)),
             }],
             scalar: ProofScalar(bytes),
@@ -312,10 +308,7 @@ mod tests {
                 ProofAnnouncementElement(bytes),
                 ProofAnnouncementElement(bytes),
             ),
-            choice: ElgamalRistretto255Choice {
-                c1: bytes,
-                c2: bytes,
-            },
+            choice: Ciphertext::zero(),
             response: ProofResponse(ProofScalar(bytes), ProofScalar(bytes), ProofScalar(bytes)),
         };
         let mut buffer = Vec::new();
