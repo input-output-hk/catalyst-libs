@@ -10,7 +10,6 @@ use catalyst_signed_doc::{
     providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
     validator::CatalystSignedDocumentValidationRule,
 };
-use futures::{StreamExt, TryStreamExt};
 
 /// `Contest Delegation` document type.
 #[derive(Debug, Clone)]
@@ -90,6 +89,7 @@ impl ContestDelegation {
     }
 }
 
+/// `CatalystSignedDocumentValidationRule` implementation for Contest Delegation document.
 #[derive(Debug)]
 pub struct ContestDelegationRule;
 
@@ -123,8 +123,8 @@ impl ContestDelegation {
     where
         Provider: CatalystSignedDocumentProvider,
     {
-        if doc.problem_report().is_problematic() {
-            anyhow::bail!("Provided document is not valid {:?}", doc.problem_report())
+        if doc.report().is_problematic() {
+            anyhow::bail!("Provided document is not valid {:?}", doc.report())
         }
         anyhow::ensure!(
             doc.doc_type()? == &CONTEST_DELEGATION,
@@ -200,18 +200,22 @@ fn get_payload(
 
 /// Get a list of delegations
 /// Returns additional boolean flag, was it valid or not.
-async fn get_delegations<Provider>(
+async fn get_delegations(
     doc: &CatalystSignedDocument,
     payload: ContestDelegationPayload,
-    provider: &Provider,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<(Vec<Delegation>, bool)>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+) -> anyhow::Result<(Vec<Delegation>, bool)> {
     const DEFAULT_WEIGHT: u32 = 1;
 
     if let Some(ref_field) = doc.doc_meta().doc_ref() {
+        let iter = ref_field
+            .iter()
+            .map(async |doc_ref| get_author_kid(doc_ref, provider, report).await);
+
+        let futures_res = futures::future::try_join_all(iter).await?;
+        let valid = futures_res.iter().all(|(_, valid)| *valid);
+
         // If there are fewer entries than delegates, then the missing weights are set to
         // `1`. If there are more weights, then the extra weights are ignored.
         // If array is empty, then the weights assigned is `1`.
@@ -220,44 +224,6 @@ where
             .into_iter()
             .chain(std::iter::repeat(DEFAULT_WEIGHT))
             .take(ref_field.len());
-
-        let iter = ref_field.iter().map(|doc_ref| {
-                async {
-                    let mut valid = true;
-                    let Some(ref_doc) = provider.try_get_doc(doc_ref).await? else {
-                        report.functional_validation(
-                            &format!(
-                                "Cannot get referenced document by reference: {}",
-                                doc_ref.to_string()
-                            ),
-                            "Missing representative reference document for the Contest Delegation document",
-                        );
-                        valid = false;
-                        return anyhow::Ok((None, valid));
-                    };
-
-                    let rep_nomination_authors = ref_doc.authors();
-                    if rep_nomination_authors.len() != 1 {
-                        report.invalid_value(
-                            "signatures",
-                            &rep_nomination_authors.len().to_string(),
-                            "1",
-                            "Rep Nomination document must have only one author/signer",
-                        );
-                        valid = false;
-                    }
-
-                    let rep_kid = rep_nomination_authors.into_iter().next();
-                    anyhow::Ok((rep_kid, valid))
-                }
-            });
-
-        let futures_res = futures::stream::iter(iter)
-            .buffer_unordered(ref_field.len())
-            .try_collect::<Vec<(Option<CatalystId>, bool)>>()
-            .await?;
-
-        let valid = futures_res.iter().all(|(_, valid)| *valid);
 
         let delegations = futures_res
             .into_iter()
@@ -279,4 +245,39 @@ where
         );
         Ok((Vec::new(), false))
     }
+}
+
+/// Get a corresponding authors/signers `CatalystId` for the provided document reference.
+/// Returns additional boolean flag, was it valid or not.
+async fn get_author_kid(
+    doc_ref: &DocumentRef,
+    provider: &dyn CatalystSignedDocumentProvider,
+    report: &ProblemReport,
+) -> anyhow::Result<(Option<CatalystId>, bool)> {
+    let mut valid = true;
+    let Some(ref_doc) = provider.try_get_doc(doc_ref).await? else {
+        report.functional_validation(
+            &format!(
+                "Cannot get referenced document by reference: {}",
+                doc_ref.to_string()
+            ),
+            "Missing representative reference document for the Contest Delegation document",
+        );
+        valid = false;
+        return Ok((None, valid));
+    };
+
+    let rep_nomination_authors = ref_doc.authors();
+    if rep_nomination_authors.len() != 1 {
+        report.invalid_value(
+            "signatures",
+            &rep_nomination_authors.len().to_string(),
+            "1",
+            "Rep Nomination document must have only one author/signer",
+        );
+        valid = false;
+    }
+
+    let rep_kid = rep_nomination_authors.into_iter().next();
+    Ok((rep_kid, valid))
 }
