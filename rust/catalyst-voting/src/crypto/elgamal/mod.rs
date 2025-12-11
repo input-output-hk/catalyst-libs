@@ -16,7 +16,7 @@ use crate::crypto::group::{GroupElement, Scalar};
 ///     c2: elgamal-ristretto255-group-element
 /// ]
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct Ciphertext(GroupElement, GroupElement);
 
