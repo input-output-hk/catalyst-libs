@@ -19,6 +19,7 @@ members = [
     "catalyst-signed-doc-macro",
     "catalyst-signed-doc-spec",
     "rbac-registration",
+    "sparse_merkle_tree"
 ]
 
 [workspace.package]
