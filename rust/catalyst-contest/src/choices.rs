@@ -27,7 +27,7 @@ pub enum Choices {
     /// A universal unencrypted set of choices.
     Clear(Vec<i64>),
     /// ElGamal/Ristretto255 encrypted choices.
-    ElgamalRistretto255 {
+    Encrypted {
         /// ElGamal/Ristretto255 encrypted choices.
         choices: Vec<Ciphertext>,
         /// A universal encrypted row proof.
@@ -60,7 +60,7 @@ impl Decode<'_, ()> for Choices {
                 if len == 2 {
                     row_proof = Some(RowProof::decode(d, ctx)?);
                 }
-                Ok(Self::ElgamalRistretto255 { choices, row_proof })
+                Ok(Self::Encrypted { choices, row_proof })
             },
             val => {
                 Err(minicbor::decode::Error::message(format!(
@@ -85,7 +85,7 @@ impl Encode<()> for Choices {
                     choice.encode(e, ctx)?;
                 }
             },
-            Choices::ElgamalRistretto255 { choices, row_proof } => {
+            Choices::Encrypted { choices, row_proof } => {
                 e.array(2)?;
                 1.encode(e, ctx)?;
                 e.array(choices.len() as u64 + u64::from(row_proof.is_some()))?;
@@ -124,7 +124,7 @@ mod tests {
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
             25, 26, 27, 28, 29, 30, 31, 32,
         ];
-        let original = Choices::ElgamalRistretto255 {
+        let original = Choices::Encrypted {
             choices: vec![],
             row_proof: Some(RowProof {
                 selections: vec![SingleSelectionProof {

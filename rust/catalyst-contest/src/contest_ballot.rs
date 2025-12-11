@@ -130,11 +130,11 @@ mod tests {
         let original = ContentBallot {
             choices: [
                 (1, Choices::Clear(vec![1, 2, 3, -4, -5])),
-                (2, Choices::ElgamalRistretto255 {
+                (2, Choices::Encrypted {
                     choices: vec![Ciphertext::zero()],
                     row_proof: None,
                 }),
-                (3, Choices::ElgamalRistretto255 {
+                (3, Choices::Encrypted {
                     choices: vec![Ciphertext::zero()],
                     row_proof: Some(RowProof {
                         selections: vec![SingleSelectionProof {
