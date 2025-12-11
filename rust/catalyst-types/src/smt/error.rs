@@ -1,3 +1,5 @@
+//! Error types for Sparse Merkle Tree Module
+
 use thiserror::Error;
 
 /// Error type

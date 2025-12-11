@@ -1,3 +1,6 @@
+//! The wrapper for the Sparse Merkle Tree which extends it's functionality by providing
+//! `coarse_height()` and `horizontal_slice_at()` methods.
+
 use std::{collections::HashMap, marker::PhantomData};
 
 use sparse_merkle_tree::{
@@ -12,16 +15,20 @@ use crate::smt::{Value, hasher::Hasher, utils, value::ValueWrapper};
 
 /// Sparse Merkle Tree
 pub struct Tree<V> {
+    /// Internal implementation of a Sparse Merkle Tree
     inner: SparseMerkleTree<Hasher, ValueWrapper, DefaultStore<ValueWrapper>>,
+    /// Phantom data
     phantom: PhantomData<V>,
 }
 
+/// Root height. The tree goes from `u8::MAX` down to 0.
 const ROOT_HEIGHT: u8 = u8::MAX;
 
 impl<V> Tree<V>
 where V: Default + Value + Clone
 {
     /// Creates new, empty tree
+    #[must_use]
     pub fn new() -> Self {
         Self {
             inner: SparseMerkleTree::default(),
@@ -30,16 +37,22 @@ where V: Default + Value + Clone
     }
 
     /// Merkle root
+    #[must_use]
     pub fn root(&self) -> &H256 {
         self.inner.root()
     }
 
     /// Check empty of the tree
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
 
     /// Insert value, returns its key.
+    ///
+    /// # Errors
+    ///
+    /// Errors coming from the internal implementation of the sparse merkle tree.
     pub fn insert(
         &mut self,
         value: &V,
@@ -51,6 +64,10 @@ where V: Default + Value + Clone
     }
 
     /// Retrieves value from the tree
+    ///
+    /// # Errors
+    ///
+    /// Errors coming from the internal implementation of the sparse merkle tree.
     pub fn get(
         &self,
         key: &H256,
@@ -64,6 +81,10 @@ where V: Default + Value + Clone
     }
 
     /// Generate merkle proof
+    ///
+    /// # Errors
+    ///
+    /// Errors coming from the internal implementation of the sparse merkle tree.
     pub fn merkle_proof(
         &self,
         keys: &[H256],
@@ -73,11 +94,13 @@ where V: Default + Value + Clone
     }
 
     /// Number of leaves
+    #[must_use]
     pub fn count(&self) -> usize {
         self.inner.store().leaves_map().len()
     }
 
     /// Returns an appropriate coarse height for grouping Merkle tree nodes into batches.
+    #[must_use]
     pub fn coarse_height(&self) -> u8 {
         let count = self.count();
         utils::coarse_height(count)
@@ -100,6 +123,7 @@ where V: Default + Value + Clone
         let store = self.inner.store();
 
         // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
+        #[allow(clippy::arithmetic_side_effects)]
         let inverted_height = u8::MAX - height;
 
         horizontal_slice::<_, Hasher>(store, inverted_height)
@@ -114,49 +138,49 @@ where V: Default + Value + Clone
     }
 }
 
-// Generates a complete horizontal slice of the Sparse Merkle Tree at a specified height.
-//
-// This function creates an iterator representing all possible node positions at a given
-// height, whether those nodes are materialized in storage or not.
-//
-// # Sparse Merkle Tree Structure
-//
-// In an SMT, each height has a theoretical maximum number of nodes:
-// - Height 0 (root): 1 node (2^0)
-// - Height 1: 2 nodes (2^1)
-// - Height 2: 4 nodes (2^2)
-// - Height h: 2^h nodes
-//
-// However, only nodes on paths to actual leaf values are materialized. This function
-// reconstructs the complete horizontal slice by:
-// 1. Computing all theoretical node positions at the target height
-// 2. Looking up which positions have materialized nodes in storage
-// 3. For materialized nodes: computing their hash by merging left/right children
-// 4. For non-materialized nodes: yielding `None` (representing implicit zero branches)
-//
-// # Algorithm
-//
-// 1. Calculate `key_prefix_length` = path length from root to target height
-// 2. Calculate `width` = 2^key_prefix_length (total possible nodes at this height)
-// 3. Retrieve all materialized nodes at target height from store
-// 4. Lazily iterate through each horizontal position (0 to width-1):
-//    - Generate the node_key for that position
-//    - If node is materialized: compute its hash from left/right children
-//    - If node is not materialized: yield None (virtual zero branch)
-//
-// # Returns
-//
-// An iterator yielding Option<H256> for each position in the horizontal slice:
-// - `Some(hash)` indicates a materialized node with the computed hash
-// - `None` indicates a virtual zero branch (non-materialized)
-//
-// The iterator will yield 2^(ROOT_HEIGHT - target_height) items.
-//
-// # Performance Note
-//
-// Returns an iterator to avoid allocating 2^key_prefix_length elements upfront.
-// For heights near the leaves (high values), the theoretical width can be astronomically
-// large. The iterator allows processing nodes on-demand or early termination.
+/// Generates a complete horizontal slice of the Sparse Merkle Tree at a specified height.
+///
+/// This function creates an iterator representing all possible node positions at a given
+/// height, whether those nodes are materialized in storage or not.
+///
+/// # Sparse Merkle Tree Structure
+///
+/// In an SMT, each height has a theoretical maximum number of nodes:
+/// - Height 0 (root): 1 node (2^0)
+/// - Height 1: 2 nodes (2^1)
+/// - Height 2: 4 nodes (2^2)
+/// - Height h: 2^h nodes
+///
+/// However, only nodes on paths to actual leaf values are materialized. This function
+/// reconstructs the complete horizontal slice by:
+/// 1. Computing all theoretical node positions at the target height
+/// 2. Looking up which positions have materialized nodes in storage
+/// 3. For materialized nodes: computing their hash by merging left/right children
+/// 4. For non-materialized nodes: yielding `None` (representing implicit zero branches)
+///
+/// # Algorithm
+///
+/// 1. Calculate `key_prefix_length` = path length from root to target height
+/// 2. Calculate `width` = `2^key_prefix_length` (total possible nodes at this height)
+/// 3. Retrieve all materialized nodes at target height from store
+/// 4. Lazily iterate through each horizontal position (0 to width-1):
+///    - Generate the `node_key` for that position
+///    - If node is materialized: compute its hash from left/right children
+///    - If node is not materialized: yield None (virtual zero branch)
+///
+/// # Returns
+///
+/// An iterator yielding Option<H256> for each position in the horizontal slice:
+/// - `Some(hash)` indicates a materialized node with the computed hash
+/// - `None` indicates a virtual zero branch (non-materialized)
+///
+/// The iterator will yield `2^(ROOT_HEIGHT - target_height)` items.
+///
+/// # Performance Note
+///
+/// Returns an iterator to avoid allocating `2^key_prefix_length` elements upfront.
+/// For heights near the leaves (high values), the theoretical width can be astronomically
+/// large. The iterator allows processing nodes on-demand or early termination.
 fn horizontal_slice<V, H>(
     store: &DefaultStore<V>,
     target_height: u8,
@@ -166,10 +190,11 @@ where
     H: sparse_merkle_tree::traits::Hasher + Default,
 {
     // How long is the path from the root to the target height.
+    #[allow(clippy::arithmetic_side_effects)]
     let key_prefix_length = ROOT_HEIGHT - target_height;
 
     // Total number of nodes at this height.
-    let width = 2_u32.pow(key_prefix_length as u32);
+    let width = 2_u32.pow(u32::from(key_prefix_length));
 
     // Retrieve all materialized nodes at this height.
     // SMT nodes are materialized lazily: only nodes on paths to non-empty leaves.
@@ -192,25 +217,25 @@ where
     })
 }
 
-// Returns an iterator over all materialized nodes at a specific height in the Sparse
-// Merkle Tree.
-//
-// # Sparse Merkle Tree Materialization
-//
-// In a Sparse Merkle Tree (SMT), not all nodes are explicitly stored (materialized) in
-// memory. Most nodes in the tree are implicitly zero/empty, and only nodes that are on
-// the path to actual leaf values are materialized and stored. This sparse representation
-// is what makes SMTs practical for large key spaces - a full binary tree of height 256
-// would require 2^256 nodes, which is impossible to store.
-//
-// For example, in a tree with only 3 leaves:
-// - Height 0 (root): 1 materialized node (the root)
-// - Height 1: 2 materialized nodes (left and right children of root)
-// - Height 2: May have 2-3 materialized nodes (only branches leading to leaves)
-// - Heights 3-255: Sparse - only nodes on paths to the 3 leaves are materialized
-//
-// This function filters the stored branches to find only those at the requested height,
-// allowing to examine a horizontal slice of the actually-stored tree structure.
+/// Returns an iterator over all materialized nodes at a specific height in the Sparse
+/// Merkle Tree.
+///
+/// # Sparse Merkle Tree Materialization
+///
+/// In a Sparse Merkle Tree (SMT), not all nodes are explicitly stored (materialized) in
+/// memory. Most nodes in the tree are implicitly zero/empty, and only nodes that are on
+/// the path to actual leaf values are materialized and stored. This sparse representation
+/// is what makes SMTs practical for large key spaces - a full binary tree of height 256
+/// would require 2^256 nodes, which is impossible to store.
+///
+/// For example, in a tree with only 3 leaves:
+/// - Height 0 (root): 1 materialized node (the root)
+/// - Height 1: 2 materialized nodes (left and right children of root)
+/// - Height 2: May have 2-3 materialized nodes (only branches leading to leaves)
+/// - Heights 3-255: Sparse - only nodes on paths to the 3 leaves are materialized
+///
+/// This function filters the stored branches to find only those at the requested height,
+/// allowing to examine a horizontal slice of the actually-stored tree structure.
 fn materialized_nodes_at_height<V>(
     store: &DefaultStore<V>,
     target_height: u8,

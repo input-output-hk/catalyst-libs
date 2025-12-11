@@ -1,12 +1,19 @@
+//! Hasher for the Sparse Merkle Tree module.
+//! 
+//! Uses the blake3 hash internally.
+
 use sparse_merkle_tree::H256;
 
+/// Hasher
 pub(super) struct Hasher(blake3::Hasher);
 
 impl Hasher {
+    /// Create a new hasher
     pub fn new() -> Self {
         Self(blake3::Hasher::new())
     }
 
+    /// Utility function to quickly has bytes
     pub(super) fn hash(data: &[u8]) -> H256 {
         let mut hasher = blake3::Hasher::new();
         hasher.update(data);

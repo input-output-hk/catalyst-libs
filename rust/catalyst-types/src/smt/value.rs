@@ -1,7 +1,10 @@
+//! Items related to a value stored in the Sparse Merkle Tree
+
 use sparse_merkle_tree::H256;
 
 use crate::smt::hasher::Hasher;
 
+/// A value wrapper that implements `sparse_merkle_tree::traits::Value`
 #[derive(Default, Debug, Clone, PartialEq)]
 pub(super) struct ValueWrapper(pub(super) Vec<u8>);
 
