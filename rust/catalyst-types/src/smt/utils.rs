@@ -17,9 +17,14 @@ const MAX_COARSE_HEIGHT: u8 = 14;
 /// Returns a height value between 1 and `MAX_COARSE_HEIGHT` that provides reasonable
 /// batching for the given count.
 pub(super) fn coarse_height(count: usize) -> u8 {
-    let d = ((count as f64) / 64.0).max(1.0).log2();
-    let d = d.max(1.0).min(f64::from(MAX_COARSE_HEIGHT));
-    d.round() as u8
+    const TARGET_BUCKETS: usize = 64;
+    if count == 0 {
+        return 1;
+    }
+    let batches = count.saturating_add(TARGET_BUCKETS - 1) / TARGET_BUCKETS;
+    u8::try_from(batches.ilog2())
+        .unwrap_or(MAX_COARSE_HEIGHT)
+        .clamp(1, MAX_COARSE_HEIGHT)
 }
 
 /// Generates a node key for a Sparse Merkle Tree based on the node's position in a
@@ -92,13 +97,13 @@ mod tests {
 
     #[test_case(0 => 1)]
     #[test_case(1 => 1)]
-    #[test_case(181 => 1)]
-    #[test_case(182 => 2)]
-    #[test_case(362 => 2)]
-    #[test_case(363 => 3)]
-    #[test_case(370_727 => 12)]
-    #[test_case(370_728 => 13)]
-    #[test_case(741_456 => MAX_COARSE_HEIGHT)]
+    #[test_case(192 => 1)]
+    #[test_case(193 => 2)]
+    #[test_case(448 => 2)]
+    #[test_case(449 => 3)]
+    #[test_case(524_224 => 12)]
+    #[test_case(524_225 => 13)]
+    #[test_case(1_048_513 => MAX_COARSE_HEIGHT)]
     #[test_case(usize::MAX => MAX_COARSE_HEIGHT; "should be capped at 14")]
     fn calculates_coarse_height(count: usize) -> u8 {
         coarse_height(count)
