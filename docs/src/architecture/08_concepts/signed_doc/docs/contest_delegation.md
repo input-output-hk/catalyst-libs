@@ -76,9 +76,9 @@ with the highest priority.
     references are invalid.
     This is to prevent a Representative changing their nomination invalidating a
     delegation with multiple representatives.
-* The payload MUST be nil.
+* The payload MAY be nil, or if present, MUST conform to the JSON schema defined in the [Payload](#payload) section.
 
-A Representative *MUST* Delegate to their latest Nomination for a Category,
+A Representative *MUST* Delegate to their latest Nomination for a Contest,
 otherwise their Nomination is invalid.
 
 This is because Delegation points to a *SPECIFIC* Nomination, and it
@@ -313,21 +313,28 @@ valid drep nominations.
       ],
       "title": "Contest Delegation Schema",
       "description": "Structure of the payload of a Contest Delegation.",
-      "type": "object",
-      "properties": {
-        "weights": {
-          "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
-          "items": {
-            "exclusiveMinimum": 0,
-            "type": "integer"
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "weights": {
+              "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              "minItems": 0,
+              "type": "array"
+            }
           },
-          "minItems": 0,
-          "type": "array"
+          "required": [
+            "weights"
+          ]
         }
-      },
-      "additionalProperties": false,
-      "required": [
-        "weights"
       ],
       "x-changelog": {
         "2025-03-01": [
