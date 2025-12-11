@@ -8,6 +8,14 @@ use std::ops::{Add, Mul};
 use crate::crypto::group::{GroupElement, Scalar};
 
 /// `ElGamal` ciphertext, encrypted message with the public key.
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// elgamal-ristretto255-encrypted-choice = [
+///     c1: elgamal-ristretto255-group-element
+///     c2: elgamal-ristretto255-group-element
+/// ]
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct Ciphertext(GroupElement, GroupElement);
