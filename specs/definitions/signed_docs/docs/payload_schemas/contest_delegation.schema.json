@@ -13,20 +13,27 @@
             "First Version Created."
         ]
     },
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "weights": {
-            "type": "array",
-            "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
-            "items": {
-                "type": "integer",
-                "exclusiveMinimum": 0
+    "oneOf": [
+        {
+            "type": "null"
+        },
+        {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "weights": {
+                    "type": "array",
+                    "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+                    "items": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0
+                    },
+                    "minItems": 0
+                }
             },
-            "minItems": 0
+            "required": [
+                "weights"
+            ]
         }
-    },
-    "required": [
-        "weights"
     ]
 }

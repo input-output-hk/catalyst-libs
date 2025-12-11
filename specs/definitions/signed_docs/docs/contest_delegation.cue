@@ -68,9 +68,9 @@ docs: "Contest Delegation": {
 			    references are invalid.
 			    This is to prevent a Representative changing their nomination invalidating a
 			    delegation with multiple representatives.
-			* The payload MUST be nil.
+			* The payload MAY be nil, or if present, MUST conform to the JSON schema defined in the payload section.
 
-			A Representative *MUST* Delegate to their latest Nomination for a Category,
+			A Representative *MUST* Delegate to their latest Nomination for a Contest,
 			otherwise their Nomination is invalid.
 
 			\(docs."Rep Nomination"._latest_nomination_note)

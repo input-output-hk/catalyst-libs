@@ -2142,10 +2142,9 @@
             "title": "Three Delegation Weights"
           }
         ],
-        "nil": false,
+        "nil": true,
         "schema": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
-          "additionalProperties": false,
           "description": "Structure of the payload of a Contest Delegation.",
           "maintainers": [
             {
@@ -2153,22 +2152,30 @@
               "url": "https://projectcatalyst.io/"
             }
           ],
-          "properties": {
-            "weights": {
-              "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
-              "items": {
-                "exclusiveMinimum": 0,
-                "type": "integer"
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "weights": {
+                  "description": "List of weights to apply to each delegate.\nThis list is in the same order as the delegate references.\nIf there are fewer entries than delegates, then the missing weights are set to `1`.\nIf there are more weights, then the extra weights are ignored.  If the payload is missing, OR the array is empty, then the weights assigned is `1`.",
+                  "items": {
+                    "exclusiveMinimum": 0,
+                    "type": "integer"
+                  },
+                  "minItems": 0,
+                  "type": "array"
+                }
               },
-              "minItems": 0,
-              "type": "array"
+              "required": [
+                "weights"
+              ]
             }
-          },
-          "required": [
-            "weights"
           ],
           "title": "Contest Delegation Schema",
-          "type": "object",
           "x-changelog": {
             "2025-03-01": [
               "First Version Created."
@@ -2188,7 +2195,7 @@
         }
       },
       "type": "764f17fb-cc50-4979-b14a-b213dbac5994",
-      "validation": "* The `parameters` metadata *MUST* point to the same Contest as the \n\tNomination of the Representative.\n* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.\n    IF there are multiple representatives, then any which are not pointing\n    to a valid `Representative Nomination` are excluded.  \n    The nomination is only invalid if ALL references `Representative Nomination` \n    references are invalid.\n    This is to prevent a Representative changing their nomination invalidating a\n    delegation with multiple representatives.\n* The payload MUST be nil.\n\nA Representative *MUST* Delegate to their latest Nomination for a Category,\notherwise their Nomination is invalid.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.\n\nA Voter may withdraw their Delegation by revoking all delegation documents.\n`revocations` must be set to `true` to withdraw a delegation, OR\na later contest delegation may change the delegated representative without\nfirst revoking the prior delegation, as only the latest delegation is\nconsidered.",
+      "validation": "* The `parameters` metadata *MUST* point to the same Contest as the \n\tNomination of the Representative.\n* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.\n    IF there are multiple representatives, then any which are not pointing\n    to a valid `Representative Nomination` are excluded.  \n    The nomination is only invalid if ALL references `Representative Nomination` \n    references are invalid.\n    This is to prevent a Representative changing their nomination invalidating a\n    delegation with multiple representatives.\n* The payload MAY be nil, or if present, MUST conform to the JSON schema defined in the payload section.\n\nA Representative *MUST* Delegate to their latest Nomination for a Contest,\notherwise their Nomination is invalid.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.\n\nA Voter may withdraw their Delegation by revoking all delegation documents.\n`revocations` must be set to `true` to withdraw a delegation, OR\na later contest delegation may change the delegated representative without\nfirst revoking the prior delegation, as only the latest delegation is\nconsidered.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -3709,7 +3716,7 @@
         }
       },
       "type": "bf9abd97-5d1f-4429-8e80-740fea371a9c",
-      "validation": "* The signer MUST be a registered 'Representative'.\n* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.\n* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.\n* The payload MUST be valid against the JSON schema defined in the referenced template.\n* Other rules may apply as defined by the Contest or other parameters which can\n\tcontrol who may validly nominate as a representative in a Contest.\n\nNo Nomination is valid unless the latest Contest Delegation of the Delegate\nrefers to their own Nomination.\nThis requires that Nominating is a two step process:\n\n1. Post the Nomination Document.\n2. Post a Contest Delegation delegating to the new Nomination Document.\n\nUpdating the Nomination Document will invalidate all Nominations to the \nRepresentative.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.",
+      "validation": "* The signer MUST be a registered 'Representative' and MUST be the same as the author of the referenced Rep Profile document.\n* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.\n* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.\n* The payload MUST be valid against the JSON schema defined in the referenced template.\n* Other rules may apply as defined by the Contest or other parameters which can\n\tcontrol who may validly nominate as a representative in a Contest.\n\nNo Nomination is valid unless the latest Contest Delegation of the Delegate\nrefers to their own Nomination.\nThis requires that Nominating is a two step process:\n\n1. Post the Nomination Document.\n2. Post a Contest Delegation delegating to the new Nomination Document.\n\nUpdating the Nomination Document will invalidate all Nominations to the \nRepresentative.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.",
       "versions": [
         {
           "changes": "* First Published Version",
