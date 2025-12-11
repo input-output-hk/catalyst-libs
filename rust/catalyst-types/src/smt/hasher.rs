@@ -1,5 +1,5 @@
 //! Hasher for the Sparse Merkle Tree module.
-//! 
+//!
 //! Uses the blake3 hash internally.
 
 use sparse_merkle_tree::H256;
