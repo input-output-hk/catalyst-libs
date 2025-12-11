@@ -1,5 +1,25 @@
 [
   {
+    "runId": 20129752465,
+    "runUniqueId": "20129752465_1765449733071",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 633,
+        "unknown": 0,
+        "total": 633
+      },
+      "time": {
+        "minDuration": 15,
+        "maxDuration": 36861,
+        "sumDuration": 182651
+      }
+    }
+  },
+  {
     "runId": 20121479946,
     "runUniqueId": "20121479946_1765426092029",
     "testResult": "PASS",
