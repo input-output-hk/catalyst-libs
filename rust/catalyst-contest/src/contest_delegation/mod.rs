@@ -6,7 +6,9 @@
 
 use catalyst_signed_doc::{
     CatalystId, CatalystSignedDocument, DocumentRef, ProblemReport, UuidV7,
-    doc_types::CONTEST_DELEGATION, providers::CatalystSignedDocumentProvider,
+    doc_types::CONTEST_DELEGATION,
+    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    validator::CatalystSignedDocumentValidationRule,
 };
 use futures::{StreamExt, TryStreamExt};
 
@@ -88,43 +90,55 @@ impl ContestDelegation {
     }
 }
 
+#[derive(Debug)]
+pub struct ContestDelegationRule;
+
+#[async_trait::async_trait]
+impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
+    async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+    ) -> anyhow::Result<bool> {
+        let mut valid = true;
+
+        valid &= get_delegator(doc, doc.report()).1;
+        let (payload, is_payload_valid) = get_payload(doc, doc.report());
+        valid &= is_payload_valid;
+
+        valid &= get_delegations(doc, payload, provider, doc.report())
+            .await?
+            .1;
+
+        Ok(valid)
+    }
+}
+
 impl ContestDelegation {
     /// Something
     pub async fn new<Provider>(
-        v: &CatalystSignedDocument,
+        doc: &CatalystSignedDocument,
         provider: &Provider,
     ) -> anyhow::Result<Self>
     where
         Provider: CatalystSignedDocumentProvider,
     {
-        if v.problem_report().is_problematic() {
-            anyhow::bail!("Provided document is not valid {:?}", v.problem_report())
+        if doc.problem_report().is_problematic() {
+            anyhow::bail!("Provided document is not valid {:?}", doc.problem_report())
         }
         anyhow::ensure!(
-            v.doc_type()? == &CONTEST_DELEGATION,
+            doc.doc_type()? == &CONTEST_DELEGATION,
             "Document must be Contest Delegation type"
         );
 
         let report = ProblemReport::new("Contest Delegation");
-        let doc_ref = v.doc_ref()?;
 
-        let authors = v.authors();
-        if authors.len() != 1 {
-            report.invalid_value(
-                "signatures",
-                &authors.len().to_string(),
-                "1",
-                "Contest Delegation document must have only one author/signer",
-            );
-        }
-        let delegator = authors.into_iter().next();
-
-        let payload = get_payload(v, &report);
-
-        let delegations = get_delegations(v, payload, provider, &report).await?;
+        let (delegator, _) = get_delegator(doc, &report);
+        let (payload, _) = get_payload(doc, &report);
+        let (delegations, _) = get_delegations(doc, payload, provider, &report).await?;
 
         Ok(ContestDelegation {
-            doc_ref,
+            doc_ref: doc.doc_ref()?,
             delegator,
             report,
             delegations,
@@ -132,37 +146,66 @@ impl ContestDelegation {
     }
 }
 
+/// Get signer of the provided document, which defines as delegator.
+/// Returns additional boolean flag, was it valid or not.
+fn get_delegator(
+    doc: &CatalystSignedDocument,
+    report: &ProblemReport,
+) -> (Option<CatalystId>, bool) {
+    let mut valid = true;
+    let authors = doc.authors();
+    if authors.len() != 1 {
+        report.invalid_value(
+            "signatures",
+            &authors.len().to_string(),
+            "1",
+            "Contest Delegation document must have only one author/signer",
+        );
+        valid = false;
+    }
+
+    let delegator = authors.into_iter().next();
+    (delegator, valid)
+}
+
 /// Get `CatalystSignedDocument` from the provided `CatalystSignedDocument`, fill the
-/// provided `ProblemReport` if something goes wrong
+/// provided `ProblemReport` if something goes wrong.
+/// Returns additional boolean flag, was it valid or not.
 fn get_payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
-) -> ContestDelegationPayload {
-    doc
+) -> (ContestDelegationPayload, bool) {
+    let mut valid = true;
+    let payload = doc
             .decoded_content()
             .inspect_err(|_| {
                 report.functional_validation(
                     "Invalid Document content, cannot get decoded bytes",
                     "Cannot get a document content during Contest Delegation document validation.",
-                )
+                );
+                valid = false;
             })
             .and_then(|v | Ok(serde_json::from_slice::<ContestDelegationPayload>(&v)?))
             .inspect_err(|_| {
                 report.functional_validation(
                     "Invalid Document content, must be a valid JSON object complient with the JSON schema.",
                     "Cannot get a document content during Contest Delegation document validation.",
-                )
+                );
+                valid = false;
             })
-            .unwrap_or_default()
+            .unwrap_or_default();
+
+    (payload, valid)
 }
 
 /// Get a list of delegations
+/// Returns additional boolean flag, was it valid or not.
 async fn get_delegations<Provider>(
     doc: &CatalystSignedDocument,
     payload: ContestDelegationPayload,
     provider: &Provider,
     report: &ProblemReport,
-) -> anyhow::Result<Vec<Delegation>>
+) -> anyhow::Result<(Vec<Delegation>, bool)>
 where
     Provider: CatalystSignedDocumentProvider,
 {
@@ -172,7 +215,6 @@ where
         // If there are fewer entries than delegates, then the missing weights are set to
         // `1`. If there are more weights, then the extra weights are ignored.
         // If array is empty, then the weights assigned is `1`.
-
         let weigths_iter = payload
             .weights
             .into_iter()
@@ -181,6 +223,7 @@ where
 
         let iter = ref_field.iter().map(|doc_ref| {
                 async {
+                    let mut valid = true;
                     let Some(ref_doc) = provider.try_get_doc(doc_ref).await? else {
                         report.functional_validation(
                             &format!(
@@ -189,7 +232,8 @@ where
                             ),
                             "Missing representative reference document for the Contest Delegation document",
                         );
-                        return anyhow::Ok(None);
+                        valid = false;
+                        return anyhow::Ok((None, valid));
                     };
 
                     let rep_nomination_authors = ref_doc.authors();
@@ -200,20 +244,25 @@ where
                             "1",
                             "Rep Nomination document must have only one author/signer",
                         );
+                        valid = false;
                     }
 
                     let rep_kid = rep_nomination_authors.into_iter().next();
-                    anyhow::Ok(rep_kid)
+                    anyhow::Ok((rep_kid, valid))
                 }
             });
 
-        let delegations = futures::stream::iter(iter)
+        let futures_res = futures::stream::iter(iter)
             .buffer_unordered(ref_field.len())
-            .try_collect::<Vec<_>>()
-            .await?
+            .try_collect::<Vec<(Option<CatalystId>, bool)>>()
+            .await?;
+
+        let valid = futures_res.iter().all(|(_, valid)| *valid);
+
+        let delegations = futures_res
             .into_iter()
             .zip(weigths_iter)
-            .map(|(kid, weight)| {
+            .map(|((kid, _), weight)| {
                 Some(Delegation {
                     weight,
                     rep_kid: kid?,
@@ -221,12 +270,13 @@ where
             })
             .flatten()
             .collect();
-        Ok(delegations)
+
+        Ok((delegations, valid))
     } else {
         report.missing_field(
             "ref",
             "Contest Delegation document must have least one reference to Rep Nomination document.",
         );
-        Ok(Vec::new())
+        Ok((Vec::new(), false))
     }
 }
