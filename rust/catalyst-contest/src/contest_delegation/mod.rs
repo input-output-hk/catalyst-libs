@@ -1,0 +1,232 @@
+//! `Contest Delegation` document.
+//!
+//! See the [documentation] for more information.
+//!
+//! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
+
+use catalyst_signed_doc::{
+    CatalystId, CatalystSignedDocument, DocumentRef, ProblemReport, UuidV7,
+    doc_types::CONTEST_DELEGATION, providers::CatalystSignedDocumentProvider,
+};
+use futures::{StreamExt, TryStreamExt};
+
+/// `Contest Delegation` document type.
+#[derive(Debug, Clone)]
+pub struct ContestDelegation {
+    /// Document reference info
+    doc_ref: DocumentRef,
+    /// A corresponding `CatalystId` of the delegator (author of the document).
+    delegator: Option<CatalystId>,
+    /// Delegations
+    delegations: Vec<Delegation>,
+    /// A comprehensive problem report, which could include a decoding errors along with
+    /// the other validation errors
+    report: ProblemReport,
+}
+
+/// Delegation type.
+#[derive(Debug, Clone)]
+pub struct Delegation {
+    /// A weight is assigned to the representative, which is used to define their voting
+    /// power value.
+    pub weight: u32,
+    /// Representative `CatalystId`
+    pub rep_kid: CatalystId,
+}
+
+impl PartialEq for ContestDelegation {
+    fn eq(
+        &self,
+        other: &Self,
+    ) -> bool {
+        self.doc_ref.eq(&other.doc_ref)
+    }
+}
+
+/// Content Deelgation JSON payload type.
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+struct ContestDelegationPayload {
+    /// List of weights to apply to each delegate.
+    /// This list is in the same order as the delegate references.
+    /// If there are fewer entries than delegates, then the missing weights are set to
+    /// `1`. If there are more weights, then the extra weights are ignored.
+    /// If the array is empty, then the weights assigned is `1`.
+    weights: Vec<u32>,
+}
+
+impl ContestDelegation {
+    /// Returns 'id' metadata field
+    #[must_use]
+    pub fn id(&self) -> &UuidV7 {
+        self.doc_ref.id()
+    }
+
+    /// Returns 'ver' metadata field
+    #[must_use]
+    pub fn ver(&self) -> &UuidV7 {
+        self.doc_ref.ver()
+    }
+
+    /// Returns 'delegator'
+    #[must_use]
+    pub fn delegator(&self) -> anyhow::Result<&CatalystId> {
+        self.delegator
+            .as_ref()
+            .ok_or(anyhow::anyhow!("Missing 'delegator'"))
+    }
+
+    /// Returns delegations
+    #[must_use]
+    pub fn delegations(&self) -> &[Delegation] {
+        &self.delegations
+    }
+
+    /// Returns `ProblemReport`
+    #[must_use]
+    pub fn report(&self) -> &ProblemReport {
+        &self.report
+    }
+}
+
+impl ContestDelegation {
+    /// Something
+    pub async fn new<Provider>(
+        v: &CatalystSignedDocument,
+        provider: &Provider,
+    ) -> anyhow::Result<Self>
+    where
+        Provider: CatalystSignedDocumentProvider,
+    {
+        if v.problem_report().is_problematic() {
+            anyhow::bail!("Provided document is not valid {:?}", v.problem_report())
+        }
+        anyhow::ensure!(
+            v.doc_type()? == &CONTEST_DELEGATION,
+            "Document must be Contest Delegation type"
+        );
+
+        let report = ProblemReport::new("Contest Delegation");
+        let doc_ref = v.doc_ref()?;
+
+        let authors = v.authors();
+        if authors.len() != 1 {
+            report.invalid_value(
+                "signatures",
+                &authors.len().to_string(),
+                "1",
+                "Contest Delegation document must have only one author/signer",
+            );
+        }
+        let delegator = authors.into_iter().next();
+
+        let payload = get_payload(v, &report);
+
+        let delegations = get_delegations(v, payload, provider, &report).await?;
+
+        Ok(ContestDelegation {
+            doc_ref,
+            delegator,
+            report,
+            delegations,
+        })
+    }
+}
+
+/// Get `CatalystSignedDocument` from the provided `CatalystSignedDocument`, fill the
+/// provided `ProblemReport` if something goes wrong
+fn get_payload(
+    doc: &CatalystSignedDocument,
+    report: &ProblemReport,
+) -> ContestDelegationPayload {
+    doc
+            .decoded_content()
+            .inspect_err(|_| {
+                report.functional_validation(
+                    "Invalid Document content, cannot get decoded bytes",
+                    "Cannot get a document content during Contest Delegation document validation.",
+                )
+            })
+            .and_then(|v | Ok(serde_json::from_slice::<ContestDelegationPayload>(&v)?))
+            .inspect_err(|_| {
+                report.functional_validation(
+                    "Invalid Document content, must be a valid JSON object complient with the JSON schema.",
+                    "Cannot get a document content during Contest Delegation document validation.",
+                )
+            })
+            .unwrap_or_default()
+}
+
+/// Get a list of delegations
+async fn get_delegations<Provider>(
+    doc: &CatalystSignedDocument,
+    payload: ContestDelegationPayload,
+    provider: &Provider,
+    report: &ProblemReport,
+) -> anyhow::Result<Vec<Delegation>>
+where
+    Provider: CatalystSignedDocumentProvider,
+{
+    const DEFAULT_WEIGHT: u32 = 1;
+
+    if let Some(ref_field) = doc.doc_meta().doc_ref() {
+        // If there are fewer entries than delegates, then the missing weights are set to
+        // `1`. If there are more weights, then the extra weights are ignored.
+        // If array is empty, then the weights assigned is `1`.
+
+        let weigths_iter = payload
+            .weights
+            .into_iter()
+            .chain(std::iter::repeat(DEFAULT_WEIGHT))
+            .take(ref_field.len());
+
+        let iter = ref_field.iter().map(|doc_ref| {
+                async {
+                    let Some(ref_doc) = provider.try_get_doc(doc_ref).await? else {
+                        report.functional_validation(
+                            &format!(
+                                "Cannot get referenced document by reference: {}",
+                                doc_ref.to_string()
+                            ),
+                            "Missing representative reference document for the Contest Delegation document",
+                        );
+                        return anyhow::Ok(None);
+                    };
+
+                    let rep_nomination_authors = ref_doc.authors();
+                    if rep_nomination_authors.len() != 1 {
+                        report.invalid_value(
+                            "signatures",
+                            &rep_nomination_authors.len().to_string(),
+                            "1",
+                            "Rep Nomination document must have only one author/signer",
+                        );
+                    }
+
+                    let rep_kid = rep_nomination_authors.into_iter().next();
+                    anyhow::Ok(rep_kid)
+                }
+            });
+
+        let delegations = futures::stream::iter(iter)
+            .buffer_unordered(ref_field.len())
+            .try_collect::<Vec<_>>()
+            .await?
+            .into_iter()
+            .zip(weigths_iter)
+            .map(|(kid, weight)| {
+                Some(Delegation {
+                    weight,
+                    rep_kid: kid?,
+                })
+            })
+            .flatten()
+            .collect();
+        Ok(delegations)
+    } else {
+        report.missing_field(
+            "ref",
+            "Contest Delegation document must have least one reference to Rep Nomination document.",
+        );
+        Ok(Vec::new())
+    }
+}
