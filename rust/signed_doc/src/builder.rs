@@ -217,9 +217,9 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
 
     fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
         Ok(Self {
-            metadata: value.inner.metadata.clone(),
-            content: value.inner.content.clone(),
-            signatures: value.inner.signatures.clone(),
+            metadata: value.0.metadata.clone(),
+            content: value.0.content.clone(),
+            signatures: value.0.signatures.clone(),
         })
     }
 }

@@ -51,24 +51,22 @@ struct InnerCatalystSignedDocument {
     report: ProblemReport,
 }
 
-/// Keep all the contents private.
-/// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
-/// manage the Arc anywhere else. These are likely to be large, best to have the Arc be
-/// non-optional.
+/// Catalyst Signed Document type.
+/// Represents a general (probable invalid) immutable Catalyst Signed Document object.
+/// Even as object holds a huge amount of data, cheap for cloning.
+/// As its stated above, the constructed/decoded Catalyst Signed Document object could be
+/// invalid, the detailed description of issues could be obtained via `report` method.
 #[derive(Debug, Clone)]
-pub struct CatalystSignedDocument {
-    /// Catalyst Signed Document metadata, raw doc, with content errors.
-    inner: Arc<InnerCatalystSignedDocument>,
-}
+pub struct CatalystSignedDocument(Arc<InnerCatalystSignedDocument>);
 
 impl Display for CatalystSignedDocument {
     fn fmt(
         &self,
         f: &mut Formatter<'_>,
     ) -> Result<(), std::fmt::Error> {
-        self.inner.metadata.fmt(f)?;
+        self.0.metadata.fmt(f)?;
         writeln!(f, "Signature Information")?;
-        if self.inner.signatures.is_empty() {
+        if self.0.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
         } else {
             for kid in &self.authors() {
@@ -81,9 +79,7 @@ impl Display for CatalystSignedDocument {
 
 impl From<InnerCatalystSignedDocument> for CatalystSignedDocument {
     fn from(inner: InnerCatalystSignedDocument) -> Self {
-        Self {
-            inner: inner.into(),
-        }
+        Self(inner.into())
     }
 }
 
@@ -95,7 +91,7 @@ impl CatalystSignedDocument {
     /// # Errors
     /// - Missing 'type' field.
     pub fn doc_type(&self) -> anyhow::Result<&DocType> {
-        self.inner.metadata.doc_type()
+        self.0.metadata.doc_type()
     }
 
     /// Return Document ID `UUIDv7`.
@@ -103,7 +99,7 @@ impl CatalystSignedDocument {
     /// # Errors
     /// - Missing 'id' field.
     pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
-        self.inner.metadata.doc_id()
+        self.0.metadata.doc_id()
     }
 
     /// Return Document Version `UUIDv7`.
@@ -111,13 +107,13 @@ impl CatalystSignedDocument {
     /// # Errors
     /// - Missing 'ver' field.
     pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
-        self.inner.metadata.doc_ver()
+        self.0.metadata.doc_ver()
     }
 
     /// Return document content object.
     #[must_use]
     pub(crate) fn content(&self) -> &Content {
-        &self.inner.content
+        &self.0.content
     }
 
     /// Return document decoded (original/non compressed) content bytes.
@@ -141,32 +137,32 @@ impl CatalystSignedDocument {
     /// Return document `ContentType`.
     #[must_use]
     pub fn doc_content_type(&self) -> Option<ContentType> {
-        self.inner.metadata.content_type()
+        self.0.metadata.content_type()
     }
 
     /// Return document `ContentEncoding`.
     #[must_use]
     pub fn doc_content_encoding(&self) -> Option<ContentEncoding> {
-        self.inner.metadata.content_encoding()
+        self.0.metadata.content_encoding()
     }
 
     /// Return document metadata content.
     // TODO: remove this and provide getters from metadata like the rest of its fields have.
     #[must_use]
     pub fn doc_meta(&self) -> &WithCborBytes<Metadata> {
-        &self.inner.metadata
+        &self.0.metadata
     }
 
     /// Return a Document's signatures
     #[must_use]
     pub(crate) fn signatures(&self) -> &Signatures {
-        &self.inner.signatures
+        &self.0.signatures
     }
 
     /// Return a list of Document's Signer's Catalyst IDs,
     #[must_use]
     pub fn authors(&self) -> Vec<CatalystId> {
-        self.inner
+        self.0
             .signatures
             .iter()
             .map(Signature::kid)
@@ -183,7 +179,7 @@ impl CatalystSignedDocument {
     pub fn is_deprecated(&self) -> anyhow::Result<bool> {
         let mut e = minicbor::Encoder::new(Vec::new());
 
-        let e = e.encode(self.inner.metadata.clone())?;
+        let e = e.encode(self.0.metadata.clone())?;
         let e = e.to_owned().into_writer();
 
         for entry in cbork_utils::map::Map::decode(
@@ -210,17 +206,14 @@ impl CatalystSignedDocument {
     /// It accumulates all kind of errors, collected during the decoding, type based
     /// validation and signature verification.
     ///
-    /// This is method is only for the public API usage, do not use it internally inside
-    /// this crate.
+    /// # Note:
+    /// Be careful, underlying `ProblemReport` state thread safe and wrapped under the
+    /// `Arc`, meaning you could easily change the internal state by non-mutable
+    /// reference. Any modifications to the returned object would also affect on the
+    /// "validity" of the correct `CatalystSignedDocument` instance.
     #[must_use]
-    pub fn problem_report(&self) -> ProblemReport {
-        self.report().clone()
-    }
-
-    /// Returns an internal problem report
-    #[must_use]
-    pub(crate) fn report(&self) -> &ProblemReport {
-        &self.inner.report
+    pub fn report(&self) -> &ProblemReport {
+        &self.0.report
     }
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
@@ -384,16 +377,16 @@ impl<C> Encode<C> for CatalystSignedDocument {
         e.array(4)?;
         // protected headers (metadata fields)
         e.bytes(
-            minicbor::to_vec(&self.inner.metadata)
+            minicbor::to_vec(&self.0.metadata)
                 .map_err(minicbor::encode::Error::message)?
                 .as_slice(),
         )?;
         // empty unprotected headers
         e.map(0)?;
         // content
-        e.encode(&self.inner.content)?;
+        e.encode(&self.0.content)?;
         // signatures
-        e.encode(&self.inner.signatures)?;
+        e.encode(&self.0.signatures)?;
         Ok(())
     }
 }
