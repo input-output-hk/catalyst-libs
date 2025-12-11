@@ -49,7 +49,7 @@ async fn single_signature_validation_test() {
         .build()
         .unwrap();
 
-    assert!(!signed_doc.problem_report().is_problematic());
+    assert!(!signed_doc.report().is_problematic());
 
     // case: has key
     let mut provider = TestCatalystProvider::default();
@@ -60,7 +60,7 @@ async fn single_signature_validation_test() {
             .await
             .unwrap(),
         "{:?}",
-        signed_doc.problem_report()
+        signed_doc.report()
     );
 
     // case: empty provider
@@ -129,7 +129,7 @@ async fn multiple_signatures_validation_test() {
         .build()
         .unwrap();
 
-    assert!(!signed_doc.problem_report().is_problematic());
+    assert!(!signed_doc.report().is_problematic());
 
     // case: all signatures valid
     let mut provider = TestCatalystProvider::default();
@@ -317,7 +317,7 @@ async fn special_cbor_cases() {
             SignatureRule.check_inner(&doc, &provider).await.unwrap(),
             "[case: {}] {:?}",
             case.name,
-            doc.problem_report()
+            doc.report()
         );
     }
 }
