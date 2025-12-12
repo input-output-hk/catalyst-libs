@@ -75,7 +75,7 @@ const MIN_PROOF_CBOR_ARRAY_LEN: u64 = ITEM_ELEMENTS_LEN + 1;
 ///
 /// zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item = ( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct UnitVectorProof(
     Vec<Announcement>,

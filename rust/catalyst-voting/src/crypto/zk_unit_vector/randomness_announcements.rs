@@ -38,7 +38,7 @@ impl BlindingRandomness {
 /// ```cddl
 /// zkproof-elgamal-announcement = ( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Announcement {
     pub(crate) i: GroupElement,
     pub(crate) b: GroupElement,
@@ -73,7 +73,7 @@ impl Announcement {
 /// ```cddl
 /// zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ResponseRandomness {
     pub(crate) z: Scalar,
     pub(crate) w: Scalar,

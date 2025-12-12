@@ -27,7 +27,7 @@ use crate::crypto::{
 /// ```cddl
 /// zkproof-ed25519-scalar = bytes .size 32
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct Scalar(IScalar);
 
