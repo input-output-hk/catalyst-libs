@@ -142,12 +142,11 @@ impl Encode<()> for DocLocator {
 #[cfg(test)]
 mod tests {
 
+    use catalyst_types::uuid::{UuidV4, UuidV7};
     use minicbor::{Decoder, Encoder};
 
     use super::*;
-    use crate::{
-        Builder, ContentType, UuidV7, metadata::document_refs::tests::create_dummy_doc_ref,
-    };
+    use crate::{Builder, ContentType, metadata::document_refs::tests::create_dummy_doc_ref};
 
     #[test]
     fn test_doc_locator_encode_decode() {
@@ -182,8 +181,6 @@ mod tests {
 
     #[test]
     fn test_doc_locator_from_cid() {
-        use crate::UuidV4;
-
         let id = UuidV7::new();
         let ver = UuidV7::new();
         let doc = Builder::new()

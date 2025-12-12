@@ -1,6 +1,6 @@
 //! Catalyst Signed Document COSE Signature information.
 
-pub use catalyst_types::catalyst_id::CatalystId;
+use catalyst_types::catalyst_id::CatalystId;
 use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 use minicbor::Decode;
 

@@ -17,10 +17,7 @@ use std::{
 };
 
 pub use builder::Builder;
-pub use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{Uuid, UuidV4, UuidV7},
-};
+pub use catalyst_types::*;
 use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 pub use cid_v1::{Cid, CidError};
 pub use content::Content;
@@ -30,7 +27,7 @@ pub use metadata::{
     Section,
 };
 use minicbor::{Decode, Decoder, Encode, decode, encode};
-pub use signature::{CatalystId, Signatures};
+pub use signature::Signatures;
 
 use crate::{builder::SignaturesBuilder, metadata::SupportedLabel, signature::Signature};
 
@@ -48,7 +45,7 @@ struct InnerCatalystSignedDocument {
     signatures: Signatures,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
-    report: ProblemReport,
+    report: problem_report::ProblemReport,
 }
 
 /// Catalyst Signed Document type.
@@ -98,7 +95,7 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'id' field.
-    pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
+    pub fn doc_id(&self) -> anyhow::Result<uuid::UuidV7> {
         self.0.metadata.doc_id()
     }
 
@@ -106,7 +103,7 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'ver' field.
-    pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
+    pub fn doc_ver(&self) -> anyhow::Result<uuid::UuidV7> {
         self.0.metadata.doc_ver()
     }
 
@@ -161,7 +158,7 @@ impl CatalystSignedDocument {
 
     /// Return a list of Document's Signer's Catalyst IDs,
     #[must_use]
-    pub fn authors(&self) -> Vec<CatalystId> {
+    pub fn authors(&self) -> Vec<catalyst_id::CatalystId> {
         self.0
             .signatures
             .iter()
@@ -212,7 +209,7 @@ impl CatalystSignedDocument {
     /// reference. Any modifications to the returned object would also affect on the
     /// "validity" of the correct `CatalystSignedDocument` instance.
     #[must_use]
-    pub fn report(&self) -> &ProblemReport {
+    pub fn report(&self) -> &problem_report::ProblemReport {
         &self.0.report
     }
 
@@ -294,7 +291,7 @@ impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
     ) -> Result<Self, decode::Error> {
         let mut ctx = DecodeContext::new(
             *ctx,
-            ProblemReport::new("Catalyst Signed Document Decoding"),
+            problem_report::ProblemReport::new("Catalyst Signed Document Decoding"),
         );
 
         let p = d.position();
