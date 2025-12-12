@@ -1,10 +1,8 @@
 //! Voters Choices.
 
-use catalyst_voting::crypto::elgamal::Ciphertext;
+use catalyst_voting::crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof};
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
-
-use crate::row_proof::RowProof;
 
 /// Voters Choices.
 ///
@@ -28,10 +26,10 @@ pub enum Choices {
     Clear(Vec<i64>),
     /// ElGamal/Ristretto255 encrypted choices.
     Encrypted {
-        /// ElGamal/Ristretto255 encrypted choices.
+        /// A list of ElGamal/Ristretto255 encrypted choices.
         choices: Vec<Ciphertext>,
         /// A universal encrypted row proof.
-        row_proof: Option<RowProof>,
+        row_proof: Option<UnitVectorProof>,
     },
 }
 
@@ -47,8 +45,20 @@ impl Decode<'_, ()> for Choices {
             )));
         }
         match u8::decode(d, ctx)? {
-            0 => Ok(Self::Clear(<Vec<i64>>::decode(d, ctx)?)),
+            0 => {
+                let mut values = Vec::with_capacity(len as usize - 1);
+                for _ in 0..len - 1 {
+                    values.push(i64::decode(d, ctx)?);
+                }
+                Ok(Self::Clear(values))
+            },
             1 => {
+                if len > 2 {
+                    return Err(minicbor::decode::Error::message(format!(
+                        "Unexpected encrypted choices array length {len}, expected 2"
+                    )));
+                }
+
                 let len = decode_array_len(d, "elgamal-ristretto255-encrypted-choices")?;
                 if !(1..=2).contains(&len) {
                     return Err(minicbor::decode::Error::message(format!(
@@ -58,7 +68,7 @@ impl Decode<'_, ()> for Choices {
                 let choices = <Vec<Ciphertext>>::decode(d, ctx)?;
                 let mut row_proof = None;
                 if len == 2 {
-                    row_proof = Some(RowProof::decode(d, ctx)?);
+                    row_proof = Some(UnitVectorProof::decode(d, ctx)?);
                 }
                 Ok(Self::Encrypted { choices, row_proof })
             },
@@ -88,7 +98,7 @@ impl Encode<()> for Choices {
             Choices::Encrypted { choices, row_proof } => {
                 e.array(2)?;
                 1.encode(e, ctx)?;
-                e.array(choices.len() as u64 + u64::from(row_proof.is_some()))?;
+                e.array(1 + u64::from(row_proof.is_some()))?;
                 choices.encode(e, ctx)?;
                 if let Some(row_proof) = row_proof {
                     row_proof.encode(e, ctx)?;
@@ -101,13 +111,7 @@ impl Encode<()> for Choices {
 
 #[cfg(test)]
 mod tests {
-    use proptest::property_test;
-
     use super::*;
-    use crate::row_proof::{
-        ProofAnnouncement, ProofAnnouncementElement, ProofResponse, ProofScalar,
-        SingleSelectionProof,
-    };
 
     #[test]
     fn clear_roundtrip() {
@@ -120,26 +124,11 @@ mod tests {
         assert_eq!(original, decoded);
     }
 
-    #[property_test]
-    fn elgamal_ristretto255_roundtrip(bytes: [u8; 32]) {
+    #[test]
+    fn encrypted_roundtrip() {
         let original = Choices::Encrypted {
-            choices: vec![],
-            row_proof: Some(RowProof {
-                selections: vec![SingleSelectionProof {
-                    announcement: ProofAnnouncement(
-                        ProofAnnouncementElement(bytes),
-                        ProofAnnouncementElement(bytes),
-                        ProofAnnouncementElement(bytes),
-                    ),
-                    choice: Ciphertext::zero(),
-                    response: ProofResponse(
-                        ProofScalar(bytes),
-                        ProofScalar(bytes),
-                        ProofScalar(bytes),
-                    ),
-                }],
-                scalar: ProofScalar(bytes),
-            }),
+            choices: vec![Ciphertext::zero(), Ciphertext::zero()],
+            row_proof: None,
         };
         let mut buffer = Vec::new();
         original

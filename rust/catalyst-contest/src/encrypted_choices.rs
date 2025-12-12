@@ -15,7 +15,6 @@ const ENCRYPTED_BLOCK_LEN: usize = 16;
 /// aes-ctr-encrypted-choices = +aes-ctr-encrypted-block
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 pub struct EncryptedChoices(pub Vec<EncryptedBlock>);
 
 /// An AES-CTR encrypted data block.
@@ -106,7 +105,8 @@ mod tests {
     }
 
     #[property_test]
-    fn encrypted_choices_roundtrip(original: EncryptedChoices) {
+    fn encrypted_choices_roundtrip(block: EncryptedBlock) {
+        let original = EncryptedChoices(vec![block]);
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())

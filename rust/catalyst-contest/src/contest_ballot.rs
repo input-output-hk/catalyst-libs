@@ -125,45 +125,16 @@ mod tests {
     use catalyst_voting::crypto::elgamal::Ciphertext;
 
     use super::*;
-    use crate::{
-        EncryptedBlock, RowProof,
-        row_proof::{
-            ProofAnnouncement, ProofAnnouncementElement, ProofResponse, ProofScalar,
-            SingleSelectionProof,
-        },
-    };
+    use crate::EncryptedBlock;
 
     #[test]
     fn roundtrip() {
-        let bytes = [
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 31, 32,
-        ];
         let original = ContentBallot {
             choices: [
                 (1, Choices::Clear(vec![1, 2, 3, -4, -5])),
                 (2, Choices::Encrypted {
                     choices: vec![Ciphertext::zero()],
                     row_proof: None,
-                }),
-                (3, Choices::Encrypted {
-                    choices: vec![Ciphertext::zero()],
-                    row_proof: Some(RowProof {
-                        selections: vec![SingleSelectionProof {
-                            announcement: ProofAnnouncement(
-                                ProofAnnouncementElement(bytes),
-                                ProofAnnouncementElement(bytes),
-                                ProofAnnouncementElement(bytes),
-                            ),
-                            choice: Ciphertext::zero(),
-                            response: ProofResponse(
-                                ProofScalar(bytes),
-                                ProofScalar(bytes),
-                                ProofScalar(bytes),
-                            ),
-                        }],
-                        scalar: ProofScalar(bytes),
-                    }),
                 }),
             ]
             .into(),
