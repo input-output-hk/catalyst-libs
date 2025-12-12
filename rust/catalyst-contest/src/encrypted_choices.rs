@@ -3,8 +3,8 @@
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-/// A length of the encrypted block array.
-const ENCRYPTED_BLOCK_ARRAY_LEN: u64 = 16;
+/// A length of the encrypted block byte array.
+const ENCRYPTED_BLOCK_LEN: usize = 16;
 
 /// Encrypted voter choices.
 ///
@@ -15,6 +15,7 @@ const ENCRYPTED_BLOCK_ARRAY_LEN: u64 = 16;
 /// aes-ctr-encrypted-choices = +aes-ctr-encrypted-block
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 pub struct EncryptedChoices(pub Vec<EncryptedBlock>);
 
 /// An AES-CTR encrypted data block.
@@ -24,7 +25,8 @@ pub struct EncryptedChoices(pub Vec<EncryptedBlock>);
 /// aes-ctr-encrypted-block = bytes .size 16
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct EncryptedBlock(pub [u8; ENCRYPTED_BLOCK_ARRAY_LEN as usize]);
+#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+pub struct EncryptedBlock(pub [u8; ENCRYPTED_BLOCK_LEN]);
 
 impl Decode<'_, ()> for EncryptedChoices {
     fn decode(
@@ -73,7 +75,7 @@ impl Decode<'_, ()> for EncryptedBlock {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        <[u8; ENCRYPTED_BLOCK_ARRAY_LEN as usize]>::decode(d, ctx).map(Self)
+        <[u8; ENCRYPTED_BLOCK_LEN]>::decode(d, ctx).map(Self)
     }
 }
 
@@ -89,11 +91,12 @@ impl Encode<()> for EncryptedBlock {
 
 #[cfg(test)]
 mod tests {
+    use proptest::property_test;
+
     use super::*;
 
-    #[test]
-    fn encrypted_block_roundtrip() {
-        let original = EncryptedBlock([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]);
+    #[property_test]
+    fn encrypted_block_roundtrip(original: EncryptedBlock) {
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
@@ -102,11 +105,8 @@ mod tests {
         assert_eq!(original, decoded);
     }
 
-    #[test]
-    fn encrypted_choices_roundtrip() {
-        let original = EncryptedChoices(vec![EncryptedBlock([
-            2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32,
-        ])]);
+    #[property_test]
+    fn encrypted_choices_roundtrip(original: EncryptedChoices) {
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())

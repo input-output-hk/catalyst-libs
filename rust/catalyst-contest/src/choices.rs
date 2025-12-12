@@ -101,6 +101,8 @@ impl Encode<()> for Choices {
 
 #[cfg(test)]
 mod tests {
+    use proptest::property_test;
+
     use super::*;
     use crate::row_proof::{
         ProofAnnouncement, ProofAnnouncementElement, ProofResponse, ProofScalar,
@@ -118,12 +120,8 @@ mod tests {
         assert_eq!(original, decoded);
     }
 
-    #[test]
-    fn elgamal_ristretto255_roundtrip() {
-        let bytes = [
-            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 31, 32,
-        ];
+    #[property_test]
+    fn elgamal_ristretto255_roundtrip(bytes: [u8; 32]) {
         let original = Choices::Encrypted {
             choices: vec![],
             row_proof: Some(RowProof {
