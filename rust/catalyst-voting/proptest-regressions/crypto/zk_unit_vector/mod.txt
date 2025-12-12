@@ -1,7 +1,0 @@
-# Seeds for failure cases proptest has generated in the past. It is
-# automatically read and these particular cases re-run before any
-# novel cases are generated.
-#
-# It is recommended to check this file in to source control so that
-# everyone who runs the test benefits from these saved cases.
-cc 0d37faafe0341225f20ef7e433eef26c589e8cbb6ee07f2781b198aad5ac115f # shrinks to input = _CborRoundtripArgs { original: UnitVectorProof([], [], [], Scalar(Scalar{ 	bytes: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], })) }
