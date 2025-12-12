@@ -1,11 +1,10 @@
-use catalyst_signed_doc::providers::tests::TestCatalystProvider;
 use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
+use crate::providers::tests::TestCatalystProvider;
 
-pub fn campaign_parameters_doc(
+pub fn brand_parameters_doc(
     template: &CatalystSignedDocument,
-    parameters: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
@@ -13,7 +12,6 @@ pub fn campaign_parameters_doc(
     provider.add_sk(kid.clone(), sk.clone());
 
     let template_ref = template.doc_ref()?;
-    let parameters_ref = parameters.doc_ref()?;
 
     Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -21,9 +19,8 @@ pub fn campaign_parameters_doc(
             "content-encoding": ContentEncoding::Brotli,
             "id": id,
             "ver": id,
-            "type": doc_types::CAMPAIGN_PARAMETERS.clone(),
+            "type": doc_types::BRAND_PARAMETERS.clone(),
             "template": [template_ref],
-            "parameters": [parameters_ref]
         }))?
         .with_json_content(&serde_json::json!({}))?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?

@@ -1,9 +1,9 @@
-use catalyst_signed_doc::providers::tests::TestCatalystProvider;
 use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
+use crate::providers::tests::TestCatalystProvider;
 
-pub fn rep_nomination_form_template_doc(
+pub fn campaign_parameters_form_template_doc(
     parameters: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
@@ -19,7 +19,7 @@ pub fn rep_nomination_form_template_doc(
             "content-encoding": ContentEncoding::Brotli,
             "id": id,
             "ver": id,
-            "type": doc_types::REP_NOMINATION_FORM_TEMPLATE.clone(),
+            "type": doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone(),
             "parameters": [parameters_ref]
         }))?
         .with_json_content(&serde_json::json!({}))?

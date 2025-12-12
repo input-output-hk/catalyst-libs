@@ -1,14 +1,13 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::{decode_context::CompatibilityPolicy, *};
+use catalyst_signed_doc::{
+    decode_context::CompatibilityPolicy,
+    tests_utils::{create_dummy_doc_ref, create_dummy_key_pair},
+    *,
+};
 use catalyst_types::catalyst_id::role_index::RoleId;
-use common::create_dummy_key_pair;
 use minicbor::{Decode, Encoder, data::Tag};
 use rand::Rng;
-
-use crate::common::create_dummy_doc_ref;
-
-mod common;
 
 type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
 
