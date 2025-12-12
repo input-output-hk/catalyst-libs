@@ -65,7 +65,7 @@ impl Decode<'_, ()> for GroupElement {
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let compressed = <[u8; GroupElement::BYTES_SIZE]>::decode(d, ctx)?;
-        Self::from_bytes(&compressed).map_err(|e| minicbor::decode::Error::message(e))
+        Self::from_bytes(&compressed).map_err(minicbor::decode::Error::message)
     }
 }
 
