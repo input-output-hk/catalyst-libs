@@ -1,16 +1,16 @@
 //! Integration test for brand parameters document validation part.
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/brand_parameters>
 
-use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
+use catalyst_signed_doc::{
+    providers::tests::TestCatalystProvider,
+    tests_utils::{
+        brand_parameters_doc, brand_parameters_form_template_doc, create_dummy_key_pair,
+    },
+    *,
+};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
-
-use crate::common::{
-    brand_parameters_doc, brand_parameters_form_template_doc, create_dummy_key_pair,
-};
-
-mod common;
 
 #[test_case(
     |provider| {

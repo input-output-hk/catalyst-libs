@@ -1,4 +1,8 @@
-#![allow(dead_code, unused_imports)]
+//! Reusable functionlaity for building and signing documents
+//! # WARNING
+//! FOR TESTING PURPOSES ONLY, DONT USE IN PRODUCTION CODE
+
+#![allow(missing_docs)]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;
@@ -21,17 +25,10 @@ pub mod rep_nomination_form_template;
 pub mod rep_profile;
 pub mod rep_profile_form_template;
 
-use std::str::FromStr;
-
 pub use brand_parameters::brand_parameters_doc;
 pub use brand_parameters_form_template::brand_parameters_form_template_doc;
 pub use campaign_parameters::campaign_parameters_doc;
 pub use campaign_parameters_form_template::campaign_parameters_form_template_doc;
-use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
-use catalyst_types::{
-    catalyst_id::role_index::RoleId,
-    uuid::{UuidV4, UuidV7},
-};
 pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
 pub use contest_ballot::contest_ballot_doc;
@@ -48,6 +45,13 @@ pub use rep_nomination::rep_nomination_doc;
 pub use rep_nomination_form_template::rep_nomination_form_template_doc;
 pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
+
+use crate::{
+    catalyst_id::{CatalystId, role_index::RoleId},
+    providers::tests::TestCatalystProvider,
+    uuid::{UuidV4, UuidV7},
+    *,
+};
 
 pub fn get_doc_kid_and_sk(
     provider: &TestCatalystProvider,

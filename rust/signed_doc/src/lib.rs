@@ -8,6 +8,7 @@ pub mod doc_types;
 mod metadata;
 pub mod providers;
 mod signature;
+pub mod tests_utils;
 pub mod validator;
 
 use std::{

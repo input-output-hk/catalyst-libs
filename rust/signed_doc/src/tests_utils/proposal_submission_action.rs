@@ -1,7 +1,7 @@
-use catalyst_signed_doc::providers::tests::TestCatalystProvider;
 use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
+use crate::providers::tests::TestCatalystProvider;
 
 pub fn proposal_submission_action_doc(
     ref_doc: &CatalystSignedDocument,
