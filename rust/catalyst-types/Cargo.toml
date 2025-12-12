@@ -31,6 +31,8 @@ tracing = "0.1.41"
 strum = { version = "0.27.1", features = ["derive"] }
 jsonschema = "0.28.3"
 serde_json = { version = "1.0.134", features = ["raw_value"] }
+sparse-merkle-tree = "0.6.1"
+blake3 = "1.8.2"
 
 # Only include fmmap for non-wasm32 targets
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
