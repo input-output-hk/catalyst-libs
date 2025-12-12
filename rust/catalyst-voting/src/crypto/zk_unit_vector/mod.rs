@@ -27,7 +27,16 @@ use crate::crypto::{
 };
 
 /// Unit vector proof struct
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// row-proof = [0, zkproof-elgamal-ristretto255-unit-vector-with-single-selection ]
+///
+/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection = [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]
+///
+/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item = ( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct UnitVectorProof(
     Vec<Announcement>,
@@ -273,7 +282,7 @@ mod arbitrary_impl {
             any_with::<(
                 Vec<((Announcement, Ciphertext), ResponseRandomness)>,
                 Scalar,
-            )>(((size_range(size), (((), ()), ())), ()))
+            )>(((size_range(size + 1), (((), ()), ())), ()))
             .prop_map(|(val, scalar)| {
                 let (vec, rr): (Vec<_>, Vec<_>) = val.into_iter().unzip();
                 let (an, cipher) = vec.into_iter().unzip();

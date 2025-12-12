@@ -4,11 +4,8 @@ use std::io::Read;
 
 use anyhow::anyhow;
 
-use super::{EncryptedVote, proof::VoterProof};
-use crate::{
-    crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof},
-    utils::read_array,
-};
+use super::EncryptedVote;
+use crate::{crypto::elgamal::Ciphertext, utils::read_array};
 
 impl EncryptedVote {
     /// Get an underlying vector length.
@@ -50,36 +47,6 @@ impl EncryptedVote {
             .iter()
             .for_each(|c| res.extend_from_slice(&c.to_bytes()));
         res
-    }
-}
-
-impl VoterProof {
-    /// Get an underlying vector length.
-    ///
-    /// **Note** each vector field has the same length.
-    #[must_use]
-    pub fn size(&self) -> usize {
-        self.0.size()
-    }
-
-    /// Decode `VoterProof` from bytes.
-    ///
-    /// # Errors
-    ///   - Cannot decode announcement value.
-    ///   - Cannot decode ciphertext value.
-    ///   - Cannot decode response randomness value.
-    ///   - Cannot decode scalar value.
-    pub fn from_bytes<R: Read>(
-        reader: &mut R,
-        len: usize,
-    ) -> anyhow::Result<Self> {
-        UnitVectorProof::from_bytes(reader, len).map(Self)
-    }
-
-    /// Encode `EncryptedVote` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> Vec<u8> {
-        self.0.to_bytes()
     }
 }
 
