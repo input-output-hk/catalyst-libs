@@ -30,7 +30,7 @@ cbork-utils = { version = "0.0.2", git = "https://github.com/input-output-hk/cat
 
 [dev-dependencies]
 criterion = "0.5.1"
-proptest = { version = "1.5.0" }
+proptest = { version = "1.6.0", features = ["attr-macro"] }
 # Potentially it could be replaced with using `proptest::property_test` attribute macro,
 # after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
 test-strategy = "0.4.0"

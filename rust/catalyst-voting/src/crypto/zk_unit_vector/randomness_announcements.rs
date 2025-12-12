@@ -4,8 +4,6 @@
 
 use std::ops::Mul;
 
-use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
-
 use crate::crypto::{
     group::{GroupElement, Scalar},
     rng::rand_core::CryptoRngCore,
@@ -97,54 +95,6 @@ impl ResponseRandomness {
     }
 }
 
-impl Encode<()> for Announcement {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        self.i.encode(e, ctx)?;
-        self.b.encode(e, ctx)?;
-        self.a.encode(e, ctx)
-    }
-}
-
-impl Decode<'_, ()> for Announcement {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
-        let i = GroupElement::decode(d, ctx)?;
-        let b = GroupElement::decode(d, ctx)?;
-        let a = GroupElement::decode(d, ctx)?;
-        Ok(Self { i, b, a })
-    }
-}
-
-impl Encode<()> for ResponseRandomness {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        self.z.encode(e, ctx)?;
-        self.w.encode(e, ctx)?;
-        self.v.encode(e, ctx)
-    }
-}
-
-impl Decode<'_, ()> for ResponseRandomness {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
-        let z = Scalar::decode(d, ctx)?;
-        let w = Scalar::decode(d, ctx)?;
-        let v = Scalar::decode(d, ctx)?;
-        Ok(Self { z, w, v })
-    }
-}
-
 #[cfg(test)]
 mod arbitrary_impl {
     use proptest::{
@@ -192,32 +142,5 @@ mod arbitrary_impl {
                 .prop_map(|(z, w, v)| ResponseRandomness { z, w, v })
                 .boxed()
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use test_strategy::proptest;
-
-    use super::*;
-
-    #[proptest]
-    fn announcement_cbor_roundtrip(original: Announcement) {
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let decoded = Announcement::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
-    }
-
-    #[proptest]
-    fn response_randomness_cbor_roundtrip(original: ResponseRandomness) {
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let decoded = ResponseRandomness::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
     }
 }
