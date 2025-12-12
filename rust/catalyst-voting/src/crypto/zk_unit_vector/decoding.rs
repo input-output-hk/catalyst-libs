@@ -153,12 +153,12 @@ impl Decode<'_, ()> for UnitVectorProof {
         }
 
         let elements = len / MIN_PROOF_CBOR_ARRAY_LEN;
-        let mut annoucements = Vec::with_capacity(elements as usize);
+        let mut announcements = Vec::with_capacity(elements as usize);
         let mut choices = Vec::with_capacity(elements as usize);
         let mut responses = Vec::with_capacity(elements as usize);
 
         for _ in 0..elements {
-            annoucements.push(Announcement::decode(d, ctx)?);
+            announcements.push(Announcement::decode(d, ctx)?);
             let first = GroupElement::decode(d, ctx)?;
             let second = GroupElement::decode(d, ctx)?;
             choices.push(Ciphertext::from_elements(first, second));
@@ -166,7 +166,7 @@ impl Decode<'_, ()> for UnitVectorProof {
         }
         let scalar = Scalar::decode(d, ctx)?;
 
-        Ok(Self(annoucements, choices, responses, scalar))
+        Ok(Self(announcements, choices, responses, scalar))
     }
 }
 
