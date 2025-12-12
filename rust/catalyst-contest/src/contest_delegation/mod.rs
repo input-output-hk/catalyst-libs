@@ -5,9 +5,11 @@
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
 
 use catalyst_signed_doc::{
-    CatalystId, CatalystSignedDocument, DocumentRef, ProblemReport, UuidV7,
+    catalyst_id::CatalystId, CatalystSignedDocument, DocumentRef,
     doc_types::CONTEST_DELEGATION,
+    problem_report::ProblemReport,
     providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    uuid::UuidV7,
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -44,7 +46,7 @@ impl PartialEq for ContestDelegation {
     }
 }
 
-/// Content Deelgation JSON payload type.
+/// Content Delgation JSON payload type.
 #[derive(Debug, Clone, Default, serde::Deserialize)]
 struct ContestDelegationPayload {
     /// List of weights to apply to each delegate.
@@ -188,7 +190,7 @@ fn get_payload(
             .and_then(|v | Ok(serde_json::from_slice::<ContestDelegationPayload>(&v)?))
             .inspect_err(|_| {
                 report.functional_validation(
-                    "Invalid Document content, must be a valid JSON object complient with the JSON schema.",
+                    "Invalid Document content, must be a valid JSON object compliant with the JSON schema.",
                     "Cannot get a document content during Contest Delegation document validation.",
                 );
                 valid = false;
@@ -219,7 +221,7 @@ async fn get_delegations(
         // If there are fewer entries than delegates, then the missing weights are set to
         // `1`. If there are more weights, then the extra weights are ignored.
         // If array is empty, then the weights assigned is `1`.
-        let weigths_iter = payload
+        let weights_iter = payload
             .weights
             .into_iter()
             .chain(std::iter::repeat(DEFAULT_WEIGHT))
@@ -227,7 +229,7 @@ async fn get_delegations(
 
         let delegations = futures_res
             .into_iter()
-            .zip(weigths_iter)
+            .zip(weights_iter)
             .map(|((kid, _), weight)| {
                 Some(Delegation {
                     weight,
