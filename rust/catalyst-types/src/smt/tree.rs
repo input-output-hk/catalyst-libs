@@ -169,7 +169,7 @@ where V: Default + Value + Clone
 ///
 /// # Returns
 ///
-/// An iterator yielding Option<H256> for each position in the horizontal slice:
+/// An iterator yielding `Option<H256>` for each position in the horizontal slice:
 /// - `Some(hash)` indicates a materialized node with the computed hash
 /// - `None` indicates a virtual zero branch (non-materialized)
 ///

@@ -63,8 +63,8 @@ pub(super) fn coarse_height(count: usize) -> u8 {
 ///    - Position bit 0: `0` → Bit 246 - Do NOT set
 ///
 /// 3. Bit-to-byte mapping:
-///    - Bits 255-248 are in byte[31]: `0b00000110` = 6
-///    - Bits 247-240 are in byte[30]: `0b10000000` = 128
+///    - Bits 255-248 are in `byte[31]`: `0b00000110` = 6
+///    - Bits 247-240 are in `byte[30]`: `0b10000000` = 128
 ///
 /// 4. Result: `[0, 0, ..., 0, 128, 6]`
 pub(super) fn node_key(
