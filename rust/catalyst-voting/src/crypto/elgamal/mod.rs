@@ -27,6 +27,14 @@ impl Ciphertext {
         Ciphertext(GroupElement::zero(), GroupElement::zero())
     }
 
+    /// Creates a `Ciphertext` instance from the given elements.
+    pub fn from_elements(
+        first: GroupElement,
+        second: GroupElement,
+    ) -> Self {
+        Self(first, second)
+    }
+
     /// Get the first element of the `Ciphertext`.
     pub fn first(&self) -> &GroupElement {
         &self.0

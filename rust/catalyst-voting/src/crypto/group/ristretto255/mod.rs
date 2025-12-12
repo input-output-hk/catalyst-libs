@@ -22,6 +22,11 @@ use crate::crypto::{
 };
 
 /// Ristretto group scalar.
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// zkproof-ed25519-scalar = bytes .size 32
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct Scalar(IScalar);
