@@ -11,65 +11,7 @@ use catalyst_types::uuid::{self, CborContext, UuidV7};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{Decode, Encode, Encoder, data::Type, encode::Write};
 
-use crate::doc_sync::PROTOCOL_VERSION;
-
-/// Ed25519 public key instance.
-/// Wrapper over `ed25519_dalek::VerifyingKey`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct PublicKey(VerifyingKey);
-
-impl<C> Encode<C> for PublicKey {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut C,
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.bytes(self.0.as_bytes())?;
-        Ok(())
-    }
-}
-
-impl<'b, C> Decode<'b, C> for PublicKey {
-    fn decode(
-        d: &mut minicbor::Decoder<'b>,
-        _ctx: &mut C,
-    ) -> Result<Self, minicbor::decode::Error> {
-        VerifyingKey::try_from(d.bytes()?)
-            .map_err(|err| {
-                minicbor::decode::Error::message(format!("error during PublicKey decode: {err}"))
-            })
-            .map(PublicKey)
-    }
-}
-
-/// Ed25519 signature instance.
-/// Wrapper over `ed25519_dalek::Signature`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct Signature(ed25519_dalek::Signature);
-
-impl<C> Encode<C> for Signature {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut C,
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.bytes(&self.0.to_bytes())?;
-        Ok(())
-    }
-}
-
-impl<'b, C> Decode<'b, C> for Signature {
-    fn decode(
-        d: &mut minicbor::Decoder<'b>,
-        _ctx: &mut C,
-    ) -> Result<Self, minicbor::decode::Error> {
-        ed25519_dalek::Signature::try_from(d.bytes()?)
-            .map_err(|err| {
-                minicbor::decode::Error::message(format!("error during Signature decode: {err}"))
-            })
-            .map(Signature)
-    }
-}
+use crate::doc_sync::{PROTOCOL_VERSION, PublicKey, Signature};
 
 /// The unsigned portion of the message envelope.
 /// This structure corresponds to the **signature input** array:
@@ -129,7 +71,10 @@ impl EnvelopePayload {
     }
 
     /// Returns the decoded payload body.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the payload bytes cannot be decoded into the requested type.
     pub fn payload<T: for<'a> Decode<'a, ()>>(&self) -> Result<(), minicbor::decode::Error> {
         minicbor::decode(self.payload_bytes())
     }
