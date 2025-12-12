@@ -5,7 +5,8 @@
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
 
 use catalyst_signed_doc::{
-    catalyst_id::CatalystId, CatalystSignedDocument, DocumentRef,
+    CatalystSignedDocument, DocumentRef,
+    catalyst_id::CatalystId,
     doc_types::CONTEST_DELEGATION,
     problem_report::ProblemReport,
     providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
@@ -46,7 +47,7 @@ impl PartialEq for ContestDelegation {
     }
 }
 
-/// Content Delgation JSON payload type.
+/// Content Delegation JSON payload type.
 #[derive(Debug, Clone, Default, serde::Deserialize)]
 struct ContestDelegationPayload {
     /// List of weights to apply to each delegate.
