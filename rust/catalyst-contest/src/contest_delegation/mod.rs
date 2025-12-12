@@ -71,8 +71,10 @@ impl ContestDelegation {
         self.doc_ref.ver()
     }
 
-    /// Returns 'delegator'
-    #[must_use]
+    /// Returns 'delegator'.
+    ///
+    /// # Errors
+    ///  - Missing 'delegator'.
     pub fn delegator(&self) -> anyhow::Result<&CatalystId> {
         self.delegator
             .as_ref()
@@ -118,7 +120,13 @@ impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
 }
 
 impl ContestDelegation {
-    /// Something
+    /// Trying to build Contest Delegation document collecting all issues into the
+    /// `report`.
+    ///
+    /// # Errors
+    ///  - If provided document not a Contest Delegation type
+    ///  - If provided document is invalid (`report().is_problematic()`)
+    ///  - `provider` returns error
     pub async fn new<Provider>(
         doc: &CatalystSignedDocument,
         provider: &Provider,
@@ -231,13 +239,12 @@ async fn get_delegations(
         let delegations = futures_res
             .into_iter()
             .zip(weights_iter)
-            .map(|((kid, _), weight)| {
+            .filter_map(|((kid, _), weight)| {
                 Some(Delegation {
                     weight,
                     rep_kid: kid?,
                 })
             })
-            .flatten()
             .collect();
 
         Ok((delegations, valid))
@@ -260,10 +267,7 @@ async fn get_author_kid(
     let mut valid = true;
     let Some(ref_doc) = provider.try_get_doc(doc_ref).await? else {
         report.functional_validation(
-            &format!(
-                "Cannot get referenced document by reference: {}",
-                doc_ref.to_string()
-            ),
+            &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing representative reference document for the Contest Delegation document",
         );
         valid = false;
