@@ -89,9 +89,8 @@ mod tests {
         assert_eq!(ge1, ge2);
     }
 
-    #[test]
-    fn cbor_roundtrip() {
-        let original = GroupElement::zero();
+    #[proptest]
+    fn cbor_roundtrip(original: GroupElement) {
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())

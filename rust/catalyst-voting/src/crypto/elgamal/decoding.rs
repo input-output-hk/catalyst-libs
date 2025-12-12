@@ -78,9 +78,8 @@ mod tests {
         assert_eq!(c1, c2);
     }
 
-    #[test]
-    fn cbor_roundtrip() {
-        let original = Ciphertext::zero();
+    #[proptest]
+    fn cbor_roundtrip(original: Ciphertext) {
         let mut buffer = Vec::new();
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
