@@ -49,7 +49,7 @@ impl Decode<'_, ()> for ContentBallot {
         let mut voter_choices = None;
         for _ in 0..len {
             match d.datatype()? {
-                Type::U64 => {
+                Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
                     let key = d.u64()?;
                     let val = Choices::decode(d, ctx)?;
                     choices.insert(key, val);
