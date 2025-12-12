@@ -212,7 +212,6 @@ where
             let mv = merge::merge::<H>(key.height, &key.node_key, &node.left, &node.right);
             mv.hash::<H>()
         }))
-        // If node is not materialized, returns None (virtual zero branch)
     })
 }
 
