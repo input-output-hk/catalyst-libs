@@ -7,8 +7,6 @@ use std::{
 
 use tokio::sync::oneshot::error::TryRecvError;
 
-use crate::doc_sync::Signature;
-
 /// State machine that tracks peer parity for the Doc Sync protocol.
 ///
 /// Transitions follow the protocol spec:
@@ -41,23 +39,20 @@ pub enum StateSnapshot {
 /// Tracks the last known local/remote signatures.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SyncState {
-    /// Local signature snapshot.
-    local: Signature,
-    /// Remote signature snapshot.
-    remote: Signature,
+    /// Local sparse merkle tree root.
+    local: blake3::Hash,
+    /// Remote sparse merkle tree root.
+    remote: blake3::Hash,
 }
 
 impl SyncState {
     /// Creates a new synchronization view for comparison.
     #[must_use]
     pub fn new(
-        local: ed25519_dalek::Signature,
-        remote: ed25519_dalek::Signature,
+        local: blake3::Hash,
+        remote: blake3::Hash,
     ) -> Self {
-        Self {
-            local: Signature(local),
-            remote: Signature(remote),
-        }
+        Self { local, remote }
     }
 
     /// Returns `true` when the local and remote views match.
@@ -201,14 +196,14 @@ mod tests {
     use super::*;
 
     fn sync_state(synced: bool) -> SyncState {
-        let sig_a = signature_with(1);
-        let sig_b = if synced { sig_a } else { signature_with(2) };
+        let sig_a = hash_with(1);
+        let sig_b = if synced { sig_a } else { hash_with(2) };
 
         SyncState::new(sig_a, sig_b)
     }
 
-    fn signature_with(byte: u8) -> ed25519_dalek::Signature {
-        ed25519_dalek::Signature::from_bytes(&[byte; 64])
+    fn hash_with(byte: u8) -> blake3::Hash {
+        blake3::Hash::from_bytes([byte; 32])
     }
 
     #[tokio::test]
