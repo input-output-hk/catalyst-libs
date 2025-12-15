@@ -53,7 +53,7 @@ use crate::{
     uuid::{UuidV4, UuidV7},
 };
 
-/// # Errors
+#[allow(clippy::missing_errors_doc)]
 pub fn get_doc_kid_and_sk(
     provider: &TestCatalystProvider,
     doc: &CatalystSignedDocument,
@@ -90,7 +90,7 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-/// # Errors
+#[allow(clippy::missing_errors_doc)]
 pub fn create_dummy_doc_ref() -> anyhow::Result<DocumentRef> {
     let test_doc = Builder::new()
         .with_json_metadata(serde_json::json!({

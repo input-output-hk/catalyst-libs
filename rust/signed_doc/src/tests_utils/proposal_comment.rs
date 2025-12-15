@@ -6,7 +6,7 @@ use crate::{
     uuid::UuidV7,
 };
 
-/// # Errors
+#[allow(clippy::missing_errors_doc)]
 pub fn proposal_comment_doc(
     ref_doc: &CatalystSignedDocument,
     template_doc: &CatalystSignedDocument,

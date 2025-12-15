@@ -5,7 +5,7 @@ use crate::{
     providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
 };
 
-/// # Errors
+#[allow(clippy::missing_errors_doc)]
 pub fn contest_ballot_checkpoint_doc(
     linked_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,

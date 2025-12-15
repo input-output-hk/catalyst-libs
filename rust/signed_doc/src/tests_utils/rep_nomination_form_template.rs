@@ -5,7 +5,7 @@ use crate::{
     providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
 };
 
-/// # Errors
+#[allow(clippy::missing_errors_doc)]
 pub fn rep_nomination_form_template_doc(
     parameters: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,

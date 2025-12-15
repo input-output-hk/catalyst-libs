@@ -6,7 +6,7 @@ use crate::{
     uuid::UuidV7,
 };
 
-/// # Errors
+#[allow(clippy::missing_errors_doc)]
 pub fn proposal_submission_action_doc(
     ref_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,
