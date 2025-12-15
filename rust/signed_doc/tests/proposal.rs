@@ -2,19 +2,19 @@
 //! Require fields: type, id, ver, template, parameters
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal>
 
-use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
+use catalyst_signed_doc::{
+    providers::tests::TestCatalystProvider,
+    tests_utils::{
+        brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
+        campaign_parameters_form_template_doc, category_parameters_doc,
+        category_parameters_form_template_doc, create_dummy_key_pair, proposal_doc,
+        proposal_form_template_doc,
+    },
+    *,
+};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
-
-use crate::common::{
-    brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
-    campaign_parameters_form_template_doc, category_parameters_doc,
-    category_parameters_form_template_doc, create_dummy_key_pair, proposal_doc,
-    proposal_form_template_doc,
-};
-
-mod common;
 
 #[test_case(
     |provider| {
@@ -60,8 +60,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let template_ref = template.doc_ref()?;
@@ -90,8 +90,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let template_ref = template.doc_ref()?;
@@ -120,8 +120,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let template_ref = template.doc_ref()?;
@@ -148,8 +148,8 @@ mod common;
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = parameters.doc_ref()?;
@@ -176,8 +176,8 @@ mod common;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let template_ref = template.doc_ref()?;

@@ -1,32 +1,31 @@
-use catalyst_signed_doc::providers::tests::TestCatalystProvider;
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
+use crate::{
+    Builder, CatalystSignedDocument, ContentEncoding, ContentType, doc_types,
+    providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
+};
 
-/// Creates a contest ballot document.
-pub fn contest_ballot_doc(
-    ref_doc: &CatalystSignedDocument,
+#[allow(clippy::missing_errors_doc)]
+pub fn proposal_form_template_doc(
     parameters_doc: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(None);
+    let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
 
     let parameters_ref = parameters_doc.doc_ref()?;
-    let ref_ref = ref_doc.doc_ref()?;
 
     Builder::new()
         .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Cbor,
+            "content-type": ContentType::SchemaJson,
             "content-encoding": ContentEncoding::Brotli,
-            "type": doc_types::CONTEST_BALLOT.clone(),
+            "type": doc_types::PROPOSAL_FORM_TEMPLATE.clone(),
             "id": id,
             "ver": id,
-            "ref": [ref_ref],
             "parameters": [parameters_ref],
         }))?
-        .with_cbor_content(1)?
+        .with_json_content(&serde_json::json!({}))?
         .add_signature(|m| sk.sign(&m).to_vec(), kid)?
         .build()
 }

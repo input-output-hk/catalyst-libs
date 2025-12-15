@@ -1,4 +1,8 @@
-#![allow(dead_code, unused_imports)]
+//! Reusable functionality for building and signing documents
+//! # WARNING
+//! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
+
+#![allow(missing_docs)]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;
@@ -21,17 +25,10 @@ pub mod rep_nomination_form_template;
 pub mod rep_profile;
 pub mod rep_profile_form_template;
 
-use std::str::FromStr;
-
 pub use brand_parameters::brand_parameters_doc;
 pub use brand_parameters_form_template::brand_parameters_form_template_doc;
 pub use campaign_parameters::campaign_parameters_doc;
 pub use campaign_parameters_form_template::campaign_parameters_form_template_doc;
-use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
-use catalyst_types::{
-    catalyst_id::role_index::RoleId,
-    uuid::{UuidV4, UuidV7},
-};
 pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
 pub use contest_ballot::contest_ballot_doc;
@@ -49,6 +46,14 @@ pub use rep_nomination_form_template::rep_nomination_form_template_doc;
 pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
 
+use crate::{
+    Builder, CatalystSignedDocument, ContentType, DocumentRef,
+    catalyst_id::{CatalystId, role_index::RoleId},
+    providers::tests::TestCatalystProvider,
+    uuid::{UuidV4, UuidV7},
+};
+
+#[allow(clippy::missing_errors_doc)]
 pub fn get_doc_kid_and_sk(
     provider: &TestCatalystProvider,
     doc: &CatalystSignedDocument,
@@ -65,24 +70,26 @@ pub fn get_doc_kid_and_sk(
 }
 
 // If `None` make `CatalystId` as admin
-pub fn create_dummy_key_pair(
-    role_index: Option<RoleId>
-) -> (ed25519_dalek::SigningKey, CatalystId) {
+#[must_use]
+pub fn create_dummy_key_pair(role_index: RoleId) -> (ed25519_dalek::SigningKey, CatalystId) {
     let sk = create_signing_key();
-    let kid = if let Some(role_index) = role_index {
-        CatalystId::new("cardano", None, sk.verifying_key()).with_role(role_index)
-    } else {
-        CatalystId::new("cardano", None, sk.verifying_key()).as_admin()
-    };
+    let kid = CatalystId::new("cardano", None, sk.verifying_key()).with_role(role_index);
     (sk, kid)
 }
 
+#[must_use]
+pub fn create_dummy_admin_key_pair() -> (ed25519_dalek::SigningKey, CatalystId) {
+    let sk = create_signing_key();
+    let kid = CatalystId::new("cardano", None, sk.verifying_key()).as_admin();
+    (sk, kid)
+}
+
+#[must_use]
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     let mut csprng = rand::rngs::OsRng;
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-#[allow(clippy::expect_used)]
 pub fn create_dummy_doc_ref() -> DocumentRef {
     let test_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -91,11 +98,11 @@ pub fn create_dummy_doc_ref() -> DocumentRef {
             "type": UuidV4::new().to_string(),
             "content-type": ContentType::Json,
         }))
-        .expect("Should create metadata")
+        .expect("Must be valid metadata fields")
         .with_json_content(&serde_json::json!({"test": "content"}))
-        .expect("Should set content")
+        .expect("Must be valid JSON object")
         .build()
-        .expect("Should build document");
+        .expect("Must be valid document");
 
-    test_doc.doc_ref().expect("Should generate DocumentRef")
+    test_doc.doc_ref().expect("Must be valid DocumentRef")
 }

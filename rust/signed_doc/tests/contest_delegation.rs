@@ -1,19 +1,19 @@
 //! Integration test for contest delegation document validation part.
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation>
 
-use catalyst_signed_doc::{providers::tests::TestCatalystProvider, *};
+use catalyst_signed_doc::{
+    providers::tests::TestCatalystProvider,
+    tests_utils::{
+        brand_parameters_doc, brand_parameters_form_template_doc, contest_delegation_doc,
+        contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair,
+        rep_nomination_doc, rep_nomination_form_template_doc, rep_profile_doc,
+        rep_profile_form_template_doc,
+    },
+    *,
+};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
-
-use crate::common::{
-    brand_parameters_doc, brand_parameters_form_template_doc, contest_delegation_doc,
-    contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair,
-    rep_nomination_doc, rep_nomination_form_template_doc, rep_profile_doc,
-    rep_profile_form_template_doc,
-};
-
-mod common;
 
 #[test_case(
     |provider| {
@@ -41,8 +41,8 @@ mod common;
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -76,8 +76,8 @@ mod common;
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -111,8 +111,8 @@ mod common;
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -141,8 +141,8 @@ mod common;
         let brand = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -174,8 +174,8 @@ mod common;
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let id = uuid::UuidV7::new();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let ref_ref = rep_nomination.doc_ref()?;

@@ -4,6 +4,8 @@
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot/
 
+pub mod contest_delegation;
+
 mod choices;
 mod contest_ballot;
 mod encrypted_choices;
