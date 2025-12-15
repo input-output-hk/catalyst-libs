@@ -4,6 +4,12 @@ use catalyst_voting::crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorPro
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
+/// A clear choice indicator. See the `Choices` CBOR schema for the details.
+const CLEAR_CHOICE: u8 = 0;
+
+/// An encrypted choice indicator. See the `Choices` CBOR schema for the details.
+const ENCRYPTED_CHOICE: u8 = 1;
+
 /// Voters Choices.
 ///
 /// The CDDL schema:
@@ -45,7 +51,7 @@ impl Decode<'_, ()> for Choices {
             )));
         }
         match u8::decode(d, ctx)? {
-            0 => {
+            CLEAR_CHOICE => {
                 let mut values = Vec::with_capacity(
                     len.checked_sub(1)
                         .ok_or_else(|| {
@@ -59,7 +65,7 @@ impl Decode<'_, ()> for Choices {
                 }
                 Ok(Self::Clear(values))
             },
-            1 => {
+            ENCRYPTED_CHOICE => {
                 if len > 2 {
                     return Err(minicbor::decode::Error::message(format!(
                         "Unexpected encrypted choices array length {len}, expected 2"
