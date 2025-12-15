@@ -10,6 +10,9 @@ use crate::crypto::{
     zk_unit_vector::randomness_announcements::Announcement,
 };
 
+/// A CBOR version of the `UnitVectorProof`.
+const UNIT_VECTOR_PROOF_VERSION: u64 = 0;
+
 /// A number of elements in the
 /// `zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item` data type.
 ///
@@ -111,7 +114,7 @@ impl Encode<()> for UnitVectorProof {
         }
 
         e.array(2)?;
-        0.encode(e, ctx)?;
+        UNIT_VECTOR_PROOF_VERSION.encode(e, ctx)?;
 
         e.array(self.0.len() as u64 * ITEM_ELEMENTS_LEN + 1)?;
         for ((announcement, choice), response) in
@@ -139,9 +142,9 @@ impl Decode<'_, ()> for UnitVectorProof {
         }
 
         let version = u64::decode(d, ctx)?;
-        if version != 0 {
+        if version != UNIT_VECTOR_PROOF_VERSION {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected UnitVectorProof version value: {version}, expected 0"
+                "Unexpected UnitVectorProof version value: {version}, expected {UNIT_VECTOR_PROOF_VERSION}"
             )));
         }
 
