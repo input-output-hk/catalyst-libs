@@ -4,6 +4,7 @@
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
 
+use anyhow::Context;
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef,
     catalyst_id::CatalystId,
@@ -273,6 +274,35 @@ async fn get_author_kid(
         valid = false;
         return Ok((None, valid));
     };
+
+    if let Ok(ref_doc_ref) = ref_doc.doc_ref() {
+        let latest_ref_doc = provider
+            .try_get_last_doc(*ref_doc_ref.id())
+            .await?
+            .context("A latest version of the document must exist if a first version exists")?;
+
+        if let Ok(latest_ref_doc_ref) = latest_ref_doc.doc_ref() {
+            if latest_ref_doc_ref != ref_doc_ref {
+                report.functional_validation(
+                    "It must be the latest Rep Nomination document",
+                    "Content Delegation must reference to the latest version Rep Nomination document"
+                );
+                valid = false;
+            }
+        } else {
+            report.missing_field(
+                "document reference",
+                "Cannot get document reference for the latest representative reference document",
+            );
+            valid = false;
+        }
+    } else {
+        report.missing_field(
+            "document reference",
+            "Cannot get document reference for the representative reference document",
+        );
+        valid = false;
+    }
 
     let rep_nomination_authors = ref_doc.authors();
     if rep_nomination_authors.len() != 1 {
