@@ -4,8 +4,10 @@ use uuid::{Timestamp, Uuid};
 
 use super::*;
 use crate::{
-    UuidV4, UuidV7, builder::tests::Builder, metadata::SupportedField,
+    builder::tests::Builder,
+    metadata::SupportedField,
     providers::tests::TestCatalystProvider,
+    uuid::{UuidV4, UuidV7},
 };
 
 #[test_case(
