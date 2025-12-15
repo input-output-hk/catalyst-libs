@@ -4,10 +4,8 @@ use catalyst_types::{catalyst_id::role_index::RoleId, uuid::UuidV7};
 use ed25519_dalek::ed25519::signature::Signer;
 
 use crate::{
-    builder::tests::Builder,
-    metadata::SupportedField,
-    providers::tests::TestCatalystProvider,
-    validator::rules::{DocumentOwnershipRule, utils::create_dummy_key_pair},
+    builder::tests::Builder, metadata::SupportedField, providers::tests::TestCatalystProvider,
+    tests_utils::create_dummy_key_pair, validator::rules::DocumentOwnershipRule,
 };
 
 mod collaborators_field_based;

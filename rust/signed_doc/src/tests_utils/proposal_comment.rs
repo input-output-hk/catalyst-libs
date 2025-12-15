@@ -11,7 +11,7 @@ pub fn proposal_comment_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+    let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
 
     let ref_doc_ref = ref_doc.doc_ref()?;

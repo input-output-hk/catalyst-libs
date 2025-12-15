@@ -6,7 +6,8 @@ use catalyst_signed_doc::{
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
         campaign_parameters_form_template_doc, category_parameters_doc,
-        category_parameters_form_template_doc, create_dummy_key_pair, proposal_form_template_doc,
+        category_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
+        proposal_form_template_doc,
     },
     *,
 };
@@ -55,7 +56,7 @@ use test_case::test_case;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = parameters.doc_ref()?;
@@ -82,7 +83,7 @@ use test_case::test_case;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(None);
+        let (sk, kid) = create_dummy_admin_key_pair();
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = parameters.doc_ref()?;
@@ -109,7 +110,7 @@ use test_case::test_case;
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(None);
+        let (sk, kid) = create_dummy_admin_key_pair();
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = parameters.doc_ref()?;
@@ -133,7 +134,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(None);
+        let (sk, kid) = create_dummy_admin_key_pair();
         provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({

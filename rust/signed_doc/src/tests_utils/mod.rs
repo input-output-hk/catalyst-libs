@@ -69,15 +69,15 @@ pub fn get_doc_kid_and_sk(
 }
 
 // If `None` make `CatalystId` as admin
-pub fn create_dummy_key_pair(
-    role_index: Option<RoleId>
-) -> (ed25519_dalek::SigningKey, CatalystId) {
+pub fn create_dummy_key_pair(role_index: RoleId) -> (ed25519_dalek::SigningKey, CatalystId) {
     let sk = create_signing_key();
-    let kid = if let Some(role_index) = role_index {
-        CatalystId::new("cardano", None, sk.verifying_key()).with_role(role_index)
-    } else {
-        CatalystId::new("cardano", None, sk.verifying_key()).as_admin()
-    };
+    let kid = CatalystId::new("cardano", None, sk.verifying_key()).with_role(role_index);
+    (sk, kid)
+}
+
+pub fn create_dummy_admin_key_pair() -> (ed25519_dalek::SigningKey, CatalystId) {
+    let sk = create_signing_key();
+    let kid = CatalystId::new("cardano", None, sk.verifying_key()).as_admin();
     (sk, kid)
 }
 

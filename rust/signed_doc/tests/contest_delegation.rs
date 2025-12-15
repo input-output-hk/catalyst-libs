@@ -42,7 +42,7 @@ use test_case::test_case;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -77,7 +77,7 @@ use test_case::test_case;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -112,7 +112,7 @@ use test_case::test_case;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -142,7 +142,7 @@ use test_case::test_case;
         let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = contest.doc_ref()?;
@@ -175,7 +175,7 @@ use test_case::test_case;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let ref_ref = rep_nomination.doc_ref()?;

@@ -3,7 +3,9 @@
 
 use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
-    tests_utils::{brand_parameters_form_template_doc, create_dummy_key_pair},
+    tests_utils::{
+        brand_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
+    },
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -21,7 +23,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -42,7 +44,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(None);
+        let (sk, kid) = create_dummy_admin_key_pair();
         provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
@@ -63,7 +65,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(None);
+        let (sk, kid) = create_dummy_admin_key_pair();
         provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({

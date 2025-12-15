@@ -524,7 +524,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -595,7 +595,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
             let doc_type = doc_type.clone();
             let doc_ref = doc_ref.clone();
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -970,7 +970,7 @@ fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
         name: "Catalyst Signed Doc with signatures non empty unprotected headers".to_string(),
         bytes_gen: Box::new({
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1023,7 +1023,7 @@ fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled strictly decoded rules, metadata field in the wrong order".to_string(),
         bytes_gen: Box::new({
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1078,7 +1078,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1206,7 +1206,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
         bytes_gen: Box::new({
             let doc_type = doc_type.clone();
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1274,7 +1274,7 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
             .to_string(),
         bytes_gen: Box::new({
             move || {
-                let (_, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+                let (_, kid) = create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;

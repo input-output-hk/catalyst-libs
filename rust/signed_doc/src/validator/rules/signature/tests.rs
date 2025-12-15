@@ -8,8 +8,9 @@ use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;
 use crate::{
-    metadata::document_refs::tests::create_dummy_doc_ref, providers::tests::*,
-    validator::rules::utils::create_dummy_key_pair, *,
+    providers::tests::*,
+    tests_utils::{create_dummy_doc_ref, create_dummy_key_pair},
+    *,
 };
 
 fn metadata() -> serde_json::Value {

@@ -8,7 +8,7 @@ pub fn proposal_form_template_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(None);
+    let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
 
     let parameters_ref = parameters_doc.doc_ref()?;

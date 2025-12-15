@@ -70,7 +70,7 @@ use test_case::test_case;
         let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let comment = proposal_comment_doc(&proposal, &template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let proposal_ref = proposal.doc_ref()?;
@@ -106,7 +106,7 @@ use test_case::test_case;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
         provider.add_sk(kid.clone(), sk.clone());
 
         let proposal_ref = proposal.doc_ref()?;
@@ -140,7 +140,7 @@ use test_case::test_case;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let proposal_ref = proposal.doc_ref()?;
@@ -175,7 +175,7 @@ use test_case::test_case;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let proposal_ref = proposal.doc_ref()?;
@@ -208,7 +208,7 @@ use test_case::test_case;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let proposal_ref = proposal.doc_ref()?;
@@ -241,7 +241,7 @@ use test_case::test_case;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let proposal_ref = proposal.doc_ref()?;
@@ -272,7 +272,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_comment_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let template_ref = template.doc_ref()?;

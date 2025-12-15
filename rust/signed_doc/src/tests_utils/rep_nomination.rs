@@ -10,7 +10,7 @@ pub fn rep_nomination_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(Some(RoleId::DelegatedRepresentative));
+    let (sk, kid) = create_dummy_key_pair(RoleId::DelegatedRepresentative);
     provider.add_sk(kid.clone(), sk.clone());
 
     let template_ref = template_doc.doc_ref()?;
