@@ -1,9 +1,11 @@
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
-use crate::providers::tests::TestCatalystProvider;
+use crate::{
+    Builder, CatalystSignedDocument, Chain, ContentEncoding, ContentType, doc_types,
+    providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
+};
 
-/// Creates a contest ballot checkpoint document.
+/// # Errors
 pub fn contest_ballot_checkpoint_doc(
     linked_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,

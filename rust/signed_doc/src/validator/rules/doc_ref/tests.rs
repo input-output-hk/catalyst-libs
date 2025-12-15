@@ -141,7 +141,7 @@ use crate::{
             .with_metadata_field(SupportedField::Type(exp_types[0].clone()))
             .build();
 
-        let new_ref = create_dummy_doc_ref();
+        let new_ref = create_dummy_doc_ref().unwrap();
         provider.add_document_with_ref(new_ref.clone(), &ref_doc);
 
         Builder::new()
@@ -158,7 +158,7 @@ use crate::{
     |_, _| {
         Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![create_dummy_doc_ref()].into(),
+                vec![create_dummy_doc_ref().unwrap()].into(),
             ))
             .build()
     }
@@ -317,7 +317,9 @@ async fn ref_rule_not_specified_test() {
     assert!(rule.check_inner(&doc, &provider).await.unwrap());
 
     let doc = Builder::new()
-        .with_metadata_field(SupportedField::Ref(vec![create_dummy_doc_ref()].into()))
+        .with_metadata_field(SupportedField::Ref(
+            vec![create_dummy_doc_ref().unwrap()].into(),
+        ))
         .build();
     assert!(!rule.check_inner(&doc, &provider).await.unwrap());
 }

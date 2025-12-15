@@ -1,8 +1,12 @@
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
-use crate::providers::tests::TestCatalystProvider;
+use crate::{
+    Builder, CatalystSignedDocument, ContentEncoding, ContentType, catalyst_id::role_index::RoleId,
+    doc_types, providers::tests::TestCatalystProvider, tests_utils::get_doc_kid_and_sk,
+    uuid::UuidV7,
+};
 
+/// # Errors
 pub fn proposal_submission_action_doc(
     ref_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,

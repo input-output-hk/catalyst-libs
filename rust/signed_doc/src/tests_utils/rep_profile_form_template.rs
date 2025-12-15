@@ -1,8 +1,11 @@
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
-use crate::providers::tests::TestCatalystProvider;
+use crate::{
+    Builder, CatalystSignedDocument, ContentEncoding, ContentType, doc_types,
+    providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
+};
 
+/// # Errors
 pub fn rep_profile_form_template_doc(
     parameters: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,

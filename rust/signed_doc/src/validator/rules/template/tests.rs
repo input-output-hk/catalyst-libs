@@ -103,7 +103,7 @@ use crate::{
 #[test_case(
     |_, provider| {
         let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        let template_ref = create_dummy_doc_ref();
+        let template_ref = create_dummy_doc_ref().unwrap();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(*template_ref.id()))
             .with_metadata_field(SupportedField::Ver(*template_ref.ver()))
@@ -222,7 +222,7 @@ use crate::{
 )]
 #[test_case(
     |_, _| {
-        let template_ref = create_dummy_doc_ref();
+        let template_ref = create_dummy_doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
         Builder::new()

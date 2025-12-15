@@ -1,9 +1,12 @@
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
-use crate::providers::tests::TestCatalystProvider;
+use crate::{
+    Builder, CatalystSignedDocument, ContentEncoding, ContentType, catalyst_id::role_index::RoleId,
+    doc_types, providers::tests::TestCatalystProvider, tests_utils::create_dummy_key_pair,
+    uuid::UuidV7,
+};
 
-/// Creates a Proposal Comment doc, without reply metadata field
+/// # Errors
 pub fn proposal_comment_doc(
     ref_doc: &CatalystSignedDocument,
     template_doc: &CatalystSignedDocument,

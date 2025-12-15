@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_doc_locator_encode_decode() {
-        let locator = create_dummy_doc_ref().doc_locator().clone();
+        let locator = create_dummy_doc_ref().unwrap().doc_locator().clone();
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
         locator.encode(&mut encoder, &mut ()).unwrap();
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_doc_locator_display() {
-        let locator = create_dummy_doc_ref().doc_locator().clone();
+        let locator = create_dummy_doc_ref().unwrap().doc_locator().clone();
         let display_str = locator.to_string();
         assert!(
             display_str.starts_with('b'),
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_doc_locator_from_str() {
-        let locator = create_dummy_doc_ref().doc_locator().clone();
+        let locator = create_dummy_doc_ref().unwrap().doc_locator().clone();
         let display_str = locator.to_string();
         let parsed = display_str
             .parse::<DocLocator>()

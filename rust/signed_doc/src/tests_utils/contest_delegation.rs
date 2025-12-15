@@ -1,9 +1,12 @@
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
-use crate::providers::tests::TestCatalystProvider;
+use crate::{
+    Builder, CatalystSignedDocument, ContentEncoding, ContentType, catalyst_id::role_index::RoleId,
+    doc_types, providers::tests::TestCatalystProvider, tests_utils::create_dummy_key_pair,
+    uuid::UuidV7,
+};
 
-/// Creates a contest delegation document.
+/// # Errors
 pub fn contest_delegation_doc(
     ref_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,

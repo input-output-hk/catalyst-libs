@@ -1,6 +1,6 @@
-//! Reusable functionlaity for building and signing documents
+//! Reusable functionality for building and signing documents
 //! # WARNING
-//! FOR TESTING PURPOSES ONLY, DONT USE IN PRODUCTION CODE
+//! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
 
 #![allow(missing_docs)]
 
@@ -47,12 +47,13 @@ pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
 
 use crate::{
+    Builder, CatalystSignedDocument, ContentType, DocumentRef,
     catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     uuid::{UuidV4, UuidV7},
-    *,
 };
 
+/// # Errors
 pub fn get_doc_kid_and_sk(
     provider: &TestCatalystProvider,
     doc: &CatalystSignedDocument,
@@ -69,37 +70,37 @@ pub fn get_doc_kid_and_sk(
 }
 
 // If `None` make `CatalystId` as admin
+#[must_use]
 pub fn create_dummy_key_pair(role_index: RoleId) -> (ed25519_dalek::SigningKey, CatalystId) {
     let sk = create_signing_key();
     let kid = CatalystId::new("cardano", None, sk.verifying_key()).with_role(role_index);
     (sk, kid)
 }
 
+#[must_use]
 pub fn create_dummy_admin_key_pair() -> (ed25519_dalek::SigningKey, CatalystId) {
     let sk = create_signing_key();
     let kid = CatalystId::new("cardano", None, sk.verifying_key()).as_admin();
     (sk, kid)
 }
 
+#[must_use]
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     let mut csprng = rand::rngs::OsRng;
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-#[allow(clippy::expect_used)]
-pub fn create_dummy_doc_ref() -> DocumentRef {
+/// # Errors
+pub fn create_dummy_doc_ref() -> anyhow::Result<DocumentRef> {
     let test_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "id": UuidV7::new().to_string(),
             "ver": UuidV7::new().to_string(),
             "type": UuidV4::new().to_string(),
             "content-type": ContentType::Json,
-        }))
-        .expect("Should create metadata")
-        .with_json_content(&serde_json::json!({"test": "content"}))
-        .expect("Should set content")
-        .build()
-        .expect("Should build document");
+        }))?
+        .with_json_content(&serde_json::json!({"test": "content"}))?
+        .build()?;
 
-    test_doc.doc_ref().expect("Should generate DocumentRef")
+    test_doc.doc_ref()
 }
