@@ -1,10 +1,16 @@
 //! Doc Sync message payload for .syn topic
+//! For more information, see <https://github.com/input-output-hk/hermes/blob/main/docs/src/architecture/08_concepts/document_sync/protocol_spec.md#syn-topic-basesyn>
 
 use derive_more::Display;
 use minicbor::{
     Decode, Decoder, Encode, Encoder, decode,
     encode::{self, Write},
 };
+
+/// Syn payload
+#[derive(Decode, Encode, derive_more::Deref, derive_more::From, derive_more::Into)]
+#[cbor(transparent)]
+pub struct Syn(#[n(0)] MsgSyn);
 
 /// Maximum length of prefix array: 2^14.
 const MAX_PREFIX_ARRAY_LENGTH: u64 = 16384;
@@ -48,7 +54,7 @@ impl<C> Decode<'_, C> for SynNumericKeys {
 
 /// Ed25519 public key type.
 pub type Ed25519Pubkey = [u8; 32];
-/// Blake3-256 hash type.
+/// BLAKE3-256 hash type.
 pub type Blake3256 = [u8; 32];
 /// Prefix array type.
 pub type PrefixArray = Vec<Blake3256>;
@@ -63,7 +69,7 @@ pub struct MsgSyn {
     /// Target peer to respond.
     pub to: Ed25519Pubkey,
     /// Array of SMT node hashes at depth D left-to-right across the tree.
-    /// The size of the array MUST be a power of two (2,4,8…,16384).
+    /// The size of the array MUST be 2 to power of N (2,4,8...,16384).
     pub prefix: Option<PrefixArray>,
     /// Last observed SMT root (BLAKE3-256 hash) of the target peer.
     pub peer_root: Blake3256,
@@ -72,9 +78,12 @@ pub struct MsgSyn {
 }
 
 impl MsgSyn {
+    /// The maximum number of fields for .syn payload
     const MAX_NUM_FIELDS: u64 = 6;
 
+    /// Get the number of fields for .syn payload
     fn num_fields(&self) -> u64 {
+        // Prefix is optional
         if self.prefix.is_none() {
             Self::MAX_NUM_FIELDS.saturating_sub(1)
         } else {
@@ -96,7 +105,7 @@ impl<C> Encode<C> for MsgSyn {
         if let Some(prefix) = &self.prefix {
             // Only encode the prefix if the doc count exceeds the threshold
             if self.count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
-                encode_prefix(prefix, e)?
+                encode_prefix(prefix, e)?;
             }
         }
         encode_blake3_256(SynNumericKeys::PeerRoot, &self.peer_root, e)?;
@@ -105,6 +114,7 @@ impl<C> Encode<C> for MsgSyn {
     }
 }
 
+/// Helper function to encode BLAKE3-256 hash and its key.
 fn encode_blake3_256<W: Write>(
     k: SynNumericKeys,
     h: &Blake3256,
@@ -113,6 +123,7 @@ fn encode_blake3_256<W: Write>(
     e.encode(k)?.bytes(h)?.ok()
 }
 
+/// Helper function to encode count and its key.
 fn encode_count<W: Write>(
     k: SynNumericKeys,
     count: u64,
@@ -121,6 +132,7 @@ fn encode_count<W: Write>(
     e.encode(k)?.u64(count)?.ok()
 }
 
+/// Helper function to encode `to` (Ed25519) public key and its key.
 fn encode_to<W: Write>(
     pubkey: &Ed25519Pubkey,
     e: &mut Encoder<W>,
@@ -128,6 +140,7 @@ fn encode_to<W: Write>(
     e.encode(SynNumericKeys::To)?.bytes(pubkey)?.ok()
 }
 
+/// Helper function to encode prefix array and its key.
 fn encode_prefix<W: Write>(
     prefix: &PrefixArray,
     e: &mut Encoder<W>,
@@ -139,7 +152,7 @@ fn encode_prefix<W: Write>(
 
     if is_valid_prefix_len(l) {
         e.encode(SynNumericKeys::Prefix)?.array(l)?;
-        for p in prefix.iter() {
+        for p in prefix {
             e.bytes(p)?;
         }
         Ok(())
@@ -160,12 +173,17 @@ impl<C> Decode<'_, C> for MsgSyn {
         })?;
         if map_len > Self::MAX_NUM_FIELDS {
             Err(decode::Error::message("Too many fields in a map").at(d.position()))?;
-        };
+        }
 
         let root = decode_blake3_256(SynNumericKeys::Root, d)?;
         let count = decode_count(SynNumericKeys::Count, d)?;
         let to = decode_to(d)?;
-        let prefix = decode_prefix(d)?;
+        // Only try to decode prefix if count exceeds threshold
+        let prefix = if count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
+            decode_prefix(d)?
+        } else {
+            None
+        };
         let peer_root = decode_blake3_256(SynNumericKeys::PeerRoot, d)?;
         let peer_count = decode_count(SynNumericKeys::PeerCount, d)?;
 
@@ -180,6 +198,7 @@ impl<C> Decode<'_, C> for MsgSyn {
     }
 }
 
+/// Helper function to decode BLAKE3-256 hash and its key.
 fn decode_blake3_256(
     k: SynNumericKeys,
     d: &mut Decoder<'_>,
@@ -189,10 +208,11 @@ fn decode_blake3_256(
             .try_into()
             .map_err(|err| decode::Error::custom(err).at(d.position()))
     } else {
-        Err(decode::Error::message(format!("Expected key number {}", k)).at(d.position()))
+        Err(decode::Error::message(format!("Expected key number {k}")).at(d.position()))
     }
 }
 
+/// Helper function to decode count and its key.
 fn decode_count(
     k: SynNumericKeys,
     d: &mut Decoder<'_>,
@@ -200,10 +220,11 @@ fn decode_count(
     if d.decode::<SynNumericKeys>().is_ok_and(|key| key == k) {
         d.u64()
     } else {
-        Err(decode::Error::message(format!("Expected key number {}", k)).at(d.position()))
+        Err(decode::Error::message(format!("Expected key number {k}")).at(d.position()))
     }
 }
 
+/// Helper function to decode `to` (Ed25519) public key and its key.
 fn decode_to(d: &mut Decoder<'_>) -> Result<Ed25519Pubkey, decode::Error> {
     if d.decode::<SynNumericKeys>()
         .is_ok_and(|key| matches!(key, SynNumericKeys::To))
@@ -219,6 +240,7 @@ fn decode_to(d: &mut Decoder<'_>) -> Result<Ed25519Pubkey, decode::Error> {
     }
 }
 
+/// Helper function to decode prefix array and its key.
 fn decode_prefix(d: &mut Decoder<'_>) -> Result<Option<PrefixArray>, decode::Error> {
     if d.decode::<SynNumericKeys>()
         .is_ok_and(|key| matches!(key, SynNumericKeys::Prefix))
@@ -231,7 +253,7 @@ fn decode_prefix(d: &mut Decoder<'_>) -> Result<Option<PrefixArray>, decode::Err
             Err(
                 decode::Error::message("Invalid prefix length, need to be 2^N and N <= 14")
                     .at(d.position()),
-            )?
+            )?;
         }
         let mut arr = vec![];
         for _ in 0..len {
@@ -248,14 +270,14 @@ fn decode_prefix(d: &mut Decoder<'_>) -> Result<Option<PrefixArray>, decode::Err
 
 /// Check whether the prefix length is valid.
 fn is_valid_prefix_len(n: u64) -> bool {
-    (n != 0) && (n & (n - 1) == 0) && n <= MAX_PREFIX_ARRAY_LENGTH
+    (n != 0) && (n.is_power_of_two()) && n <= MAX_PREFIX_ARRAY_LENGTH
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn encode_decode_without_prefix() {
+    fn test_encode_decode_without_prefix() {
         let msg = MsgSyn {
             root: [0u8; 32],
             count: 10,
@@ -268,7 +290,8 @@ mod tests {
         let mut buf = minicbor::Encoder::new(vec![]);
         buf.encode(&msg).expect("Encoding should succeed");
         let encoded = buf.into_writer();
-        let decoded: MsgSyn = minicbor::decode(&encoded).expect("Decoding should succeed");
+        let decoded = Syn::decode(&mut minicbor::Decoder::new(&encoded), &mut ())
+            .expect("Decoding should succeed");
 
         assert_eq!(msg.root, decoded.root);
         assert_eq!(msg.count, decoded.count);
@@ -279,7 +302,7 @@ mod tests {
     }
 
     #[test]
-    fn encode_decode_with_prefix_count_below_threshold() {
+    fn test_encode_decode_with_prefix_count_below_threshold() {
         let msg = MsgSyn {
             root: [0u8; 32],
             count: 64,
@@ -292,7 +315,8 @@ mod tests {
         let mut buf = minicbor::Encoder::new(vec![]);
         buf.encode(&msg).expect("Encoding should succeed");
         let encoded = buf.into_writer();
-        let decoded: MsgSyn = minicbor::decode(&encoded).expect("Decoding should succeed");
+        let decoded = Syn::decode(&mut minicbor::Decoder::new(&encoded), &mut ())
+            .expect("Decoding should succeed");
 
         assert_eq!(msg.root, decoded.root);
         assert_eq!(msg.count, decoded.count);
@@ -300,11 +324,11 @@ mod tests {
         // Prefix shouldn't be encoded
         assert_eq!(None, decoded.prefix);
         assert_eq!(msg.peer_root, decoded.peer_root);
-        assert_eq!(msg.peer_count, decoded.peer_count)
+        assert_eq!(msg.peer_count, decoded.peer_count);
     }
 
     #[test]
-    fn encode_decode_with_prefix_count_above_threshold() {
+    fn test_encode_decode_with_prefix_count_above_threshold() {
         let msg = MsgSyn {
             root: [0u8; 32],
             count: 80,
@@ -317,7 +341,8 @@ mod tests {
         let mut buf = minicbor::Encoder::new(vec![]);
         buf.encode(&msg).expect("Encoding should succeed");
         let encoded = buf.into_writer();
-        let decoded: MsgSyn = minicbor::decode(&encoded).expect("Decoding should succeed");
+        let decoded = Syn::decode(&mut minicbor::Decoder::new(&encoded), &mut ())
+            .expect("Decoding should succeed");
 
         assert_eq!(msg.root, decoded.root);
         assert_eq!(msg.count, decoded.count);
@@ -325,11 +350,11 @@ mod tests {
         // Prefix shouldn't be encoded
         assert_eq!(msg.prefix, decoded.prefix);
         assert_eq!(msg.peer_root, decoded.peer_root);
-        assert_eq!(msg.peer_count, decoded.peer_count)
+        assert_eq!(msg.peer_count, decoded.peer_count);
     }
 
     #[test]
-    fn encode_with_invalid_prefix_len() {
+    fn test_encode_with_invalid_prefix_len() {
         let msg = MsgSyn {
             root: [0u8; 32],
             count: 80,
@@ -349,12 +374,15 @@ mod tests {
     }
 
     #[test]
-    fn encode_with_invalid_prefix_len_above_limit() {
+    fn test_encode_with_invalid_prefix_len_above_limit() {
         let msg = MsgSyn {
             root: [0u8; 32],
             count: 80,
             to: [0u8; 32],
-            prefix: Some(vec![[0u8; 32]; (MAX_PREFIX_ARRAY_LENGTH + 1) as usize]),
+            prefix: Some(vec![
+                [0u8; 32];
+                usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()
+            ]),
             peer_root: [0u8; 32],
             peer_count: 20,
         };
