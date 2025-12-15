@@ -20,6 +20,7 @@ COPY_SRC:
         catalyst-contest \
         catalyst-signed-doc-macro \
         catalyst-signed-doc-spec \
+        catalyst-signed-doc-tests-utils \
         rbac-registration \
         immutable-ledger .
 
