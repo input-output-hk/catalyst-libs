@@ -3,6 +3,7 @@
 mod envelope;
 
 pub mod payload;
+pub mod syn_payload;
 
 pub use envelope::{Envelope, EnvelopePayload};
 
