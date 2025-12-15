@@ -3,8 +3,10 @@
 use cbork_utils::decode_helper::decode_array_len;
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-/// A length of the encrypted block byte array.
-const ENCRYPTED_BLOCK_LEN: usize = 16;
+use crate::contest_ballot::encrypted_block::EncryptedBlock;
+
+/// A CBOR version of the `EncryptedChoices`.
+const VERSION: u64 = 0;
 
 /// Encrypted voter choices.
 ///
@@ -16,16 +18,6 @@ const ENCRYPTED_BLOCK_LEN: usize = 16;
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EncryptedChoices(pub Vec<EncryptedBlock>);
-
-/// An AES-CTR encrypted data block.
-///
-/// The CDDL schema:
-/// ```cddl
-/// aes-ctr-encrypted-block = bytes .size 16
-/// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
-pub struct EncryptedBlock(pub [u8; ENCRYPTED_BLOCK_LEN]);
 
 impl Decode<'_, ()> for EncryptedChoices {
     fn decode(
@@ -41,9 +33,9 @@ impl Decode<'_, ()> for EncryptedChoices {
             )));
         }
         let version = u64::decode(d, ctx)?;
-        if version != 0 {
+        if version != VERSION {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected EncryptedChoices version value: {version}, expected 0"
+                "Unexpected EncryptedChoices version value: {version}, expected {VERSION}"
             )));
         }
 
@@ -67,30 +59,11 @@ impl Encode<()> for EncryptedChoices {
         e.array((self.0.len() as u64).checked_add(1).ok_or_else(|| {
             minicbor::encode::Error::message("EncryptedChoices length overflow")
         })?)?;
-        0.encode(e, ctx)?;
+        VERSION.encode(e, ctx)?;
         for block in &self.0 {
             block.encode(e, ctx)?;
         }
         Ok(())
-    }
-}
-
-impl Decode<'_, ()> for EncryptedBlock {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
-        <[u8; ENCRYPTED_BLOCK_LEN]>::decode(d, ctx).map(Self)
-    }
-}
-
-impl Encode<()> for EncryptedBlock {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        self.0.encode(e, ctx)
     }
 }
 
@@ -101,17 +74,7 @@ mod tests {
     use super::*;
 
     #[property_test]
-    fn encrypted_block_roundtrip(original: EncryptedBlock) {
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let decoded = EncryptedBlock::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
-    }
-
-    #[property_test]
-    fn encrypted_choices_roundtrip(block: EncryptedBlock) {
+    fn roundtrip(block: EncryptedBlock) {
         let original = EncryptedChoices(vec![block]);
         let mut buffer = Vec::new();
         original

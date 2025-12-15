@@ -127,7 +127,7 @@ mod tests {
     use catalyst_voting::crypto::elgamal::Ciphertext;
 
     use super::*;
-    use crate::EncryptedBlock;
+    use crate::contest_ballot::encrypted_block::EncryptedBlock;
 
     #[test]
     fn roundtrip() {
