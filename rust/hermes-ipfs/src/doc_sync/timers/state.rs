@@ -137,8 +137,8 @@ mod tests {
             ..Default::default()
         }
     }
-    #[tokio::test]
-    async fn test_start_quiet_timer_count_keepalive() {
+    #[test]
+    fn test_start_quiet_timer_count_keepalive() {
         // Track how many times the callback is called
         let callback_count = Arc::new(AtomicU32::new(0)).clone();
         let callback: KeepaliveCallback = Arc::new({
@@ -150,23 +150,52 @@ mod tests {
         });
 
         let state = SyncTimersState::new(timer_config(), callback);
-        let state_clone = state.clone();
-        tokio::task::spawn_blocking(move || {
-            state_clone.start_quiet_timer();
-        })
-        .await
-        .unwrap();
+        state.start_quiet_timer();
 
         // Trigger 2 keepalive
-        tokio::time::sleep(Duration::from_millis(250)).await;
+        std::thread::sleep(Duration::from_millis(250));
         state.reset_quiet_timer();
         // Trigger 1 keepalive
-        tokio::time::sleep(Duration::from_millis(120)).await;
+        std::thread::sleep(Duration::from_millis(120));
 
         let count = callback_count.load(Ordering::Relaxed);
-        assert!(
-            count == 3,
+        assert_eq!(
+            count, 3,
             "Expected callback to be called 3 times, got {count}"
+        );
+    }
+
+    #[test]
+    fn test_double_start_no_duplicate() {
+        // This should show the log "Quiet timer already running"
+        let _unused = tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::TRACE)
+            .with_test_writer()
+            .try_init();
+
+        let callback_count = Arc::new(AtomicU32::new(0));
+        let callback: KeepaliveCallback = Arc::new({
+            let counter = callback_count.clone();
+            move || {
+                counter.fetch_add(1, Ordering::Relaxed);
+                Ok(())
+            }
+        });
+
+        let state = SyncTimersState::new(timer_config(), callback);
+
+        // Start twice
+        state.start_quiet_timer();
+        // Should ignore
+        state.start_quiet_timer();
+
+        // Wait for keepalive
+        std::thread::sleep(Duration::from_millis(120));
+
+        let count = callback_count.load(Ordering::Relaxed);
+        assert_eq!(
+            count, 1,
+            "Expected callback to be called 1 times, got {count}"
         );
     }
 }
