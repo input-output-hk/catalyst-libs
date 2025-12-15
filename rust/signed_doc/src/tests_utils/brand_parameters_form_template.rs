@@ -1,13 +1,16 @@
-use catalyst_signed_doc::providers::tests::TestCatalystProvider;
 use ed25519_dalek::ed25519::signature::Signer;
 
-use super::*;
+use crate::{
+    Builder, CatalystSignedDocument, ContentEncoding, ContentType, doc_types,
+    providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
+};
 
+#[allow(clippy::missing_errors_doc)]
 pub fn brand_parameters_form_template_doc(
     provider: &mut TestCatalystProvider
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(None);
+    let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
     Builder::new()
         .with_json_metadata(serde_json::json!({
