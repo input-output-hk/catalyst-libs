@@ -1,6 +1,9 @@
 use std::io::Write;
 
-use catalyst_types::catalyst_id::role_index::RoleId;
+use catalyst_types::{
+    catalyst_id::{CatalystId, role_index::RoleId},
+    uuid::{UuidV4, UuidV7},
+};
 use ed25519_dalek::ed25519::signature::Signer;
 
 use super::*;

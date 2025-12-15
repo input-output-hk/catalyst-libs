@@ -64,7 +64,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Role0)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
@@ -98,7 +98,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Proposer));
         provider.add_sk(kid.clone(), sk.clone());
 
@@ -131,7 +131,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
@@ -163,7 +163,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
@@ -195,7 +195,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
@@ -228,7 +228,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
@@ -260,7 +260,7 @@ use test_case::test_case;
         let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = get_doc_kid_and_sk(provider, &proposal, 0)
             .map(|(sk, kid)| (sk, kid.with_role(RoleId::Proposer)))
             .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;

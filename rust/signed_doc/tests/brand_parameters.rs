@@ -24,7 +24,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(Some(RoleId::Role0));
         provider.add_sk(kid.clone(), sk.clone());
 
@@ -50,7 +50,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
@@ -76,7 +76,7 @@ use test_case::test_case;
 #[test_case(
     |provider| {
         let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
 
@@ -101,7 +101,7 @@ use test_case::test_case;
 )]
 #[test_case(
     |provider| {
-        let id = UuidV7::new();
+        let id = uuid::UuidV7::new();
         let (sk, kid) = create_dummy_key_pair(None);
         provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
