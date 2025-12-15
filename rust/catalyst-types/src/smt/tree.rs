@@ -320,4 +320,20 @@ mod tests {
             .expect("should get a slice");
         hashes.len()
     }
+
+    #[test]
+    fn horizontal_slice_at_0_equals_to_root() {
+        let mut smt = Tree::new();
+        let _key = smt.insert(&IntValue(1)).expect("should insert");
+
+        let root = smt.root();
+        let node_at_0 = smt
+            .horizontal_slice_at(0)
+            .next()
+            .expect("should have at least one value")
+            .expect("should retrieve the value")
+            .expect("value should exist");
+
+        assert_eq!(*root, node_at_0);
+    }
 }
