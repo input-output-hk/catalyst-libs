@@ -3,3 +3,5 @@
 //! See the [documentation] for more information.
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot/
+
+pub mod contest_delegation;
