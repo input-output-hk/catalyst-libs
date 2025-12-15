@@ -6,12 +6,6 @@
 
 pub mod contest_delegation;
 
-mod choices;
 mod contest_ballot;
-mod encrypted_choices;
 
-pub use crate::{
-    choices::Choices,
-    contest_ballot::ContentBallot,
-    encrypted_choices::{EncryptedBlock, EncryptedChoices},
-};
+pub use crate::contest_ballot::{Choices, ContentBallot, EncryptedBlock, EncryptedChoices};
