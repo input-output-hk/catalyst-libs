@@ -97,10 +97,12 @@ impl Encode<()> for ContentBallot {
         e: &mut Encoder<W>,
         _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        let len = self.choices.len() as u64
-            + u64::from(self.column_proof.is_some())
-            + u64::from(self.matrix_proof.is_some())
-            + u64::from(self.voter_choices.is_some());
+        let len = u64::try_from(self.choices.len())
+            .map_err(minicbor::encode::Error::message)?
+            .checked_add(u64::from(self.column_proof.is_some()))
+            .and_then(|v| v.checked_add(u64::from(self.matrix_proof.is_some())))
+            .and_then(|v| v.checked_add(u64::from(self.voter_choices.is_some())))
+            .ok_or_else(|| minicbor::encode::Error::message("ContentBallot map length overflow"))?;
         e.map(len)?;
 
         for (&key, val) in &self.choices {

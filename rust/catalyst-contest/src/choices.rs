@@ -46,8 +46,15 @@ impl Decode<'_, ()> for Choices {
         }
         match u8::decode(d, ctx)? {
             0 => {
-                let mut values = Vec::with_capacity(len as usize - 1);
-                for _ in 0..len - 1 {
+                let mut values = Vec::with_capacity(
+                    len.checked_sub(1)
+                        .ok_or_else(|| {
+                            minicbor::decode::Error::message("Choices array length underflow")
+                        })?
+                        .try_into()
+                        .map_err(minicbor::decode::Error::message)?,
+                );
+                for _ in 1..len {
                     values.push(i64::decode(d, ctx)?);
                 }
                 Ok(Self::Clear(values))
@@ -89,7 +96,9 @@ impl Encode<()> for Choices {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             Choices::Clear(choices) => {
-                e.array(choices.len() as u64 + 1)?;
+                e.array((choices.len() as u64).checked_add(1).ok_or_else(|| {
+                    minicbor::encode::Error::message("Clear chaoices array length overflow")
+                })?)?;
                 0.encode(e, ctx)?;
                 for choice in choices {
                     choice.encode(e, ctx)?;
@@ -98,6 +107,8 @@ impl Encode<()> for Choices {
             Choices::Encrypted { choices, row_proof } => {
                 e.array(2)?;
                 1.encode(e, ctx)?;
+                // Allowed because 1 + 1 will never result in overflow.
+                #[allow(clippy::arithmetic_side_effects)]
                 e.array(1 + u64::from(row_proof.is_some()))?;
                 choices.encode(e, ctx)?;
                 if let Some(row_proof) = row_proof {

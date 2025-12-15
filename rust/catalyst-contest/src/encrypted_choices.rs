@@ -32,20 +32,24 @@ impl Decode<'_, ()> for EncryptedChoices {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        let len = decode_array_len(d, "encrypted choices")?;
+        let len: usize = decode_array_len(d, "EncryptedChoices")?
+            .try_into()
+            .map_err(minicbor::decode::Error::message)?;
         if len < 2 {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected encrypted choices array length: {len}, expected at least 2"
+                "Unexpected EncryptedChoices array length: {len}, expected at least 2"
             )));
         }
         let version = u64::decode(d, ctx)?;
         if version != 0 {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected encrypted choices version value: {version}, expected 0"
+                "Unexpected EncryptedChoices version value: {version}, expected 0"
             )));
         }
 
-        let mut blocks = Vec::with_capacity(len as usize - 1);
+        // This is allowed because of the `len < 2` check above.
+        #[allow(clippy::arithmetic_side_effects)]
+        let mut blocks = Vec::with_capacity(len - 1);
         for _ in 1..len {
             blocks.push(EncryptedBlock::decode(d, ctx)?);
         }
@@ -60,7 +64,9 @@ impl Encode<()> for EncryptedChoices {
         e: &mut Encoder<W>,
         ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.array(self.0.len() as u64 + 1)?;
+        e.array((self.0.len() as u64).checked_add(1).ok_or_else(|| {
+            minicbor::encode::Error::message("EncryptedChoices length overflow")
+        })?)?;
         0.encode(e, ctx)?;
         for block in &self.0 {
             block.encode(e, ctx)?;
