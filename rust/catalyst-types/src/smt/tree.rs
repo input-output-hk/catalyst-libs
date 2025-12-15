@@ -10,7 +10,12 @@ use sparse_merkle_tree::{
 };
 pub use sparse_merkle_tree::{H256, MerkleProof};
 
-use crate::smt::{Error, Value, hasher::Hasher, utils::{self, ROOT_HEIGHT}, value::ValueWrapper};
+use crate::smt::{
+    Error, Value,
+    hasher::Hasher,
+    utils::{self, ROOT_HEIGHT},
+    value::ValueWrapper,
+};
 
 /// Sparse Merkle Tree
 pub struct Tree<V> {
@@ -118,11 +123,7 @@ where V: Default + Value + Clone
     ) -> impl Iterator<Item = Result<Option<H256>, Error>> {
         let store = self.inner.store();
 
-        // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
-        #[allow(clippy::arithmetic_side_effects)]
-        let inverted_height = ROOT_HEIGHT - height;
-
-        horizontal_slice::<_, Hasher>(store, inverted_height)
+        horizontal_slice::<_, Hasher>(store, height)
     }
 }
 
@@ -185,24 +186,24 @@ where
     V: Clone,
     H: sparse_merkle_tree::traits::Hasher + Default,
 {
-    // How long is the path from the root to the target height.
+    // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
     #[allow(clippy::arithmetic_side_effects)]
-    let key_prefix_length = ROOT_HEIGHT - target_height;
+    let inverted_height = ROOT_HEIGHT - target_height;
 
     // Total number of nodes at this height.
-    let width = 2_u32.pow(u32::from(key_prefix_length));
+    let width = 2_u32.pow(u32::from(target_height));
 
     // Retrieve all materialized nodes at this height.
     // SMT nodes are materialized lazily: only nodes on paths to non-empty leaves.
     // Thus at any height, stored nodes <= theoretical maximum for that level.
     let materialized_nodes: HashMap<_, _> =
-        materialized_nodes_at_height(store, target_height).collect();
+        materialized_nodes_at_height(store, inverted_height).collect();
 
     // For a given height we need to iterate through `width` number of positions,
     // even if some nodes are not materialized.
     (0..width).map(move |horizontal_position| {
-        let node_key = utils::node_key(key_prefix_length, horizontal_position)?;
-        let key = BranchKey::new(target_height, node_key);
+        let node_key = utils::node_key(target_height, horizontal_position)?;
+        let key = BranchKey::new(inverted_height, node_key);
 
         Ok(materialized_nodes.get(&node_key).map(|node| {
             // Recreate the node identity using the provided hasher.
