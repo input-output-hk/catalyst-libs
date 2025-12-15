@@ -8,6 +8,9 @@ use crate::smt::Error;
 /// batches.
 const MAX_COARSE_HEIGHT: u8 = 14;
 
+/// Root height. The tree goes from `u8::MAX` down to 0.
+pub(super) const ROOT_HEIGHT: u8 = u8::MAX;
+
 /// Calculates an appropriate coarse height for grouping Merkle tree nodes into batches.
 ///
 /// This function determines a tree height that balances the tradeoff between batch size
@@ -83,7 +86,7 @@ pub(super) fn node_key(
 
         if bit_is_set {
             #[allow(clippy::arithmetic_side_effects)]
-            node_key.set_bit(u8::MAX - bit_index_msb);
+            node_key.set_bit(ROOT_HEIGHT - bit_index_msb);
         }
     }
     Ok(node_key)

@@ -10,7 +10,7 @@ use sparse_merkle_tree::{
 };
 pub use sparse_merkle_tree::{H256, MerkleProof};
 
-use crate::smt::{Error, Value, hasher::Hasher, utils, value::ValueWrapper};
+use crate::smt::{Error, Value, hasher::Hasher, utils::{self, ROOT_HEIGHT}, value::ValueWrapper};
 
 /// Sparse Merkle Tree
 pub struct Tree<V> {
@@ -19,9 +19,6 @@ pub struct Tree<V> {
     /// Phantom data
     phantom: PhantomData<V>,
 }
-
-/// Root height. The tree goes from `u8::MAX` down to 0.
-const ROOT_HEIGHT: u8 = u8::MAX;
 
 impl<V> Tree<V>
 where V: Default + Value + Clone
@@ -123,7 +120,7 @@ where V: Default + Value + Clone
 
         // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
         #[allow(clippy::arithmetic_side_effects)]
-        let inverted_height = u8::MAX - height;
+        let inverted_height = ROOT_HEIGHT - height;
 
         horizontal_slice::<_, Hasher>(store, inverted_height)
     }
