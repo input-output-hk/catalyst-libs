@@ -90,17 +90,19 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-#[allow(clippy::missing_errors_doc)]
-pub fn create_dummy_doc_ref() -> anyhow::Result<DocumentRef> {
+pub fn create_dummy_doc_ref() -> DocumentRef {
     let test_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "id": UuidV7::new().to_string(),
             "ver": UuidV7::new().to_string(),
             "type": UuidV4::new().to_string(),
             "content-type": ContentType::Json,
-        }))?
-        .with_json_content(&serde_json::json!({"test": "content"}))?
-        .build()?;
+        }))
+        .expect("Must be valid metadata fields")
+        .with_json_content(&serde_json::json!({"test": "content"}))
+        .expect("Must be valid JSON object")
+        .build()
+        .expect("Must be valid document");
 
-    test_doc.doc_ref()
+    test_doc.doc_ref().expect("Must be valid DocumentRef")
 }

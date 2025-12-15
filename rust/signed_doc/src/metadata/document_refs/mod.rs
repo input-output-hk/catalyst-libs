@@ -249,7 +249,7 @@ pub(crate) mod tests {
     #[test_case(
         CompatibilityPolicy::Accept,
         {
-            let doc_ref = create_dummy_doc_ref().unwrap();
+            let doc_ref = create_dummy_doc_ref();
             let mut e = Encoder::new(Vec::new());
             e.array(1)
                 .unwrap()
@@ -315,7 +315,7 @@ pub(crate) mod tests {
         mut policy: CompatibilityPolicy,
         e_gen: impl FnOnce(UuidV7, UuidV7, DocLocator) -> Encoder<Vec<u8>>,
     ) {
-        let doc_ref = create_dummy_doc_ref().unwrap();
+        let doc_ref = create_dummy_doc_ref();
         let e = e_gen(*doc_ref.id(), *doc_ref.ver(), doc_ref.doc_locator().clone());
 
         let doc_refs =
@@ -326,8 +326,8 @@ pub(crate) mod tests {
 
     #[test]
     fn test_json_valid_serde() {
-        let doc_ref1 = create_dummy_doc_ref().unwrap();
-        let doc_ref2 = create_dummy_doc_ref().unwrap();
+        let doc_ref1 = create_dummy_doc_ref();
+        let doc_ref2 = create_dummy_doc_ref();
 
         let refs = DocumentRefs(vec![doc_ref1, doc_ref2]);
 
@@ -339,10 +339,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_deterministic_decoding() {
-        let mut refs = vec![
-            create_dummy_doc_ref().unwrap(),
-            create_dummy_doc_ref().unwrap(),
-        ];
+        let mut refs = vec![create_dummy_doc_ref(), create_dummy_doc_ref()];
         refs.sort_by(|a, b| {
             let a_bytes = {
                 let mut e = Encoder::new(Vec::new());

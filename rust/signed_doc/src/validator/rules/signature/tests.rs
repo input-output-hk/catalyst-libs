@@ -14,10 +14,10 @@ use crate::{
 };
 
 fn metadata() -> serde_json::Value {
-    let ref_doc = create_dummy_doc_ref().unwrap();
-    let reply_doc = create_dummy_doc_ref().unwrap();
-    let template_doc = create_dummy_doc_ref().unwrap();
-    let parameters_doc = create_dummy_doc_ref().unwrap();
+    let ref_doc = create_dummy_doc_ref();
+    let reply_doc = create_dummy_doc_ref();
+    let template_doc = create_dummy_doc_ref();
+    let parameters_doc = create_dummy_doc_ref();
 
     serde_json::json!({
         "content-type": ContentType::Json.to_string(),
@@ -234,8 +234,7 @@ fn parameters_alias_field(
     e.bytes(m_p_headers.as_slice())?;
     // empty unprotected headers
     e.map(1)?;
-    e.str(alias)?
-        .encode_with(create_dummy_doc_ref().unwrap(), &mut ())?;
+    e.str(alias)?.encode_with(create_dummy_doc_ref(), &mut ())?;
     // content (random bytes)
     let content = [1, 2, 3];
     e.bytes(&content)?;
