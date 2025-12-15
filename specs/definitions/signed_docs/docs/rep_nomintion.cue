@@ -111,9 +111,15 @@ docs: "Rep Nomination": {
 		In the case of Revoking a nomination the payload is `nil`.
 		"""
 
-	signers: roles: user: [
-		"Representative",
-	]
+	signers: {
+		roles: {
+			user: [
+				"Representative",
+			]
+		}
+
+		update: type: "ref"
+	}
 
 	authors: {
 		"Neil McAuliffe": "neil.mcauliffe@iohk.io"
@@ -126,6 +132,13 @@ docs: "Rep Nomination": {
 			modified: "2025-06-19"
 			changes: """
 				* First Published Version
+				"""
+		},
+		{
+			version:  "0.2.2"
+			modified: "2025-12-02"
+			changes: """
+				* Added missing `signers: update: type: "ref"` definition.
 				"""
 		},
 	]

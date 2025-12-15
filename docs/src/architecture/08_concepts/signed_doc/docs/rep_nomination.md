@@ -289,7 +289,8 @@ The following User roles may sign documents of this type:
 
 * Representative
 
-Only the original author can update and sign a new version of documents.
+Updates are allowed by the original author and from the 'collaborators' metadata field
+of the referenced document specified by the 'ref' metadata field.
 
 ## Copyright
 
@@ -297,7 +298,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-12-02 |
+| Modified | 2025-12-15 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -308,6 +309,10 @@ Only the original author can update and sign a new version of documents.
 #### 0.01 (2025-06-19)
 
 * First Published Version
+
+#### 0.2.2 (2025-12-02)
+
+* Added missing `signers: update: type: "ref"` definition.
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3

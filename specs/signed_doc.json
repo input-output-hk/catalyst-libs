@@ -622,6 +622,11 @@
         "changes": "* Added missing `ref` metadata field definition.\n* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.",
         "modified": "2025-12-02",
         "version": "0.2.1"
+      },
+      {
+        "changes": "* Added missing `signers: update: type: \"ref\"` definition for `Rep Nomination` document type.",
+        "modified": "2025-12-15",
+        "version": "0.2.2"
       }
     ]
   },
@@ -3533,8 +3538,8 @@
           ]
         },
         "update": {
-          "description": "Only the original author can update and sign a new version of documents.",
-          "type": "author"
+          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the referenced document specified by the 'ref' metadata field.",
+          "type": "ref"
         }
       },
       "type": "bf9abd97-5d1f-4429-8e80-740fea371a9c",
@@ -3544,6 +3549,11 @@
           "changes": "* First Published Version",
           "modified": "2025-06-19",
           "version": "0.01"
+        },
+        {
+          "changes": "* Added missing `signers: update: type: \"ref\"` definition.",
+          "modified": "2025-12-02",
+          "version": "0.2.2"
         }
       ]
     },
