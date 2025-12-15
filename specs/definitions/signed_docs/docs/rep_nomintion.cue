@@ -112,11 +112,9 @@ docs: "Rep Nomination": {
 		"""
 
 	signers: {
-		roles: {
-			user: [
-				"Representative",
-			]
-		}
+		roles: user: [
+			"Representative",
+		]
 
 		update: type: "ref"
 	}
