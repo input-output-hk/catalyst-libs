@@ -146,13 +146,15 @@ impl Decode<'_, ()> for UnitVectorProof {
         }
 
         let len = decode_array_len(d, "UnitVectorProof inner array")?;
-        if len < MIN_PROOF_CBOR_ARRAY_LEN || !len.is_multiple_of(MIN_PROOF_CBOR_ARRAY_LEN) {
+        if len < MIN_PROOF_CBOR_ARRAY_LEN
+            || !len.saturating_sub(1).is_multiple_of(ITEM_ELEMENTS_LEN)
+        {
             return Err(minicbor::decode::Error::message(format!(
                 "Unexpected rUnitVectorProof inner array length {len}, expected multiplier of {MIN_PROOF_CBOR_ARRAY_LEN}"
             )));
         }
 
-        let elements = len / MIN_PROOF_CBOR_ARRAY_LEN;
+        let elements = len.saturating_sub(1) / ITEM_ELEMENTS_LEN;
         let mut announcements = Vec::with_capacity(elements as usize);
         let mut choices = Vec::with_capacity(elements as usize);
         let mut responses = Vec::with_capacity(elements as usize);
