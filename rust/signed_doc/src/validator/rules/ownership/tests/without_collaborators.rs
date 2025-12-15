@@ -6,11 +6,9 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::{
-    CatalystSignedDocument,
-    builder::tests::Builder,
-    metadata::SupportedField,
-    providers::tests::TestCatalystProvider,
-    validator::rules::{DocumentOwnershipRule, utils::create_dummy_key_pair},
+    CatalystSignedDocument, builder::tests::Builder, metadata::SupportedField,
+    providers::tests::TestCatalystProvider, tests_utils::create_dummy_key_pair,
+    validator::rules::DocumentOwnershipRule,
 };
 
 #[test_case(
