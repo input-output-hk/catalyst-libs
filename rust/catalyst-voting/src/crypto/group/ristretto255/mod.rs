@@ -22,11 +22,21 @@ use crate::crypto::{
 };
 
 /// Ristretto group scalar.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// zkproof-ed25519-scalar = bytes .size 32
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct Scalar(IScalar);
 
 /// Ristretto group element.
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// elgamal-ristretto255-group-element = bytes .size 32
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct GroupElement(RistrettoPoint);
