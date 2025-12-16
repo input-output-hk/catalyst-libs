@@ -3,8 +3,7 @@ use test_case::test_case;
 
 use super::*;
 use crate::{
-    builder::tests::Builder, metadata::SupportedField,
-    validator::rules::utils::create_dummy_key_pair,
+    builder::tests::Builder, metadata::SupportedField, tests_utils::create_dummy_key_pair,
 };
 
 #[test_case(

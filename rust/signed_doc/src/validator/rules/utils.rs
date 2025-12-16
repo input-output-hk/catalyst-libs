@@ -51,23 +51,3 @@ pub(crate) fn content_json_schema_check(
 
     true
 }
-
-#[cfg(test)]
-pub(super) fn create_dummy_key_pair(
-    role_index: catalyst_types::catalyst_id::role_index::RoleId
-) -> (
-    ed25519_dalek::SigningKey,
-    catalyst_types::catalyst_id::CatalystId,
-) {
-    let sk = create_signing_key();
-    let kid = catalyst_types::catalyst_id::CatalystId::new("cardano", None, sk.verifying_key())
-        .with_role(role_index)
-        .as_uri();
-    (sk, kid)
-}
-
-#[cfg(test)]
-pub(super) fn create_signing_key() -> ed25519_dalek::SigningKey {
-    let mut csprng = rand::rngs::OsRng;
-    ed25519_dalek::SigningKey::generate(&mut csprng)
-}
