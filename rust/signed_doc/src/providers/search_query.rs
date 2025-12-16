@@ -54,7 +54,7 @@ impl UuidV7Selector {
         match self {
             Self::Eq(eq) => uuid == eq,
             Self::Range { min, max } => uuid >= min && uuid <= max,
-            Self::In(inclussion) => inclussion.contains(uuid),
+            Self::In(inclusion) => inclusion.contains(uuid),
         }
     }
 }
@@ -76,7 +76,7 @@ impl DocumentRefSelector {
     ) -> bool {
         match self {
             Self::Eq(eq) => doc_refs == eq,
-            Self::In(inclussion) => doc_refs.iter().any(|v| inclussion.contains(v)),
+            Self::In(inclusion) => doc_refs.iter().any(|v| inclusion.contains(v)),
         }
     }
 }
@@ -98,7 +98,7 @@ impl CatalystIdSelector {
     ) -> bool {
         match self {
             Self::Eq(eq) => cat_ids == eq,
-            Self::In(inclussion) => cat_ids.iter().any(|v| inclussion.contains(v)),
+            Self::In(inclusion) => cat_ids.iter().any(|v| inclusion.contains(v)),
         }
     }
 }
