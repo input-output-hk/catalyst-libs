@@ -306,12 +306,7 @@ mod tests {
             root: test_blake3_256(),
             count: 64,
             to: test_pk(),
-            prefix: Some(
-                vec![test_blake3_256(); 4]
-                    .into_iter()
-                    .map(Blake3256::from)
-                    .collect(),
-            ),
+            prefix: Some(vec![test_blake3_256(); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -337,12 +332,7 @@ mod tests {
             root: test_blake3_256(),
             count: 80,
             to: test_pk(),
-            prefix: Some(
-                vec![test_blake3_256(); 4]
-                    .into_iter()
-                    .map(Blake3256::from)
-                    .collect(),
-            ),
+            prefix: Some(vec![test_blake3_256(); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -368,12 +358,7 @@ mod tests {
             root: test_blake3_256(),
             count: 80,
             to: test_pk(),
-            prefix: Some(
-                vec![test_blake3_256(); 3]
-                    .into_iter()
-                    .map(Blake3256::from)
-                    .collect(),
-            ),
+            prefix: Some(vec![test_blake3_256(); 3]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -393,12 +378,10 @@ mod tests {
             root: test_blake3_256(),
             count: 80,
             to: test_pk(),
-            prefix: Some(
-                vec![test_blake3_256(); usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()]
-                    .into_iter()
-                    .map(Blake3256::from)
-                    .collect(),
-            ),
+            prefix: Some(vec![
+                test_blake3_256();
+                usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()
+            ]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
