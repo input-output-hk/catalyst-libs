@@ -3,6 +3,7 @@
 //! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
 
 #![allow(missing_docs)]
+#![allow(clippy::expect_used, clippy::missing_panics_doc)]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;
@@ -69,7 +70,6 @@ pub fn get_doc_kid_and_sk(
     Ok((sk.clone(), kid.clone()))
 }
 
-// If `None` make `CatalystId` as admin
 #[must_use]
 pub fn create_dummy_key_pair(role_index: RoleId) -> (ed25519_dalek::SigningKey, CatalystId) {
     let sk = create_signing_key();
@@ -90,6 +90,7 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
+#[must_use]
 pub fn create_dummy_doc_ref() -> DocumentRef {
     let test_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
