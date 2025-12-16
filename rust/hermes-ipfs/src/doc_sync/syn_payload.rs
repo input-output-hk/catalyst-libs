@@ -81,8 +81,8 @@ impl MsgSyn {
 
     /// Get the number of fields for .syn payload
     fn num_fields(&self) -> u64 {
-        // Prefix is optional
-        if self.prefix.is_none() && self.count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
+        // Prefix is optional or count is less than or equal to the min threshold, skip the field
+        if self.prefix.is_none() || self.count <= MIN_DOC_COUNT_PREFIX_THRESHOLD {
             Self::MAX_NUM_FIELDS.saturating_sub(1)
         } else {
             Self::MAX_NUM_FIELDS
