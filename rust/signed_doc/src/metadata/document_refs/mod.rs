@@ -195,31 +195,12 @@ mod serde_impl {
 #[cfg(test)]
 pub(crate) mod tests {
 
-    use catalyst_types::uuid::{CborContext, UuidV4, UuidV7};
+    use catalyst_types::uuid::{CborContext, UuidV7};
     use minicbor::{Decoder, Encoder};
     use test_case::test_case;
 
     use super::*;
-    use crate::{ContentType, builder::Builder};
-
-    pub(crate) fn create_dummy_doc_ref() -> DocumentRef {
-        let id = UuidV7::new();
-        let ver = UuidV7::new();
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": id.to_string(),
-                "ver": ver.to_string(),
-                "type": UuidV4::new().to_string(),
-                "content-type": ContentType::Json,
-            }))
-            .expect("Should create metadata")
-            .with_json_content(&serde_json::json!({"test": "content"}))
-            .expect("Should set content")
-            .build()
-            .expect("Should build document");
-
-        doc.doc_ref().expect("Should generate DocumentRef")
-    }
+    use crate::tests_utils::create_dummy_doc_ref;
 
     #[test_case(
         CompatibilityPolicy::Accept,
