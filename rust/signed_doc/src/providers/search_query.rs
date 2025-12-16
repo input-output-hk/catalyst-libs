@@ -6,15 +6,14 @@ use catalyst_types::catalyst_id::CatalystId;
 use crate::{DocType, DocumentRef, DocumentRefs, uuid::UuidV7};
 
 /// `CatalystSignedDocumentProvider::try_find_doc` search query argument type.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct CatalystSignedDocumentSearchQuery {
     /// 'id' metadata field search.
     pub id: Option<UuidV7Selector>,
     /// 'ver' metadata field search.
     pub ver: Option<UuidV7Selector>,
     /// 'type' metadata field search.
-    /// Search `DocType` in the given list.
-    pub doc_type: Vec<DocType>,
+    pub doc_type: Option<DocTypeSelector>,
     /// `ref` metadata field search.
     pub doc_ref: Option<DocumentRefSelector>,
     /// `template` metadata field search.
@@ -55,6 +54,25 @@ impl UuidV7Selector {
             Self::Eq(eq) => uuid == eq,
             Self::Range { min, max } => uuid >= min && uuid <= max,
             Self::In(inclusion) => inclusion.contains(uuid),
+        }
+    }
+}
+
+/// `DocType` search selector.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DocTypeSelector {
+    /// Search with `DocType` in the given list.
+    In(Vec<DocType>),
+}
+
+impl DocTypeSelector {
+    /// Applying `DocTypeSelector` for the provided `DocType` value.
+    pub fn filter(
+        &self,
+        doc_type: &DocType,
+    ) -> bool {
+        match self {
+            Self::In(inclusion) => inclusion.contains(doc_type),
         }
     }
 }

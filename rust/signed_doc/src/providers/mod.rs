@@ -200,7 +200,9 @@ pub mod tests {
                     continue;
                 }
 
-                if query.doc_type.contains(v.doc_type()?) {
+                if let Some(selector) = query.doc_type.as_ref()
+                    && selector.filter(v.doc_type()?)
+                {
                     res.push(v.clone());
                     continue;
                 }
