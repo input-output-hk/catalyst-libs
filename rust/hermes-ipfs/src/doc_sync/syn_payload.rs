@@ -7,6 +7,8 @@ use minicbor::{
     encode::{self, Write},
 };
 
+use crate::doc_sync::{Blake3256, PublicKey};
+
 /// Syn payload
 #[derive(Decode, Encode, derive_more::Deref, derive_more::From, derive_more::Into)]
 #[cbor(transparent)]
@@ -52,22 +54,18 @@ impl<C> Decode<'_, C> for SynNumericKeys {
     }
 }
 
-/// Ed25519 public key type.
-pub type Ed25519Pubkey = [u8; 32];
-/// BLAKE3-256 hash type.
-pub type Blake3256 = [u8; 32];
 /// Prefix array type.
 pub type PrefixArray = Vec<Blake3256>;
 
 /// Payload for .syn topic.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug)]
 pub struct MsgSyn {
     /// The root BLAKE3-256 hash of the requester’s SMT root.
     pub root: Blake3256,
     /// Current number of documents of the requester.
     pub count: u64,
     /// Target peer to respond.
-    pub to: Ed25519Pubkey,
+    pub to: PublicKey,
     /// Array of SMT node hashes at depth D left-to-right across the tree.
     /// The size of the array MUST be 2 to power of N (2,4,8...,16384).
     pub prefix: Option<PrefixArray>,
@@ -120,7 +118,7 @@ fn encode_blake3_256<W: Write>(
     h: &Blake3256,
     e: &mut Encoder<W>,
 ) -> Result<(), encode::Error<W::Error>> {
-    e.encode(k)?.bytes(h)?.ok()
+    e.encode(k)?.encode(h)?.ok()
 }
 
 /// Helper function to encode count and its key.
@@ -134,10 +132,10 @@ fn encode_count<W: Write>(
 
 /// Helper function to encode `to` (Ed25519) public key and its key.
 fn encode_to<W: Write>(
-    pubkey: &Ed25519Pubkey,
+    pubkey: &PublicKey,
     e: &mut Encoder<W>,
 ) -> Result<(), encode::Error<W::Error>> {
-    e.encode(SynNumericKeys::To)?.bytes(pubkey)?.ok()
+    e.encode(SynNumericKeys::To)?.encode(pubkey)?.ok()
 }
 
 /// Helper function to encode prefix array and its key.
@@ -153,7 +151,7 @@ fn encode_prefix<W: Write>(
     if is_valid_prefix_len(l) {
         e.encode(SynNumericKeys::Prefix)?.array(l)?;
         for p in prefix {
-            e.bytes(p)?;
+            e.encode(p)?;
         }
         Ok(())
     } else {
@@ -204,9 +202,7 @@ fn decode_blake3_256(
     d: &mut Decoder<'_>,
 ) -> Result<Blake3256, decode::Error> {
     if d.decode::<SynNumericKeys>().is_ok_and(|key| key == k) {
-        d.bytes()?
-            .try_into()
-            .map_err(|err| decode::Error::custom(err).at(d.position()))
+        d.decode()
     } else {
         Err(decode::Error::message(format!("Expected key number {k}")).at(d.position()))
     }
@@ -225,13 +221,11 @@ fn decode_count(
 }
 
 /// Helper function to decode `to` (Ed25519) public key and its key.
-fn decode_to(d: &mut Decoder<'_>) -> Result<Ed25519Pubkey, decode::Error> {
+fn decode_to(d: &mut Decoder<'_>) -> Result<PublicKey, decode::Error> {
     if d.decode::<SynNumericKeys>()
         .is_ok_and(|key| matches!(key, SynNumericKeys::To))
     {
-        d.bytes()?
-            .try_into()
-            .map_err(|err| decode::Error::custom(err).at(d.position()))
+        d.decode()
     } else {
         Err(
             decode::Error::message(format!("Expected `to` key number {}", SynNumericKeys::To))
@@ -257,11 +251,7 @@ fn decode_prefix(d: &mut Decoder<'_>) -> Result<Option<PrefixArray>, decode::Err
         }
         let mut arr = vec![];
         for _ in 0..len {
-            let bytes = d.bytes()?;
-            let hash: [u8; 32] = bytes.try_into().map_err(|_| {
-                decode::Error::message("Invalid hash length, expected 32 bytes").at(d.position())
-            })?;
-            arr.push(hash);
+            arr.push(d.decode()?);
         }
         return Ok(Some(arr));
     }
@@ -276,14 +266,23 @@ fn is_valid_prefix_len(n: u64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_pk() -> PublicKey {
+        [0u8; 32].try_into().unwrap()
+    }
+
+    fn test_blake3_256() -> Blake3256 {
+        [0u8; 32].into()
+    }
+
     #[test]
     fn test_encode_decode_without_prefix() {
         let msg = MsgSyn {
-            root: [0u8; 32],
+            root: test_blake3_256(),
             count: 10,
-            to: [0u8; 32],
+            to: test_pk(),
             prefix: None,
-            peer_root: [0u8; 32],
+            peer_root: test_blake3_256(),
             peer_count: 20,
         };
 
@@ -304,11 +303,16 @@ mod tests {
     #[test]
     fn test_encode_decode_with_prefix_count_below_threshold() {
         let msg = MsgSyn {
-            root: [0u8; 32],
+            root: test_blake3_256(),
             count: 64,
-            to: [0u8; 32],
-            prefix: Some(vec![[0u8; 32]; 4]),
-            peer_root: [0u8; 32],
+            to: test_pk(),
+            prefix: Some(
+                vec![test_blake3_256(); 4]
+                    .into_iter()
+                    .map(Blake3256::from)
+                    .collect(),
+            ),
+            peer_root: test_blake3_256(),
             peer_count: 20,
         };
 
@@ -330,11 +334,16 @@ mod tests {
     #[test]
     fn test_encode_decode_with_prefix_count_above_threshold() {
         let msg = MsgSyn {
-            root: [0u8; 32],
+            root: test_blake3_256(),
             count: 80,
-            to: [0u8; 32],
-            prefix: Some(vec![[0u8; 32]; 4]),
-            peer_root: [0u8; 32],
+            to: test_pk(),
+            prefix: Some(
+                vec![test_blake3_256(); 4]
+                    .into_iter()
+                    .map(Blake3256::from)
+                    .collect(),
+            ),
+            peer_root: test_blake3_256(),
             peer_count: 20,
         };
 
@@ -356,11 +365,16 @@ mod tests {
     #[test]
     fn test_encode_with_invalid_prefix_len() {
         let msg = MsgSyn {
-            root: [0u8; 32],
+            root: test_blake3_256(),
             count: 80,
-            to: [0u8; 32],
-            prefix: Some(vec![[0u8; 32]; 3]),
-            peer_root: [0u8; 32],
+            to: test_pk(),
+            prefix: Some(
+                vec![test_blake3_256(); 3]
+                    .into_iter()
+                    .map(Blake3256::from)
+                    .collect(),
+            ),
+            peer_root: test_blake3_256(),
             peer_count: 20,
         };
 
@@ -376,14 +390,16 @@ mod tests {
     #[test]
     fn test_encode_with_invalid_prefix_len_above_limit() {
         let msg = MsgSyn {
-            root: [0u8; 32],
+            root: test_blake3_256(),
             count: 80,
-            to: [0u8; 32],
-            prefix: Some(vec![
-                [0u8; 32];
-                usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()
-            ]),
-            peer_root: [0u8; 32],
+            to: test_pk(),
+            prefix: Some(
+                vec![test_blake3_256(); usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()]
+                    .into_iter()
+                    .map(Blake3256::from)
+                    .collect(),
+            ),
+            peer_root: test_blake3_256(),
             peer_count: 20,
         };
 
