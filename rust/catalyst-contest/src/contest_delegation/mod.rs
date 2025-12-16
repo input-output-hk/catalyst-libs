@@ -275,34 +275,7 @@ async fn get_author_kid(
         return Ok((None, valid));
     };
 
-    if let Ok(ref_doc_ref) = ref_doc.doc_ref() {
-        let latest_ref_doc = provider
-            .try_get_last_doc(*ref_doc_ref.id())
-            .await?
-            .context("A latest version of the document must exist if a first version exists")?;
-
-        if let Ok(latest_ref_doc_ref) = latest_ref_doc.doc_ref() {
-            if latest_ref_doc_ref != ref_doc_ref {
-                report.functional_validation(
-                    "It must be the latest Rep Nomination document",
-                    "Content Delegation must reference to the latest version Rep Nomination document"
-                );
-                valid = false;
-            }
-        } else {
-            report.missing_field(
-                "document reference",
-                "Cannot get document reference for the latest representative reference document",
-            );
-            valid = false;
-        }
-    } else {
-        report.missing_field(
-            "document reference",
-            "Cannot get document reference for the representative reference document",
-        );
-        valid = false;
-    }
+    valid &= rep_nomination_ref_check(&ref_doc, provider, report).await?;
 
     let rep_nomination_authors = ref_doc.authors();
     if rep_nomination_authors.len() != 1 {
@@ -317,4 +290,36 @@ async fn get_author_kid(
 
     let rep_kid = rep_nomination_authors.into_iter().next();
     Ok((rep_kid, valid))
+}
+
+/// Verifies that the corresponding 'Rep Nomination' document reference is valid:
+/// - References to the latest version of 'Rep Nomination' document ever submitted to the
+///   corresponding 'Contest Parameters' document.
+/// -
+async fn rep_nomination_ref_check(
+    ref_doc: &CatalystSignedDocument,
+    provider: &dyn CatalystSignedDocumentProvider,
+    report: &ProblemReport,
+) -> anyhow::Result<bool> {
+    let mut valid = true;
+    let ref_doc_ref = ref_doc
+        .doc_ref()
+        .context("Cannot get document reference for the representative reference document")?;
+    let latest_ref_doc = provider
+        .try_get_last_doc(*ref_doc_ref.id())
+        .await?
+        .context("A latest version of the document must exist if a first version exists")?;
+    let latest_ref_doc_ref = latest_ref_doc.doc_ref().context(
+        "Cannot get document reference for the latest representative reference document",
+    )?;
+
+    if latest_ref_doc_ref != ref_doc_ref {
+        report.functional_validation(
+            "It must be the latest Rep Nomination document",
+            "Content Delegation must reference to the latest version Rep Nomination document",
+        );
+        valid = false;
+    }
+
+    Ok(valid)
 }
