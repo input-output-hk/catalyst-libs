@@ -14,7 +14,7 @@ use minicbor::Encode;
 
 use crate::{
     CatalystSignedDocument,
-    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    providers::Provider,
     validator::{CatalystSignedDocumentValidationRule, rules::utils::content_json_schema_check},
 };
 
@@ -55,7 +55,7 @@ impl CatalystSignedDocumentValidationRule for ContentRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }

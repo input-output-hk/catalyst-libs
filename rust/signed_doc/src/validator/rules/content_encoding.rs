@@ -5,8 +5,7 @@ use std::string::ToString;
 use catalyst_signed_doc_spec::is_required::IsRequired;
 
 use crate::{
-    CatalystSignedDocument, metadata::ContentEncoding,
-    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    CatalystSignedDocument, metadata::ContentEncoding, providers::Provider,
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -29,7 +28,7 @@ impl CatalystSignedDocumentValidationRule for ContentEncodingRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }

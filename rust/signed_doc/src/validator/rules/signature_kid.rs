@@ -6,8 +6,7 @@ use catalyst_signed_doc_spec::signers::roles::{Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
-    validator::CatalystSignedDocumentValidationRule,
+    CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
 ///  COSE signature `kid` (Catalyst Id) role validation
@@ -23,7 +22,7 @@ impl CatalystSignedDocumentValidationRule for SignatureKidRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }

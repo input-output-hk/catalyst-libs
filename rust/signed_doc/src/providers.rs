@@ -41,7 +41,10 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
         &self,
         id: UuidV7,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
+}
 
+/// `TimeThresholdProvider` Provider trait
+pub trait TimeThresholdProvider {
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
     /// If `None` is returned, skips "too far in the future" validation.
@@ -53,14 +56,15 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
     fn past_threshold(&self) -> Option<Duration>;
 }
 
-/// Super trait of `CatalystSignedDocumentProvider` and `CatalystIdProvider`
-pub trait CatalystSignedDocumentAndCatalystIdProvider:
-    CatalystSignedDocumentProvider + CatalystIdProvider
+/// Super trait of `CatalystSignedDocumentProvider`, `TimeThresholdProvider` and
+/// `CatalystIdProvider`
+pub trait Provider:
+    CatalystSignedDocumentProvider + TimeThresholdProvider + CatalystIdProvider
 {
 }
 
-impl<T: CatalystSignedDocumentProvider + CatalystIdProvider>
-    CatalystSignedDocumentAndCatalystIdProvider for T
+impl<T: CatalystSignedDocumentProvider + TimeThresholdProvider + CatalystIdProvider> Provider
+    for T
 {
 }
 
@@ -75,7 +79,7 @@ pub mod tests {
         CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
         VerifyingKey,
     };
-    use crate::DocumentRef;
+    use crate::{DocumentRef, providers::TimeThresholdProvider};
 
     /// Simple testing implementation of `CatalystSignedDocumentProvider`,
     #[derive(Default, Debug)]
@@ -162,7 +166,9 @@ pub mod tests {
                 .min_by_key(|(doc_ref, _)| doc_ref.ver().uuid())
                 .map(|(_, doc)| doc.clone()))
         }
+    }
 
+    impl TimeThresholdProvider for TestCatalystProvider {
         fn future_threshold(&self) -> Option<std::time::Duration> {
             Some(Duration::from_secs(5))
         }

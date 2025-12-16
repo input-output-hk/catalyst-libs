@@ -6,8 +6,7 @@ mod tests;
 use catalyst_types::json_schema::JsonSchema;
 
 use crate::{
-    CatalystSignedDocument, metadata::ContentType,
-    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    CatalystSignedDocument, metadata::ContentType, providers::Provider,
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -28,7 +27,7 @@ impl CatalystSignedDocumentValidationRule for ContentTypeRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }

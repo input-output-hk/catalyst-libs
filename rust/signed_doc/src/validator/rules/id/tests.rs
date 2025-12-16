@@ -6,7 +6,7 @@ use super::*;
 use crate::{
     builder::tests::Builder,
     metadata::SupportedField,
-    providers::{CatalystSignedDocumentProvider, tests::TestCatalystProvider},
+    providers::{tests::TestCatalystProvider, TimeThresholdProvider},
     uuid::UuidV7,
 };
 

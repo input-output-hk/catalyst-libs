@@ -7,8 +7,7 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
-    validator::CatalystSignedDocumentValidationRule,
+    CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
 /// Signed Document `id` field validation rule
@@ -20,7 +19,7 @@ impl CatalystSignedDocumentValidationRule for IdRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Self::check_inner(doc, provider)
     }
@@ -35,7 +34,7 @@ impl IdRule {
     ///    behind (`past_threshold` arg) from `Utc::now()` based on the provided threshold
     fn check_inner(
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(

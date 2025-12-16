@@ -8,12 +8,7 @@ use dashmap::DashMap;
 use futures::{StreamExt, TryStreamExt};
 
 use crate::{
-    CatalystSignedDocument,
-    metadata::DocType,
-    providers::{
-        CatalystIdProvider, CatalystSignedDocumentAndCatalystIdProvider,
-        CatalystSignedDocumentProvider,
-    },
+    CatalystSignedDocument, metadata::DocType, providers::Provider,
     validator::rules::documents_rules_from_spec,
 };
 
@@ -26,7 +21,7 @@ pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool>;
 }
 
@@ -53,13 +48,10 @@ fn document_rules_init() -> DashMap<DocType, Rules> {
 ///
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
-pub async fn validate<Provider>(
+pub async fn validate(
     doc: &CatalystSignedDocument,
-    provider: &Provider,
-) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider + CatalystIdProvider,
-{
+    provider: &impl Provider,
+) -> anyhow::Result<bool> {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
