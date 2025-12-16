@@ -3399,7 +3399,7 @@
           ]
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the referenced document specified by the 'ref' metadata field.",
+          "description": "Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)\nof the referenced document specified by the 'ref' metadata field.",
           "type": "ref"
         }
       },
@@ -3538,7 +3538,7 @@
           ]
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the referenced document specified by the 'ref' metadata field.",
+          "description": "Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)\nof the referenced document specified by the 'ref' metadata field.",
           "type": "ref"
         }
       },

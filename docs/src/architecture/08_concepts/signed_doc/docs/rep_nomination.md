@@ -289,7 +289,7 @@ The following User roles may sign documents of this type:
 
 * Representative
 
-Updates are allowed by the original author and from the 'collaborators' metadata field
+Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)
 of the referenced document specified by the 'ref' metadata field.
 
 ## Copyright
