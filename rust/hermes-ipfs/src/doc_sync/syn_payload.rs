@@ -82,7 +82,7 @@ impl MsgSyn {
     /// Get the number of fields for .syn payload
     fn num_fields(&self) -> u64 {
         // Prefix is optional
-        if self.prefix.is_none() {
+        if self.prefix.is_none() && self.count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
             Self::MAX_NUM_FIELDS.saturating_sub(1)
         } else {
             Self::MAX_NUM_FIELDS
@@ -97,45 +97,28 @@ impl<C> Encode<C> for MsgSyn {
         _: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
         e.map(self.num_fields())?;
-        encode_blake3_256(SynNumericKeys::Root, &self.root, e)?;
-        encode_count(SynNumericKeys::Count, self.count, e)?;
-        encode_to(&self.to, e)?;
+        encode_marked(SynNumericKeys::Root, &self.root, e)?;
+        encode_marked(SynNumericKeys::Count, &self.count, e)?;
+        encode_marked(SynNumericKeys::To, &self.to, e)?;
         if let Some(prefix) = &self.prefix {
             // Only encode the prefix if the doc count exceeds the threshold
             if self.count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
                 encode_prefix(prefix, e)?;
             }
         }
-        encode_blake3_256(SynNumericKeys::PeerRoot, &self.peer_root, e)?;
-        encode_count(SynNumericKeys::PeerCount, self.peer_count, e)?;
+        encode_marked(SynNumericKeys::PeerRoot, &self.peer_root, e)?;
+        encode_marked(SynNumericKeys::PeerCount, &self.peer_count, e)?;
         Ok(())
     }
 }
 
-/// Helper function to encode BLAKE3-256 hash and its key.
-fn encode_blake3_256<W: Write>(
+/// Helper function for encoding key-value pair.
+fn encode_marked<W: Write, T: Encode<()>>(
     k: SynNumericKeys,
-    h: &Blake3256,
+    value: &T,
     e: &mut Encoder<W>,
 ) -> Result<(), encode::Error<W::Error>> {
-    e.encode(k)?.encode(h)?.ok()
-}
-
-/// Helper function to encode count and its key.
-fn encode_count<W: Write>(
-    k: SynNumericKeys,
-    count: u64,
-    e: &mut Encoder<W>,
-) -> Result<(), encode::Error<W::Error>> {
-    e.encode(k)?.u64(count)?.ok()
-}
-
-/// Helper function to encode `to` (Ed25519) public key and its key.
-fn encode_to<W: Write>(
-    pubkey: &PublicKey,
-    e: &mut Encoder<W>,
-) -> Result<(), encode::Error<W::Error>> {
-    e.encode(SynNumericKeys::To)?.encode(pubkey)?.ok()
+    e.encode(k)?.encode(value)?.ok()
 }
 
 /// Helper function to encode prefix array and its key.
@@ -173,17 +156,17 @@ impl<C> Decode<'_, C> for MsgSyn {
             Err(decode::Error::message("Too many fields in a map").at(d.position()))?;
         }
 
-        let root = decode_blake3_256(SynNumericKeys::Root, d)?;
-        let count = decode_count(SynNumericKeys::Count, d)?;
-        let to = decode_to(d)?;
+        let root = decode_marked_type(SynNumericKeys::Root, d)?;
+        let count = decode_marked_type(SynNumericKeys::Count, d)?;
+        let to = decode_marked_type(SynNumericKeys::To, d)?;
         // Only try to decode prefix if count exceeds threshold
         let prefix = if count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
             decode_prefix(d)?
         } else {
             None
         };
-        let peer_root = decode_blake3_256(SynNumericKeys::PeerRoot, d)?;
-        let peer_count = decode_count(SynNumericKeys::PeerCount, d)?;
+        let peer_root = decode_marked_type(SynNumericKeys::PeerRoot, d)?;
+        let peer_count = decode_marked_type(SynNumericKeys::PeerCount, d)?;
 
         Ok(MsgSyn {
             root,
@@ -196,41 +179,15 @@ impl<C> Decode<'_, C> for MsgSyn {
     }
 }
 
-/// Helper function to decode BLAKE3-256 hash and its key.
-fn decode_blake3_256(
+/// Helper function for decoding key-value pair.
+fn decode_marked_type<'b, T: Decode<'b, ()>>(
     k: SynNumericKeys,
-    d: &mut Decoder<'_>,
-) -> Result<Blake3256, decode::Error> {
+    d: &mut Decoder<'b>,
+) -> Result<T, decode::Error> {
     if d.decode::<SynNumericKeys>().is_ok_and(|key| key == k) {
         d.decode()
     } else {
         Err(decode::Error::message(format!("Expected key number {k}")).at(d.position()))
-    }
-}
-
-/// Helper function to decode count and its key.
-fn decode_count(
-    k: SynNumericKeys,
-    d: &mut Decoder<'_>,
-) -> Result<u64, decode::Error> {
-    if d.decode::<SynNumericKeys>().is_ok_and(|key| key == k) {
-        d.u64()
-    } else {
-        Err(decode::Error::message(format!("Expected key number {k}")).at(d.position()))
-    }
-}
-
-/// Helper function to decode `to` (Ed25519) public key and its key.
-fn decode_to(d: &mut Decoder<'_>) -> Result<PublicKey, decode::Error> {
-    if d.decode::<SynNumericKeys>()
-        .is_ok_and(|key| matches!(key, SynNumericKeys::To))
-    {
-        d.decode()
-    } else {
-        Err(
-            decode::Error::message(format!("Expected `to` key number {}", SynNumericKeys::To))
-                .at(d.position()),
-        )
     }
 }
 
@@ -260,7 +217,7 @@ fn decode_prefix(d: &mut Decoder<'_>) -> Result<Option<PrefixArray>, decode::Err
 
 /// Check whether the prefix length is valid.
 fn is_valid_prefix_len(n: u64) -> bool {
-    (n != 0) && (n.is_power_of_two()) && n <= MAX_PREFIX_ARRAY_LENGTH
+    n.is_power_of_two() && n <= MAX_PREFIX_ARRAY_LENGTH
 }
 
 #[cfg(test)]
