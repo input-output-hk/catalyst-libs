@@ -1,188 +1,214 @@
 //! ZK Unit Vector objects decoding implementation
 
-use std::io::Read;
+use cbork_utils::decode_helper::decode_array_len;
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use anyhow::anyhow;
+use super::{ResponseRandomness, UnitVectorProof};
+use crate::crypto::{
+    elgamal::Ciphertext,
+    group::{GroupElement, Scalar},
+    zk_unit_vector::randomness_announcements::Announcement,
+};
 
-use super::{Announcement, Ciphertext, GroupElement, ResponseRandomness, Scalar, UnitVectorProof};
-use crate::utils::read_array;
+/// A CBOR version of the `UnitVectorProof`.
+const UNIT_VECTOR_PROOF_VERSION: u64 = 0;
 
-impl UnitVectorProof {
-    /// Get an underlying vector length.
-    ///
-    /// **Note** each vector field has the same length.
-    #[must_use]
-    pub fn size(&self) -> usize {
-        self.0.len()
-    }
+/// A number of elements in the
+/// `zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item` data type.
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item = ( zkproof-elgamal-announcement, ~elgamal-ristretto255-encrypted-choice, zkproof-ed25519-r-response )
+///
+/// zkproof-elgamal-announcement = ( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )
+///
+/// zkproof-elgamal-group-element = bytes .size 32
+///
+/// elgamal-ristretto255-encrypted-choice = [
+///     c1: elgamal-ristretto255-group-element
+///     c2: elgamal-ristretto255-group-element
+/// ]
+///
+/// zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
+///
+/// zkproof-ed25519-scalar = bytes .size 32
+/// ```
+///
+/// Therefore, the total number consists of the following:
+/// - 8 (zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item)
+///      - 3 (zkproof-elgamal-announcement = x3 zkproof-elgamal-group-element)
+///      - 2 (elgamal-ristretto255-encrypted-choice = x2
+///        elgamal-ristretto255-group-element)
+///      - 3 (zkproof-ed25519-r-response = x3 zkproof-ed25519-scalar)
+const ITEM_ELEMENTS_LEN: u64 = 8;
 
-    /// Decode `UnitVectorProof` from bytes.
-    ///
-    /// # Errors
-    ///   - Cannot decode announcement value.
-    ///   - Cannot decode ciphertext value.
-    ///   - Cannot decode response randomness value.
-    ///   - Cannot decode scalar value.
-    pub fn from_bytes<R: Read>(
-        reader: &mut R,
-        len: usize,
-    ) -> anyhow::Result<Self> {
-        let ann = (0..len)
-            .map(|i| {
-                let bytes = read_array(reader)?;
-                Announcement::from_bytes(&bytes).map_err(|e| {
-                    anyhow!(
-                        "Cannot decode announcement at {i}, \
-                        error: {e}."
-                    )
-                })
-            })
-            .collect::<anyhow::Result<_>>()?;
-        let dl = (0..len)
-            .map(|i| {
-                let bytes = read_array(reader)?;
-                Ciphertext::from_bytes(&bytes).map_err(|e| {
-                    anyhow!(
-                        "Cannot decode ciphertext at {i}, \
-                        error: {e}."
-                    )
-                })
-            })
-            .collect::<anyhow::Result<_>>()?;
-        let rr = (0..len)
-            .map(|i| {
-                let bytes = read_array(reader)?;
-                ResponseRandomness::from_bytes(&bytes).map_err(|e| {
-                    anyhow!(
-                        "Cannot decode response randomness at {i}, \
-                        error: {e}."
-                    )
-                })
-            })
-            .collect::<anyhow::Result<_>>()?;
+/// A minimal length of the underlying CBOR array of the `UnitVectorProof` data type.
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// zkproof-elgamal-ristretto255-unit-vector-with-single-selection = [ +zkproof-elgamal-ristretto255-unit-vector-with-single-selection-item, zkproof-ed25519-scalar ]
+/// ```
+const MIN_PROOF_CBOR_ARRAY_LEN: u64 = ITEM_ELEMENTS_LEN + 1;
 
-        let bytes = read_array(reader)?;
-        let scalar =
-            Scalar::from_bytes(bytes).map_err(|_| anyhow!("Cannot decode scalar field."))?;
-        Ok(Self(ann, dl, rr, scalar))
-    }
-
-    /// Get a deserialized bytes size
-    #[must_use]
-    fn bytes_size(&self) -> usize {
-        Scalar::BYTES_SIZE
-            + self.0.len() * Announcement::BYTES_SIZE
-            + self.0.len() * Ciphertext::BYTES_SIZE
-            + self.0.len() * ResponseRandomness::BYTES_SIZE
-    }
-
-    /// Encode `EncryptedVote` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> Vec<u8> {
-        let mut res = Vec::with_capacity(self.bytes_size());
-        self.0
-            .iter()
-            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
-        self.1
-            .iter()
-            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
-        self.2
-            .iter()
-            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
-        res.extend_from_slice(&self.3.to_bytes());
-        res
+impl Encode<()> for Announcement {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.i.encode(e, ctx)?;
+        self.b.encode(e, ctx)?;
+        self.a.encode(e, ctx)
     }
 }
 
-impl Announcement {
-    /// `Announcement` bytes size
-    pub const BYTES_SIZE: usize = GroupElement::BYTES_SIZE * 3;
-
-    /// Decode `Announcement` from bytes.
-    ///
-    /// # Errors
-    ///   - `AnnouncementDecodingError`
-    #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
-        let i = GroupElement::from_bytes(bytes[0..32].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `i` group element field."))?;
-        let b = GroupElement::from_bytes(bytes[32..64].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `b` group element field."))?;
-        let a = GroupElement::from_bytes(bytes[64..96].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `a` group element field."))?;
+impl Decode<'_, ()> for Announcement {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let i = GroupElement::decode(d, ctx)?;
+        let b = GroupElement::decode(d, ctx)?;
+        let a = GroupElement::decode(d, ctx)?;
         Ok(Self { i, b, a })
     }
+}
 
-    /// Encode `Announcement` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        let mut res = [0; 96];
-        res[0..32].copy_from_slice(&self.i.to_bytes());
-        res[32..64].copy_from_slice(&self.b.to_bytes());
-        res[64..96].copy_from_slice(&self.a.to_bytes());
-        res
+impl Encode<()> for ResponseRandomness {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.z.encode(e, ctx)?;
+        self.w.encode(e, ctx)?;
+        self.v.encode(e, ctx)
     }
 }
 
-impl ResponseRandomness {
-    /// `ResponseRandomness` bytes size
-    pub const BYTES_SIZE: usize = Scalar::BYTES_SIZE * 3;
-
-    /// Decode `ResponseRandomness` from bytes.
-    ///
-    /// # Errors
-    ///   - Cannot decode scalar field.
-    #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
-        let z = Scalar::from_bytes(bytes[0..32].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `z` scalar field."))?;
-        let w = Scalar::from_bytes(bytes[32..64].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `w` scalar field."))?;
-        let v = Scalar::from_bytes(bytes[64..96].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `v` scalar field."))?;
+impl Decode<'_, ()> for ResponseRandomness {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let z = Scalar::decode(d, ctx)?;
+        let w = Scalar::decode(d, ctx)?;
+        let v = Scalar::decode(d, ctx)?;
         Ok(Self { z, w, v })
     }
+}
 
-    /// Encode `ResponseRandomness` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        let mut res = [0; 96];
-        res[0..32].copy_from_slice(&self.z.to_bytes());
-        res[32..64].copy_from_slice(&self.w.to_bytes());
-        res[64..96].copy_from_slice(&self.v.to_bytes());
-        res
+impl Encode<()> for UnitVectorProof {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        if self.0.len() != self.1.len() || self.0.len() != self.2.len() {
+            return Err(minicbor::encode::Error::message(format!(
+                "All UnitVectorProof parts must have the same length: announcements = {}, choice = {}, responses = {}",
+                self.0.len(),
+                self.1.len(),
+                self.2.len()
+            )));
+        }
+
+        e.array(2)?;
+        UNIT_VECTOR_PROOF_VERSION.encode(e, ctx)?;
+
+        e.array(self.0.len() as u64 * ITEM_ELEMENTS_LEN + 1)?;
+        for ((announcement, choice), response) in
+            self.0.iter().zip(self.1.iter()).zip(self.2.iter())
+        {
+            announcement.encode(e, ctx)?;
+            choice.first().encode(e, ctx)?;
+            choice.second().encode(e, ctx)?;
+            response.encode(e, ctx)?;
+        }
+        self.3.encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for UnitVectorProof {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let len = decode_array_len(d, "UnitVectorProof")?;
+        if len != 2 {
+            return Err(minicbor::decode::Error::message(format!(
+                "Unexpected UnitVectorProof array length {len}, expected 2"
+            )));
+        }
+
+        let version = u64::decode(d, ctx)?;
+        if version != UNIT_VECTOR_PROOF_VERSION {
+            return Err(minicbor::decode::Error::message(format!(
+                "Unexpected UnitVectorProof version value: {version}, expected {UNIT_VECTOR_PROOF_VERSION}"
+            )));
+        }
+
+        let len = decode_array_len(d, "UnitVectorProof inner array")?;
+        if len < MIN_PROOF_CBOR_ARRAY_LEN
+            || !len.saturating_sub(1).is_multiple_of(ITEM_ELEMENTS_LEN)
+        {
+            return Err(minicbor::decode::Error::message(format!(
+                "Unexpected rUnitVectorProof inner array length {len}, expected multiplier of {MIN_PROOF_CBOR_ARRAY_LEN}"
+            )));
+        }
+
+        let elements = len.saturating_sub(1) / ITEM_ELEMENTS_LEN;
+        let mut announcements = Vec::with_capacity(elements as usize);
+        let mut choices = Vec::with_capacity(elements as usize);
+        let mut responses = Vec::with_capacity(elements as usize);
+
+        for _ in 0..elements {
+            announcements.push(Announcement::decode(d, ctx)?);
+            let first = GroupElement::decode(d, ctx)?;
+            let second = GroupElement::decode(d, ctx)?;
+            choices.push(Ciphertext::from_elements(first, second));
+            responses.push(ResponseRandomness::decode(d, ctx)?);
+        }
+        let scalar = Scalar::decode(d, ctx)?;
+
+        Ok(Self(announcements, choices, responses, scalar))
     }
 }
 
 #[cfg(test)]
 #[allow(clippy::explicit_deref_methods)]
 mod tests {
-    use test_strategy::proptest;
+    use proptest::property_test;
 
     use super::*;
 
-    #[proptest]
-    fn proof_to_bytes_from_bytes_test(
-        #[strategy(0..5usize)] _size: usize,
-        #[any(#_size)] p1: UnitVectorProof,
-    ) {
-        let bytes = p1.to_bytes();
-        assert_eq!(bytes.len(), p1.bytes_size());
-        let p2 = UnitVectorProof::from_bytes(&mut bytes.as_slice(), p1.size()).unwrap();
-        assert_eq!(p1, p2);
+    #[property_test]
+    fn response_randomness_cbor_roundtrip(original: ResponseRandomness) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = ResponseRandomness::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
     }
 
-    #[proptest]
-    fn announcement_to_bytes_from_bytes_test(a1: Announcement) {
-        let bytes = a1.to_bytes();
-        let a2 = Announcement::from_bytes(&bytes).unwrap();
-        assert_eq!(a1, a2);
+    #[property_test]
+    fn announcement_cbor_roundtrip(original: Announcement) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = Announcement::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
     }
 
-    #[proptest]
-    fn response_randomness_to_bytes_from_bytes_test(r1: ResponseRandomness) {
-        let bytes = r1.to_bytes();
-        let r2 = ResponseRandomness::from_bytes(&bytes).unwrap();
-        assert_eq!(r1, r2);
+    #[property_test]
+    fn unit_vector_proof_cbor_roundtrip(original: UnitVectorProof) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = UnitVectorProof::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
     }
 }
