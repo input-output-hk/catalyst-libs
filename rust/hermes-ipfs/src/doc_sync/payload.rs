@@ -9,7 +9,7 @@ use minicbor::{
 
 use crate::{Cid, doc_sync::Blake3256};
 
-/// Encoding wrapper over [`hermes_ipfs::Cid`].
+/// Encoding wrapper over [`ipld_core::cid::Cid`].
 #[derive(Copy, Clone, TransparentWrapper)]
 #[repr(transparent)]
 struct CborCid(Cid);
