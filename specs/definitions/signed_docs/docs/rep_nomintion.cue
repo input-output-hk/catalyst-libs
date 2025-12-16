@@ -49,6 +49,10 @@ docs: "Rep Nomination": {
 		* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.
 		* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.
 		* The payload MUST be valid against the JSON schema defined in the referenced template.
+		* Only **ONE** major version (same `id`) could be submitted per contest.
+			If representative already submitted nomination for the specific contest,
+			only sub-versions could be submitted by that representative
+			(same `id` different `ver`).
 		* Other rules may apply as defined by the Contest or other parameters which can
 			control who may validly nominate as a representative in a Contest.
 
@@ -78,6 +82,7 @@ docs: "Rep Nomination": {
 
 		back_end: """
 			* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
+			* Only **ONE** major version (same `id`) could be submitted per 'Representative'.
 			* The system will only consider Representatives as having valid Nominations if:
 				* Their latest Nomination in a Contest is not Revoked.
 				* Their latest Delegation in a Contest references their latest Nomination.
