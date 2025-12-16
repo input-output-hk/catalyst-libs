@@ -19,6 +19,8 @@ pub struct SyncTimersState {
     keepalive_task: Mutex<Option<JoinHandle<()>>>,
     /// Notification for resetting the quiet timer.
     reset_new_notify: Notify,
+    /// Notification for shutting down the quiet timer.
+    shutdown_notify: Notify,
 }
 
 impl SyncTimersState {
@@ -32,6 +34,7 @@ impl SyncTimersState {
             send_new_keepalive,
             keepalive_task: Mutex::new(None),
             reset_new_notify: Notify::new(),
+            shutdown_notify: Notify::new(),
         })
     }
 
@@ -105,20 +108,28 @@ impl SyncTimersState {
                     tracing::trace!("Quiet timer reset");
                     // Loop restarts immediately -> New random duration picked
                 }
+                // Shutdown triggered
+                () = self.shutdown_notify.notified() => {
+                    tracing::trace!("Quiet timer shutting down");
+                    break;
+                }
             }
         }
     }
 
     /// Reset quiet period timer (call on every received or posted .new)
     pub fn reset_quiet_timer(&self) {
-        tracing::trace!("Resetting quiet timer");
         // Notify the background task to reset its sleep loop
-        self.reset_new_notify.notify_waiters();
+        self.reset_new_notify.notify_one();
     }
 
     /// Stop the quiet period background task, if running.
     pub fn stop_quiet_timer(&self) {
-        self.keepalive_task.blocking_lock().take();
+        self.shutdown_notify.notify_one();
+        self.keepalive_task
+            .blocking_lock()
+            .take()
+            .map(JoinHandle::join);
     }
 }
 
@@ -140,7 +151,7 @@ mod tests {
     #[test]
     fn test_start_quiet_timer_count_keepalive() {
         // Track how many times the callback is called
-        let callback_count = Arc::new(AtomicU32::new(0)).clone();
+        let callback_count = Arc::new(AtomicU32::new(0));
         let callback: KeepaliveCallback = Arc::new({
             let counter = callback_count.clone();
             move || {
@@ -167,12 +178,34 @@ mod tests {
 
     #[test]
     fn test_double_start_no_duplicate() {
-        // This should show the log "Quiet timer already running"
-        let _unused = tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::TRACE)
-            .with_test_writer()
-            .try_init();
+        let callback_count = Arc::new(AtomicU32::new(0));
+        let callback: KeepaliveCallback = Arc::new({
+            let counter = callback_count.clone();
+            move || {
+                counter.fetch_add(1, Ordering::Relaxed);
+                Ok(())
+            }
+        });
+        let state = SyncTimersState::new(timer_config(), callback);
 
+        // Start twice
+        state.start_quiet_timer();
+        // Should ignore
+        // If log is enabled, this should show "Quiet timer already running"
+        state.start_quiet_timer();
+
+        // Wait for keepalive
+        std::thread::sleep(Duration::from_millis(120));
+
+        let count = callback_count.load(Ordering::Relaxed);
+        assert_eq!(
+            count, 1,
+            "Expected callback to be called 1 times, got {count}"
+        );
+    }
+
+    #[test]
+    fn test_start_stop() {
         let callback_count = Arc::new(AtomicU32::new(0));
         let callback: KeepaliveCallback = Arc::new({
             let counter = callback_count.clone();
@@ -184,14 +217,13 @@ mod tests {
 
         let state = SyncTimersState::new(timer_config(), callback);
 
-        // Start twice
+        // Start timer -> timer expired (count + 1) -> stop timer ->
+        // timer expired (this should not do anything since the timer is stopped)
         state.start_quiet_timer();
-        // Should ignore
-        state.start_quiet_timer();
-
-        // Wait for keepalive
         std::thread::sleep(Duration::from_millis(120));
-
+        state.stop_quiet_timer();
+        assert!(state.keepalive_task.blocking_lock().is_none());
+        std::thread::sleep(Duration::from_millis(120));
         let count = callback_count.load(Ordering::Relaxed);
         assert_eq!(
             count, 1,
