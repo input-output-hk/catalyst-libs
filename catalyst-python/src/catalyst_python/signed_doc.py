@@ -333,7 +333,7 @@ def __create_metadata(
     }
 
     if template is not None:
-        metadata["template"] = template.to_json()
+        metadata["template"] = [template.to_json()]
     if parameters is not None:
         metadata["parameters"] = [p.to_json() for p in parameters]
 
