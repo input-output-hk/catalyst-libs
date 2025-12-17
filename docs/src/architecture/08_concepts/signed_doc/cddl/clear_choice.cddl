@@ -1,7 +1,7 @@
 ; An Choice Selection (clear/unencrypted).
 ;
-; This is a positive integer, and is
-; constrained by the parameters of the contest.
+; This is a positive integer, and is constrained
+; by the parameters of the contest.
 
 
 ; Universal Unencrypted Choice
