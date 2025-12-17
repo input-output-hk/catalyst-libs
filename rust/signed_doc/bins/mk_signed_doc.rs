@@ -13,10 +13,8 @@ use catalyst_signed_doc::{Builder, CatalystSignedDocument, catalyst_id::Catalyst
 use clap::Parser;
 use ed25519_dalek::ed25519::signature::Signer;
 
-fn main() {
-    if let Err(err) = Cli::parse().exec() {
-        println!("{err}");
-    }
+fn main() -> anyhow::Result<()> {
+    Cli::parse().exec()
 }
 
 /// Catalyst Sign Document CLI Commands
