@@ -13,7 +13,7 @@ impl Hasher {
         Self(blake3::Hasher::new())
     }
 
-    /// Utility function to quickly has bytes
+    /// Utility function to quickly hash bytes
     pub(super) fn hash(data: &[u8]) -> H256 {
         let mut hasher = blake3::Hasher::new();
         hasher.update(data);
