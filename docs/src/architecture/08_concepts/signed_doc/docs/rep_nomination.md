@@ -42,6 +42,10 @@ The payload of a profile is controlled by its template.
 * The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.
 * The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.
 * The payload MUST be valid against the [JSON schema][JSON Schema-2020-12] defined in the referenced template.
+* Only **ONE** major version (same `id`) could be submitted per contest.
+    If representative already submitted nomination for the specific contest,
+    only sub-versions could be submitted by that representative
+    (same [`id`](../metadata.md#id) different `ver`).
 * Other rules may apply as defined by the Contest or other parameters which can
     control who may validly nominate as a representative in a Contest.
 
@@ -81,6 +85,7 @@ to re-delegate to affirm the delegates latest nomination.
 #### Back End
 
 * The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
+* Only **ONE** major version (same `id`) could be submitted per 'Representative'.
 * The system will only consider Representatives as having valid Nominations if:
     * Their latest Nomination in a Contest is not Revoked.
     * Their latest Delegation in a Contest references their latest Nomination.
@@ -289,7 +294,8 @@ The following User roles may sign documents of this type:
 
 * Representative
 
-Only the original author can update and sign a new version of documents.
+Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)
+of the referenced document specified by the 'ref' metadata field.
 
 ## Copyright
 
@@ -297,7 +303,7 @@ Only the original author can update and sign a new version of documents.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-12-02 |
+| Modified | 2025-12-15 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -308,6 +314,10 @@ Only the original author can update and sign a new version of documents.
 #### 0.01 (2025-06-19)
 
 * First Published Version
+
+#### 0.2.2 (2025-12-02)
+
+* Added missing `signers: update: type: "ref"` definition.
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
