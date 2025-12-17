@@ -103,7 +103,7 @@ impl Encode<()> for Choices {
         match self {
             Choices::Clear(choices) => {
                 e.array((choices.len() as u64).checked_add(1).ok_or_else(|| {
-                    minicbor::encode::Error::message("Clear chaoices array length overflow")
+                    minicbor::encode::Error::message("Clear choices array length overflow")
                 })?)?;
                 0.encode(e, ctx)?;
                 for choice in choices {
