@@ -65,13 +65,10 @@ class SignedDocument:
         self.hex_cbor = hex_cbor
 
     def doc_ref(self) -> DocumentRef:
-        id = self.metadata["id"]
-        ver = self.metadata["ver"]
-        cid = cid_sha256_hash(bytes.fromhex(self.hex_cbor))
         return DocumentRef(
-            id=id,
-            ver=ver,
-            cid=cid,
+            doc_id=self.metadata["id"],
+            doc_ver=self.metadata["ver"],
+            cid=cid_sha256_hash(bytes.fromhex(self.hex_cbor)),
         )
 
 
