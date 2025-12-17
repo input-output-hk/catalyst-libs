@@ -666,6 +666,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_meta().doc_ref() == Some(&refs));
                 anyhow::ensure!(doc.doc_meta().template() == Some(&refs));
                 anyhow::ensure!(doc.doc_meta().reply() == Some(&refs));
+                anyhow::ensure!(doc.doc_meta().revocations() == Some(&vec![uuid_v7].into()));
                 anyhow::ensure!(doc.doc_content_type() == Some(ContentType::Json));
                 anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
                 anyhow::ensure!(doc.authors().len() == 1);

@@ -14,6 +14,12 @@ pub enum Revocations {
     Specified(Vec<UuidV7>),
 }
 
+impl From<Vec<UuidV7>> for Revocations {
+    fn from(value: Vec<UuidV7>) -> Self {
+        Self::Specified(value)
+    }
+}
+
 impl Serialize for Revocations {
     fn serialize<S>(
         &self,
