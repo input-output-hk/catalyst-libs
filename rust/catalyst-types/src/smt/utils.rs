@@ -74,6 +74,9 @@ pub(super) fn node_key(
     key_prefix_length: u8,
     position_from_left: u32,
 ) -> Result<H256, Error> {
+    if key_prefix_length > 32 {
+        return Err(Error::InvalidKeyPrefixLength);
+    }
     let mut node_key = H256::zero();
 
     for bit_index_msb in 0..key_prefix_length {
