@@ -53,6 +53,18 @@ class DocumentRef:
             "cid": self.cid,
         }
 
+class SignedDocument:
+    def __init__(
+        self,
+        metadata: dict[str, Any],
+        hex_cbor: str,
+    ) -> None:
+        self.metadata = metadata
+        self.hex_cbor = hex_cbor
+
+    def doc_ref(self) -> DocumentRef:
+        return DocumentRef(self.metadata["id"], self.metadata["ver"])
+
 
 class SignedDocumentBuilder:
     def __init__(
@@ -123,19 +135,6 @@ class SignedDocumentBuilder:
                 metadata=copy.deepcopy(self.metadata),
                 hex_cbor=signed_doc_file.read().hex(),
             )
-
-
-class SignedDocument:
-    def __init__(
-        self,
-        metadata: dict[str, Any],
-        hex_cbor: str,
-    ) -> None:
-        self.metadata = metadata
-        self.hex_cbor = hex_cbor
-
-    def doc_ref(self) -> DocumentRef:
-        return DocumentRef(self.metadata["id"], self.metadata["ver"])
 
 
 # ------------------- #
