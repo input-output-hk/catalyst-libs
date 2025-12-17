@@ -6,7 +6,7 @@ use crate::smt::Error;
 
 /// Maximum coarse height for the Sparse Merkle Tree, needed to limit the number of
 /// batches.
-const MAX_COARSE_HEIGHT: u8 = 14;
+pub(super) const MAX_COARSE_HEIGHT: u8 = 14;
 
 /// Root height. The tree goes from `u8::MAX` down to 0.
 pub(super) const ROOT_HEIGHT: u8 = u8::MAX;

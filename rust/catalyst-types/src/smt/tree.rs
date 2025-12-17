@@ -13,7 +13,7 @@ pub use sparse_merkle_tree::{H256, MerkleProof};
 use crate::smt::{
     Error, Value,
     hasher::Hasher,
-    utils::{self, ROOT_HEIGHT},
+    utils::{self, MAX_COARSE_HEIGHT, ROOT_HEIGHT},
     value::ValueWrapper,
 };
 
@@ -120,7 +120,7 @@ where V: Default + Value + Clone
     pub fn horizontal_slice_at(
         &self,
         height: u8,
-    ) -> impl Iterator<Item = Result<Option<H256>, Error>> {
+    ) -> Result<impl Iterator<Item = Result<Option<H256>, Error>>, Error> {
         let store = self.inner.store();
 
         horizontal_slice::<_, Hasher>(store, height)
@@ -181,11 +181,17 @@ where V: Default + Value + Clone
 fn horizontal_slice<V, H>(
     store: &DefaultStore<V>,
     target_height: u8,
-) -> impl Iterator<Item = Result<Option<H256>, Error>>
+) -> Result<impl Iterator<Item = Result<Option<H256>, Error>>, Error>
 where
     V: Clone,
     H: sparse_merkle_tree::traits::Hasher + Default,
 {
+    if target_height > MAX_COARSE_HEIGHT {
+        return Err(Error::SliceHeightTooLarge {
+            allowed_max: MAX_COARSE_HEIGHT,
+        });
+    }
+
     // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
     #[allow(clippy::arithmetic_side_effects)]
     let inverted_height = ROOT_HEIGHT - target_height;
@@ -201,7 +207,7 @@ where
 
     // For a given height we need to iterate through `width` number of positions,
     // even if some nodes are not materialized.
-    (0..width).map(move |horizontal_position| {
+    Ok((0..width).map(move |horizontal_position| {
         let node_key = utils::node_key(target_height, horizontal_position)?;
         let key = BranchKey::new(inverted_height, node_key);
 
@@ -210,7 +216,7 @@ where
             let mv = merge::merge::<H>(key.height, &key.node_key, &node.left, &node.right);
             mv.hash::<H>()
         }))
-    })
+    }))
 }
 
 /// Returns an iterator over all materialized nodes at a specific height in the Sparse
@@ -314,6 +320,7 @@ mod tests {
         let smt = Tree::<IntValue>::new();
         let hashes = smt
             .horizontal_slice_at(height)
+            .expect("should get a slice")
             .collect::<Result<Vec<_>, _>>()
             .expect("should get a slice");
         hashes.len()
@@ -327,6 +334,7 @@ mod tests {
         let root = smt.root();
         let node_at_0 = smt
             .horizontal_slice_at(0)
+            .expect("should get a slice")
             .next()
             .expect("should have at least one value")
             .expect("should retrieve the value")
