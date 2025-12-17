@@ -97,13 +97,13 @@ cddlDefinitions: {
 	"clear-choice": {
 		requires: []
 		def: """
-			int
+			uint
 			"""
 		description: """
 			An Choice Selection (clear/unencrypted).
 
-			This can be a positive or negative integer, and is
-			constrained by the parameters of the contest.
+			This is a positive integer, and is constrained
+			by the parameters of the contest.
 			"""
 		comment: """
 			Universal Unencrypted Choice
