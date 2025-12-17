@@ -6,6 +6,6 @@ mod encrypted_block;
 mod encrypted_choices;
 
 pub use self::{
-    ballot::ContentBallot, choices::Choices, encrypted_block::EncryptedBlock,
+    ballot::ContentBallotPayload, choices::Choices, encrypted_block::EncryptedBlock,
     encrypted_choices::EncryptedChoices,
 };

@@ -19,7 +19,7 @@ use crate::{Choices, EncryptedChoices};
 /// }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ContentBallot {
+pub struct ContentBallotPayload {
     /// A map of voters choices.
     pub choices: BTreeMap<u64, Choices>,
     /// A universal encrypted column proof.
@@ -34,14 +34,14 @@ pub struct ContentBallot {
     pub voter_choices: Option<EncryptedChoices>,
 }
 
-impl Decode<'_, ()> for ContentBallot {
+impl Decode<'_, ()> for ContentBallotPayload {
     fn decode(
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         use minicbor::data::Type;
 
-        let len = decode_map_len(d, "content ballot")?;
+        let len = decode_map_len(d, "content ballot payload")?;
 
         let mut choices = BTreeMap::new();
         let column_proof = None;
@@ -69,14 +69,14 @@ impl Decode<'_, ()> for ContentBallot {
                         "voter-choices" => voter_choices = Some(EncryptedChoices::decode(d, ctx)?),
                         key => {
                             return Err(minicbor::decode::Error::message(format!(
-                                "Unexpected content ballot key value: {key:?}"
+                                "Unexpected content ballot payload key value: {key:?}"
                             )));
                         },
                     }
                 },
                 t => {
                     return Err(minicbor::decode::Error::message(format!(
-                        "Unexpected content ballot key type: {t:?}"
+                        "Unexpected content ballot payload key type: {t:?}"
                     )));
                 },
             }
@@ -91,7 +91,7 @@ impl Decode<'_, ()> for ContentBallot {
     }
 }
 
-impl Encode<()> for ContentBallot {
+impl Encode<()> for ContentBallotPayload {
     fn encode<W: Write>(
         &self,
         e: &mut Encoder<W>,
@@ -102,7 +102,9 @@ impl Encode<()> for ContentBallot {
             .checked_add(u64::from(self.column_proof.is_some()))
             .and_then(|v| v.checked_add(u64::from(self.matrix_proof.is_some())))
             .and_then(|v| v.checked_add(u64::from(self.voter_choices.is_some())))
-            .ok_or_else(|| minicbor::encode::Error::message("ContentBallot map length overflow"))?;
+            .ok_or_else(|| {
+                minicbor::encode::Error::message("contest ballot payload map length overflow")
+            })?;
         e.map(len)?;
 
         for (&key, val) in &self.choices {
@@ -131,7 +133,7 @@ mod tests {
 
     #[test]
     fn roundtrip() {
-        let original = ContentBallot {
+        let original = ContentBallotPayload {
             choices: [
                 (1, Choices::Clear(vec![1, 2, 3, -4, -5])),
                 (2, Choices::Encrypted {
@@ -151,7 +153,7 @@ mod tests {
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
-        let decoded = ContentBallot::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        let decoded = ContentBallotPayload::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
         assert_eq!(original, decoded);
     }
 }

@@ -8,4 +8,4 @@ pub mod contest_delegation;
 
 mod contest_ballot;
 
-pub use crate::contest_ballot::{Choices, ContentBallot, EncryptedBlock, EncryptedChoices};
+pub use crate::contest_ballot::{Choices, ContentBallotPayload, EncryptedBlock, EncryptedChoices};
