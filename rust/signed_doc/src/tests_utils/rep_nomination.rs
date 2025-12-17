@@ -2,7 +2,7 @@ use ed25519_dalek::ed25519::signature::Signer;
 
 use crate::{
     Builder, CatalystSignedDocument, ContentEncoding, ContentType, catalyst_id::role_index::RoleId,
-    doc_types, providers::tests::TestCatalystProvider, tests_utils::create_dummy_key_pair,
+    doc_types, providers::tests::TestCatalystProvider, tests_utils::get_doc_kid_and_sk,
     uuid::UuidV7,
 };
 
@@ -14,8 +14,9 @@ pub fn rep_nomination_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_key_pair(RoleId::DelegatedRepresentative);
-    provider.add_sk(kid.clone(), sk.clone());
+    let (sk, kid) = get_doc_kid_and_sk(provider, ref_doc, 0)
+        .map(|(sk, kid)| (sk, kid.with_role(RoleId::DelegatedRepresentative)))
+        .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
 
     let template_ref = template_doc.doc_ref()?;
     let ref_ref = ref_doc.doc_ref()?;
