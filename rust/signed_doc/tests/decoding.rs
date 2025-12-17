@@ -622,6 +622,8 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                     .encode_with(doc_ref.clone(), &mut ())?;
                 p_headers.str("section")?.encode("$")?;
 
+                p_headers.str("revocations")?;
+                p_headers.array(1)?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
                 /* cspell:disable */
                 p_headers.str("collaborators")?;
                 p_headers.array(2)?;
@@ -1367,6 +1369,7 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_random_header_field_case("template"),
         signed_doc_with_random_header_field_case("reply"),
         signed_doc_with_random_header_field_case("section"),
+        signed_doc_with_random_header_field_case("revocations"),
         signed_doc_with_random_header_field_case("collaborators"),
         signed_doc_with_random_header_field_case("parameters"),
         signed_doc_with_random_header_field_case("chain"),
