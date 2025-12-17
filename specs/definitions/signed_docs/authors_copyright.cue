@@ -149,5 +149,12 @@ copyright: #copyrightNotice & {
 				* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.
 				"""
 		},
+		{
+			version:  "0.2.2"
+			modified: "2025-12-15"
+			changes: """
+				* Added missing `signers: update: type: "ref"` definition for `Rep Nomination` document type.
+				"""
+		},
 	]
 }
