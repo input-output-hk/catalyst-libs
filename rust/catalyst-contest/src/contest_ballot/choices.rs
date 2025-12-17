@@ -19,7 +19,7 @@ const ENCRYPTED_CHOICE: u8 = 1;
 ///
 /// clear-choices = ( +clear-choice )
 ///
-/// clear-choice = int
+/// clear-choice = uint
 ///
 /// elgamal-ristretto255-encrypted-choices = [
 ///     [+ elgamal-ristretto255-encrypted-choice]
@@ -29,7 +29,7 @@ const ENCRYPTED_CHOICE: u8 = 1;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Choices {
     /// A universal unencrypted set of choices.
-    Clear(Vec<i64>),
+    Clear(Vec<u64>),
     /// ElGamal/Ristretto255 encrypted choices.
     Encrypted {
         /// A list of ElGamal/Ristretto255 encrypted choices.
@@ -61,7 +61,7 @@ impl Decode<'_, ()> for Choices {
                         .map_err(minicbor::decode::Error::message)?,
                 );
                 for _ in 1..len {
-                    values.push(i64::decode(d, ctx)?);
+                    values.push(u64::decode(d, ctx)?);
                 }
                 Ok(Self::Clear(values))
             },

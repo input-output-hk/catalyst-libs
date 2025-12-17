@@ -135,7 +135,7 @@ mod tests {
     fn roundtrip() {
         let original = ContentBallotPayload {
             choices: [
-                (1, Choices::Clear(vec![1, 2, 3, -4, -5])),
+                (1, Choices::Clear(vec![1, 2, 3, 4, 5])),
                 (2, Choices::Encrypted {
                     choices: vec![Ciphertext::zero()],
                     row_proof: None,
