@@ -109,9 +109,7 @@ class SignedDocumentBuilder:
             json_str = json.dumps(self.content)
             doc_content_file.write(json_str.encode(encoding="utf-8"))
             doc_content_file.flush()
-
-            if (
-                subprocess.run(
+            res = subprocess.run(
                     [
                         mk_signed_doc_path,
                         "build",
@@ -120,13 +118,23 @@ class SignedDocumentBuilder:
                         metadata_file.name,
                     ],
                     # capture_output=True,
-                ).returncode
-                != 0
-            ):
-                raise "'mk_signed_doc build' failed"
-
-            if (
-                subprocess.run(
+                )
+            print(res.returncode)
+            # if (
+            #     subprocess.run(
+            #         [
+            #             mk_signed_doc_path,
+            #             "build",
+            #             doc_content_file.name,
+            #             signed_doc_file.name,
+            #             metadata_file.name,
+            #         ],
+            #         # capture_output=True,
+            #     ).returncode
+            #     != 0
+            # ):
+            #     raise "'mk_signed_doc build' failed"
+            res = subprocess.run(
                     [
                         mk_signed_doc_path,
                         "sign",
@@ -135,10 +143,22 @@ class SignedDocumentBuilder:
                         self.cat_id,
                     ],
                     # capture_output=True,
-                ).returncode
-                != 0
-            ):
-                raise "'mk_signed_doc sign' failed"
+                )
+            print(res.returncode)
+            # if (
+            #     subprocess.run(
+            #         [
+            #             mk_signed_doc_path,
+            #             "sign",
+            #             signed_doc_file.name,
+            #             self.key.sk_hex,
+            #             self.cat_id,
+            #         ],
+            #         # capture_output=True,
+            #     ).returncode
+            #     != 0
+            # ):
+            #     raise "'mk_signed_doc sign' failed"
 
             return SignedDocument(
                 metadata=copy.deepcopy(self.metadata),
