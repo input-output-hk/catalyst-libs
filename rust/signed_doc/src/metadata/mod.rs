@@ -10,6 +10,7 @@ mod content_encoding;
 mod content_type;
 pub(crate) mod doc_type;
 pub(crate) mod document_refs;
+mod revocations;
 mod section;
 mod supported_field;
 
@@ -23,8 +24,8 @@ use minicbor::Decoder;
 pub use section::Section;
 use strum::IntoDiscriminant as _;
 
-use crate::decode_context::CompatibilityPolicy;
 pub(crate) use crate::metadata::supported_field::{SupportedField, SupportedLabel};
+use crate::{decode_context::CompatibilityPolicy, metadata::revocations::Revocations};
 
 /// Document Metadata.
 ///
@@ -115,6 +116,14 @@ impl Metadata {
         self.0
             .get(&SupportedLabel::Section)
             .and_then(SupportedField::try_as_section_ref)
+    }
+
+    /// Return `revocations` field.
+    #[must_use]
+    pub fn revocations(&self) -> Option<&Revocations> {
+        self.0
+            .get(&SupportedLabel::Revocations)
+            .and_then(SupportedField::try_as_revocations_ref)
     }
 
     /// Return `collaborators` field.
