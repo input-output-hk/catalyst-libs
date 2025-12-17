@@ -8,6 +8,7 @@ import time
 import subprocess
 import json
 from tempfile import NamedTemporaryFile
+from ipfs_cid import cid_sha256_hash
 
 from catalyst_python.admin import AdminKey
 from catalyst_python.catalyst_id import RoleID
@@ -41,10 +42,10 @@ class DocType(StrEnum):
 
 
 class DocumentRef:
-    def __init__(self, doc_id: str, doc_ver: str) -> None:
+    def __init__(self, doc_id: str, doc_ver: str, cid: str) -> None:
         self.doc_id = doc_id
         self.doc_ver = doc_ver
-        self.cid = "0x"
+        self.cid = cid
 
     def to_json(self) -> dict:
         return {
@@ -64,7 +65,14 @@ class SignedDocument:
         self.hex_cbor = hex_cbor
 
     def doc_ref(self) -> DocumentRef:
-        return DocumentRef(self.metadata["id"], self.metadata["ver"])
+        id = self.metadata["id"]
+        ver = self.metadata["ver"]
+        cid = cid_sha256_hash(bytes.fromhex(self.hex_cbor))
+        return DocumentRef(
+            id=id,
+            ver=ver,
+            cid=cid,
+        )
 
 
 class SignedDocumentBuilder:
