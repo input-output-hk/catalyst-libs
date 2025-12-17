@@ -31,7 +31,12 @@ impl BlindingRandomness {
 
 /// First announcement, formed by I, B, A group elements. These group elements
 /// are the commitments of the binary representation of the unit vector index.
-#[derive(Clone, Debug, Eq, PartialEq)]
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// zkproof-elgamal-announcement = ( zkproof-elgamal-group-element, zkproof-elgamal-group-element, zkproof-elgamal-group-element )
+/// ```
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Announcement {
     pub(crate) i: GroupElement,
     pub(crate) b: GroupElement,
@@ -61,7 +66,12 @@ impl Announcement {
 
 /// Response encoding the bits of the private vector, and the randomness of
 /// `BlindingRandomness`.
-#[derive(Clone, Debug, Eq, PartialEq)]
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// zkproof-ed25519-r-response = ( zkproof-ed25519-scalar, zkproof-ed25519-scalar, zkproof-ed25519-scalar )
+/// ```
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ResponseRandomness {
     pub(crate) z: Scalar,
     pub(crate) w: Scalar,

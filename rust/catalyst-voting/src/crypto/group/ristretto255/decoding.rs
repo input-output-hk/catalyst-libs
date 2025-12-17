@@ -2,6 +2,7 @@
 
 use anyhow::anyhow;
 use curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar as IScalar};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 use super::{GroupElement, Scalar};
 
@@ -48,6 +49,46 @@ impl GroupElement {
     }
 }
 
+impl Encode<()> for Scalar {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.to_bytes().encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for Scalar {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let bytes = <[u8; Scalar::BYTES_SIZE]>::decode(d, ctx)?;
+        Self::from_bytes(bytes).map_err(minicbor::decode::Error::message)
+    }
+}
+
+impl Encode<()> for GroupElement {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.to_bytes().encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for GroupElement {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let compressed = <[u8; GroupElement::BYTES_SIZE]>::decode(d, ctx)?;
+        Self::from_bytes(&compressed).map_err(minicbor::decode::Error::message)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use test_strategy::proptest;
@@ -66,5 +107,25 @@ mod tests {
         let bytes = ge1.to_bytes();
         let ge2 = GroupElement::from_bytes(&bytes).unwrap();
         assert_eq!(ge1, ge2);
+    }
+
+    #[proptest]
+    fn scalar_cbor_roundtrip(original: Scalar) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = Scalar::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[proptest]
+    fn group_element_cbor_roundtrip(original: GroupElement) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = GroupElement::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
     }
 }
