@@ -53,6 +53,7 @@ class DocumentRef:
             "cid": self.cid,
         }
 
+
 class SignedDocument:
     def __init__(
         self,
@@ -109,27 +110,35 @@ class SignedDocumentBuilder:
             doc_content_file.write(json_str.encode(encoding="utf-8"))
             doc_content_file.flush()
 
-            subprocess.run(
-                [
-                    mk_signed_doc_path,
-                    "build",
-                    doc_content_file.name,
-                    signed_doc_file.name,
-                    metadata_file.name,
-                ],
-                capture_output=True,
-            )
+            if (
+                subprocess.run(
+                    [
+                        mk_signed_doc_path,
+                        "build",
+                        doc_content_file.name,
+                        signed_doc_file.name,
+                        metadata_file.name,
+                    ],
+                    capture_output=True,
+                ).returncode
+                != 0
+            ):
+                raise "'mk_signed_doc build' failed"
 
-            subprocess.run(
-                [
-                    mk_signed_doc_path,
-                    "sign",
-                    signed_doc_file.name,
-                    self.key.sk_hex,
-                    self.cat_id,
-                ],
-                capture_output=True,
-            )
+            if (
+                subprocess.run(
+                    [
+                        mk_signed_doc_path,
+                        "sign",
+                        signed_doc_file.name,
+                        self.key.sk_hex,
+                        self.cat_id,
+                    ],
+                    capture_output=True,
+                ).returncode
+                != 0
+            ):
+                raise "'mk_signed_doc sign' failed"
 
             return SignedDocument(
                 metadata=copy.deepcopy(self.metadata),
