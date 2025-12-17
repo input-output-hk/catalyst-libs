@@ -82,7 +82,7 @@ class SignedDocumentBuilder:
     # Build and sign document, returns hex str of document bytes
     def build_and_sign(
         self,
-    ) -> str:
+    ) -> SignedDocument:
         with (
             NamedTemporaryFile() as metadata_file,
             NamedTemporaryFile() as doc_content_file,
@@ -119,17 +119,20 @@ class SignedDocumentBuilder:
                 capture_output=True,
             )
 
-            return signed_doc_file.read().hex()
+            return SignedDocument(
+                metadata=copy.deepcopy(self.metadata),
+                hex_cbor=signed_doc_file.read().hex(),
+            )
 
 
 class SignedDocument:
     def __init__(
         self,
         metadata: dict[str, Any],
-        hex: str,
+        hex_cbor: str,
     ) -> None:
         self.metadata = metadata
-        self.hex = hex
+        self.hex_cbor = hex_cbor
 
     def doc_ref(self) -> DocumentRef:
         return DocumentRef(self.metadata["id"], self.metadata["ver"])
