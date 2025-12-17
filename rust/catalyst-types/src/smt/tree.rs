@@ -193,8 +193,12 @@ where
     }
 
     // In `sparse_merkle_tree` crate the heights are inverted (root is located at height 255).
-    #[allow(clippy::arithmetic_side_effects)]
-    let inverted_height = ROOT_HEIGHT - target_height;
+    let inverted_height =
+        ROOT_HEIGHT
+            .checked_sub(target_height)
+            .ok_or(Error::SliceHeightTooLarge {
+                allowed_max: MAX_COARSE_HEIGHT,
+            })?;
 
     // Total number of nodes at this height.
     let width = 2_u32.pow(u32::from(target_height));
