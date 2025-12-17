@@ -46,7 +46,7 @@ cbor-cid = '
 tally-proposal-result = [ 0, { + clear-choice : voting-power } ]
 
 ; Universal Unencrypted Choice
-clear-choice = int
+clear-choice = uint
 
 ; Voting Power.
 voting-power = int
