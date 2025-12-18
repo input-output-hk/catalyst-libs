@@ -1,4 +1,4 @@
-//! Catalyst Signed Document `section` field type definition.
+//! Catalyst Signed Document `revocations` field type definition.
 
 use std::fmt::{Debug, Display};
 
