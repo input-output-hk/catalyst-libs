@@ -5,9 +5,6 @@ use thiserror::Error;
 /// Error type
 #[derive(Debug, Error)]
 pub enum Error {
-    /// Inner implementation error
-    #[error(transparent)]
-    InnerTree(#[from] sparse_merkle_tree::error::Error),
     /// Invalid key prefix length
     #[error("invalid key prefix length")]
     InvalidKeyPrefixLength,
@@ -18,3 +15,7 @@ pub enum Error {
         allowed_max: u8,
     },
 }
+
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct MerkleTreeError(#[from] sparse_merkle_tree::error::Error);

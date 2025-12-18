@@ -11,7 +11,7 @@ use sparse_merkle_tree::{
 pub use sparse_merkle_tree::{H256, MerkleProof};
 
 use crate::smt::{
-    Error, Value,
+    Error, Value, error,
     hasher::Hasher,
     utils::{self, MAX_COARSE_HEIGHT, ROOT_HEIGHT},
     value::ValueWrapper,
@@ -57,7 +57,7 @@ where V: Default + Value + Clone
     pub fn insert(
         &mut self,
         value: &V,
-    ) -> Result<H256, Error> {
+    ) -> Result<H256, error::MerkleTreeError> {
         let key = Hasher::hash(&value.to_bytes());
         let value = ValueWrapper(value.to_bytes());
         let _ = self.inner.update(key, value)?;
@@ -72,7 +72,7 @@ where V: Default + Value + Clone
     pub fn get(
         &self,
         key: &H256,
-    ) -> Result<Option<V>, Error> {
+    ) -> Result<Option<V>, error::MerkleTreeError> {
         let value = self.inner.get(key)?;
         if value == <ValueWrapper as sparse_merkle_tree::traits::Value>::zero() {
             Ok(None)
@@ -89,7 +89,7 @@ where V: Default + Value + Clone
     pub fn merkle_proof(
         &self,
         keys: &[H256],
-    ) -> Result<MerkleProof, Error> {
+    ) -> Result<MerkleProof, error::MerkleTreeError> {
         let proof = self.inner.merkle_proof(keys.to_vec())?;
         Ok(proof)
     }
@@ -117,6 +117,10 @@ where V: Default + Value + Clone
     ///
     /// Note: This function uses the standard tree convention where height 0 is the root
     /// and height increases toward the leaves.
+    ///
+    /// # Errors
+    ///
+    /// Errors related to calculating the horizontal slice.
     pub fn horizontal_slice_at(
         &self,
         height: u8,
