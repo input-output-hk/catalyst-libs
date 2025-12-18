@@ -19,7 +19,7 @@ choices = [ 0, clear-choices ] /
 clear-choices = ( +clear-choice )
 
 ; Universal Unencrypted Choice
-clear-choice = int
+clear-choice = uint
 
 ; elgamal/ristretto255 Encrypted Choices
 elgamal-ristretto255-encrypted-choices = [
