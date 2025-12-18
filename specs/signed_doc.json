@@ -164,8 +164,8 @@
     },
     "clear-choice": {
       "comment": "Universal Unencrypted Choice",
-      "def": "int",
-      "description": "An Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
+      "def": "uint",
+      "description": "An Choice Selection (clear/unencrypted).\n\nThis is a positive integer, and is constrained\nby the parameters of the contest.",
       "requires": []
     },
     "clear-choices": {
@@ -622,6 +622,11 @@
         "changes": "* Added missing `ref` metadata field definition.\n* Improved `payload` cddl definition, replaced `document_ref` to the `uint` as a map keys to the `choices`.",
         "modified": "2025-12-02",
         "version": "0.2.1"
+      },
+      {
+        "changes": "* Added missing `signers: update: type: \"ref\"` definition for `Rep Nomination` document type.",
+        "modified": "2025-12-15",
+        "version": "0.2.2"
       }
     ]
   },
@@ -3394,7 +3399,7 @@
           ]
         },
         "update": {
-          "description": "Updates are allowed by the original author and from the 'collaborators' metadata field\nof the referenced document specified by the 'ref' metadata field.",
+          "description": "Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)\nof the referenced document specified by the 'ref' metadata field.",
           "type": "ref"
         }
       },
@@ -3419,7 +3424,7 @@
         "Steven Johnson": "steven.johnson@iohk.io"
       },
       "business_logic": {
-        "back_end": "* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n* The system will only consider Representatives as having valid Nominations if:\n\t* Their latest Nomination in a Contest is not Revoked.\n\t* Their latest Delegation in a Contest references their latest Nomination.",
+        "back_end": "* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n* Only **ONE** major version (same `id`) could be submitted per 'Representative'.\n* The system will only consider Representatives as having valid Nominations if:\n\t* Their latest Nomination in a Contest is not Revoked.\n\t* Their latest Delegation in a Contest references their latest Nomination.",
         "front_end": "* Allows a Representative to create or update their profile for a category.\n* The Representative sets their status to 'active' to be discoverable for delegation.\n* The Representative `revokes` the Nomination to signal they are no longer \n  participating in the category.\n* Nominations are not valid if the latest Delegation by the Representative does NOT\n  reference their latest Nomination."
       },
       "description": "A Representative Nomination Document is created to opt\nin as a Representative Voter for a specific Contest on a Brand/Campaign or Category.\n\nThis Document is a kind of `Profile` that is primarily used to\nhelp justify the Representatives Nomination to prospective delegators.\n\nThe user must have registered as a Representative.\nThe presence of this document signifies the user's intent to participate in that \ncontest as a Representative.\n\nThe document's structure is defined by the associated \nRep Nomination Form Template.\nThis allows an Admin to specify contest-specific requirements.\n\nThe Representative can retract their nomination by using the `revoke` metadata to\nrevoke this Nomination document.\n\nIt is an extension of all other profiles attached to the same Catalyst ID.\n\nProfiles themselves are intentionally general, however they may be\nlinked to a Brand/Campaign/Category via the template used by the profile.\n\nThe payload of a profile is controlled by its template.",
@@ -3533,17 +3538,22 @@
           ]
         },
         "update": {
-          "description": "Only the original author can update and sign a new version of documents.",
-          "type": "author"
+          "description": "Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)\nof the referenced document specified by the 'ref' metadata field.",
+          "type": "ref"
         }
       },
       "type": "bf9abd97-5d1f-4429-8e80-740fea371a9c",
-      "validation": "* The signer MUST be a registered 'Representative'.\n* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.\n* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.\n* The payload MUST be valid against the JSON schema defined in the referenced template.\n* Other rules may apply as defined by the Contest or other parameters which can\n\tcontrol who may validly nominate as a representative in a Contest.\n\nNo Nomination is valid unless the latest Contest Delegation of the Delegate\nrefers to their own Nomination.\nThis requires that Nominating is a two step process:\n\n1. Post the Nomination Document.\n2. Post a Contest Delegation delegating to the new Nomination Document.\n\nUpdating the Nomination Document will invalidate all Nominations to the \nRepresentative.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.",
+      "validation": "* The signer MUST be a registered 'Representative'.\n* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.\n* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.\n* The payload MUST be valid against the JSON schema defined in the referenced template.\n* Only **ONE** major version (same `id`) could be submitted per contest.\n\tIf representative already submitted nomination for the specific contest,\n\tonly sub-versions could be submitted by that representative\n\t(same `id` different `ver`).\n* Other rules may apply as defined by the Contest or other parameters which can\n\tcontrol who may validly nominate as a representative in a Contest.\n\nNo Nomination is valid unless the latest Contest Delegation of the Delegate\nrefers to their own Nomination.\nThis requires that Nominating is a two step process:\n\n1. Post the Nomination Document.\n2. Post a Contest Delegation delegating to the new Nomination Document.\n\nUpdating the Nomination Document will invalidate all Nominations to the \nRepresentative.\n\nThis is because Delegation points to a *SPECIFIC* Nomination, and it\n*MUST* be the latest for the Representative on the Contest.\nAs the Nomination contains information that the User relies on\nwhen choosing to delegate, changing that information could have a \nreal and detrimental result in the Delegation choice.\nTherefore, for a Delegation to be valid, it *MUST* point to the\nlatest Nomination for a Representative.\n\nPublishing a newer version of the Nomination Document to a specific contest will\ninvalidate all pre-existing delegations, and all voters will need\nto re-delegate to affirm the delegates latest nomination.",
       "versions": [
         {
           "changes": "* First Published Version",
           "modified": "2025-06-19",
           "version": "0.01"
+        },
+        {
+          "changes": "* Added missing `signers: update: type: \"ref\"` definition.",
+          "modified": "2025-12-02",
+          "version": "0.2.2"
         }
       ]
     },

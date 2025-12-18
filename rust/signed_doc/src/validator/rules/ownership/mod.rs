@@ -13,8 +13,7 @@ use catalyst_signed_doc_spec::{
 };
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
-    validator::CatalystSignedDocumentValidationRule,
+    CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
 /// Context for the validation problem report.
@@ -36,7 +35,7 @@ impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -75,7 +74,7 @@ impl DocumentOwnershipRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let doc_id = doc.doc_id()?;
         if doc_id == doc.doc_ver()? && doc.authors().len() != 1 {

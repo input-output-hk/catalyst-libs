@@ -8,7 +8,15 @@ use std::ops::{Add, Mul};
 use crate::crypto::group::{GroupElement, Scalar};
 
 /// `ElGamal` ciphertext, encrypted message with the public key.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// The CBOR CDDL schema:
+/// ```cddl
+/// elgamal-ristretto255-encrypted-choice = [
+///     c1: elgamal-ristretto255-group-element
+///     c2: elgamal-ristretto255-group-element
+/// ]
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct Ciphertext(GroupElement, GroupElement);
 
@@ -17,6 +25,14 @@ impl Ciphertext {
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
     pub fn zero() -> Self {
         Ciphertext(GroupElement::zero(), GroupElement::zero())
+    }
+
+    /// Creates a `Ciphertext` instance from the given elements.
+    pub fn from_elements(
+        first: GroupElement,
+        second: GroupElement,
+    ) -> Self {
+        Self(first, second)
     }
 
     /// Get the first element of the `Ciphertext`.

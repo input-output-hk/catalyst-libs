@@ -1,6 +1,8 @@
 //! Elgamal objects decoding implementation
 
 use anyhow::anyhow;
+use cbork_utils::decode_helper::decode_array_len;
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 use super::{Ciphertext, GroupElement};
 
@@ -34,6 +36,35 @@ impl Ciphertext {
     }
 }
 
+impl Encode<()> for Ciphertext {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(2)?;
+        self.0.encode(e, ctx)?;
+        self.1.encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for Ciphertext {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let len = decode_array_len(d, "Ciphertext")?;
+        if len != 2 {
+            return Err(minicbor::decode::Error::message(format!(
+                "Unexpected Ciphertext array length: {len}, expected 2"
+            )));
+        }
+        let c1 = GroupElement::decode(d, ctx)?;
+        let c2 = GroupElement::decode(d, ctx)?;
+        Ok(Self(c1, c2))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use test_strategy::proptest;
@@ -45,5 +76,15 @@ mod tests {
         let bytes = c1.to_bytes();
         let c2 = Ciphertext::from_bytes(&bytes).unwrap();
         assert_eq!(c1, c2);
+    }
+
+    #[proptest]
+    fn cbor_roundtrip(original: Ciphertext) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = Ciphertext::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
     }
 }
