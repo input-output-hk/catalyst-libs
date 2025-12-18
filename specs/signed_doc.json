@@ -164,8 +164,8 @@
     },
     "clear-choice": {
       "comment": "Universal Unencrypted Choice",
-      "def": "int",
-      "description": "An Choice Selection (clear/unencrypted).\n\nThis can be a positive or negative integer, and is\nconstrained by the parameters of the contest.",
+      "def": "uint",
+      "description": "An Choice Selection (clear/unencrypted).\n\nThis is a positive integer, and is constrained\nby the parameters of the contest.",
       "requires": []
     },
     "clear-choices": {
