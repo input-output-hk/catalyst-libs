@@ -1,9 +1,13 @@
 //! Providers traits, which are used during different validation procedures.
 
 use std::time::Duration;
+mod search_query;
 
 use catalyst_types::{catalyst_id::CatalystId, uuid::UuidV7};
 use ed25519_dalek::VerifyingKey;
+pub use search_query::{
+    CatalystIdSelector, CatalystSignedDocumentSearchQuery, DocumentRefSelector, UuidV7Selector,
+};
 
 use crate::{CatalystSignedDocument, DocumentRef};
 
@@ -22,26 +26,35 @@ pub trait CatalystIdProvider: Send + Sync {
 /// `CatalystSignedDocument` Provider trait
 #[async_trait::async_trait]
 pub trait CatalystSignedDocumentProvider: Send + Sync {
-    /// Try to get `CatalystSignedDocument` from document reference
+    /// Try to get a `CatalystSignedDocument` from document reference
     async fn try_get_doc(
         &self,
         doc_ref: &DocumentRef,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
-    /// Try to get the last known version of the `CatalystSignedDocument`, same
+    /// Try to get the last known version of a `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
     async fn try_get_last_doc(
         &self,
         id: UuidV7,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
-    /// Try to get the first known version of the `CatalystSignedDocument`, `id` and `ver`
+    /// Try to get the first known version of a `CatalystSignedDocument`, `id` and `ver`
     /// are equal.
     async fn try_get_first_doc(
         &self,
         id: UuidV7,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
+    /// Try to find a `CatalystSignedDocument` by the provided query.
+    async fn try_search_docs(
+        &self,
+        query: &CatalystSignedDocumentSearchQuery,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>>;
+}
+
+/// `TimeThresholdProvider` Provider trait
+pub trait TimeThresholdProvider {
     /// Returns a future threshold value, which is used in the validation of the `ver`
     /// field that it is not too far in the future.
     /// If `None` is returned, skips "too far in the future" validation.
@@ -53,14 +66,15 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
     fn past_threshold(&self) -> Option<Duration>;
 }
 
-/// Super trait of `CatalystSignedDocumentProvider` and `CatalystIdProvider`
-pub trait CatalystSignedDocumentAndCatalystIdProvider:
-    CatalystSignedDocumentProvider + CatalystIdProvider
+/// Super trait of `CatalystSignedDocumentProvider`, `TimeThresholdProvider` and
+/// `CatalystIdProvider`
+pub trait Provider:
+    CatalystSignedDocumentProvider + TimeThresholdProvider + CatalystIdProvider
 {
 }
 
-impl<T: CatalystSignedDocumentProvider + CatalystIdProvider>
-    CatalystSignedDocumentAndCatalystIdProvider for T
+impl<T: CatalystSignedDocumentProvider + TimeThresholdProvider + CatalystIdProvider> Provider
+    for T
 {
 }
 
@@ -75,7 +89,10 @@ pub mod tests {
         CatalystId, CatalystIdProvider, CatalystSignedDocument, CatalystSignedDocumentProvider,
         VerifyingKey,
     };
-    use crate::DocumentRef;
+    use crate::{
+        DocumentRef,
+        providers::{CatalystSignedDocumentSearchQuery, TimeThresholdProvider},
+    };
 
     /// Simple testing implementation of `CatalystSignedDocumentProvider`,
     #[derive(Default, Debug)]
@@ -163,6 +180,85 @@ pub mod tests {
                 .map(|(_, doc)| doc.clone()))
         }
 
+        async fn try_search_docs(
+            &self,
+            query: &CatalystSignedDocumentSearchQuery,
+        ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+            let mut res = Vec::new();
+
+            for v in self.signed_doc.values() {
+                if let Some(selector) = query.id.as_ref()
+                    && selector.filter(&v.doc_id()?)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+                if let Some(selector) = query.ver.as_ref()
+                    && selector.filter(&v.doc_ver()?)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.doc_type.as_ref()
+                    && selector.filter(v.doc_type()?)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.doc_ref.as_ref()
+                    && let Some(doc_refs) = v.doc_meta().doc_ref()
+                    && selector.filter(doc_refs)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.template.as_ref()
+                    && let Some(doc_refs) = v.doc_meta().template()
+                    && selector.filter(doc_refs)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.reply.as_ref()
+                    && let Some(doc_refs) = v.doc_meta().reply()
+                    && selector.filter(doc_refs)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.parameters.as_ref()
+                    && let Some(doc_refs) = v.doc_meta().parameters()
+                    && selector.filter(doc_refs)
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.collaborators.as_ref()
+                    && selector.filter(v.doc_meta().collaborators())
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+
+                if let Some(selector) = query.authors.as_ref()
+                    && selector.filter(v.authors().as_slice())
+                {
+                    res.push(v.clone());
+                    continue;
+                }
+            }
+
+            Ok(res)
+        }
+    }
+
+    impl TimeThresholdProvider for TestCatalystProvider {
         fn future_threshold(&self) -> Option<std::time::Duration> {
             Some(Duration::from_secs(5))
         }

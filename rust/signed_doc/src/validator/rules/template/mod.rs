@@ -10,7 +10,7 @@ use catalyst_types::json_schema::JsonSchema;
 
 use crate::{
     CatalystSignedDocument, ContentType, DocType,
-    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    providers::Provider,
     validator::{
         CatalystSignedDocumentValidationRule,
         rules::{doc_ref::doc_refs_check, utils::content_json_schema_check},
@@ -34,7 +34,7 @@ impl CatalystSignedDocumentValidationRule for TemplateRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -76,7 +76,7 @@ impl TemplateRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let context = "Template rule check";
 
