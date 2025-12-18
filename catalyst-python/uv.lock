@@ -78,6 +78,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
+    { name = "ipfs-cid" },
     { name = "pycardano" },
     { name = "python-bitcoinlib" },
     { name = "requests" },
@@ -91,6 +92,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cryptography", specifier = ">=46.0.3" },
+    { name = "ipfs-cid", specifier = ">=1.0.0" },
     { name = "pycardano", specifier = ">=0.18.0" },
     { name = "python-bitcoinlib", specifier = ">=0.12.2" },
     { name = "requests", specifier = ">=2.32.5" },
@@ -470,6 +472,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730", size = 20503, upload-time = "2025-10-18T21:55:43.219Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12", size = 7484, upload-time = "2025-10-18T21:55:41.639Z" },
+]
+
+[[package]]
+name = "ipfs-cid"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/11/9a363e839d17cc9e98391c7862fc20985d012e3b7b3b50e9b9991562b155/ipfs_cid-1.0.0.tar.gz", hash = "sha256:a752c87cde68840e27dcb02f4e7cf940297fae43872bb5e6ef3bf73ad31af73d", size = 4137, upload-time = "2023-01-11T17:53:36.006Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/51/e006097277ff32f552f47b568ff7af292873fa395bbf38d8ca12859b44fc/ipfs_cid-1.0.0-py3-none-any.whl", hash = "sha256:341985f50f893e0e49cf7da0fc0c4ba1afbe57fdea8a215724fd708de4ef96cb", size = 4574, upload-time = "2023-01-11T17:53:34.889Z" },
 ]
 
 [[package]]
