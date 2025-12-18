@@ -10,9 +10,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error};
 /// A list of all versions of this document which are 'revoked'.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Revocations {
-    /// All documents are affected.
+    /// All versions are affected.
     All,
-    /// A specified list.
+    /// A specified list of versions.
     Specified(Vec<UuidV7>),
 }
 
