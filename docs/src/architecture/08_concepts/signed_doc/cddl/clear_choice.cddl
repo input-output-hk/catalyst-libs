@@ -1,8 +1,8 @@
 ; An Choice Selection (clear/unencrypted).
 ;
-; This can be a positive or negative integer, and is
-; constrained by the parameters of the contest.
+; This is a positive integer, and is constrained
+; by the parameters of the contest.
 
 
 ; Universal Unencrypted Choice
-clear-choice = int
+clear-choice = uint

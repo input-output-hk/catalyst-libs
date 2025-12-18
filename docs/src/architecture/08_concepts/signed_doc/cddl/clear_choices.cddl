@@ -8,4 +8,4 @@
 clear-choices = ( +clear-choice )
 
 ; Universal Unencrypted Choice
-clear-choice = int
+clear-choice = uint
