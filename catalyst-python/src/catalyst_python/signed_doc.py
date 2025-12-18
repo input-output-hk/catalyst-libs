@@ -122,7 +122,7 @@ class SignedDocumentBuilder:
                     signed_doc_file.name,
                     metadata_file.name,
                 ],
-                # capture_output=True,
+                capture_output=True,
             ).check_returncode()
 
             subprocess.run(
@@ -133,7 +133,7 @@ class SignedDocumentBuilder:
                     self.key.sk_hex,
                     self.cat_id,
                 ],
-                # capture_output=True,
+                capture_output=True,
             ).check_returncode()
 
             return SignedDocument(
