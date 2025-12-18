@@ -31,8 +31,8 @@ impl Serialize for Revocations {
         S: Serializer,
     {
         match self {
-            Revocations::All => serializer.serialize_bool(true),
-            Revocations::Specified(versions) => versions.serialize(serializer),
+            Self::All => serializer.serialize_bool(true),
+            Self::Specified(versions) => versions.serialize(serializer),
         }
     }
 }
@@ -43,11 +43,11 @@ impl<'de> Deserialize<'de> for Revocations {
         let value = serde_json::Value::deserialize(deserializer)?;
 
         match value {
-            serde_json::Value::Bool(true) => Ok(Revocations::All),
+            serde_json::Value::Bool(true) => Ok(Self::All),
 
             serde_json::Value::Array(_) => {
-                let versions = Vec::<UuidV7>::deserialize(value).map_err(D::Error::custom)?;
-                Ok(Revocations::Specified(versions))
+                let versions = Vec::deserialize(value).map_err(D::Error::custom)?;
+                Ok(Self::Specified(versions))
             },
 
             _ => {
@@ -78,10 +78,10 @@ impl Encode<()> for Revocations {
         _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            Revocations::All => {
+            Self::All => {
                 e.bool(true)?;
             },
-            Revocations::Specified(versions) => {
+            Self::Specified(versions) => {
                 versions.encode(e, &mut CborContext::Tagged)?;
             },
         }
@@ -99,7 +99,7 @@ impl<'b> Decode<'b, ()> for Revocations {
         match d.datatype()? {
             Type::Bool => {
                 if d.bool()? {
-                    Ok(Revocations::All)
+                    Ok(Self::All)
                 } else {
                     Err(minicbor::decode::Error::message(
                         "{CONTEXT}: `false` value is not allowed",
@@ -119,7 +119,7 @@ impl<'b> Decode<'b, ()> for Revocations {
                     })
                     .collect::<Result<_, _>>()?;
 
-                Ok(Revocations::Specified(versions))
+                Ok(Self::Specified(versions))
             },
             _ => {
                 Err(minicbor::decode::Error::message(
