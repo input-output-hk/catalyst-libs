@@ -11,6 +11,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.3",
+    "ipfs-cid>=1.0.0",
     "pycardano>=0.18.0",
     "python-bitcoinlib>=0.12.2",
     "requests>=2.32.5",

@@ -12,7 +12,7 @@ use minicbor::{Decode, Encode};
 use crate::CompatibilityPolicy;
 
 /// List of document reference instance.
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Deserialize, serde::Serialize)]
 pub struct DocumentRefs(Vec<DocumentRef>);
 
 impl Deref for DocumentRefs {
@@ -151,44 +151,6 @@ impl Encode<()> for DocumentRefs {
             doc_ref.encode(e, ctx)?;
         }
         Ok(())
-    }
-}
-
-mod serde_impl {
-    //! `serde::Deserialize` and `serde::Serialize` trait implementations
-
-    use super::{DocumentRef, DocumentRefs};
-
-    /// A struct to support deserializing for both the old and new version of `ref`.
-    #[derive(serde::Deserialize)]
-    #[serde(untagged)]
-    enum DocRefSerde {
-        /// Old structure of document reference.
-        Old(DocumentRef),
-        /// New structure of document reference.
-        New(Vec<DocumentRef>),
-    }
-
-    impl serde::Serialize for DocumentRefs {
-        fn serialize<S>(
-            &self,
-            serializer: S,
-        ) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer,
-        {
-            self.0.serialize(serializer)
-        }
-    }
-
-    impl<'de> serde::Deserialize<'de> for DocumentRefs {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: serde::Deserializer<'de> {
-            match DocRefSerde::deserialize(deserializer)? {
-                DocRefSerde::Old(v) => Ok(DocumentRefs(vec![v])),
-                DocRefSerde::New(v) => Ok(DocumentRefs(v)),
-            }
-        }
     }
 }
 
