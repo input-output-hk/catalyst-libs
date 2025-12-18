@@ -9,7 +9,7 @@ use catalyst_signed_doc::{
     catalyst_id::CatalystId,
     doc_types::CONTEST_DELEGATION,
     problem_report::ProblemReport,
-    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystSignedDocumentProvider, Provider},
     uuid::UuidV7,
     validator::CatalystSignedDocumentValidationRule,
 };
@@ -103,7 +103,7 @@ impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let mut valid = true;
 

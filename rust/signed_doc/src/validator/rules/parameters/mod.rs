@@ -14,7 +14,7 @@ use itertools::Itertools;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
-    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystSignedDocumentProvider, Provider},
     validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
@@ -37,7 +37,7 @@ impl CatalystSignedDocumentValidationRule for ParametersRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -91,7 +91,7 @@ impl ParametersRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let context: &str = "Parameter rule check";
         if let Self::Specified {
