@@ -10,7 +10,9 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error};
 /// A list of all versions of this document which are 'revoked'.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Revocations {
+    /// All documents are affected.
     All,
+    /// A specified list.
     Specified(Vec<UuidV7>),
 }
 
@@ -64,7 +66,7 @@ impl Display for Revocations {
     ) -> std::fmt::Result {
         match self {
             Self::All => write!(f, "all"),
-            Self::Specified(versions) => write!(f, "{:?}", versions),
+            Self::Specified(versions) => write!(f, "{versions:?}"),
         }
     }
 }
