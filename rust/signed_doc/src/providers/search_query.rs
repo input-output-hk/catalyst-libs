@@ -31,21 +31,22 @@ pub struct CatalystSignedDocumentSearchQuery {
 /// `UUIDv7` search selector.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UuidV7Selector {
-    /// Search by the exact UUIDv7
+    /// Search by the exact `UUIDv7`.
     Eq(UuidV7),
-    /// Search in this UUIDv7's range
+    /// Search in this `UUIDv7`'s range.
     Range {
-        /// Minimum UUIDv7 to find (inclusive)
+        /// Minimum `UUIDv7` to find (inclusive).
         min: UuidV7,
-        /// Maximum UUIDv7 to find (inclusive)
+        /// Maximum `UUIDv7` to find (inclusive).
         max: UuidV7,
     },
-    /// Search UUIDv7s in the given list.
+    /// Search `UUIDv7`s in the given list.
     In(Vec<UuidV7>),
 }
 
 impl UuidV7Selector {
     /// Applying `UuidV7Selector` for the provided `UuidV7` value.
+    #[must_use]
     pub fn filter(
         &self,
         uuid: &UuidV7,
@@ -88,6 +89,7 @@ pub enum DocumentRefSelector {
 
 impl DocumentRefSelector {
     /// Applying `DocumentRefSelector` for the provided `DocumentRefs` value.
+    #[must_use]
     pub fn filter(
         &self,
         doc_refs: &DocumentRefs,
@@ -110,6 +112,7 @@ pub enum CatalystIdSelector {
 
 impl CatalystIdSelector {
     /// Applying `CatalystIdSelector` for the provided `Vec<CatalystId>` value.
+    #[must_use]
     pub fn filter(
         &self,
         cat_ids: &[CatalystId],

@@ -180,6 +180,9 @@ pub mod tests {
                 .map(|(_, doc)| doc.clone()))
         }
 
+        // The `needless_continue` lint is allowed here to make the code more robust, otherwise
+        // the continue expression needs to be removed from the last branch.
+        #[allow(clippy::needless_continue)]
         async fn try_search_docs(
             &self,
             query: &CatalystSignedDocumentSearchQuery,
@@ -246,6 +249,7 @@ pub mod tests {
                     continue;
                 }
 
+                #[allow(clippy::needless_continue)]
                 if let Some(selector) = query.authors.as_ref()
                     && selector.filter(v.authors().as_slice())
                 {
