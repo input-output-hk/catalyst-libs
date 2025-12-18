@@ -302,21 +302,27 @@ async fn rep_nomination_ref_check(
     report: &ProblemReport,
 ) -> anyhow::Result<bool> {
     let mut valid = true;
-    let ref_doc_ref = ref_doc
-        .doc_ref()
-        .context("Cannot get document reference for the representative reference document")?;
-    let latest_ref_doc = provider
-        .try_get_last_doc(*ref_doc_ref.id())
-        .await?
-        .context("A latest version of the document must exist if a first version exists")?;
-    let latest_ref_doc_ref = latest_ref_doc.doc_ref().context(
-        "Cannot get document reference for the latest representative reference document",
-    )?;
 
-    if latest_ref_doc_ref != ref_doc_ref {
-        report.functional_validation(
-            "It must be the latest Rep Nomination document",
-            "Content Delegation must reference to the latest version Rep Nomination document",
+    if let Ok(ref_doc_ref) = ref_doc.doc_ref() {
+        let latest_ref_doc = provider
+            .try_get_last_doc(*ref_doc_ref.id())
+            .await?
+            .context("A latest version of the document must exist if a first version exists")?;
+
+        let latest_ref_doc_ref = latest_ref_doc.doc_ref().context(
+            "Cannot get document reference for the latest representative reference document",
+        )?;
+        if latest_ref_doc_ref != ref_doc_ref {
+            report.functional_validation(
+                "It must be the latest Rep Nomination document",
+                "Content Delegation must reference to the latest version Rep Nomination document",
+            );
+            valid = false;
+        }
+    } else {
+        report.missing_field(
+            "document reference",
+            "Cannot get document reference for the representative reference document",
         );
         valid = false;
     }
