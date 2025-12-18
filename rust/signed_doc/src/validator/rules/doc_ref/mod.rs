@@ -9,7 +9,7 @@ use itertools::Itertools;
 
 use crate::{
     CatalystSignedDocument, DocType, DocumentRef, DocumentRefs,
-    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystSignedDocumentProvider, Provider},
     validator::CatalystSignedDocumentValidationRule,
 };
 
@@ -34,7 +34,7 @@ impl CatalystSignedDocumentValidationRule for RefRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -85,7 +85,7 @@ impl RefRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let context: &str = "Ref rule check";
         if let Self::Specified {
