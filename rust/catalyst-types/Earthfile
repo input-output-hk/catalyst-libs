@@ -1,0 +1,7 @@
+IMPORT 0.8
+
+# wasm32-wasip2
+WASM_BUILD:
+    FUNCTION
+
+    RUN cargo b -p catalyst-types --target wasm32-wasip2
