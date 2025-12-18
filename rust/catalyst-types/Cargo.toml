@@ -17,7 +17,7 @@ name = "catalyst_types"
 
 [dependencies]
 displaydoc = "0.2.5"
-ed25519-dalek = "2.1.1"
+ed25519-dalek = { version = "2.1.1", default-features = false, features = ["std", "rand_core"] }
 fluent-uri = "0.3.2"
 minicbor = { version = "0.25.1", features = ["std"] }
 num-traits = "0.2.19"
@@ -29,7 +29,7 @@ uuid = { version = "1.12.0", features = ["v4", "v7", "serde"] }
 chrono = "0.4.39"
 tracing = "0.1.41"
 strum = { version = "0.27.1", features = ["derive"] }
-jsonschema = "0.28.3"
+jsonschema = { version = "0.37.4", default-features = false, features = ["resolve-file"] }
 serde_json = { version = "1.0.134", features = ["raw_value"] }
 
 # Only include fmmap for non-wasm32 targets

@@ -13,6 +13,14 @@ use serde_json::Value;
 #[derive(Clone)]
 pub struct JsonSchema(Arc<Validator>);
 
+// On wasm targets the `jsonschema` crate uses `Rc` internally, which is not
+// `Send + Sync`. The wasm runtime we target is single-threaded, so we can mark
+// the wrapper as thread-safe to satisfy shared storage requirements.
+#[cfg(target_family = "wasm")]
+unsafe impl Send for JsonSchema {}
+#[cfg(target_family = "wasm")]
+unsafe impl Sync for JsonSchema {}
+
 /// `JsonSchema` building error type.
 #[derive(Debug, thiserror::Error)]
 pub enum SchemaBuildError {

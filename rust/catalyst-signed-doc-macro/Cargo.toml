@@ -19,5 +19,5 @@ quote = "1.0"
 proc-macro2 = "1.0"
 anyhow = "1.0.99"
 
-catalyst-signed-doc-spec = { version = "0.2.0", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-signed-doc-spec/v0.2.0" }
+catalyst-signed-doc-spec = { path = "../catalyst-signed-doc-spec" }
 
