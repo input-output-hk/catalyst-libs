@@ -8,7 +8,7 @@ use catalyst_signed_doc_spec::{
 
 use crate::{
     CatalystSignedDocument, Chain,
-    providers::{CatalystSignedDocumentAndCatalystIdProvider, CatalystSignedDocumentProvider},
+    providers::{CatalystSignedDocumentProvider, Provider},
     validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
@@ -32,7 +32,7 @@ impl CatalystSignedDocumentValidationRule for ChainRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -64,7 +64,7 @@ impl ChainRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let chain = doc.doc_meta().chain();
 

@@ -6,8 +6,7 @@ mod tests;
 use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::collaborators::Collaborators};
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
-    validator::CatalystSignedDocumentValidationRule,
+    CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
 /// `collaborators` field validation rule
@@ -27,7 +26,7 @@ impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }
