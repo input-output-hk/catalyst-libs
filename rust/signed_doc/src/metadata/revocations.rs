@@ -44,12 +44,11 @@ impl<'de> Deserialize<'de> for Revocations {
 
         match value {
             serde_json::Value::Bool(true) => Ok(Self::All),
-
             serde_json::Value::Array(_) => {
-                let versions = Vec::deserialize(value).map_err(D::Error::custom)?;
-                Ok(Self::Specified(versions))
+                Vec::deserialize(value)
+                    .map_err(D::Error::custom)
+                    .map(Self::Specified)
             },
-
             _ => {
                 Err(D::Error::custom(
                     "invalid revocations value: expected `true` or array of UUIDv7",
