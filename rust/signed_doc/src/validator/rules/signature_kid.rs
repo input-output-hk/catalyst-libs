@@ -6,8 +6,7 @@ use catalyst_signed_doc_spec::signers::roles::{Roles, UserRole};
 use catalyst_types::catalyst_id::role_index::RoleId;
 
 use crate::{
-    CatalystSignedDocument, providers::CatalystSignedDocumentAndCatalystIdProvider,
-    validator::CatalystSignedDocumentValidationRule,
+    CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
 ///  COSE signature `kid` (Catalyst Id) role validation
@@ -23,7 +22,7 @@ impl CatalystSignedDocumentValidationRule for SignatureKidRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         Ok(self.check_inner(doc))
     }
@@ -74,9 +73,15 @@ impl SignatureKidRule {
                 }
                 res
             } else {
+                if kid.is_admin() {
+                    doc.report().invalid_value("kid", &kid.to_string(),
+                        "Allowed roles must be empty when admin Catalyst ID is used",
+                        &format!("Invalid Catalyst Signed Document signature at position [{i}]"));
+                    return false;
+                }
+
                 let (role_index, _) = kid.role_and_rotation();
-                let res = self.allowed_roles.contains(&role_index);
-                if !res {
+                if !self.allowed_roles.contains(&role_index) {
                     doc.report().invalid_value(
                         "kid",
                         role_index.to_string().as_str(),
@@ -86,8 +91,10 @@ impl SignatureKidRule {
                         )
                         .as_str(),
                     );
+                    return false;
                 }
-                res
+
+                true
             }
         });
         if !contains_exp_role {
@@ -135,5 +142,35 @@ mod tests {
 
         rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
         assert!(!rule.check_inner(&doc));
+    }
+
+    #[test]
+    fn admin_key_non_empty_allowed_roles() {
+        let rule = SignatureKidRule {
+            allowed_roles: [RoleId::Role0, RoleId::DelegatedRepresentative]
+                .into_iter()
+                .collect(),
+        };
+
+        let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
+        let pk = sk.verifying_key();
+        let kid = CatalystId::new("cardano", None, pk)
+            .with_role(RoleId::Role0)
+            .as_admin();
+
+        let doc = Builder::new()
+            .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
+            .with_metadata_field(SupportedField::ContentType(ContentType::Json))
+            .with_content(vec![1, 2, 3])
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)
+            .unwrap()
+            .build();
+
+        assert!(!rule.check_inner(&doc));
+
+        let report = format!("{:?}", doc.report());
+        assert!(report.contains("Allowed roles must be empty when admin Catalyst ID is used"));
     }
 }

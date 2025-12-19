@@ -377,7 +377,7 @@ The following User roles may sign documents of this type:
 
 * Proposer
 
-Updates are allowed by the original author and from the 'collaborators' metadata field
+Updates are allowed by the original author OR from the 'collaborators' metadata field (if defined)
 of the referenced document specified by the 'ref' metadata field.
 
 ## Copyright
@@ -386,7 +386,7 @@ of the referenced document specified by the 'ref' metadata field.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-12-02 |
+| Modified | 2025-12-15 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |

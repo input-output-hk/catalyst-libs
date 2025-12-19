@@ -1,8 +1,9 @@
+use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
 use crate::{
     Builder, CatalystSignedDocument, ContentEncoding, ContentType, doc_types,
-    providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
+    providers::tests::TestCatalystProvider, tests_utils::create_dummy_key_pair, uuid::UuidV7,
 };
 
 #[allow(clippy::missing_errors_doc)]
@@ -12,7 +13,7 @@ pub fn contest_ballot_doc(
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
-    let (sk, kid) = create_dummy_admin_key_pair();
+    let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
 
     let parameters_ref = parameters_doc.doc_ref()?;

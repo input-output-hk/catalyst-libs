@@ -9,7 +9,7 @@ use catalyst_signed_doc_spec::{
 
 use crate::{
     CatalystSignedDocument, DocType,
-    providers::CatalystSignedDocumentAndCatalystIdProvider,
+    providers::Provider,
     validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
 };
 
@@ -32,7 +32,7 @@ impl CatalystSignedDocumentValidationRule for ReplyRule {
     async fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         self.check_inner(doc, provider).await
     }
@@ -77,7 +77,7 @@ impl ReplyRule {
     async fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn CatalystSignedDocumentAndCatalystIdProvider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let context: &str = "Reply rule check";
         if let Self::Specified {
