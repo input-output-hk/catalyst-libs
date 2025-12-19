@@ -8,7 +8,7 @@ use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
     Chain, ContentEncoding, ContentType, DocType, DocumentRefs, Section,
-    metadata::collaborators::Collaborators,
+    metadata::{collaborators::Collaborators, revocations::Revocations},
 };
 
 /// COSE label. May be either a signed integer or a string.
@@ -110,10 +110,12 @@ pub(crate) enum SupportedField {
     Template(DocumentRefs) = 8,
     /// `parameters` field.
     Parameters(DocumentRefs) = 9,
+    /// `revocations` field.
+    Revocations(Revocations) = 10,
     /// `collaborators` field.
-    Collaborators(Collaborators) = 10,
+    Collaborators(Collaborators) = 11,
     /// `Content-Encoding` field.
-    ContentEncoding(ContentEncoding) = 11,
+    ContentEncoding(ContentEncoding) = 12,
 }
 
 impl SupportedLabel {
@@ -128,6 +130,7 @@ impl SupportedLabel {
             Label::Str("type") => Some(Self::Type),
             Label::Str("chain") => Some(Self::Chain),
             Label::Str("reply") => Some(Self::Reply),
+            Label::Str("revocations") => Some(Self::Revocations),
             Label::Str("collaborators") => Some(Self::Collaborators),
             Label::Str("section") => Some(Self::Section),
             Label::Str("template") => Some(Self::Template),
@@ -151,6 +154,7 @@ impl SupportedLabel {
             Self::Type => Label::Str("type"),
             Self::Chain => Label::Str("chain"),
             Self::Reply => Label::Str("reply"),
+            Self::Revocations => Label::Str("revocations"),
             Self::Collaborators => Label::Str("collaborators"),
             Self::Section => Label::Str("section"),
             Self::Template => Label::Str("template"),
@@ -189,6 +193,7 @@ impl serde::ser::Serialize for SupportedField {
             Self::Ref(v) | Self::Reply(v) | Self::Template(v) | Self::Parameters(v) => {
                 v.serialize(serializer)
             },
+            Self::Revocations(v) => v.serialize(serializer),
             Self::Collaborators(v) => v.serialize(serializer),
             Self::Section(v) => v.serialize(serializer),
         }
@@ -212,6 +217,9 @@ impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
             SupportedLabel::Type => Deserialize::deserialize(d).map(SupportedField::Type),
             SupportedLabel::Chain => Deserialize::deserialize(d).map(SupportedField::Chain),
             SupportedLabel::Reply => Deserialize::deserialize(d).map(SupportedField::Reply),
+            SupportedLabel::Revocations => {
+                Deserialize::deserialize(d).map(SupportedField::Revocations)
+            },
             SupportedLabel::Collaborators => {
                 Deserialize::deserialize(d).map(SupportedField::Collaborators)
             },
@@ -264,6 +272,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<Suppo
                 d.decode_with(&mut ctx.policy().clone())
                     .map(SupportedField::Reply)
             },
+            SupportedLabel::Revocations => d.decode().map(SupportedField::Revocations),
             SupportedLabel::Collaborators => d.decode().map(SupportedField::Collaborators),
             SupportedLabel::Section => d.decode().map(SupportedField::Section),
             SupportedLabel::Template => {
@@ -322,6 +331,7 @@ impl minicbor::Encode<()> for SupportedField {
             | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
             SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
             SupportedField::Chain(chain) => chain.encode(e, ctx),
+            SupportedField::Revocations(revocations) => revocations.encode(e, ctx),
             SupportedField::Collaborators(collaborators) => collaborators.encode(e, ctx),
             SupportedField::Section(section) => section.encode(e, ctx),
             SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),

@@ -5,6 +5,7 @@ mod state_machine;
 
 pub mod payload;
 pub mod syn_payload;
+pub mod timers;
 
 use ed25519_dalek::VerifyingKey;
 pub use envelope::{Envelope, EnvelopePayload};
