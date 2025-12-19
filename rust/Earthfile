@@ -98,6 +98,8 @@ build:
                 --docs="true"
     END
 
+    DO ./catalyst-types+WASM_BUILD
+
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
     # Catalyst Signed Documents cli tool
