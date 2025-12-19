@@ -1,7 +1,10 @@
-IMPORT 0.8
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.6 AS rust-ci
 
 # wasm32-wasip2
 WASM_BUILD:
     FUNCTION
 
-    RUN cargo b -p catalyst-types --target wasm32-wasip2
+    DO rust-ci+EXECUTE \
+            --cmd="cargo b -p catalyst-types --target wasm32-wasip2"
