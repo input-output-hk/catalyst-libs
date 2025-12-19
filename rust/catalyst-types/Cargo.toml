@@ -31,7 +31,7 @@ tracing = "0.1.41"
 strum = { version = "0.27.1", features = ["derive"] }
 jsonschema = { version = "0.37.4", default-features = false }
 serde_json = { version = "1.0.134", features = ["raw_value"] }
-sparse-merkle-tree = "0.6.1"
+sparse-merkle-tree = { version = "0.6.2", git = "https://github.com/nervosnetwork/sparse-merkle-tree.git", rev = "b74ea1bd57a397df82fcf32f2639de7e5248659f", default-features = false, features = ["std", "with-blake2b-ref"] }
 blake3 = "1.8.2"
 
 # Only include fmmap for non-wasm32 targets
