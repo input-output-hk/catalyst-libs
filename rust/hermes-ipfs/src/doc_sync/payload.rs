@@ -7,9 +7,9 @@ use minicbor::{
     encode::{self, Write},
 };
 
-use crate::Cid;
+use crate::{Cid, doc_sync::Blake3256};
 
-/// Encoding wrapper over [`hermes_ipfs::Cid`].
+/// Encoding wrapper over [`ipld_core::cid::Cid`].
 #[derive(Copy, Clone, TransparentWrapper)]
 #[repr(transparent)]
 struct CborCid(Cid);
@@ -83,14 +83,11 @@ impl<C> Decode<'_, C> for NumericKeys {
     }
 }
 
-/// [`CommonFields::root`] value alias.
-pub type RootHash = [u8; 32];
-
 /// Common fields of `.diff` and `.new` message payload maps.
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 pub struct CommonFields {
     /// Root of the senders SMT with these docs added.
-    pub root: RootHash,
+    pub root: Blake3256,
     /// Count of the number of docs in the senders.
     pub count: u64,
     /// Included if this is a reply to a `.syn` topic.
@@ -109,10 +106,10 @@ impl CommonFields {
 
 /// Encodes [`CommonFields::root`] key-value pair.
 fn encode_root<W: Write>(
-    root: &RootHash,
+    root: &Blake3256,
     e: &mut Encoder<W>,
 ) -> Result<(), encode::Error<W::Error>> {
-    e.encode(NumericKeys::Root)?.bytes(root)?.ok()
+    e.encode(NumericKeys::Root)?.encode(root)?.ok()
 }
 
 /// Encodes [`CommonFields::count`] key-value pair.
@@ -138,13 +135,11 @@ fn encode_in_reply_to<W: Write>(
 }
 
 /// Decodes [`CommonFields::root`] key-value pair.
-fn decode_root(d: &mut Decoder<'_>) -> Result<RootHash, decode::Error> {
+fn decode_root(d: &mut Decoder<'_>) -> Result<Blake3256, decode::Error> {
     if d.decode::<NumericKeys>()
         .is_ok_and(|key| matches!(key, NumericKeys::Root))
     {
-        d.bytes()?
-            .try_into()
-            .map_err(|err| decode::Error::custom(err).at(d.position()))
+        d.decode()
     } else {
         Err(decode::Error::message("Expected `root` key").at(d.position()))
     }
@@ -607,7 +602,7 @@ mod tests {
         /// Constructs a body from its fields.
         pub fn to_cbor(fields: &[fn() -> &'static [Token<'static>]]) -> anyhow::Result<Vec<u8>> {
             let mut buf = minicbor::Encoder::new(vec![]);
-            buf.map(u64::try_from(fields.iter().count())?)?;
+            buf.map(u64::try_from(fields.len())?)?;
             fields
                 .iter()
                 .flat_map(|f| f())

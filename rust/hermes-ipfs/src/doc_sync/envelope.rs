@@ -136,7 +136,7 @@ impl<C> Encode<C> for EnvelopePayload {
         ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(4)?;
-        e.encode_with(&self.peer, ctx)?
+        e.encode_with(self.peer, ctx)?
             .encode_with(self.seq, &mut CborContext::Tagged)?
             .u64(self.ver)?;
         <W as Write>::write_all(e.writer_mut(), &self.payload)
@@ -214,7 +214,7 @@ impl<C> Encode<C> for SignedPayloadView<'_> {
         _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(5)?;
-        e.encode(&self.payload.peer)?;
+        e.encode(self.payload.peer)?;
         e.encode_with(self.payload.seq, &mut CborContext::Tagged)?;
         e.u64(self.payload.ver)?;
         e.writer_mut()
@@ -424,7 +424,7 @@ mod tests {
 
         let mut signed = Encoder::new(Vec::new());
         signed.array(5).unwrap();
-        signed.encode(&payload.peer).unwrap();
+        signed.encode(payload.peer).unwrap();
         signed
             .encode_with(payload.seq, &mut CborContext::Tagged)
             .unwrap();
@@ -508,7 +508,7 @@ mod tests {
         // Construct a fake array of length 4 instead of 5
         let mut bad_array = Encoder::new(Vec::new());
         bad_array.array(4).unwrap(); // Wrong length
-        bad_array.encode(&payload.peer).unwrap();
+        bad_array.encode(payload.peer).unwrap();
         bad_array
             .encode_with(payload.seq, &mut CborContext::Tagged)
             .unwrap();
