@@ -7,4 +7,4 @@ WASM_BUILD:
     FUNCTION
 
     DO rust-ci+EXECUTE \
-            --cmd="cargo b -p catalyst-types --target wasm32-wasip2"
+            --cmd="cargo b --release -p catalyst-types --target wasm32-wasip2"
