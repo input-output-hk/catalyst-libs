@@ -31,7 +31,7 @@ pub(crate) enum TemplateRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for TemplateRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -73,7 +73,7 @@ impl TemplateRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,

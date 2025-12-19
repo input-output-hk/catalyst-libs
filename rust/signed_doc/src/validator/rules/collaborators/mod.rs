@@ -23,7 +23,7 @@ pub(crate) enum CollaboratorsRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,

@@ -29,7 +29,7 @@ pub(crate) enum ChainRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ChainRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -61,7 +61,7 @@ impl ChainRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -100,7 +100,7 @@ impl ChainRule {
     }
 
     /// `chain` metadata field checks
-    async fn chain_check(
+    fn chain_check(
         doc_chain: &Chain,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystSignedDocumentProvider,

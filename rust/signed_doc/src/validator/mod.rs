@@ -5,7 +5,6 @@ pub(crate) mod rules;
 use std::{fmt::Debug, sync::LazyLock};
 
 use dashmap::DashMap;
-use futures::{StreamExt, TryStreamExt};
 
 use crate::{
     CatalystSignedDocument, metadata::DocType, providers::Provider,
@@ -13,12 +12,11 @@ use crate::{
 };
 
 /// `CatalystSignedDocument` validation rule trait
-#[async_trait::async_trait]
 pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -48,7 +46,7 @@ fn document_rules_init() -> DashMap<DocType, Rules> {
 ///
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
-pub async fn validate(
+pub fn validate(
     doc: &CatalystSignedDocument,
     provider: &impl Provider,
 ) -> anyhow::Result<bool> {
@@ -70,11 +68,10 @@ pub async fn validate(
         return Ok(false);
     };
 
-    let iter = rules.iter().map(|v| v.check(doc, provider));
-    let res = futures::stream::iter(iter)
-        .buffer_unordered(rules.len())
-        .try_collect::<Vec<_>>()
-        .await?
+    let res = rules
+        .iter()
+        .map(|v| v.check(doc, provider))
+        .collect::<anyhow::Result<Vec<_>>>()?
         .iter()
         .all(|res| *res);
     Ok(res)

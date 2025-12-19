@@ -40,7 +40,7 @@ fn metadata() -> serde_json::Value {
 }
 
 #[tokio::test]
-async fn single_signature_validation_test() {
+fn single_signature_validation_test() {
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
 
     let signed_doc = Builder::new()
@@ -113,7 +113,7 @@ async fn single_signature_validation_test() {
 }
 
 #[tokio::test]
-async fn multiple_signatures_validation_test() {
+fn multiple_signatures_validation_test() {
     let (sk1, kid1) = create_dummy_key_pair(RoleId::Role0);
     let (sk2, kid2) = create_dummy_key_pair(RoleId::Role0);
     let (sk3, kid3) = create_dummy_key_pair(RoleId::Role0);
@@ -274,7 +274,7 @@ struct SpecialCborTestCase<'a> {
 }
 
 #[tokio::test]
-async fn special_cbor_cases() {
+fn special_cbor_cases() {
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     let mut provider = TestCatalystProvider::default();
     provider.add_sk(kid.clone(), sk.clone());

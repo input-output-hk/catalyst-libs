@@ -32,7 +32,7 @@ pub(crate) enum DocumentOwnershipRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -71,7 +71,7 @@ impl DocumentOwnershipRule {
     }
 
     /// Check document ownership rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,

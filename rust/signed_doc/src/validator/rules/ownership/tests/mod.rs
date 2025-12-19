@@ -13,7 +13,7 @@ mod ref_field_based;
 mod without_collaborators;
 
 #[tokio::test]
-async fn empty_provider_test() {
+fn empty_provider_test() {
     let provider = TestCatalystProvider::default();
 
     let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);

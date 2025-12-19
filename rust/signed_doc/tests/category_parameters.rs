@@ -183,7 +183,7 @@ use test_case::test_case;
 )]
 #[tokio::test]
 #[allow(clippy::unwrap_used)]
-async fn test_category_parameters_doc(
+fn test_category_parameters_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();

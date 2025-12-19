@@ -52,7 +52,7 @@ pub(crate) enum ContentRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ContentRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,

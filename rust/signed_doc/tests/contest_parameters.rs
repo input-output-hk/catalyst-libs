@@ -199,7 +199,7 @@ use test_case::test_case;
 )]
 #[tokio::test]
 #[allow(clippy::unwrap_used)]
-async fn contest_parameters(
+fn contest_parameters(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();

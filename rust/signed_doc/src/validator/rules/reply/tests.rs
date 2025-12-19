@@ -154,7 +154,7 @@ use crate::{
     "valid reply to the missing document"
 )]
 #[tokio::test]
-async fn reply_specified_test(
+fn reply_specified_test(
     doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -184,7 +184,7 @@ async fn reply_specified_test(
 }
 
 #[tokio::test]
-async fn reply_specified_optional_test() {
+fn reply_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = ReplyRule::Specified {
         allowed_type: UuidV4::new().into(),
@@ -205,7 +205,7 @@ async fn reply_specified_optional_test() {
 }
 
 #[tokio::test]
-async fn reply_rule_not_specified_test() {
+fn reply_rule_not_specified_test() {
     let rule = ReplyRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 

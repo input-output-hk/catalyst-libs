@@ -13,7 +13,7 @@ pub(crate) struct VerRule;
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for VerRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -31,7 +31,7 @@ impl VerRule {
     ///    must be greater than the latest known submitted version for that `id`
     /// 4. When a document with the same `id` already exists, the new document's `type`
     ///    must be the same as the latest known submitted document's `type` for that `id`
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,

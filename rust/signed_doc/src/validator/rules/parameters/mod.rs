@@ -34,7 +34,7 @@ pub(crate) enum ParametersRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ParametersRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -88,7 +88,7 @@ impl ParametersRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -197,7 +197,7 @@ impl ParametersRule {
 /// - `Ok(true)` if `ref_field` is `None` or yield a matching parameter set.
 /// - `Ok(false)` if no recursive parameter set matches the expected one.
 /// - `Err` if an unexpected provider error occurs.
-pub(crate) async fn link_check(
+pub(crate) fn link_check(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
     field_name: &str,
@@ -257,7 +257,7 @@ pub(crate) async fn link_check(
 ///
 /// All encountered parameter lists are returned; traversal is cycle-safe
 /// and explores deeper parameter references recursively.
-async fn collect_parameters_recursively(
+fn collect_parameters_recursively(
     root: &DocumentRef,
     field_name: &str,
     provider: &dyn CatalystSignedDocumentProvider,

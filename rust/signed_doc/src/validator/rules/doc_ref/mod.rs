@@ -31,7 +31,7 @@ pub(crate) enum RefRule {
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for RefRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -82,7 +82,7 @@ impl RefRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -129,7 +129,7 @@ impl RefRule {
 /// Validate all the document references by the defined validation rules,
 /// plus conducting additional validations with the provided `validator`.
 /// Document all possible error in doc report (no fail fast)
-pub(crate) async fn doc_refs_check<Validator>(
+pub(crate) fn doc_refs_check<Validator>(
     doc_refs: &DocumentRefs,
     exp_ref_types: &[DocType],
     multiple: bool,

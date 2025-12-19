@@ -501,7 +501,7 @@ use crate::{
     "reference to non-linked parameters field"
 )]
 #[tokio::test]
-async fn parameter_specified_test(
+fn parameter_specified_test(
     doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -532,7 +532,7 @@ async fn parameter_specified_test(
 }
 
 #[tokio::test]
-async fn parameters_specified_optional_test() {
+fn parameters_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = ParametersRule::Specified {
         allowed_type: vec![UuidV4::new().into()],
@@ -553,7 +553,7 @@ async fn parameters_specified_optional_test() {
 }
 
 #[tokio::test]
-async fn parameters_rule_not_specified_test() {
+fn parameters_rule_not_specified_test() {
     let rule = ParametersRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 

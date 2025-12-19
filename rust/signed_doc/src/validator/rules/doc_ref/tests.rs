@@ -167,7 +167,7 @@ use crate::{
     "valid reference to the missing one document"
 )]
 #[tokio::test]
-async fn ref_multiple_specified_test(
+fn ref_multiple_specified_test(
     doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -254,7 +254,7 @@ async fn ref_multiple_specified_test(
     "valid document with multiple references"
 )]
 #[tokio::test]
-async fn ref_non_multiple_specified_test(
+fn ref_non_multiple_specified_test(
     doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -286,7 +286,7 @@ async fn ref_non_multiple_specified_test(
 }
 
 #[tokio::test]
-async fn ref_specified_optional_test() {
+fn ref_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = RefRule::Specified {
         allowed_type: vec![UuidV4::new().into()],
@@ -309,7 +309,7 @@ async fn ref_specified_optional_test() {
 }
 
 #[tokio::test]
-async fn ref_rule_not_specified_test() {
+fn ref_rule_not_specified_test() {
     let rule = RefRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 

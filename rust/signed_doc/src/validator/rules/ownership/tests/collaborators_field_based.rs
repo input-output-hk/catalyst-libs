@@ -194,7 +194,7 @@ use crate::{
    "Latest Version Catalyst Signed Document signed by first author and one collaborator and one unknown collaborator"
 )]
 #[tokio::test]
-async fn ownership_test(
+fn ownership_test(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();

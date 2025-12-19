@@ -249,9 +249,7 @@ use crate::{
     "missing `id` field"
 )]
 #[tokio::test]
-async fn ver_test(
-    doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument
-) -> bool {
+fn ver_test(doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument) -> bool {
     let mut provider = TestCatalystProvider::default();
     let doc = doc_gen(&mut provider);
 

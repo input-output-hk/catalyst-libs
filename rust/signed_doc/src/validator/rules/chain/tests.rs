@@ -29,7 +29,7 @@ mod helper {
 }
 
 #[tokio::test]
-async fn test_without_chaining_documents() {
+fn test_without_chaining_documents() {
     let doc_type = UuidV4::new();
     let doc_id = UuidV7::new();
     let doc_ver = UuidV7::new();
@@ -50,7 +50,7 @@ async fn test_without_chaining_documents() {
 }
 
 #[tokio::test]
-async fn chain_rule_collaborators_rule_conflict() {
+fn chain_rule_collaborators_rule_conflict() {
     let chain = ChainSpec {
         required: IsRequired::Optional,
     };
@@ -139,7 +139,7 @@ async fn chain_rule_collaborators_rule_conflict() {
     "valid intermediate chained documents (0, 1, -2)"
 )]
 #[tokio::test]
-async fn test_valid_chained_documents(
+fn test_valid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
@@ -286,7 +286,7 @@ async fn test_valid_chained_documents(
     "not have its absolute height exactly one more than the height of the document being chained to"
 )]
 #[tokio::test]
-async fn test_invalid_chained_documents(
+fn test_invalid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };

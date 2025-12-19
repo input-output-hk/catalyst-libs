@@ -19,7 +19,7 @@ pub(crate) struct SignatureRule;
 
 #[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for SignatureRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -34,7 +34,7 @@ impl SignatureRule {
     ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -64,7 +64,7 @@ impl SignatureRule {
 }
 
 /// A single signature validation function
-async fn validate_signature(
+fn validate_signature(
     doc: &CatalystSignedDocument,
     sign: &Signature,
     provider: &dyn CatalystIdProvider,

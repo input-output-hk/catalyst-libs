@@ -12,42 +12,40 @@ pub use search_query::{
 use crate::{CatalystSignedDocument, DocumentRef};
 
 /// `CatalystId` Provider trait
-#[async_trait::async_trait]
 pub trait CatalystIdProvider: Send + Sync {
     /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
     /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
     /// corresponding `RoleId` and `KeyRotation` has not been registered.
-    async fn try_get_registered_key(
+    fn try_get_registered_key(
         &self,
         kid: &CatalystId,
     ) -> anyhow::Result<Option<VerifyingKey>>;
 }
 
 /// `CatalystSignedDocument` Provider trait
-#[async_trait::async_trait]
 pub trait CatalystSignedDocumentProvider: Send + Sync {
     /// Try to get a `CatalystSignedDocument` from document reference
-    async fn try_get_doc(
+    fn try_get_doc(
         &self,
         doc_ref: &DocumentRef,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Try to get the last known version of a `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
-    async fn try_get_last_doc(
+    fn try_get_last_doc(
         &self,
         id: UuidV7,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Try to get the first known version of a `CatalystSignedDocument`, `id` and `ver`
     /// are equal.
-    async fn try_get_first_doc(
+    fn try_get_first_doc(
         &self,
         id: UuidV7,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Try to find a `CatalystSignedDocument` by the provided query.
-    async fn try_search_docs(
+    fn try_search_docs(
         &self,
         query: &CatalystSignedDocumentSearchQuery,
     ) -> anyhow::Result<Vec<CatalystSignedDocument>>;
@@ -147,16 +145,15 @@ pub mod tests {
         }
     }
 
-    #[async_trait::async_trait]
     impl CatalystSignedDocumentProvider for TestCatalystProvider {
-        async fn try_get_doc(
+        fn try_get_doc(
             &self,
             doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             Ok(self.signed_doc.get(doc_ref).cloned())
         }
 
-        async fn try_get_last_doc(
+        fn try_get_last_doc(
             &self,
             id: catalyst_types::uuid::UuidV7,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
@@ -168,7 +165,7 @@ pub mod tests {
                 .map(|(_, doc)| doc.clone()))
         }
 
-        async fn try_get_first_doc(
+        fn try_get_first_doc(
             &self,
             id: catalyst_types::uuid::UuidV7,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
@@ -183,7 +180,7 @@ pub mod tests {
         // The `needless_continue` lint is allowed here to make the code more robust, otherwise
         // the continue expression needs to be removed from the last branch.
         #[allow(clippy::needless_continue)]
-        async fn try_search_docs(
+        fn try_search_docs(
             &self,
             query: &CatalystSignedDocumentSearchQuery,
         ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
@@ -272,9 +269,8 @@ pub mod tests {
         }
     }
 
-    #[async_trait::async_trait]
     impl CatalystIdProvider for TestCatalystProvider {
-        async fn try_get_registered_key(
+        fn try_get_registered_key(
             &self,
             kid: &CatalystId,
         ) -> anyhow::Result<Option<VerifyingKey>> {
