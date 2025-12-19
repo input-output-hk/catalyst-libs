@@ -139,7 +139,7 @@ use test_case::test_case;
         let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_admin_key_pair();
+        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         provider.add_sk(kid.clone(), sk.clone());
 
         let parameters_ref = parameters.doc_ref()?;

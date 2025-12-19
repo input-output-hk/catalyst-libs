@@ -8,6 +8,7 @@ import time
 import subprocess
 import json
 from tempfile import NamedTemporaryFile
+from ipfs_cid import cid_sha256_hash
 
 from catalyst_python.admin import AdminKey
 from catalyst_python.catalyst_id import RoleID
@@ -41,10 +42,10 @@ class DocType(StrEnum):
 
 
 class DocumentRef:
-    def __init__(self, doc_id: str, doc_ver: str) -> None:
+    def __init__(self, doc_id: str, doc_ver: str, cid: str) -> None:
         self.doc_id = doc_id
         self.doc_ver = doc_ver
-        self.cid = "0x"
+        self.cid = cid
 
     def to_json(self) -> dict:
         return {
@@ -54,7 +55,24 @@ class DocumentRef:
         }
 
 
-class SignedDocumentBase:
+class SignedDocument:
+    def __init__(
+        self,
+        metadata: dict[str, Any],
+        hex_cbor: str,
+    ) -> None:
+        self.metadata = metadata
+        self.hex_cbor = hex_cbor
+
+    def doc_ref(self) -> DocumentRef:
+        return DocumentRef(
+            doc_id=self.metadata["id"],
+            doc_ver=self.metadata["ver"],
+            cid=cid_sha256_hash(bytes.fromhex(self.hex_cbor)),
+        )
+
+
+class SignedDocumentBuilder:
     def __init__(
         self,
         metadata: dict[str, Any],
@@ -67,17 +85,12 @@ class SignedDocumentBase:
         self.cat_id = cat_id
         self.key = key
 
-    def doc_ref(self) -> DocumentRef:
-        return DocumentRef(self.metadata["id"], self.metadata["ver"])
-
-    def new_doc_version(self) -> None:
+    def new_version(self) -> None:
         time.sleep(1)
         self.metadata["doc_ver"] = uuid_v7()
 
-
-class SignedDocument(SignedDocumentBase):
     def copy(self) -> Self:
-        return SignedDocument(
+        return SignedDocumentBuilder(
             metadata=copy.deepcopy(self.metadata),
             content=copy.deepcopy(self.content),
             cat_id=copy.deepcopy(self.cat_id),
@@ -87,7 +100,7 @@ class SignedDocument(SignedDocumentBase):
     # Build and sign document, returns hex str of document bytes
     def build_and_sign(
         self,
-    ) -> str:
+    ) -> SignedDocument:
         with (
             NamedTemporaryFile() as metadata_file,
             NamedTemporaryFile() as doc_content_file,
@@ -101,7 +114,6 @@ class SignedDocument(SignedDocumentBase):
             json_str = json.dumps(self.content)
             doc_content_file.write(json_str.encode(encoding="utf-8"))
             doc_content_file.flush()
-
             subprocess.run(
                 [
                     mk_signed_doc_path,
@@ -111,7 +123,7 @@ class SignedDocument(SignedDocumentBase):
                     metadata_file.name,
                 ],
                 capture_output=True,
-            )
+            ).check_returncode()
 
             subprocess.run(
                 [
@@ -122,9 +134,12 @@ class SignedDocument(SignedDocumentBase):
                     self.cat_id,
                 ],
                 capture_output=True,
-            )
+            ).check_returncode()
 
-            return signed_doc_file.read().hex()
+            return SignedDocument(
+                metadata=copy.deepcopy(self.metadata),
+                hex_cbor=signed_doc_file.read().hex(),
+            )
 
 
 # ------------------- #
@@ -139,7 +154,7 @@ def proposal_doc(
     rbac_chain: RBACChain,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocument:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.proposal,
         content_type="application/json",
@@ -150,7 +165,7 @@ def proposal_doc(
     )
 
     (cat_id, key) = rbac_chain.cat_id_for_role(RoleID.PROPOSER)
-    return SignedDocument(metadata, content, cat_id, key)
+    return SignedDocumentBuilder(metadata, content, cat_id, key)
 
 
 def proposal_form_template_doc(
@@ -159,7 +174,7 @@ def proposal_form_template_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocument:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.proposal_form_template,
         content_type="application/schema+json",
@@ -168,7 +183,7 @@ def proposal_form_template_doc(
         doc_ver=doc_ver,
     )
 
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def proposal_comment_form_template_doc(
@@ -177,7 +192,7 @@ def proposal_comment_form_template_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocument:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.proposal_comment_form_template,
         content_type="application/schema+json",
@@ -186,7 +201,7 @@ def proposal_comment_form_template_doc(
         doc_ver=doc_ver,
     )
 
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_doc(
@@ -196,7 +211,7 @@ def category_parameters_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocumentBase:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters,
         content_type="application/json",
@@ -205,7 +220,7 @@ def category_parameters_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def category_parameters_form_template_doc(
@@ -214,7 +229,7 @@ def category_parameters_form_template_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocumentBase:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.category_parameters_form_template,
         content_type="application/schema+json",
@@ -222,7 +237,7 @@ def category_parameters_form_template_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def campaign_parameters_doc(
@@ -232,7 +247,7 @@ def campaign_parameters_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocumentBase:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters,
         content_type="application/json",
@@ -241,7 +256,7 @@ def campaign_parameters_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def campaign_parameters_form_template_doc(
@@ -250,7 +265,7 @@ def campaign_parameters_form_template_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocumentBase:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.campaign_parameters_form_template,
         content_type="application/schema+json",
@@ -258,7 +273,7 @@ def campaign_parameters_form_template_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_doc(
@@ -267,7 +282,7 @@ def brand_parameters_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocumentBase:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters,
         content_type="application/json",
@@ -275,7 +290,7 @@ def brand_parameters_doc(
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def brand_parameters_form_template_doc(
@@ -283,14 +298,14 @@ def brand_parameters_form_template_doc(
     admin_key: AdminKey,
     doc_id: str | None = None,
     doc_ver: str | None = None,
-) -> SignedDocumentBase:
+) -> SignedDocumentBuilder:
     metadata = __create_metadata(
         doc_type=DocType.brand_parameters_form_template,
         content_type="application/schema+json",
         doc_id=doc_id,
         doc_ver=doc_ver,
     )
-    return SignedDocument(metadata, content, admin_key.cat_id(), admin_key.key)
+    return SignedDocumentBuilder(metadata, content, admin_key.cat_id(), admin_key.key)
 
 
 def __create_metadata(
@@ -318,7 +333,7 @@ def __create_metadata(
     }
 
     if template is not None:
-        metadata["template"] = template.to_json()
+        metadata["template"] = [template.to_json()]
     if parameters is not None:
         metadata["parameters"] = [p.to_json() for p in parameters]
 
