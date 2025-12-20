@@ -193,7 +193,6 @@ use crate::{
     } => false ;
    "Latest Version Catalyst Signed Document signed by first author and one collaborator and one unknown collaborator"
 )]
-#[tokio::test]
 fn ownership_test(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
@@ -203,7 +202,6 @@ fn ownership_test(
 
     let res = DocumentOwnershipRule::CollaboratorsFieldBased
         .check_inner(&doc, &provider)
-        .await
         .unwrap();
     println!("{:?}", doc.report());
     res

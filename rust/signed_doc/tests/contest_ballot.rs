@@ -221,7 +221,6 @@ use test_case::test_case;
     ;
     "missing parameters"
 )]
-#[tokio::test]
 #[allow(clippy::unwrap_used)]
 fn contest_ballot(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
@@ -231,7 +230,7 @@ fn contest_ballot(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(*doc.doc_type().unwrap(), doc_types::CONTEST_BALLOT.clone());
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

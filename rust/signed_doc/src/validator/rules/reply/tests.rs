@@ -153,7 +153,6 @@ use crate::{
     ;
     "valid reply to the missing document"
 )]
-#[tokio::test]
 fn reply_specified_test(
     doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
@@ -168,7 +167,6 @@ fn reply_specified_test(
         optional: false,
     }
     .check_inner(&doc, &provider)
-    .await
     .unwrap();
 
     let optional_res = ReplyRule::Specified {
@@ -176,14 +174,13 @@ fn reply_specified_test(
         optional: true,
     }
     .check_inner(&doc, &provider)
-    .await
     .unwrap();
 
     assert_eq!(non_optional_res, optional_res);
     non_optional_res
 }
 
-#[tokio::test]
+#[test]
 fn reply_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = ReplyRule::Specified {
@@ -192,7 +189,7 @@ fn reply_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).unwrap());
 
     let provider = TestCatalystProvider::default();
     let rule = ReplyRule::Specified {
@@ -201,19 +198,19 @@ fn reply_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).unwrap());
 }
 
-#[tokio::test]
+#[test]
 fn reply_rule_not_specified_test() {
     let rule = ReplyRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 
     let doc = Builder::new().build();
-    assert!(rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).unwrap());
 
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Reply(vec![create_dummy_doc_ref()].into()))
         .build();
-    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).unwrap());
 }

@@ -236,7 +236,6 @@ use crate::{
     ;
     "referencing to unknown document"
 )]
-#[tokio::test]
 fn template_specified_test(
     doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
@@ -248,7 +247,6 @@ fn template_specified_test(
 
     TemplateRule::Specified { allowed_type }
         .check_inner(&doc, &provider)
-        .await
         .unwrap()
 }
 
@@ -286,7 +284,6 @@ fn template_specified_test(
     ;
     "content is complied with the referenced template json schema for non specified 'template' field"
 )]
-#[tokio::test]
 fn reply_rule_not_specified_test(
     doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
@@ -296,6 +293,5 @@ fn reply_rule_not_specified_test(
     let doc = doc_gen(allowed_type, &mut provider);
     TemplateRule::NotSpecified
         .check_inner(&doc, &provider)
-        .await
         .unwrap()
 }

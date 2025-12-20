@@ -27,14 +27,13 @@ pub(crate) enum ChainRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ChainRule {
     fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -77,7 +76,7 @@ impl ChainRule {
 
             // perform integrity validation
             if let Some(doc_chain) = chain {
-                return Self::chain_check(doc_chain, doc, provider).await;
+                return Self::chain_check(doc_chain, doc, provider);
             }
         }
         if let Self::NotSpecified = self
@@ -207,8 +206,7 @@ impl ChainRule {
                 provider,
                 doc.report(),
                 chain_validator,
-            )
-            .await;
+            );
         }
 
         Ok(true)

@@ -22,7 +22,6 @@ pub(crate) enum ContentTypeRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ContentTypeRule {
     fn check(
         &self,

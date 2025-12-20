@@ -23,7 +23,6 @@ pub(crate) enum ContentEncodingRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ContentEncodingRule {
     fn check(
         &self,

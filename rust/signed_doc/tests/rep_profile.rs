@@ -168,7 +168,6 @@ use test_case::test_case;
     ;
     "missing 'parameters'"
 )]
-#[tokio::test]
 #[allow(clippy::unwrap_used)]
 fn test_brand_parameters_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
@@ -178,7 +177,7 @@ fn test_brand_parameters_doc(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(*doc.doc_type().unwrap(), doc_types::REP_PROFILE.clone());
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

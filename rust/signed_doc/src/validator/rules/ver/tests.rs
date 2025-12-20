@@ -248,10 +248,9 @@ use crate::{
     => false;
     "missing `id` field"
 )]
-#[tokio::test]
 fn ver_test(doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDocument) -> bool {
     let mut provider = TestCatalystProvider::default();
     let doc = doc_gen(&mut provider);
 
-    VerRule.check_inner(&doc, &provider).await.unwrap()
+    VerRule.check_inner(&doc, &provider).unwrap()
 }

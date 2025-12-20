@@ -286,7 +286,6 @@ use test_case::test_case;
     ;
     "missing parameters"
 )]
-#[tokio::test]
 #[allow(clippy::unwrap_used)]
 fn test_proposal_submission_action_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
@@ -299,7 +298,7 @@ fn test_proposal_submission_action_doc(
         doc_types::PROPOSAL_SUBMISSION_ACTION.clone()
     );
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

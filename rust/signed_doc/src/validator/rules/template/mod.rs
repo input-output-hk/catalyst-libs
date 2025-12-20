@@ -29,14 +29,13 @@ pub(crate) enum TemplateRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for TemplateRule {
     fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -122,8 +121,7 @@ impl TemplateRule {
                 provider,
                 doc.report(),
                 template_validator,
-            )
-            .await;
+            );
         }
         if let Self::NotSpecified = self
             && let Some(template) = doc.doc_meta().template()

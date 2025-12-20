@@ -135,7 +135,6 @@ use test_case::test_case;
     ;
     "missing 'parameters'"
 )]
-#[tokio::test]
 #[allow(clippy::unwrap_used)]
 fn test_category_parameters_form_template_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
@@ -148,7 +147,7 @@ fn test_category_parameters_form_template_doc(
         doc_types::REP_NOMINATION_FORM_TEMPLATE.clone()
     );
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

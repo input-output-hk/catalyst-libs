@@ -50,7 +50,6 @@ pub(crate) enum ContentRule {
     Nil,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ContentRule {
     fn check(
         &self,

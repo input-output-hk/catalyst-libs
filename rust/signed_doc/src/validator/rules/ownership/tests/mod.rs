@@ -12,7 +12,7 @@ mod collaborators_field_based;
 mod ref_field_based;
 mod without_collaborators;
 
-#[tokio::test]
+#[test]
 fn empty_provider_test() {
     let provider = TestCatalystProvider::default();
 
@@ -26,16 +26,10 @@ fn empty_provider_test() {
         .unwrap()
         .build();
 
-    let result = DocumentOwnershipRule::OriginalAuthor
-        .check_inner(&doc, &provider)
-        .await;
+    let result = DocumentOwnershipRule::OriginalAuthor.check_inner(&doc, &provider);
     assert!(matches!(result, Ok(false)));
-    let result = DocumentOwnershipRule::RefFieldBased
-        .check_inner(&doc, &provider)
-        .await;
+    let result = DocumentOwnershipRule::RefFieldBased.check_inner(&doc, &provider);
     assert!(matches!(result, Ok(false)));
-    let result = DocumentOwnershipRule::CollaboratorsFieldBased
-        .check_inner(&doc, &provider)
-        .await;
+    let result = DocumentOwnershipRule::CollaboratorsFieldBased.check_inner(&doc, &provider);
     assert!(matches!(result, Ok(false)));
 }

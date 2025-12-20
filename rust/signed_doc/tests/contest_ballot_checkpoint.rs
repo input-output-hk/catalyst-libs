@@ -273,7 +273,6 @@ use test_case::test_case;
     ;
     "missing chain"
 )]
-#[tokio::test]
 #[allow(clippy::unwrap_used)]
 fn contest_ballot_checkpoint(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
@@ -286,7 +285,7 @@ fn contest_ballot_checkpoint(
         doc_types::CONTEST_BALLOT_CHECKPOINT.clone()
     );
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

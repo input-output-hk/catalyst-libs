@@ -28,7 +28,7 @@ mod helper {
     }
 }
 
-#[tokio::test]
+#[test]
 fn test_without_chaining_documents() {
     let doc_type = UuidV4::new();
     let doc_id = UuidV7::new();
@@ -42,14 +42,14 @@ fn test_without_chaining_documents() {
         .build();
 
     let rule = ChainRule::NotSpecified;
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check(&doc, &provider).unwrap());
     let rule = ChainRule::Specified { optional: true };
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check(&doc, &provider).unwrap());
     let rule = ChainRule::Specified { optional: false };
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check(&doc, &provider).unwrap());
 }
 
-#[tokio::test]
+#[test]
 fn chain_rule_collaborators_rule_conflict() {
     let chain = ChainSpec {
         required: IsRequired::Optional,
@@ -138,13 +138,13 @@ fn chain_rule_collaborators_rule_conflict() {
     } => true;
     "valid intermediate chained documents (0, 1, -2)"
 )]
-#[tokio::test]
+
 fn test_valid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
 
-    rule.check(&doc, &provider).await.unwrap()
+    rule.check(&doc, &provider).unwrap()
 }
 
 #[test_case(
@@ -285,11 +285,11 @@ fn test_valid_chained_documents(
     } => false;
     "not have its absolute height exactly one more than the height of the document being chained to"
 )]
-#[tokio::test]
+
 fn test_invalid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
 
-    rule.check_inner(&doc, &provider).await.unwrap()
+    rule.check_inner(&doc, &provider).unwrap()
 }

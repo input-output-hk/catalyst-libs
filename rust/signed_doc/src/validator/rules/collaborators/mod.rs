@@ -21,7 +21,6 @@ pub(crate) enum CollaboratorsRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
     fn check(
         &self,

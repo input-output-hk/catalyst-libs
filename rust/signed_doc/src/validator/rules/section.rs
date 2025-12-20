@@ -17,7 +17,6 @@ pub(crate) enum SectionRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for SectionRule {
     fn check(
         &self,

@@ -11,14 +11,13 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct VerRule;
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for VerRule {
     fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -61,7 +60,7 @@ impl VerRule {
                 &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
             );
             is_valid = false;
-        } else if let Some(last_doc) = provider.try_get_last_doc(id).await? {
+        } else if let Some(last_doc) = provider.try_get_last_doc(id)? {
             let Ok(last_doc_ver) = last_doc.doc_ver() else {
                 doc.report().missing_field(
                     "ver",
