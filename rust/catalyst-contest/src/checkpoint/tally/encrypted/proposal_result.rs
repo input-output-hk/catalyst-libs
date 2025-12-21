@@ -52,3 +52,21 @@ impl Decode<'_, ()> for EncryptedTallyProposalResult {
         Ok(Self)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        let original = EncryptedTallyProposalResult;
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            EncryptedTallyProposalResult::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+}

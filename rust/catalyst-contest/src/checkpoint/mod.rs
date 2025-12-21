@@ -19,7 +19,7 @@ mod stage;
 mod tally;
 
 pub use drep_encryption_key::DrepEncryptionKey;
-use minicbor::{Decode, Encode, decode::Error as DecodeError, encode::Error as EncodeError};
+use minicbor::{Decode, Encode, decode::Error as DecodeError};
 pub use rejection_reason::RejectionReason;
 pub use rejections::Rejections;
 pub use smt::{entries::SmtEntries, root::SmtRoot};
@@ -161,25 +161,19 @@ impl Decode<'_, ()> for CatalystBallotCheckpointPayload {
         // Required fields
         let key = d.str()?;
         if key != "stage" {
-            return Err(DecodeError::message(
-                "Expected 'stage', got {key}",
-            ));
+            return Err(DecodeError::message("Expected 'stage', got {key}"));
         }
         let stage = BallotProcessingStage::decode(d, ctx)?;
 
         let key = d.str()?;
         if key != "smt-root" {
-            return Err(DecodeError::message(
-                "Expected 'smt-root', got {key}",
-            ));
+            return Err(DecodeError::message("Expected 'smt-root', got {key}"));
         }
         let smt_root = SmtRoot::decode(d, ctx)?;
 
         let key = d.str()?;
         if key != "smt-entries" {
-            return Err(DecodeError::message(
-                "Expected 'smt-entries', got {key}",
-            ));
+            return Err(DecodeError::message("Expected 'smt-entries', got {key}"));
         }
         let smt_entries = SmtEntries::decode(d, ctx)?;
 
@@ -250,5 +244,197 @@ impl Decode<'_, ()> for CatalystBallotCheckpointPayload {
             tally,
             drep_encryption_key,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use catalyst_signed_doc::tests_utils::create_dummy_doc_ref;
+
+    use super::*;
+
+    fn create_test_smt_root() -> SmtRoot {
+        SmtRoot(vec![
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32,
+        ])
+    }
+
+    fn create_test_rejections() -> Rejections {
+        let doc_ref1 = create_dummy_doc_ref();
+        let doc_ref2 = create_dummy_doc_ref();
+
+        let mut rejections_map = std::collections::HashMap::new();
+        rejections_map.insert(RejectionReason::AlreadyVoted, vec![doc_ref1.clone()].into());
+        rejections_map.insert(
+            RejectionReason::ObsoleteVote,
+            vec![doc_ref2.clone(), doc_ref1.clone()].into(),
+        );
+
+        Rejections(rejections_map)
+    }
+
+    fn create_test_encrypted_tally() -> EncryptedTally {
+        // Use Default trait to create an empty encrypted tally
+        EncryptedTally::default()
+    }
+
+    fn create_test_tally() -> Tally {
+        // Use Default trait to create an empty tally
+        Tally::default()
+    }
+
+    #[test]
+    fn roundtrip_required_fields_only() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::BulletinBoard,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(42u64),
+            rejections: None,
+            encrypted_tally: None,
+            tally: None,
+            drep_encryption_key: None,
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_with_rejections_and_drep_key() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::Tally,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(100u64),
+            rejections: Some(create_test_rejections()),
+            encrypted_tally: None,
+            tally: None,
+            drep_encryption_key: Some(DrepEncryptionKey),
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_with_tally_and_drep_key() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::Audit,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(500u64),
+            rejections: None,
+            encrypted_tally: None,
+            tally: Some(create_test_tally()),
+            drep_encryption_key: Some(DrepEncryptionKey),
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_with_rejections_and_encrypted_tally() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::BulletinBoard,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(1000u64),
+            rejections: Some(create_test_rejections()),
+            encrypted_tally: Some(create_test_encrypted_tally()),
+            tally: None,
+            drep_encryption_key: Some(DrepEncryptionKey),
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_with_drep_key() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::Tally,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(250u64),
+            rejections: None,
+            encrypted_tally: None,
+            tally: None,
+            drep_encryption_key: Some(DrepEncryptionKey),
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_all_fields() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::Audit,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(9999u64),
+            rejections: Some(create_test_rejections()),
+            encrypted_tally: Some(create_test_encrypted_tally()),
+            tally: Some(create_test_tally()),
+            drep_encryption_key: Some(DrepEncryptionKey),
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_with_multiple_optional_fields() {
+        let original = CatalystBallotCheckpointPayload {
+            stage: BallotProcessingStage::BulletinBoard,
+            smt_root: create_test_smt_root(),
+            smt_entries: SmtEntries::from(777u64),
+            rejections: Some(create_test_rejections()),
+            encrypted_tally: Some(create_test_encrypted_tally()),
+            tally: None,
+            drep_encryption_key: Some(DrepEncryptionKey),
+        };
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded =
+            CatalystBallotCheckpointPayload::decode(&mut minicbor::Decoder::new(&buffer), &mut ())
+                .unwrap();
+        assert_eq!(original, decoded);
     }
 }

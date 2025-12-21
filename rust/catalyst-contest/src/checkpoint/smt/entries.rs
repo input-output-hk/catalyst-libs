@@ -38,3 +38,25 @@ impl Decode<'_, ()> for SmtEntries {
         Ok(Self(entries))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        let test_values = [0u64, 1, 42, 1000, u64::MAX];
+
+        for value in test_values {
+            let original = SmtEntries::from(value);
+
+            let mut buffer = Vec::new();
+            original
+                .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+                .unwrap();
+            let decoded =
+                SmtEntries::decode(&mut minicbor::Decoder::new(&buffer), &mut ()).unwrap();
+            assert_eq!(original, decoded);
+        }
+    }
+}

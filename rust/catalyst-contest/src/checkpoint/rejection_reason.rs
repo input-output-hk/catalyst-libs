@@ -49,3 +49,23 @@ impl Decode<'_, ()> for RejectionReason {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        let reasons = [RejectionReason::AlreadyVoted, RejectionReason::ObsoleteVote];
+
+        for original in reasons {
+            let mut buffer = Vec::new();
+            original
+                .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+                .unwrap();
+            let decoded =
+                RejectionReason::decode(&mut minicbor::Decoder::new(&buffer), &mut ()).unwrap();
+            assert_eq!(original, decoded);
+        }
+    }
+}

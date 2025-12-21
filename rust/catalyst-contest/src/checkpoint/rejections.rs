@@ -70,3 +70,33 @@ impl Decode<'_, ()> for Rejections {
         Ok(Self(rejections))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use catalyst_signed_doc::tests_utils::create_dummy_doc_ref;
+
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        // Create test DocumentRef instances
+        let doc_ref1 = create_dummy_doc_ref();
+        let doc_ref2 = create_dummy_doc_ref();
+
+        let mut rejections_map = HashMap::new();
+        rejections_map.insert(RejectionReason::AlreadyVoted, vec![doc_ref1.clone()].into());
+        rejections_map.insert(
+            RejectionReason::ObsoleteVote,
+            vec![doc_ref2.clone(), doc_ref1.clone()].into(),
+        );
+
+        let original = Rejections(rejections_map);
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = Rejections::decode(&mut minicbor::Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+}

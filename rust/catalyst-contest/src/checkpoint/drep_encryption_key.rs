@@ -30,3 +30,20 @@ impl Decode<'_, ()> for DrepEncryptionKey {
         Ok(Self)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        let original = DrepEncryptionKey;
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = DrepEncryptionKey::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+}
