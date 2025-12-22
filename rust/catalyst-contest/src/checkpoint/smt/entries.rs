@@ -2,7 +2,7 @@
 
 use minicbor::{Decode, Encode, decode::Error as DecodeError, encode::Error as EncodeError};
 
-/// Root of a Sparse Merkle Tree (SMT).
+/// Number of entries in a Sparse Merkle Tree (SMT).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SmtEntries(u64);
 
