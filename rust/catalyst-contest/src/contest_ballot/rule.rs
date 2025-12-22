@@ -17,14 +17,7 @@ impl CatalystSignedDocumentValidationRule for ContestBallotRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        if doc.report().is_problematic() {
-            bail!("Provided document is not valid {:?}", doc.report())
-        }
-        ensure!(
-            doc.doc_type()? == &CONTEST_BALLOT,
-            "Document must be Contest Ballot type"
-        );
-
+        // TODO: FIXME:
         todo!()
     }
 }

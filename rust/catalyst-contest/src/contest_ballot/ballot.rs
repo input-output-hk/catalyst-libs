@@ -24,6 +24,7 @@ impl ContestBallot {
             "Document must be Contest Ballot type"
         );
 
+        // TODO: FIXME:
         todo!()
     }
 }
