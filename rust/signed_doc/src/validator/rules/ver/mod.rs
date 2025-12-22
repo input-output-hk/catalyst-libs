@@ -17,7 +17,7 @@ impl CatalystSignedDocumentValidationRule for VerRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        Self::check_inner(doc, provider)
     }
 }
 
@@ -31,7 +31,6 @@ impl VerRule {
     /// 4. When a document with the same `id` already exists, the new document's `type`
     ///    must be the same as the latest known submitted document's `type` for that `id`
     fn check_inner(
-        &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {

@@ -36,7 +36,7 @@ pub trait CatalystSignedDocumentValidationRule: 'static + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
-    /// 
+    ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
     fn check(
