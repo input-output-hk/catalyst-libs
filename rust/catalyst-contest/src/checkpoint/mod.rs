@@ -194,38 +194,52 @@ impl Decode<'_, ()> for CatalystBallotCheckpointPayload {
 
         if remaining_opt_items > 0 {
             let mut key = d.str()?;
+            // Return error if field name is not expected
+            if !&optional_fields.contains(&key) {
+                return Err(UnexpectedPayloadField(key.to_string()).into());
+            }
 
+            // Rejections field
             let field_name = optional_fields.remove(0);
             if key == field_name {
                 rejections = Some(Rejections::decode(d, ctx)?);
-                key = d.str()?;
                 remaining_opt_items -= 1;
+                if remaining_opt_items > 0 {
+                    key = d.str()?;
+                }
             } else if !&optional_fields.contains(&key) {
                 return Err(UnexpectedPayloadField(key.to_string()).into());
             }
 
+            // Encrypted Tally field
             if remaining_opt_items > 0 {
                 let field_name = optional_fields.remove(0);
                 if key == field_name {
                     encrypted_tally = Some(EncryptedTally::decode(d, ctx)?);
-                    key = d.str()?;
                     remaining_opt_items -= 1;
+                    if remaining_opt_items > 0 {
+                        key = d.str()?;
+                    }
                 } else if !&optional_fields.contains(&key) {
                     return Err(UnexpectedPayloadField(key.to_string()).into());
                 }
             }
 
+            // Tally field
             if remaining_opt_items > 0 {
                 let field_name = optional_fields.remove(0);
                 if key == field_name {
                     tally = Some(Tally::decode(d, ctx)?);
-                    key = d.str()?;
                     remaining_opt_items -= 1;
+                    if remaining_opt_items > 0 {
+                        key = d.str()?;
+                    }
                 } else if !&optional_fields.contains(&key) {
                     return Err(UnexpectedPayloadField(key.to_string()).into());
                 }
             }
 
+            // D-Rep Encryption Key field
             if remaining_opt_items > 0 {
                 let field_name = optional_fields.remove(0);
                 if key != field_name {
