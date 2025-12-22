@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.6 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.9 AS rust-ci
 IMPORT ../ AS repo-ci
 
 COPY_SRC:
@@ -97,6 +97,9 @@ build:
                 --junit="cat-libs.junit-report.xml" \
                 --docs="true"
     END
+
+    DO ./catalyst-types+WASM_BUILD
+    DO ./catalyst-signed-doc-spec+WASM_BUILD
 
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork

@@ -7,6 +7,8 @@ use std::{
 
 use tokio::sync::oneshot::error::TryRecvError;
 
+use crate::doc_sync::Blake3256;
+
 /// State machine that tracks peer parity for the Doc Sync protocol.
 ///
 /// Transitions follow the protocol spec:
@@ -40,17 +42,17 @@ pub enum StateSnapshot {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SyncState {
     /// Local sparse merkle tree root.
-    local: blake3::Hash,
+    local: Blake3256,
     /// Remote sparse merkle tree root.
-    remote: blake3::Hash,
+    remote: Blake3256,
 }
 
 impl SyncState {
     /// Creates a new synchronization view for comparison.
     #[must_use]
     pub fn new(
-        local: blake3::Hash,
-        remote: blake3::Hash,
+        local: Blake3256,
+        remote: Blake3256,
     ) -> Self {
         Self { local, remote }
     }
@@ -202,8 +204,8 @@ mod tests {
         SyncState::new(sig_a, sig_b)
     }
 
-    fn hash_with(byte: u8) -> blake3::Hash {
-        blake3::Hash::from_bytes([byte; 32])
+    fn hash_with(byte: u8) -> Blake3256 {
+        [byte; 32].into()
     }
 
     #[tokio::test]
