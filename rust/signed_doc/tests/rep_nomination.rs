@@ -2,11 +2,14 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/brand_parameters>
 
 use catalyst_signed_doc::{
-    providers::tests::TestCatalystProvider, tests_utils::{
+    providers::tests::TestCatalystProvider,
+    tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, contest_parameters_doc,
         contest_parameters_form_template_doc, get_doc_kid_and_sk, rep_nomination_doc,
         rep_nomination_form_template_doc, rep_profile_doc, rep_profile_form_template_doc,
-    }, validator::Validator, *
+    },
+    validator::Validator,
+    *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;

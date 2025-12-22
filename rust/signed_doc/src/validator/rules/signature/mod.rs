@@ -23,7 +23,7 @@ impl CatalystSignedDocumentValidationRule for SignatureRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        Self::check_inner(doc, provider)
     }
 }
 
@@ -34,7 +34,6 @@ impl SignatureRule {
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
     fn check_inner(
-        &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {

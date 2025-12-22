@@ -20,6 +20,9 @@ pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn check(
         &self,
         doc: &CatalystSignedDocument,
@@ -33,6 +36,9 @@ pub trait CatalystSignedDocumentValidationRule: 'static + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
+    /// 
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn check(
         &self,
         doc: &CatalystSignedDocument,
@@ -51,10 +57,17 @@ pub struct Validator(DashMap<DocType, Rules>);
 #[cfg(target_arch = "wasm32")]
 pub struct Validator(HashMap<DocType, Rules>);
 
+impl Default for Validator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Validator {
     /// # Panics
     /// - Cannot fail to initialize validation rules. Should never happen.
     #[allow(clippy::expect_used)]
+    #[must_use]
     pub fn new() -> Self {
         Self(
             documents_rules_from_spec()

@@ -16,6 +16,9 @@ pub trait CatalystIdProvider {
     /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
     /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
     /// corresponding `RoleId` and `KeyRotation` has not been registered.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn try_get_registered_key(
         &self,
         kid: &CatalystId,
@@ -24,7 +27,10 @@ pub trait CatalystIdProvider {
 
 /// `CatalystSignedDocument` Provider trait
 pub trait CatalystSignedDocumentProvider {
-    /// Try to get a `CatalystSignedDocument` from document reference
+    /// Try to get a `CatalystSignedDocument` from document reference.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn try_get_doc(
         &self,
         doc_ref: &DocumentRef,
@@ -32,6 +38,9 @@ pub trait CatalystSignedDocumentProvider {
 
     /// Try to get the last known version of a `CatalystSignedDocument`, same
     /// `id` and the highest known `ver`.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn try_get_last_doc(
         &self,
         id: UuidV7,
@@ -39,12 +48,18 @@ pub trait CatalystSignedDocumentProvider {
 
     /// Try to get the first known version of a `CatalystSignedDocument`, `id` and `ver`
     /// are equal.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn try_get_first_doc(
         &self,
         id: UuidV7,
     ) -> anyhow::Result<Option<CatalystSignedDocument>>;
 
     /// Try to find a `CatalystSignedDocument` by the provided query.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
     fn try_search_docs(
         &self,
         query: &CatalystSignedDocumentSearchQuery,
