@@ -8,55 +8,7 @@ use minicbor::{
     encode::{Error as EncodeError, Write},
 };
 
-/// Placeholder map of `tally-proposal-result`.
-#[derive(Default, Debug, Clone, Hash, PartialEq, Eq)]
-pub struct ClearChoice(i64);
-
-impl Encode<()> for ClearChoice {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut (),
-    ) -> Result<(), EncodeError<W::Error>> {
-        e.i64(self.0)?;
-        Ok(())
-    }
-}
-
-impl Decode<'_, ()> for ClearChoice {
-    fn decode(
-        d: &mut Decoder<'_>,
-        _ctx: &mut (),
-    ) -> Result<Self, DecodeError> {
-        let entries = d.i64()?;
-        Ok(Self(entries))
-    }
-}
-
-/// Placeholder map of `tally-proposal-result`.
-#[derive(Default, Debug, Clone, PartialEq, Eq)]
-pub struct VotingPower(i64);
-
-impl Encode<()> for VotingPower {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut (),
-    ) -> Result<(), EncodeError<W::Error>> {
-        e.i64(self.0)?;
-        Ok(())
-    }
-}
-
-impl Decode<'_, ()> for VotingPower {
-    fn decode(
-        d: &mut Decoder<'_>,
-        _ctx: &mut (),
-    ) -> Result<Self, DecodeError> {
-        let entries = d.i64()?;
-        Ok(Self(entries))
-    }
-}
+use super::{ClearChoice, VotingPower};
 
 /// Placeholder map of `tally-proposal-result`.
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
@@ -126,43 +78,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn roundtrip_clear_choice() {
-        let test_values = [0i64, 1, -1, 42, -42, i64::MAX, i64::MIN];
-
-        for value in test_values {
-            let original = ClearChoice(value);
-
-            let mut buffer = Vec::new();
-            original
-                .encode(&mut Encoder::new(&mut buffer), &mut ())
-                .unwrap();
-            let decoded = ClearChoice::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-            assert_eq!(original, decoded);
-        }
-    }
-
-    #[test]
-    fn roundtrip_voting_power() {
-        let test_values = [0i64, 1, -1, 1000, -1000, i64::MAX, i64::MIN];
-
-        for value in test_values {
-            let original = VotingPower(value);
-
-            let mut buffer = Vec::new();
-            original
-                .encode(&mut Encoder::new(&mut buffer), &mut ())
-                .unwrap();
-            let decoded = VotingPower::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-            assert_eq!(original, decoded);
-        }
-    }
-
-    #[test]
     fn roundtrip_proposal_result() {
         let mut choice_map = HashMap::new();
-        choice_map.insert(ClearChoice(0), VotingPower(100));
-        choice_map.insert(ClearChoice(1), VotingPower(200));
-        choice_map.insert(ClearChoice(-1), VotingPower(50));
+        choice_map.insert(0.into(), VotingPower::from(100));
+        choice_map.insert(1.into(), VotingPower::from(200));
+        choice_map.insert(ClearChoice::from(-1), VotingPower::from(50));
 
         let original = ProposalResult(choice_map);
 

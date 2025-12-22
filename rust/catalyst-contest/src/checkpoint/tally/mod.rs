@@ -1,13 +1,17 @@
 //! Tally related code
 pub(super) mod encrypted;
 
+mod clear_choice;
 mod proposal_result;
+mod voting_power;
 
 use std::collections::HashMap;
 
 use catalyst_signed_doc::DocumentRef;
+pub use clear_choice::ClearChoice;
 use minicbor::{Decode, Encode};
 pub use proposal_result::ProposalResult;
+pub use voting_power::VotingPower;
 
 /// Tally map of `document_ref => tally-proposal-result`.
 #[derive(Default, Debug, Clone, PartialEq, Eq)]

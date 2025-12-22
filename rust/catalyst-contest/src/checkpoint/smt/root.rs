@@ -1,17 +1,13 @@
 //! Root of a Sparse Merkle Tree (SMT).
 
+use cbork_utils::BLAKE3_CBOR_TAG;
 use minicbor::{
     Decode, Encode, data::Tag, decode::Error as DecodeError, encode::Error as EncodeError,
 };
 
-/// CBOR tag for BLAKE3 HASH
-/// <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml>
-const BLAKE3_CBOR_TAG: u64 = 32781;
-
-/// Default Hash Size for BLAKE3 is 32 bytes.
-const DEFAULT_HASH_SIZE: usize = 32;
-
 /// Root of a Sparse Merkle Tree (SMT).
+///
+/// Hash size is determined by length of bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SmtRoot(pub(crate) Vec<u8>);
 
@@ -39,8 +35,7 @@ impl Decode<'_, ()> for SmtRoot {
             )));
         }
         let bytes = d.bytes()?;
-        let mut root = vec![0u8; DEFAULT_HASH_SIZE];
-        root.copy_from_slice(bytes);
+        let root = bytes.to_vec();
         Ok(Self(root))
     }
 }
