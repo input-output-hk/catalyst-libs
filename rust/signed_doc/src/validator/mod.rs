@@ -29,7 +29,7 @@ pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
 
 /// `CatalystSignedDocument` validation rule trait
 #[cfg(target_arch = "wasm32")]
-pub trait CatalystSignedDocumentValidationRule: Debug {
+pub trait CatalystSignedDocumentValidationRule: 'static + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
@@ -115,7 +115,7 @@ impl Validator {
     /// Extend the current defined validation rules set for the provided document type.
     #[cfg(target_arch = "wasm32")]
     pub fn extend_rules_per_document(
-        &self,
+        &mut self,
         doc_type: DocType,
         rule: impl CatalystSignedDocumentValidationRule,
     ) {
