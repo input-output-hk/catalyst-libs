@@ -2,14 +2,12 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation>
 
 use catalyst_signed_doc::{
-    providers::tests::TestCatalystProvider,
-    tests_utils::{
+    providers::tests::TestCatalystProvider, tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, contest_delegation_doc,
         contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair,
         rep_nomination_doc, rep_nomination_form_template_doc, rep_profile_doc,
         rep_profile_form_template_doc,
-    },
-    *,
+    }, validator::Validator, *
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
@@ -209,7 +207,7 @@ fn contest_ballot(
         doc_types::CONTEST_DELEGATION.clone()
     );
 
-    let is_valid = validator::validate(&doc, &provider).unwrap();
+    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

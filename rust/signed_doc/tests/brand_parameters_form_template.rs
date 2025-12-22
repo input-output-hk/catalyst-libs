@@ -2,11 +2,9 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/brand_parameters_form_template>
 
 use catalyst_signed_doc::{
-    providers::tests::TestCatalystProvider,
-    tests_utils::{
+    providers::tests::TestCatalystProvider, tests_utils::{
         brand_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
-    },
-    *,
+    }, validator::Validator, *
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
@@ -94,7 +92,7 @@ fn test_brand_parameters_form_template_doc(
         doc_types::BRAND_PARAMETERS_FORM_TEMPLATE.clone()
     );
 
-    let is_valid = validator::validate(&doc, &provider).unwrap();
+    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

@@ -3,14 +3,12 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/proposal>
 
 use catalyst_signed_doc::{
-    providers::tests::TestCatalystProvider,
-    tests_utils::{
+    providers::tests::TestCatalystProvider, tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
         campaign_parameters_form_template_doc, category_parameters_doc,
         category_parameters_form_template_doc, create_dummy_key_pair, proposal_doc,
         proposal_form_template_doc,
-    },
-    *,
+    }, validator::Validator, *
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
@@ -208,7 +206,7 @@ fn test_proposal_doc(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(*doc.doc_type().unwrap(), doc_types::PROPOSAL.clone());
 
-    let is_valid = validator::validate(&doc, &provider).unwrap();
+    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

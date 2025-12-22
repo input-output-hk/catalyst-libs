@@ -12,7 +12,7 @@ pub use search_query::{
 use crate::{CatalystSignedDocument, DocumentRef};
 
 /// `CatalystId` Provider trait
-pub trait CatalystIdProvider: Send + Sync {
+pub trait CatalystIdProvider {
     /// Try to get `VerifyingKey` by the provided `CatalystId` and corresponding `RoleId`
     /// and `KeyRotation` Return `None` if the provided `CatalystId` with the
     /// corresponding `RoleId` and `KeyRotation` has not been registered.
@@ -23,7 +23,7 @@ pub trait CatalystIdProvider: Send + Sync {
 }
 
 /// `CatalystSignedDocument` Provider trait
-pub trait CatalystSignedDocumentProvider: Send + Sync {
+pub trait CatalystSignedDocumentProvider {
     /// Try to get a `CatalystSignedDocument` from document reference
     fn try_get_doc(
         &self,
