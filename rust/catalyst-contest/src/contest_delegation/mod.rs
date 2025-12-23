@@ -209,11 +209,19 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    let Some(_contest_parameters)  = provider.try_get_doc(doc_ref)? else {
+    let Some(_contest_parameters) = provider.try_get_doc(doc_ref)? else {
         report.functional_validation(
-                &format!("Cannot get referenced document by reference: {doc_ref}"),
-                "Missing 'Contest Parameters' document for the Contest Delegation document",
-            );
+            &format!("Cannot get referenced document by reference: {doc_ref}"),
+            "Missing 'Contest Parameters' document for the Contest Delegation document",
+        );
+        return Ok(false);
+    };
+
+    let Ok(_doc_ver) = doc.doc_ver() else {
+        report.missing_field(
+            "ver",
+            "Missing 'ver' metadata field for 'Contest Delegation' document",
+        );
         return Ok(false);
     };
 
