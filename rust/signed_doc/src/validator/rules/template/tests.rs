@@ -236,8 +236,7 @@ use crate::{
     ;
     "referencing to unknown document"
 )]
-#[tokio::test]
-async fn template_specified_test(
+fn template_specified_test(
     doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -248,7 +247,6 @@ async fn template_specified_test(
 
     TemplateRule::Specified { allowed_type }
         .check_inner(&doc, &provider)
-        .await
         .unwrap()
 }
 
@@ -286,8 +284,7 @@ async fn template_specified_test(
     ;
     "content is complied with the referenced template json schema for non specified 'template' field"
 )]
-#[tokio::test]
-async fn reply_rule_not_specified_test(
+fn reply_rule_not_specified_test(
     doc_gen: impl FnOnce(DocType, &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let allowed_type: DocType = UuidV4::new().into();
@@ -296,6 +293,5 @@ async fn reply_rule_not_specified_test(
     let doc = doc_gen(allowed_type, &mut provider);
     TemplateRule::NotSpecified
         .check_inner(&doc, &provider)
-        .await
         .unwrap()
 }

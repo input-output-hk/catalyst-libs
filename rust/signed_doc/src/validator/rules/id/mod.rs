@@ -14,9 +14,8 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct IdRule;
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for IdRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,

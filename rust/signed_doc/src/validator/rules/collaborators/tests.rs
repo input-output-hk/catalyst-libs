@@ -26,10 +26,8 @@ use crate::{
     ;
     "missing 'collaborators' field"
 )]
-#[tokio::test]
-async fn section_rule_specified_optional_test(
-    doc_gen: impl FnOnce() -> CatalystSignedDocument
-) -> bool {
+
+fn section_rule_specified_optional_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = CollaboratorsRule::Specified { optional: true };
 
     let doc = doc_gen();
@@ -56,8 +54,8 @@ async fn section_rule_specified_optional_test(
     ;
     "missing 'collaborators' field"
 )]
-#[tokio::test]
-async fn section_rule_specified_not_optional_test(
+
+fn section_rule_specified_not_optional_test(
     doc_gen: impl FnOnce() -> CatalystSignedDocument
 ) -> bool {
     let rule = CollaboratorsRule::Specified { optional: false };
@@ -86,8 +84,8 @@ async fn section_rule_specified_not_optional_test(
     ;
     "valid 'collaborators' field present"
 )]
-#[tokio::test]
-async fn section_rule_not_specified_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
+
+fn section_rule_not_specified_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = CollaboratorsRule::NotSpecified;
 
     let doc = doc_gen();
