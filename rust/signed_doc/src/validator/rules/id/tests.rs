@@ -73,8 +73,8 @@ use crate::{
     => false;
     "missing `id` field"
 )]
-#[tokio::test]
-async fn id_test(doc_gen: impl FnOnce(&TestCatalystProvider) -> CatalystSignedDocument) -> bool {
+
+fn id_test(doc_gen: impl FnOnce(&TestCatalystProvider) -> CatalystSignedDocument) -> bool {
     let provider = TestCatalystProvider::default();
     let doc = doc_gen(&provider);
 

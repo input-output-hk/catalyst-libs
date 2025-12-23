@@ -1,0 +1,10 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.9 AS rust-ci
+
+# wasm32-wasip2
+WASM_BUILD:
+    FUNCTION
+
+    DO rust-ci+EXECUTE \
+            --cmd="cargo b --release -p catalyst-signed-doc --target wasm32-wasip2"

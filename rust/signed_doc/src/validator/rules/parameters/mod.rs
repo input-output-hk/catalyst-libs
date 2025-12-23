@@ -9,7 +9,6 @@ use catalyst_signed_doc_spec::{
     DocSpecs, is_required::IsRequired, metadata::parameters::Parameters,
 };
 use catalyst_types::problem_report::ProblemReport;
-use futures::FutureExt;
 use itertools::Itertools;
 
 use crate::{
@@ -32,14 +31,13 @@ pub(crate) enum ParametersRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ParametersRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -88,7 +86,7 @@ impl ParametersRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -108,8 +106,7 @@ impl ParametersRule {
                     provider,
                     doc.report(),
                     |_| true,
-                )
-                .boxed();
+                );
 
                 let template_link_check = link_check(
                     doc.doc_meta().template(),
@@ -117,24 +114,21 @@ impl ParametersRule {
                     "template",
                     provider,
                     doc.report(),
-                )
-                .boxed();
+                );
                 let ref_link_check = link_check(
                     doc.doc_meta().doc_ref(),
                     parameters_ref,
                     "ref",
                     provider,
                     doc.report(),
-                )
-                .boxed();
+                );
                 let reply_link_check = link_check(
                     doc.doc_meta().reply(),
                     parameters_ref,
                     "reply",
                     provider,
                     doc.report(),
-                )
-                .boxed();
+                );
                 let chain_field = doc
                     .doc_meta()
                     .chain()
@@ -146,22 +140,19 @@ impl ParametersRule {
                     "chain",
                     provider,
                     doc.report(),
-                )
-                .boxed();
+                );
 
-                let checks = [
+                let res = [
                     parameters_check,
                     template_link_check,
                     ref_link_check,
                     reply_link_check,
                     chain_link_check,
-                ];
-                let res = futures::future::join_all(checks)
-                    .await
-                    .into_iter()
-                    .collect::<anyhow::Result<Vec<_>>>()?
-                    .iter()
-                    .all(|res| *res);
+                ]
+                .into_iter()
+                .collect::<anyhow::Result<Vec<_>>>()?
+                .iter()
+                .all(|res| *res);
 
                 return Ok(res);
             } else if !optional {
@@ -197,7 +188,7 @@ impl ParametersRule {
 /// - `Ok(true)` if `ref_field` is `None` or yield a matching parameter set.
 /// - `Ok(false)` if no recursive parameter set matches the expected one.
 /// - `Err` if an unexpected provider error occurs.
-pub(crate) async fn link_check(
+pub(crate) fn link_check(
     ref_field: Option<&DocumentRefs>,
     exp_parameters: &DocumentRefs,
     field_name: &str,
@@ -212,13 +203,13 @@ pub(crate) async fn link_check(
     let mut all_valid = true;
     for doc_ref in exp_parameters.iter() {
         let (valid, result) =
-            collect_parameters_recursively(doc_ref, field_name, provider, report).await?;
+            collect_parameters_recursively(doc_ref, field_name, provider, report)?;
         all_valid &= valid;
         allowed_params.extend(result);
     }
 
     for doc_ref in ref_field.iter() {
-        if let Some(referenced_doc) = provider.try_get_doc(doc_ref).await? {
+        if let Some(referenced_doc) = provider.try_get_doc(doc_ref)? {
             if let Some(ref_params) = referenced_doc.doc_meta().parameters() {
                 if !ref_params.iter().all(|v| allowed_params.contains(v)) {
                     report.invalid_value(
@@ -257,7 +248,7 @@ pub(crate) async fn link_check(
 ///
 /// All encountered parameter lists are returned; traversal is cycle-safe
 /// and explores deeper parameter references recursively.
-async fn collect_parameters_recursively(
+fn collect_parameters_recursively(
     root: &DocumentRef,
     field_name: &str,
     provider: &dyn CatalystSignedDocumentProvider,
@@ -274,7 +265,7 @@ async fn collect_parameters_recursively(
         }
         result.insert(current.clone());
 
-        if let Some(doc) = provider.try_get_doc(&current).await? {
+        if let Some(doc) = provider.try_get_doc(&current)? {
             if let Some(params) = doc.doc_meta().parameters() {
                 for param in params.iter() {
                     if !visited.contains(param) {

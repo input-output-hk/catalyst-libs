@@ -30,14 +30,13 @@ pub(crate) enum DocumentOwnershipRule {
     OriginalAuthor,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -71,7 +70,7 @@ impl DocumentOwnershipRule {
     }
 
     /// Check document ownership rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -90,7 +89,7 @@ impl DocumentOwnershipRule {
             Self::OriginalAuthor => {
                 // only run check for the non first version of the document
                 if doc_id != doc.doc_ver()? {
-                    let Some(first_doc) = provider.try_get_first_doc(doc_id).await? else {
+                    let Some(first_doc) = provider.try_get_first_doc(doc_id)? else {
                         doc.report().other(
                             "Cannot find a first version of the referenced document",
                             REPORT_CONTEXT,
@@ -103,7 +102,7 @@ impl DocumentOwnershipRule {
             Self::CollaboratorsFieldBased => {
                 // only run check for the non first version of the document
                 if doc_id != doc.doc_ver()? {
-                    let Some(first_doc) = provider.try_get_first_doc(doc_id).await? else {
+                    let Some(first_doc) = provider.try_get_first_doc(doc_id)? else {
                         doc.report().other(
                             "Cannot find a first version of the referenced document",
                             REPORT_CONTEXT,
@@ -112,7 +111,7 @@ impl DocumentOwnershipRule {
                     };
                     allowed_authors.extend(first_doc.authors());
 
-                    let last_doc = provider.try_get_last_doc(doc_id).await?.context(
+                    let last_doc = provider.try_get_last_doc(doc_id)?.context(
                         "A latest version of the document must exist if a first version exists",
                     )?;
 
@@ -129,7 +128,7 @@ impl DocumentOwnershipRule {
                         .other("'ref' field cannot have multiple values", REPORT_CONTEXT);
                     return Ok(false);
                 };
-                let Some(first_ref_doc) = provider.try_get_first_doc(*doc_ref.id()).await? else {
+                let Some(first_ref_doc) = provider.try_get_first_doc(*doc_ref.id())? else {
                     doc.report().other(
                         "Cannot find a first version of the referenced document",
                         REPORT_CONTEXT,
@@ -138,7 +137,7 @@ impl DocumentOwnershipRule {
                 };
                 allowed_authors.extend(first_ref_doc.authors());
 
-                let last_doc = provider.try_get_last_doc(*doc_ref.id()).await?.context(
+                let last_doc = provider.try_get_last_doc(*doc_ref.id())?.context(
                     "A latest version of the document must exist if a first version exists",
                 )?;
 

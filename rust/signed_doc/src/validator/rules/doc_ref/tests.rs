@@ -166,8 +166,7 @@ use crate::{
     ;
     "valid reference to the missing one document"
 )]
-#[tokio::test]
-async fn ref_multiple_specified_test(
+fn ref_multiple_specified_test(
     doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -182,7 +181,6 @@ async fn ref_multiple_specified_test(
         optional: false,
     }
     .check_inner(&doc, &provider)
-    .await
     .unwrap();
 
     let optional_res = RefRule::Specified {
@@ -191,7 +189,6 @@ async fn ref_multiple_specified_test(
         optional: true,
     }
     .check_inner(&doc, &provider)
-    .await
     .unwrap();
 
     assert_eq!(non_optional_res, optional_res);
@@ -253,8 +250,7 @@ async fn ref_multiple_specified_test(
     ;
     "valid document with multiple references"
 )]
-#[tokio::test]
-async fn ref_non_multiple_specified_test(
+fn ref_non_multiple_specified_test(
     doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -269,7 +265,6 @@ async fn ref_non_multiple_specified_test(
         optional: false,
     }
     .check_inner(&doc, &provider)
-    .await
     .unwrap();
 
     let optional_res = RefRule::Specified {
@@ -278,15 +273,14 @@ async fn ref_non_multiple_specified_test(
         optional: true,
     }
     .check_inner(&doc, &provider)
-    .await
     .unwrap();
 
     assert_eq!(non_optional_res, optional_res);
     non_optional_res
 }
 
-#[tokio::test]
-async fn ref_specified_optional_test() {
+#[test]
+fn ref_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = RefRule::Specified {
         allowed_type: vec![UuidV4::new().into()],
@@ -295,7 +289,7 @@ async fn ref_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).unwrap());
 
     let provider = TestCatalystProvider::default();
     let rule = RefRule::Specified {
@@ -305,19 +299,19 @@ async fn ref_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).unwrap());
 }
 
-#[tokio::test]
-async fn ref_rule_not_specified_test() {
+#[test]
+fn ref_rule_not_specified_test() {
     let rule = RefRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 
     let doc = Builder::new().build();
-    assert!(rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(rule.check_inner(&doc, &provider).unwrap());
 
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Ref(vec![create_dummy_doc_ref()].into()))
         .build();
-    assert!(!rule.check_inner(&doc, &provider).await.unwrap());
+    assert!(!rule.check_inner(&doc, &provider).unwrap());
 }

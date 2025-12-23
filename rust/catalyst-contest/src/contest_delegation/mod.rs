@@ -99,9 +99,8 @@ impl ContestDelegation {
 #[derive(Debug)]
 pub struct ContestDelegationRule;
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -112,9 +111,7 @@ impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
         let (payload, is_payload_valid) = get_payload(doc, doc.report());
         valid &= is_payload_valid;
 
-        valid &= get_delegations(doc, payload, provider, doc.report())
-            .await?
-            .1;
+        valid &= get_delegations(doc, payload, provider, doc.report())?.1;
 
         Ok(valid)
     }
@@ -128,7 +125,7 @@ impl ContestDelegation {
     ///  - If provided document not a Contest Delegation type
     ///  - If provided document is invalid (`report().is_problematic()`)
     ///  - `provider` returns error
-    pub async fn new<Provider>(
+    pub fn new<Provider>(
         doc: &CatalystSignedDocument,
         provider: &Provider,
     ) -> anyhow::Result<Self>
@@ -147,7 +144,7 @@ impl ContestDelegation {
 
         let (delegator, _) = get_delegator(doc, &report);
         let (payload, _) = get_payload(doc, &report);
-        let (delegations, _) = get_delegations(doc, payload, provider, &report).await?;
+        let (delegations, _) = get_delegations(doc, payload, provider, &report)?;
 
         Ok(ContestDelegation {
             doc_ref: doc.doc_ref()?,
@@ -212,7 +209,7 @@ fn get_payload(
 
 /// Get a list of delegations
 /// Returns additional boolean flag, was it valid or not.
-async fn get_delegations(
+fn get_delegations(
     doc: &CatalystSignedDocument,
     payload: ContestDelegationPayload,
     provider: &dyn CatalystSignedDocumentProvider,
@@ -221,12 +218,12 @@ async fn get_delegations(
     const DEFAULT_WEIGHT: u32 = 1;
 
     if let Some(ref_field) = doc.doc_meta().doc_ref() {
-        let iter = ref_field
+        let kids = ref_field
             .iter()
-            .map(async |doc_ref| get_author_kid(doc_ref, provider, report).await);
+            .map(|doc_ref| get_author_kid(doc_ref, provider, report))
+            .collect::<anyhow::Result<Vec<_>>>()?;
 
-        let futures_res = futures::future::try_join_all(iter).await?;
-        let valid = futures_res.iter().all(|(_, valid)| *valid);
+        let valid = kids.iter().all(|(_, valid)| *valid);
 
         // If there are fewer entries than delegates, then the missing weights are set to
         // `1`. If there are more weights, then the extra weights are ignored.
@@ -237,7 +234,7 @@ async fn get_delegations(
             .chain(std::iter::repeat(DEFAULT_WEIGHT))
             .take(ref_field.len());
 
-        let delegations = futures_res
+        let delegations = kids
             .into_iter()
             .zip(weights_iter)
             .filter_map(|((kid, _), weight)| {
@@ -260,13 +257,13 @@ async fn get_delegations(
 
 /// Get a corresponding authors/signers `CatalystId` for the provided document reference.
 /// Returns additional boolean flag, was it valid or not.
-async fn get_author_kid(
+fn get_author_kid(
     doc_ref: &DocumentRef,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
 ) -> anyhow::Result<(Option<CatalystId>, bool)> {
     let mut valid = true;
-    let Some(ref_doc) = provider.try_get_doc(doc_ref).await? else {
+    let Some(ref_doc) = provider.try_get_doc(doc_ref)? else {
         report.functional_validation(
             &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing representative reference document for the Contest Delegation document",
