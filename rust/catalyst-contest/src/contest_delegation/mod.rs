@@ -340,7 +340,7 @@ fn rep_nomination_ref_check(
     // Parameters`
     let query = CatalystSignedDocumentSearchQuery {
         authors: Some(CatalystIdSelector::Eq(ref_doc.authors())),
-        parameters: Some(DocumentRefSelector::In(parameters.to_vec())),
+        parameters: Some(DocumentRefSelector::Eq(parameters.clone())),
         doc_type: Some(DocTypeSelector::In(vec![doc_types::REP_NOMINATION])),
         ..Default::default()
     };
@@ -373,7 +373,8 @@ fn rep_nomination_ref_check(
     // Nomination' author/signer).
     let query = CatalystSignedDocumentSearchQuery {
         authors: Some(CatalystIdSelector::Eq(ref_doc.authors())),
-        parameters: Some(DocumentRefSelector::In(parameters.to_vec())),
+        parameters: Some(DocumentRefSelector::Eq(parameters.clone())),
+        doc_ref: Some(DocumentRefSelector::Eq(vec![ref_doc_ref].into())),
         doc_type: Some(DocTypeSelector::In(vec![doc_types::CONTEST_DELEGATION])),
         ..Default::default()
     };

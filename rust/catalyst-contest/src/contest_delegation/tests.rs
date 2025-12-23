@@ -26,7 +26,7 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        contest_delegation_by_representative_doc(&rep_nomination, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let _delegation_by_representative = contest_delegation_by_representative_doc(&rep_nomination, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         contest_delegation_doc(&rep_nomination, &contest, provider)
     }
     => true
@@ -48,6 +48,26 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
     => false
     ;
     "missing delegation by representative"
+)]
+#[test_case(
+    |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = rep_profile_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let rep_profile = rep_profile_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let _delegation_by_representative = contest_delegation_by_representative_doc(&rep_nomination, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        let rep_nomination_latest = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let _delegation_by_representative_2 = contest_delegation_by_representative_doc(&rep_nomination_latest, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_delegation_doc(&rep_nomination, &contest, provider)
+    }
+    => false
+    ;
+    "not the latest nomination reference"
 )]
 #[allow(clippy::unwrap_used)]
 fn contest_delegation(
