@@ -6,6 +6,9 @@
 
 pub mod rule;
 
+#[cfg(test)]
+mod tests;
+
 use anyhow::Context;
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef,
