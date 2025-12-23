@@ -100,6 +100,7 @@ build:
 
     DO ./catalyst-types+WASM_BUILD
     DO ./catalyst-signed-doc-spec+WASM_BUILD
+    DO ./signed_doc+WASM_BUILD
 
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork

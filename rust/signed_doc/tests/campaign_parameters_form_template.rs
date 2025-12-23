@@ -7,6 +7,7 @@ use catalyst_signed_doc::{
         brand_parameters_doc, brand_parameters_form_template_doc,
         campaign_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
     },
+    validator::Validator,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
@@ -124,9 +125,8 @@ use test_case::test_case;
     ;
     "missing 'parameters'"
 )]
-#[tokio::test]
 #[allow(clippy::unwrap_used)]
-async fn test_campaign_parameters_form_template_doc(
+fn test_campaign_parameters_form_template_doc(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -137,7 +137,7 @@ async fn test_campaign_parameters_form_template_doc(
         doc_types::CAMPAIGN_PARAMETERS_FORM_TEMPLATE.clone()
     );
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
     is_valid

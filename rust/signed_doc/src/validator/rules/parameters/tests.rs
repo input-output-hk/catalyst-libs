@@ -500,8 +500,7 @@ use crate::{
     ;
     "reference to non-linked parameters field"
 )]
-#[tokio::test]
-async fn parameter_specified_test(
+fn parameter_specified_test(
     doc_gen: impl FnOnce(&[DocType; 2], &mut TestCatalystProvider) -> CatalystSignedDocument
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -515,7 +514,6 @@ async fn parameter_specified_test(
         optional: false,
     }
     .check(&doc, &provider)
-    .await
     .unwrap();
 
     let optional_res = ParametersRule::Specified {
@@ -523,7 +521,6 @@ async fn parameter_specified_test(
         optional: true,
     }
     .check(&doc, &provider)
-    .await
     .unwrap();
 
     println!("{:?}", doc.report());
@@ -531,8 +528,8 @@ async fn parameter_specified_test(
     non_optional_res
 }
 
-#[tokio::test]
-async fn parameters_specified_optional_test() {
+#[test]
+fn parameters_specified_optional_test() {
     let provider = TestCatalystProvider::default();
     let rule = ParametersRule::Specified {
         allowed_type: vec![UuidV4::new().into()],
@@ -540,7 +537,7 @@ async fn parameters_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check(&doc, &provider).unwrap());
 
     let provider = TestCatalystProvider::default();
     let rule = ParametersRule::Specified {
@@ -549,21 +546,21 @@ async fn parameters_specified_optional_test() {
     };
 
     let doc = Builder::new().build();
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check(&doc, &provider).unwrap());
 }
 
-#[tokio::test]
-async fn parameters_rule_not_specified_test() {
+#[test]
+fn parameters_rule_not_specified_test() {
     let rule = ParametersRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 
     let doc = Builder::new().build();
-    assert!(rule.check(&doc, &provider).await.unwrap());
+    assert!(rule.check(&doc, &provider).unwrap());
 
     let doc = Builder::new()
         .with_metadata_field(SupportedField::Parameters(
             vec![create_dummy_doc_ref()].into(),
         ))
         .build();
-    assert!(!rule.check(&doc, &provider).await.unwrap());
+    assert!(!rule.check(&doc, &provider).unwrap());
 }

@@ -17,9 +17,8 @@ pub(crate) struct SignatureKidRule {
     allowed_roles: HashSet<RoleId>,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for SignatureKidRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,
