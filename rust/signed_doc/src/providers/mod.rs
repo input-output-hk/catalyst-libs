@@ -6,7 +6,8 @@ mod search_query;
 use catalyst_types::{catalyst_id::CatalystId, uuid::UuidV7};
 use ed25519_dalek::VerifyingKey;
 pub use search_query::{
-    CatalystIdSelector, CatalystSignedDocumentSearchQuery, DocumentRefSelector, UuidV7Selector,
+    CatalystIdSelector, CatalystSignedDocumentSearchQuery, DocTypeSelector, DocumentRefSelector,
+    UuidV7Selector,
 };
 
 use crate::{CatalystSignedDocument, DocumentRef};
