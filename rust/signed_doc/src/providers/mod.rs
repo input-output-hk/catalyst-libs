@@ -204,71 +204,55 @@ pub mod tests {
 
             for v in self.signed_doc.values() {
                 if let Some(selector) = query.id.as_ref()
-                    && selector.filter(&v.doc_id()?)
+                    && !selector.filter(&v.doc_id()?)
                 {
-                    res.push(v.clone());
                     continue;
                 }
                 if let Some(selector) = query.ver.as_ref()
-                    && selector.filter(&v.doc_ver()?)
+                    && !selector.filter(&v.doc_ver()?)
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
                 if let Some(selector) = query.doc_type.as_ref()
-                    && selector.filter(v.doc_type()?)
+                    && !selector.filter(v.doc_type()?)
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
                 if let Some(selector) = query.doc_ref.as_ref()
                     && let Some(doc_refs) = v.doc_meta().doc_ref()
-                    && selector.filter(doc_refs)
+                    && !selector.filter(doc_refs)
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
                 if let Some(selector) = query.template.as_ref()
                     && let Some(doc_refs) = v.doc_meta().template()
-                    && selector.filter(doc_refs)
+                    && !selector.filter(doc_refs)
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
                 if let Some(selector) = query.reply.as_ref()
                     && let Some(doc_refs) = v.doc_meta().reply()
-                    && selector.filter(doc_refs)
+                    && !selector.filter(doc_refs)
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
                 if let Some(selector) = query.parameters.as_ref()
                     && let Some(doc_refs) = v.doc_meta().parameters()
-                    && selector.filter(doc_refs)
+                    && !selector.filter(doc_refs)
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
                 if let Some(selector) = query.collaborators.as_ref()
-                    && selector.filter(v.doc_meta().collaborators())
+                    && !selector.filter(v.doc_meta().collaborators())
                 {
-                    res.push(v.clone());
                     continue;
                 }
-
-                #[allow(clippy::needless_continue)]
                 if let Some(selector) = query.authors.as_ref()
-                    && selector.filter(v.authors().as_slice())
+                    && !selector.filter(v.authors().as_slice())
                 {
-                    res.push(v.clone());
                     continue;
                 }
+                res.push(v.clone());
             }
 
             Ok(res)

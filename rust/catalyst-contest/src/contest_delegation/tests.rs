@@ -6,14 +6,14 @@ use catalyst_signed_doc::{
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, contest_delegation_doc,
         contest_parameters_doc, contest_parameters_form_template_doc, rep_nomination_doc,
-        rep_nomination_form_template_doc, rep_profile_doc, rep_profile_form_template_doc,
+        rep_nomination_form_template_doc, rep_profile_doc, rep_profile_form_template_doc, contest_delegation_by_representative_doc
     },
     validator::Validator,
     *,
 };
 use test_case::test_case;
 
-use crate::contest_delegation::{rule::ContestDelegationRule, ContestDelegation};
+use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
 
 #[test_case(
     |provider| {
@@ -25,6 +25,8 @@ use crate::contest_delegation::{rule::ContestDelegationRule, ContestDelegation};
         let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_delegation_by_representative_doc(&rep_nomination, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+
         contest_delegation_doc(&rep_nomination, &contest, provider)
     }
     => true
