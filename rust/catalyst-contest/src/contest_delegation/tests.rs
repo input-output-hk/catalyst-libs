@@ -26,16 +26,31 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
         let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
         contest_delegation_by_representative_doc(&rep_nomination, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
-
         contest_delegation_doc(&rep_nomination, &contest, provider)
     }
     => true
     ;
     "valid document"
 )]
+#[test_case(
+    |provider| {
+        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = rep_profile_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let rep_profile = rep_profile_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let contest = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = rep_nomination_form_template_doc(&contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let rep_nomination = rep_nomination_doc(&template, &rep_profile, &contest, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_delegation_doc(&rep_nomination, &contest, provider)
+    }
+    => false
+    ;
+    "missing delegation by representative"
+)]
 #[allow(clippy::unwrap_used)]
 fn contest_delegation(
-    doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
+    doc_gen: impl Fn(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
     let doc = doc_gen(&mut provider).unwrap();
@@ -48,6 +63,8 @@ fn contest_delegation(
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
 
+    // Generate similar `CatalystSignedDocument` instance to have a clean internal problem report
+    let doc = doc_gen(&mut provider).unwrap();
     let contest_delegation = ContestDelegation::new(&doc, &provider).unwrap();
     assert_eq!(is_valid, !contest_delegation.report().is_problematic());
     println!("{:?}", contest_delegation.report());

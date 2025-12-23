@@ -326,15 +326,6 @@ fn rep_nomination_ref_check(
 ) -> anyhow::Result<bool> {
     let mut valid = true;
 
-    println!(
-        "ref_doc authors: [{}]",
-        ref_doc
-            .authors()
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(",")
-    );
     // We could use 'Rep Nomination'->'parameters' field,
     // because it must be the same as the 'Contest Delegation' document according the
     // `ParametersRule::link_check` verification.
