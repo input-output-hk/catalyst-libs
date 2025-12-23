@@ -11,7 +11,6 @@ use catalyst_signed_doc::{
     validator::Validator,
     *,
 };
-// use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 use crate::contest_delegation::{rule::ContestDelegationRule, ContestDelegation};
