@@ -20,7 +20,7 @@ pub fn contest_delegation_by_representative_doc(
         .map(|(sk, kid)| (sk, kid.with_role(RoleId::Role0)))
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
 
-    contest_delegation_doc_inner(ref_doc, parameters_doc, kid, sk)
+    contest_delegation_doc_inner(ref_doc, parameters_doc, kid, &sk)
 }
 
 #[allow(clippy::missing_errors_doc)]
@@ -32,7 +32,7 @@ pub fn contest_delegation_doc(
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
 
-    contest_delegation_doc_inner(ref_doc, parameters_doc, kid, sk)
+    contest_delegation_doc_inner(ref_doc, parameters_doc, kid, &sk)
 }
 
 #[allow(clippy::missing_errors_doc)]
@@ -40,7 +40,7 @@ fn contest_delegation_doc_inner(
     ref_doc: &CatalystSignedDocument,
     parameters_doc: &CatalystSignedDocument,
     kid: CatalystId,
-    sk: ed25519_dalek::SigningKey,
+    sk: &ed25519_dalek::SigningKey,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let id = UuidV7::new();
     let parameters_ref = parameters_doc.doc_ref()?;

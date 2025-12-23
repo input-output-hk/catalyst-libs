@@ -3,7 +3,11 @@
 //! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
 
 #![allow(missing_docs)]
-#![allow(clippy::expect_used, clippy::missing_panics_doc)]
+#![allow(
+    clippy::expect_used,
+    clippy::missing_panics_doc,
+    clippy::missing_docs_in_private_items
+)]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;

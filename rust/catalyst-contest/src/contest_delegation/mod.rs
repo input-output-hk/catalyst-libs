@@ -200,7 +200,7 @@ fn contest_parameters_checks(
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool> {
-    let Some(doc_ref) = doc.doc_meta().parameters().map(|v| v.first()).flatten() else {
+    let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
         report.missing_field(
             "parameters",
             "Contest Delegation must have a 'parameters' metadata field",
