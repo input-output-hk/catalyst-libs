@@ -29,14 +29,13 @@ pub(crate) enum RefRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for RefRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -82,7 +81,7 @@ impl RefRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -103,8 +102,7 @@ impl RefRule {
                     provider,
                     doc.report(),
                     |_| true,
-                )
-                .await;
+                );
             } else if !optional {
                 doc.report()
                     .missing_field("ref", &format!("{context}, document must have ref field"));
@@ -129,7 +127,7 @@ impl RefRule {
 /// Validate all the document references by the defined validation rules,
 /// plus conducting additional validations with the provided `validator`.
 /// Document all possible error in doc report (no fail fast)
-pub(crate) async fn doc_refs_check<Validator>(
+pub(crate) fn doc_refs_check<Validator>(
     doc_refs: &DocumentRefs,
     exp_ref_types: &[DocType],
     multiple: bool,
@@ -156,7 +154,7 @@ where
     }
 
     for dr in doc_refs.iter() {
-        if let Some(ref ref_doc) = provider.try_get_doc(dr).await? {
+        if let Some(ref ref_doc) = provider.try_get_doc(dr)? {
             let is_valid = referenced_doc_type_check(ref_doc, exp_ref_types, field_name, report)
                 && referenced_doc_ref_check(ref_doc, dr, field_name, report)
                 && validator(ref_doc);

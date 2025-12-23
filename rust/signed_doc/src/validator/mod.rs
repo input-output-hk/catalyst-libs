@@ -2,10 +2,12 @@
 
 pub(crate) mod rules;
 
-use std::{fmt::Debug, sync::LazyLock};
+#[cfg(target_arch = "wasm32")]
+use std::collections::HashMap;
+use std::fmt::Debug;
 
+#[cfg(not(target_arch = "wasm32"))]
 use dashmap::DashMap;
-use futures::{StreamExt, TryStreamExt};
 
 use crate::{
     CatalystSignedDocument, metadata::DocType, providers::Provider,
@@ -13,12 +15,31 @@ use crate::{
 };
 
 /// `CatalystSignedDocument` validation rule trait
-#[async_trait::async_trait]
+#[cfg(not(target_arch = "wasm32"))]
 pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
     /// Validates `CatalystSignedDocument`, return `false` if the provided
     /// `CatalystSignedDocument` violates some validation rules with properly filling the
     /// problem report.
-    async fn check(
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
+    fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &dyn Provider,
+    ) -> anyhow::Result<bool>;
+}
+
+/// `CatalystSignedDocument` validation rule trait
+#[cfg(target_arch = "wasm32")]
+pub trait CatalystSignedDocumentValidationRule: 'static + Debug {
+    /// Validates `CatalystSignedDocument`, return `false` if the provided
+    /// `CatalystSignedDocument` violates some validation rules with properly filling the
+    /// problem report.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -26,77 +47,101 @@ pub trait CatalystSignedDocumentValidationRule: 'static + Send + Sync + Debug {
 }
 
 /// Struct represented a collection of rules
-pub(crate) type Rules = Vec<Box<dyn CatalystSignedDocumentValidationRule>>;
+pub type Rules = Vec<Box<dyn CatalystSignedDocumentValidationRule>>;
 
-/// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<DashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
+/// `CatalystSignedDocument` validator type.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct Validator(DashMap<DocType, Rules>);
 
-/// `DOCUMENT_RULES` initialization function
-#[allow(clippy::expect_used)]
-fn document_rules_init() -> DashMap<DocType, Rules> {
-    let document_rules_map: DashMap<DocType, Rules> = documents_rules_from_spec()
-        .expect("cannot fail to initialize validation rules")
-        .collect();
+/// `CatalystSignedDocument` validator type.
+#[cfg(target_arch = "wasm32")]
+pub struct Validator(HashMap<DocType, Rules>);
 
-    document_rules_map
+impl Default for Validator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-/// A comprehensive document type based validation of the `CatalystSignedDocument`.
-/// Includes time based validation of the `id` and `ver` fields based on the provided
-/// `future_threshold` and `past_threshold` threshold values (in seconds).
-/// Return true if it is valid, otherwise return false.
-///
-/// # Errors
-/// If `provider` returns error, fails fast throwing that error.
-pub async fn validate(
-    doc: &CatalystSignedDocument,
-    provider: &impl Provider,
-) -> anyhow::Result<bool> {
-    let Ok(doc_type) = doc.doc_type() else {
-        doc.report().missing_field(
-            "type",
-            "Can't get a document type during the validation process",
-        );
-        return Ok(false);
-    };
+impl Validator {
+    /// # Panics
+    /// - Cannot fail to initialize validation rules. Should never happen.
+    #[allow(clippy::expect_used)]
+    #[must_use]
+    pub fn new() -> Self {
+        Self(
+            documents_rules_from_spec()
+                .expect("Cannot fail to initialize validation rules. Should never happen.")
+                .collect(),
+        )
+    }
 
-    let Some(rules) = DOCUMENT_RULES.get(doc_type) else {
-        doc.report().invalid_value(
-            "`type`",
-            &doc.doc_type()?.to_string(),
-            "Must be a known document type value",
-            "Unsupported document type",
-        );
-        return Ok(false);
-    };
+    /// A comprehensive document type based validation of the `CatalystSignedDocument`.
+    /// Includes time based validation of the `id` and `ver` fields based on the provided
+    /// `future_threshold` and `past_threshold` threshold values (in seconds).
+    /// Return true if it is valid, otherwise return false.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
+    pub fn validate(
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &impl Provider,
+    ) -> anyhow::Result<bool> {
+        let Ok(doc_type) = doc.doc_type() else {
+            doc.report().missing_field(
+                "type",
+                "Can't get a document type during the validation process",
+            );
+            return Ok(false);
+        };
 
-    let iter = rules.iter().map(|v| v.check(doc, provider));
-    let res = futures::stream::iter(iter)
-        .buffer_unordered(rules.len())
-        .try_collect::<Vec<_>>()
-        .await?
-        .iter()
-        .all(|res| *res);
-    Ok(res)
-}
+        let Some(rules) = self.0.get(doc_type) else {
+            doc.report().invalid_value(
+                "`type`",
+                &doc.doc_type()?.to_string(),
+                "Must be a known document type value",
+                "Unsupported document type",
+            );
+            return Ok(false);
+        };
 
-/// Extend the current defined validation rules set for the provided document type.
-pub fn extend_rules_per_document(
-    doc_type: DocType,
-    rule: impl CatalystSignedDocumentValidationRule,
-) {
-    DOCUMENT_RULES
-        .entry(doc_type)
-        .or_default()
-        .push(Box::new(rule));
+        let res = rules
+            .iter()
+            .map(|v| v.check(doc, provider))
+            .collect::<anyhow::Result<Vec<_>>>()?
+            .iter()
+            .all(|res| *res);
+        Ok(res)
+    }
+
+    /// Extend the current defined validation rules set for the provided document type.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn extend_rules_per_document(
+        &mut self,
+        doc_type: DocType,
+        rule: impl CatalystSignedDocumentValidationRule,
+    ) {
+        self.0.entry(doc_type).or_default().push(Box::new(rule));
+    }
+
+    /// Extend the current defined validation rules set for the provided document type.
+    #[cfg(target_arch = "wasm32")]
+    pub fn extend_rules_per_document(
+        &mut self,
+        doc_type: DocType,
+        rule: impl CatalystSignedDocumentValidationRule,
+    ) {
+        self.0.entry(doc_type).or_default().push(Box::new(rule));
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::validator::document_rules_init;
+    use super::*;
 
     #[test]
     fn document_rules_init_test() {
-        document_rules_init();
+        let _unused = Validator::new();
     }
 }

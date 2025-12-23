@@ -27,14 +27,13 @@ pub(crate) enum ReplyRule {
     NotSpecified,
 }
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for ReplyRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        self.check_inner(doc, provider)
     }
 }
 
@@ -74,7 +73,7 @@ impl ReplyRule {
     }
 
     /// Field validation rule
-    async fn check_inner(
+    fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
@@ -121,8 +120,7 @@ impl ReplyRule {
                     provider,
                     doc.report(),
                     reply_validator,
-                )
-                .await;
+                );
             } else if !optional {
                 doc.report().missing_field(
                     "reply",

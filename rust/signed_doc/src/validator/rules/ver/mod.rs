@@ -11,14 +11,13 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct VerRule;
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for VerRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        Self::check_inner(doc, provider)
     }
 }
 
@@ -31,8 +30,7 @@ impl VerRule {
     ///    must be greater than the latest known submitted version for that `id`
     /// 4. When a document with the same `id` already exists, the new document's `type`
     ///    must be the same as the latest known submitted document's `type` for that `id`
-    async fn check_inner(
-        &self,
+    fn check_inner(
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
@@ -61,7 +59,7 @@ impl VerRule {
                 &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
             );
             is_valid = false;
-        } else if let Some(last_doc) = provider.try_get_last_doc(id).await? {
+        } else if let Some(last_doc) = provider.try_get_last_doc(id)? {
             let Ok(last_doc_ver) = last_doc.doc_ver() else {
                 doc.report().missing_field(
                     "ver",

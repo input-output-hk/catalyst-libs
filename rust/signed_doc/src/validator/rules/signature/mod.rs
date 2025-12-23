@@ -17,14 +17,13 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct SignatureRule;
 
-#[async_trait::async_trait]
 impl CatalystSignedDocumentValidationRule for SignatureRule {
-    async fn check(
+    fn check(
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider).await
+        Self::check_inner(doc, provider)
     }
 }
 
@@ -34,8 +33,7 @@ impl SignatureRule {
     ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
-    async fn check_inner(
-        &self,
+    fn check_inner(
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
@@ -47,14 +45,10 @@ impl SignatureRule {
             return Ok(false);
         }
 
-        let sign_rules = doc
+        let res = doc
             .signatures()
             .iter()
-            .map(|sign| validate_signature(doc, sign, provider, doc.report()));
-
-        let res = futures::future::join_all(sign_rules)
-            .await
-            .into_iter()
+            .map(|sign| validate_signature(doc, sign, provider, doc.report()))
             .collect::<anyhow::Result<Vec<_>>>()?
             .iter()
             .all(|res| *res);
@@ -64,7 +58,7 @@ impl SignatureRule {
 }
 
 /// A single signature validation function
-async fn validate_signature(
+fn validate_signature(
     doc: &CatalystSignedDocument,
     sign: &Signature,
     provider: &dyn CatalystIdProvider,
@@ -72,7 +66,7 @@ async fn validate_signature(
 ) -> anyhow::Result<bool> {
     let kid = sign.kid();
 
-    let Some(pk) = provider.try_get_registered_key(kid).await? else {
+    let Some(pk) = provider.try_get_registered_key(kid)? else {
         report.other(
             &format!("Missing public key for {kid}."),
             "During public key extraction",
