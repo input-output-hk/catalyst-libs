@@ -357,7 +357,7 @@ fn rep_nomination_ref_check(
     let latest_ref_doc_ref = all_nominations
         .iter()
         .filter_map(|doc| doc.doc_ref().ok())
-        // TODO: fix to just `v.ver()` after `UuidV7` would implement `Ord` trait
+        // TODO: replace it with just `max` after https://github.com/input-output-hk/catalyst-libs/issues/751 would be resolved
         .max_by_key(|v| v.ver().uuid())
         .context("A latest version of the document must exist if a first version exists")?;
 
