@@ -4,15 +4,12 @@
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
 
+pub mod rule;
+
 use anyhow::Context;
 use catalyst_signed_doc::{
-    CatalystSignedDocument, DocumentRef,
-    catalyst_id::CatalystId,
-    doc_types::CONTEST_DELEGATION,
-    problem_report::ProblemReport,
-    providers::{CatalystSignedDocumentProvider, Provider},
-    uuid::UuidV7,
-    validator::CatalystSignedDocumentValidationRule,
+    CatalystSignedDocument, DocumentRef, catalyst_id::CatalystId, doc_types::CONTEST_DELEGATION,
+    problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
 };
 
 /// `Contest Delegation` document type.
@@ -92,28 +89,6 @@ impl ContestDelegation {
     #[must_use]
     pub fn report(&self) -> &ProblemReport {
         &self.report
-    }
-}
-
-/// `CatalystSignedDocumentValidationRule` implementation for Contest Delegation document.
-#[derive(Debug)]
-pub struct ContestDelegationRule;
-
-impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
-    fn check(
-        &self,
-        doc: &CatalystSignedDocument,
-        provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
-        let mut valid = true;
-
-        valid &= get_delegator(doc, doc.report()).1;
-        let (payload, is_payload_valid) = get_payload(doc, doc.report());
-        valid &= is_payload_valid;
-
-        valid &= get_delegations(doc, payload, provider, doc.report())?.1;
-
-        Ok(valid)
     }
 }
 
@@ -272,7 +247,7 @@ fn get_author_kid(
         return Ok((None, valid));
     };
 
-    valid &= rep_nomination_ref_check(&ref_doc, provider, report).await?;
+    valid &= rep_nomination_ref_check(&ref_doc, provider, report)?;
 
     let rep_nomination_authors = ref_doc.authors();
     if rep_nomination_authors.len() != 1 {
@@ -293,7 +268,7 @@ fn get_author_kid(
 /// - References to the latest version of 'Rep Nomination' document ever submitted to the
 ///   corresponding 'Contest Parameters' document.
 /// -
-async fn rep_nomination_ref_check(
+fn rep_nomination_ref_check(
     ref_doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
@@ -302,8 +277,7 @@ async fn rep_nomination_ref_check(
 
     if let Ok(ref_doc_ref) = ref_doc.doc_ref() {
         let latest_ref_doc = provider
-            .try_get_last_doc(*ref_doc_ref.id())
-            .await?
+            .try_get_last_doc(*ref_doc_ref.id())?
             .context("A latest version of the document must exist if a first version exists")?;
 
         let latest_ref_doc_ref = latest_ref_doc.doc_ref().context(
