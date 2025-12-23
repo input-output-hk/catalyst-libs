@@ -4,9 +4,10 @@
 use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, contest_delegation_doc,
-        contest_parameters_doc, contest_parameters_form_template_doc, rep_nomination_doc,
-        rep_nomination_form_template_doc, rep_profile_doc, rep_profile_form_template_doc, contest_delegation_by_representative_doc
+        brand_parameters_doc, brand_parameters_form_template_doc,
+        contest_delegation_by_representative_doc, contest_delegation_doc, contest_parameters_doc,
+        contest_parameters_form_template_doc, rep_nomination_doc, rep_nomination_form_template_doc,
+        rep_profile_doc, rep_profile_form_template_doc,
     },
     validator::Validator,
     *,
@@ -63,7 +64,8 @@ fn contest_delegation(
     assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
 
-    // Generate similar `CatalystSignedDocument` instance to have a clean internal problem report
+    // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
+    // report
     let doc = doc_gen(&mut provider).unwrap();
     let contest_delegation = ContestDelegation::new(&doc, &provider).unwrap();
     assert_eq!(is_valid, !contest_delegation.report().is_problematic());

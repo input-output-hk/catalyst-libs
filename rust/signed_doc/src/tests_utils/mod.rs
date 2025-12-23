@@ -34,7 +34,7 @@ pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
 pub use contest_ballot::contest_ballot_doc;
 pub use contest_ballot_checkpoint::contest_ballot_checkpoint_doc;
-pub use contest_delegation::{contest_delegation_doc, contest_delegation_by_representative_doc};
+pub use contest_delegation::{contest_delegation_by_representative_doc, contest_delegation_doc};
 pub use contest_parameters::contest_parameters_doc;
 pub use contest_parameters_form_template::contest_parameters_form_template_doc;
 pub use proposal::proposal_doc;

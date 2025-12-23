@@ -369,7 +369,7 @@ fn rep_nomination_ref_check(
         valid = false;
     }
 
-    // Trying to find the latest 'Contest Delegation' submited by the representative ('Rep
+    // Trying to find the latest 'Contest Delegation' submitted by the representative ('Rep
     // Nomination' author/signer).
     let query = CatalystSignedDocumentSearchQuery {
         authors: Some(CatalystIdSelector::Eq(ref_doc.authors())),
@@ -380,7 +380,7 @@ fn rep_nomination_ref_check(
     if provider.try_search_docs(&query)?.is_empty() {
         report.functional_validation(
             "A Representative MUST Delegate to their latest Nomination for a 'Contest Parameters', otherwise their Nomination is invalid.", 
-            "Fails to validate a 'Contest Delegation' referenced represenative nomination"
+            "Fails to validate a 'Contest Delegation' referenced representative nomination"
         );
         valid = false;
     }
