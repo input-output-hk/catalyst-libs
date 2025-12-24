@@ -6,6 +6,8 @@ mod encrypted_block;
 mod encrypted_choices;
 mod payload;
 mod rule;
+#[cfg(test)]
+mod tests;
 
 pub use self::{
     choices::Choices, encrypted_block::EncryptedBlock, encrypted_choices::EncryptedChoices,
