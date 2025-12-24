@@ -8,8 +8,11 @@ mod voting_power;
 use std::collections::HashMap;
 
 use catalyst_signed_doc::DocumentRef;
+use cbork_utils::{decode_context::DecodeCtx, map::Map};
 pub use clear_choice::ClearChoice;
-use minicbor::{Decode, Encode};
+use minicbor::{
+    Decode, Decoder, Encode, Encoder, decode::Error as DecodeError, encode::Error as EncodeError,
+};
 pub use proposal_result::ProposalResult;
 pub use voting_power::VotingPower;
 
@@ -20,11 +23,21 @@ pub struct Tally(HashMap<DocumentRef, ProposalResult>);
 impl Encode<()> for Tally {
     fn encode<W: minicbor::encode::Write>(
         &self,
-        e: &mut minicbor::Encoder<W>,
+        e: &mut Encoder<W>,
         ctx: &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+    ) -> Result<(), EncodeError<W::Error>> {
         e.map(self.0.len() as u64)?;
-        for (doc_ref, proposal_result) in &self.0 {
+
+        // Sort entries by their CBOR-encoded key for RFC 8949 canonical ordering
+        // (length-first, then lexicographic for equal-length keys)
+        let mut entries: Vec<_> = self.0.iter().collect();
+        entries.sort_by_cached_key(|(doc_ref, _)| {
+            let mut buf = Vec::new();
+            drop(doc_ref.encode(&mut Encoder::new(&mut buf), &mut ()));
+            buf
+        });
+
+        for (doc_ref, proposal_result) in entries {
             doc_ref.encode(e, ctx)?;
             proposal_result.encode(e, ctx)?;
         }
@@ -34,21 +47,22 @@ impl Encode<()> for Tally {
 
 impl Decode<'_, ()> for Tally {
     fn decode(
-        d: &mut minicbor::Decoder<'_>,
+        d: &mut Decoder<'_>,
         ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
-        let Some(map_len) = d.map()? else {
-            return Err(minicbor::decode::Error::message(
-                "tally must be a defined-size map",
-            ));
-        };
+    ) -> Result<Self, DecodeError> {
+        let entries = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
         let mut tally = HashMap::new();
-        for _ in 0..map_len {
-            let doc_ref = DocumentRef::decode(d, ctx)?;
-            let proposal_result = ProposalResult::decode(d, ctx)?;
+        for entry in entries.as_slice() {
+            let mut key_decoder = Decoder::new(&entry.key_bytes);
+            let doc_ref = DocumentRef::decode(&mut key_decoder, ctx)?;
 
-            tally.insert(doc_ref, proposal_result);
+            let mut value_decoder = Decoder::new(&entry.value);
+            let proposal_result = ProposalResult::decode(&mut value_decoder, ctx)?;
+
+            if tally.insert(doc_ref, proposal_result).is_some() {
+                return Err(DecodeError::message("Duplicate document reference key"));
+            }
         }
 
         Ok(Self(tally))
