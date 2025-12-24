@@ -68,3 +68,41 @@ impl Decode<'_, ()> for Tally {
         Ok(Self(tally))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use catalyst_signed_doc::tests_utils::create_dummy_doc_ref;
+
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        let doc_ref1 = create_dummy_doc_ref();
+        let doc_ref2 = create_dummy_doc_ref();
+
+        let mut tally_map = std::collections::HashMap::new();
+        tally_map.insert(doc_ref1, ProposalResult::default());
+        tally_map.insert(doc_ref2, ProposalResult::default());
+
+        let original = Tally(tally_map);
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = Tally::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_empty() {
+        let original = Tally::default();
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = Tally::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+}

@@ -44,6 +44,7 @@ impl Encode<()> for ProposalResult {
 }
 
 impl Decode<'_, ()> for ProposalResult {
+    #[allow(clippy::indexing_slicing)]
     fn decode(
         d: &mut Decoder<'_>,
         ctx: &mut (),

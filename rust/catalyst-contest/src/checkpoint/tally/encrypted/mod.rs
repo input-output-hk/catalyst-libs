@@ -63,3 +63,41 @@ impl Decode<'_, ()> for EncryptedTally {
         Ok(Self(tally))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use catalyst_signed_doc::tests_utils::create_dummy_doc_ref;
+
+    use super::*;
+
+    #[test]
+    fn roundtrip() {
+        let doc_ref1 = create_dummy_doc_ref();
+        let doc_ref2 = create_dummy_doc_ref();
+
+        let mut tally_map = HashMap::new();
+        tally_map.insert(doc_ref1, EncryptedTallyProposalResult);
+        tally_map.insert(doc_ref2, EncryptedTallyProposalResult);
+
+        let original = EncryptedTally(tally_map);
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = EncryptedTally::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[test]
+    fn roundtrip_empty() {
+        let original = EncryptedTally::default();
+
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = EncryptedTally::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+}
