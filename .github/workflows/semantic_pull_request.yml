@@ -18,6 +18,7 @@ jobs:
         rust
         rust/c509-certificate
         rust/cardano-chain-follower
+        rust/catalyst-contest
         rust/catalyst-types
         rust/catalyst-voting
         rust/immutable-ledger
