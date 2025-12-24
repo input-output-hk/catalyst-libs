@@ -23,7 +23,7 @@ build-backend = "maturin"
 
 [tool.maturin]
 python-source = "python"
-module-name = "my_project._lib_name"
+module-name = "catalyst_python._lib_name"
 
 [dependency-groups]
 dev = [
