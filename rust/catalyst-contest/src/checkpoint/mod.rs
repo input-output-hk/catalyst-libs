@@ -32,8 +32,6 @@ use crate::checkpoint::tally::Tally;
 
 /// Number of required fields in `CatalystBallotCheckpointPayload`.
 const REQUIRED_FIELD_COUNT: u64 = 3;
-/// Number of optional fields in `CatalystBallotCheckpointPayload`.
-const OPTIONAL_FIELD_COUNT: u64 = 4;
 
 /// Catalyst Ballot Checkpoint Payload
 ///
@@ -140,22 +138,7 @@ impl Decode<'_, ()> for CatalystBallotCheckpointPayload {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, DecodeError> {
-        const MAX_FIELDS: u64 = REQUIRED_FIELD_COUNT + OPTIONAL_FIELD_COUNT;
-
         let entries = Map::decode(d, &mut DecodeCtx::Deterministic)?;
-        let map_len = entries.len() as u64;
-
-        if map_len < REQUIRED_FIELD_COUNT {
-            return Err(DecodeError::message(format!(
-                "CatalystBallotCheckpointPayload must have {REQUIRED_FIELD_COUNT} required fields, got {map_len}.",
-            )));
-        }
-
-        if map_len > MAX_FIELDS {
-            return Err(DecodeError::message(format!(
-                "CatalystBallotCheckpointPayload must have at most {MAX_FIELDS} fields, got {map_len}.",
-            )));
-        }
 
         // Initialize all fields as None/missing
         let mut stage: Option<BallotProcessingStage> = None;
