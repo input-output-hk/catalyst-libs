@@ -1,5 +1,6 @@
 //! Encrypted Tally Proposal Result
 
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{
     Decode, Decoder, Encode, Encoder,
     decode::Error as DecodeError,
@@ -29,26 +30,25 @@ impl Decode<'_, ()> for EncryptedTallyProposalResult {
         d: &mut Decoder<'_>,
         _ctx: &mut (),
     ) -> Result<Self, DecodeError> {
-        // According to CDDL: encrypted-tally-proposal-result = [ 1, undefined ]
-        // For now, decode and store as placeholder String
-        let Some(arr_len) = d.array()? else {
-            return Err(DecodeError::message(
-                "encrypted-tally-proposal-result must be a defined-size array",
-            ));
-        };
-        if arr_len != 2 {
+        let array = Array::decode(d, &mut DecodeCtx::Deterministic)?;
+        if array.len() != 2 {
             return Err(DecodeError::message(format!(
-                "encrypted-tally-proposal-result must have 2 elements, got {arr_len}",
+                "encrypted-tally-proposal-result must have 2 elements, got {}",
+                array.len()
             )));
         }
 
-        let version = d.u8()?;
+        let mut version_decoder = Decoder::new(&array[0]);
+        let version = version_decoder.u8()?;
         if version != 1 {
             return Err(DecodeError::message(format!(
                 "encrypted-tally-proposal-result version must be 1, got {version}",
             )));
         }
-        d.undefined()?;
+
+        let mut undefined_decoder = Decoder::new(&array[1]);
+        undefined_decoder.undefined()?;
+
         Ok(Self)
     }
 }
