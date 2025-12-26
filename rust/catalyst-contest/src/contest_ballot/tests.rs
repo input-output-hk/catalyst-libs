@@ -2,7 +2,8 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot>
 
 use catalyst_signed_doc::{
-    CatalystSignedDocument, providers::tests::TestCatalystProvider, validator::Validator,
+    CatalystSignedDocument, providers::tests::TestCatalystProvider,
+    tests_utils::contest_ballot_doc, validator::Validator,
 };
 use test_case::test_case;
 
@@ -10,13 +11,18 @@ use crate::{ContestBallotRule, contest_ballot::ballot::ContestBallot};
 
 #[test_case(
     |provider| {
-        todo!()
+        let proposal = todo!();
+
+        let contest_parameters = todo!();
+
+        contest_ballot_doc(&proposal, &contest_parameters, provider)
     }
     => true
     ;
     "valid document"
 )]
-fn contest_delegation(
+// TODO: FIXME: More cases!
+fn contest_ballot(
     doc_gen: impl Fn(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
@@ -32,9 +38,9 @@ fn contest_delegation(
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
     // report
     let doc = doc_gen(&mut provider).unwrap();
-    let contest_delegation = ContestBallot::new(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !contest_delegation.report().is_problematic());
-    println!("{:?}", contest_delegation.report());
+    let contest_ballot = ContestBallot::new(&doc, &provider).unwrap();
+    assert_eq!(is_valid, !contest_ballot.report().is_problematic());
+    println!("{:?}", contest_ballot.report());
 
     is_valid
 }
