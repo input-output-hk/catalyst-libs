@@ -96,7 +96,7 @@ impl TemplateRule {
                 };
                 match template_content_type {
                     ContentType::SchemaJson => templated_json_schema_check(doc, template_doc),
-                    t @ ContentType::Json
+                    t @ (ContentType::Json
                     | ContentType::Cddl
                     | ContentType::Cbor
                     | ContentType::Css
@@ -106,7 +106,7 @@ impl TemplateRule {
                     | ContentType::Markdown
                     | ContentType::MarkdownHandlebars
                     | ContentType::Plain
-                    | ContentType::PlainHandlebars => {
+                    | ContentType::PlainHandlebars) => {
                         // TODO: not implemented yet
                         doc.report().invalid_value(
                             "content-type",
