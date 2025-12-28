@@ -110,7 +110,7 @@ impl TemplateRule {
                         // TODO: not implemented yet
                         doc.report().invalid_value(
                             "content-type",
-                            &format!("{t:?}"),
+                            &format!("{t}"),
                             "Unsupported content type",
                             context,
                         );
