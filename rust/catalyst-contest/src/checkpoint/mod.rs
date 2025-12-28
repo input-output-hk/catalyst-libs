@@ -36,7 +36,7 @@ const REQUIRED_FIELD_COUNT: u64 = 3;
 /// Catalyst Ballot Checkpoint Payload
 ///
 /// TH CDDL Schema:
-/// ```
+/// ```cddl
 /// ; Catalyst Ballot Checkpoint Payload data object.
 /// contest-ballot-checkpoint = {
 ///     "stage" : stage
