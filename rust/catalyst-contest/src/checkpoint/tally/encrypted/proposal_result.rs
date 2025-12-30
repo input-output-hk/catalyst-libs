@@ -31,14 +31,14 @@ impl Decode<'_, ()> for EncryptedTallyProposalResult {
         _ctx: &mut (),
     ) -> Result<Self, DecodeError> {
         let array = Array::decode(d, &mut DecodeCtx::Deterministic)?;
-        if array.len() != 2 {
+        let [version, undefined] = array.as_slice() else {
             return Err(DecodeError::message(format!(
                 "encrypted-tally-proposal-result must have 2 elements, got {}",
                 array.len()
             )));
-        }
+        };
 
-        let mut version_decoder = Decoder::new(&array[0]);
+        let mut version_decoder = Decoder::new(version);
         let version = version_decoder.u8()?;
         if version != 1 {
             return Err(DecodeError::message(format!(
@@ -46,7 +46,7 @@ impl Decode<'_, ()> for EncryptedTallyProposalResult {
             )));
         }
 
-        let mut undefined_decoder = Decoder::new(&array[1]);
+        let mut undefined_decoder = Decoder::new(undefined);
         undefined_decoder.undefined()?;
 
         Ok(Self)
