@@ -2,8 +2,14 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot>
 
 use catalyst_signed_doc::{
-    CatalystSignedDocument, providers::tests::TestCatalystProvider,
-    tests_utils::contest_ballot_doc, validator::Validator,
+    CatalystSignedDocument, doc_types,
+    providers::tests::TestCatalystProvider,
+    tests_utils::{
+        brand_parameters_doc, brand_parameters_form_template_doc, contest_ballot_doc,
+        contest_parameters_doc, contest_parameters_form_template_doc, proposal_doc,
+        proposal_form_template_doc,
+    },
+    validator::Validator,
 };
 use test_case::test_case;
 
@@ -11,17 +17,18 @@ use crate::{ContestBallotRule, contest_ballot::ballot::ContestBallot};
 
 #[test_case(
     |provider| {
-        let proposal = todo!();
-
-        let contest_parameters = todo!();
-
-        contest_ballot_doc(&proposal, &contest_parameters, provider)
+        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        contest_ballot_doc(&proposal, &parameters, provider)
     }
     => true
     ;
     "valid document"
 )]
-// TODO: FIXME: More cases!
 fn contest_ballot(
     doc_gen: impl Fn(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
@@ -29,7 +36,7 @@ fn contest_ballot(
     let doc = doc_gen(&mut provider).unwrap();
 
     let mut validator = Validator::new();
-    validator.extend_rules_per_document(doc_types::CONTEST_BALLOT.clone(), ContestBallotRule);
+    validator.extend_rules_per_document(doc_types::CONTEST_BALLOT.clone(), ContestBallotRule {});
 
     let is_valid = validator.validate(&doc, &provider).unwrap();
     assert_eq!(is_valid, !doc.report().is_problematic());

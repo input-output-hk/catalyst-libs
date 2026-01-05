@@ -2,14 +2,19 @@
 
 use anyhow::{bail, ensure};
 use catalyst_signed_doc::{
-    CatalystSignedDocument, doc_types::CONTEST_BALLOT, providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument, doc_types::CONTEST_BALLOT, problem_report::ProblemReport,
+    providers::CatalystSignedDocumentProvider,
 };
 
 /// An individual Ballot cast in a Contest by a registered user.
-pub struct ContestBallot {}
+pub struct ContestBallot {
+    /// A report containing all the issues occurred during `ContestBallot` validation.
+    report: ProblemReport,
+}
 
 impl ContestBallot {
-    pub async fn new<Provider>(
+    /// Creates a new `ContestBallot` instance.
+    pub fn new<Provider>(
         doc: &CatalystSignedDocument,
         provider: &Provider,
     ) -> anyhow::Result<Self>
@@ -26,5 +31,11 @@ impl ContestBallot {
 
         // TODO: FIXME:
         todo!()
+    }
+
+    /// Returns `ProblemReport`.
+    #[must_use]
+    pub fn report(&self) -> &ProblemReport {
+        &self.report
     }
 }
