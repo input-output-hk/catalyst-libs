@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use cbork_utils::decode_helper::decode_map_len;
+use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 use crate::{Choices, EncryptedChoices};
@@ -41,21 +41,25 @@ impl Decode<'_, ()> for ContentBallotPayload {
     ) -> Result<Self, minicbor::decode::Error> {
         use minicbor::data::Type;
 
-        let len = decode_map_len(d, "content ballot payload")?;
+        let map = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
         let mut choices = BTreeMap::new();
         let column_proof = None;
         let matrix_proof = None;
         let mut voter_choices = None;
-        for _ in 0..len {
-            match d.datatype()? {
+
+        for entry in map {
+            let mut key_decoder = Decoder::new(&entry.key_bytes);
+            let mut value_decoder = Decoder::new(&entry.value);
+
+            match key_decoder.datatype()? {
                 Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
-                    let key = d.u64()?;
-                    let val = Choices::decode(d, ctx)?;
+                    let key = key_decoder.u64()?;
+                    let val = Choices::decode(&mut value_decoder, ctx)?;
                     choices.insert(key, val);
                 },
                 Type::String => {
-                    match d.str()? {
+                    match key_decoder.str()? {
                         "column-proof" => {
                             return Err(minicbor::decode::Error::message(
                                 "column-proof is a placeholder and shouldn't be used",
@@ -66,7 +70,10 @@ impl Decode<'_, ()> for ContentBallotPayload {
                                 "matrix-proof is a placeholder and shouldn't be used",
                             ));
                         },
-                        "voter-choices" => voter_choices = Some(EncryptedChoices::decode(d, ctx)?),
+                        "voter-choices" => {
+                            voter_choices =
+                                Some(EncryptedChoices::decode(&mut value_decoder, ctx)?);
+                        },
                         key => {
                             return Err(minicbor::decode::Error::message(format!(
                                 "Unexpected content ballot payload key value: {key:?}"

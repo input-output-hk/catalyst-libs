@@ -1,6 +1,6 @@
 //! Encrypted voter choices.
 
-use cbork_utils::decode_helper::decode_array_len;
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 use crate::contest_ballot::encrypted_block::EncryptedBlock;
@@ -24,26 +24,26 @@ impl Decode<'_, ()> for EncryptedChoices {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        let len: usize = decode_array_len(d, "EncryptedChoices")?
-            .try_into()
-            .map_err(minicbor::decode::Error::message)?;
-        if len < 2 {
+        let array = Array::decode(d, &mut DecodeCtx::Deterministic)?;
+        let [version, choices @ ..] = array.as_slice() else {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected EncryptedChoices array length: {len}, expected at least 2"
+                "Unexpected EncryptedChoices array length: {}, expected at least 2",
+                array.len()
             )));
-        }
-        let version = u64::decode(d, ctx)?;
+        };
+
+        let mut version_decoder = Decoder::new(version);
+        let version = version_decoder.u64()?;
         if version != VERSION {
             return Err(minicbor::decode::Error::message(format!(
                 "Unexpected EncryptedChoices version value: {version}, expected {VERSION}"
             )));
         }
 
-        // This is allowed because of the `len < 2` check above.
-        #[allow(clippy::arithmetic_side_effects)]
-        let mut blocks = Vec::with_capacity(len - 1);
-        for _ in 1..len {
-            blocks.push(EncryptedBlock::decode(d, ctx)?);
+        let mut blocks = Vec::with_capacity(choices.len());
+        for choice in choices {
+            let mut d = Decoder::new(choice);
+            blocks.push(EncryptedBlock::decode(&mut d, ctx)?);
         }
 
         Ok(Self(blocks))
