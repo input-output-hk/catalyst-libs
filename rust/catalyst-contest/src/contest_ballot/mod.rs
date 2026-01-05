@@ -10,6 +10,6 @@ mod rule;
 mod tests;
 
 pub use self::{
-    choices::Choices, encrypted_block::EncryptedBlock, encrypted_choices::EncryptedChoices,
-    payload::ContentBallotPayload, rule::ContestBallotRule,
+    ballot::ContestBallot, choices::Choices, encrypted_block::EncryptedBlock,
+    encrypted_choices::EncryptedChoices, payload::ContentBallotPayload, rule::ContestBallotRule,
 };
