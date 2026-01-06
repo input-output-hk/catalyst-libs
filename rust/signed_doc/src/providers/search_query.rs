@@ -68,6 +68,7 @@ pub enum DocTypeSelector {
 
 impl DocTypeSelector {
     /// Applying `DocTypeSelector` for the provided `DocType` value.
+    #[must_use]
     pub fn filter(
         &self,
         doc_type: &DocType,

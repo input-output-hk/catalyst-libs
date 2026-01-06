@@ -199,7 +199,7 @@ use test_case::test_case;
     "missing 'parameters'"
 )]
 #[allow(clippy::unwrap_used)]
-fn contest_ballot(
+fn contest_delegation(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();
