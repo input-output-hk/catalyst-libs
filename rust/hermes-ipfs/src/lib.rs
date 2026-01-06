@@ -14,11 +14,9 @@ pub use ipld_core::cid::Cid;
 /// IPLD
 pub use ipld_core::ipld::Ipld;
 use libp2p::gossipsub::MessageId as PubsubMessageId;
-use multihash_codetable::Code;
-use multihash_codetable::MultihashDigest;
+use multihash_codetable::{Code, MultihashDigest};
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
-use rust_ipfs::Block;
 /// Server, Client, or Auto mode
 pub use rust_ipfs::DhtMode;
 /// Server, Client, or Auto mode
@@ -34,7 +32,7 @@ pub use rust_ipfs::path::IpfsPath;
 /// Storage type for IPFS node.
 pub use rust_ipfs::repo::StorageTypes;
 use rust_ipfs::{
-    GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
+    Block, GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
     dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
 };
 
@@ -47,8 +45,7 @@ pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
 pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
-where
-    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
 impl Default for HermesIpfsBuilder<dummy::Behaviour> {
     fn default() -> Self {
@@ -57,8 +54,7 @@ impl Default for HermesIpfsBuilder<dummy::Behaviour> {
 }
 
 impl<N> HermesIpfsBuilder<N>
-where
-    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync,
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
 {
     #[must_use]
     /// Create a new` IpfsBuilder`.
@@ -163,12 +159,11 @@ impl HermesIpfs {
         Ok(HermesIpfs { node })
     }
 
-    /// Add a file to IPFS.
+    /// Add a file to IPFS by creating a block
     ///
     /// ## Parameters
     ///
-    /// * `file_path` The `file_path` can be specified as a type that converts into
-    ///   `std::path::PathBuf`.
+    /// * `data` - `Vec<u8>` Data to be uploaded.
     ///
     /// ## Returns
     ///
@@ -176,39 +171,36 @@ impl HermesIpfs {
     ///
     /// ## Errors
     ///
-    /// Returns an error if the file fails to upload.
+    /// Returns an error if the block fails to upload.
     pub async fn add_ipfs_file(
         &self,
-        _ipfs_file: AddIpfsFile,
         data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
         let cid = Cid::new_v1(CODEC_CBOR, Code::Sha2_256.digest(&data));
         let block = Block::new(cid, data)
-            .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {:?}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
         Ok(ipfs_path)
     }
 
-    /// Get a file from IPFS
+    /// Get a block from IPFS
     ///
     /// ## Parameters
     ///
-    /// * `ipfs_path` - `GetIpfsFile(IpfsPath)` Path used to get the file from IPFS.
+    /// * `cid` - `Cid` Content identifier to be downloaded.
     ///
     /// ## Returns
     ///
-    /// * `A result with Vec<u8>`.
+    /// * `A result with Block`.
     ///
     /// ## Errors
     ///
-    /// Returns an error if the file fails to download.
-    pub async fn get_ipfs_file(
+    /// Returns an error if the block fails to retrieve.
+    pub async fn get_ipfs_block(
         &self,
         cid: Cid,
-        _ipfs_path: GetIpfsFile,
-    ) -> anyhow::Result<Vec<u8>> {
-        let block = self.node.get_block(cid).await?;
-        Ok(block.data().to_vec())
+    ) -> anyhow::Result<Block> {
+        self.node.get_block(cid).await
     }
 
     /// Pin content to IPFS.
@@ -496,9 +488,11 @@ impl HermesIpfs {
             .node
             .dht_get_providers(key)
             .await?
-            .try_fold(HashSet::new(), |mut acc, set| async move {
-                acc.extend(set);
-                Ok(acc)
+            .try_fold(HashSet::new(), |mut acc, set| {
+                async move {
+                    acc.extend(set);
+                    Ok(acc)
+                }
             })
             .await?)
     }
