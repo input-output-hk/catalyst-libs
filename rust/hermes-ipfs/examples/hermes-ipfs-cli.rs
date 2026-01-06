@@ -63,15 +63,21 @@ async fn main() -> anyhow::Result<()> {
         Commands::AddFile => {
             println!("Adding file");
             let contents = lipsum(42);
-            let ipfs_path = hermes_node
-                .add_ipfs_file(contents.into_bytes().into())
-                .await?;
+            let ipfs_path = hermes_node.add_ipfs_file(contents.into_bytes()).await?;
             println!("Added file: {ipfs_path}");
         },
         Commands::GetFile { ipfs_path_str } => {
             println!("Getting file");
             let ipfs_path: IpfsPath = ipfs_path_str.parse()?;
-            let get_file_bytes = hermes_node.get_ipfs_file(ipfs_path.into()).await?;
+            let get_file_bytes = hermes_node
+                .get_ipfs_file(
+                    ipfs_path
+                        .root()
+                        .cid()
+                        .ok_or(anyhow::anyhow!("Could not get CID"))?,
+                )
+                .await?;
+
             println!("* Got file, {} bytes:", get_file_bytes.len());
             let get_file = String::from_utf8(get_file_bytes)?;
             println!("* FILE CONTENTS:");

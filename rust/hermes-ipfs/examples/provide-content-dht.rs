@@ -22,7 +22,7 @@ async fn connect_node_a_upload_and_provide(
     println!("***************************************");
     println!("* Adding file to IPFS:");
     println!("");
-    let ipfs_path = hermes_ipfs.add_ipfs_file(file_content.into()).await?;
+    let ipfs_path = hermes_ipfs.add_ipfs_file(file_content).await?;
     println!("* IPFS file published at {ipfs_path}");
     let cid = ipfs_path.root().cid().ok_or(anyhow::anyhow!(
         "ERROR! Could not extract CID from IPFS path."
@@ -85,12 +85,14 @@ async fn main() -> anyhow::Result<()> {
     println!("***************************************");
     println!("* Get content from IPFS path {ipfs_path}");
     println!("");
-    // For illustration, the `ipfs_path` can be obtained from a known CID
-    let ipfs_path_string = format!("{ipfs_path}");
-
     // Fetch the content from the `ipfs_path`.
     let fetched_bytes = hermes_ipfs_b
-        .get_ipfs_file(ipfs_path_string.parse()?)
+        .get_ipfs_file(
+            ipfs_path
+                .root()
+                .cid()
+                .ok_or(anyhow::anyhow!("Could not get CID"))?,
+        )
         .await?;
     assert_eq!(ipfs_file, fetched_bytes);
     let fetched_file = String::from_utf8(fetched_bytes)?;
