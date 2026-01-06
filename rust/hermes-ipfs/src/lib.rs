@@ -33,7 +33,7 @@ pub use rust_ipfs::path::IpfsPath;
 pub use rust_ipfs::repo::StorageTypes;
 use rust_ipfs::{
     Block, GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
-    dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
+    dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
 };
 
 /// Codec for Hermes CID.
@@ -617,56 +617,6 @@ impl HermesIpfs {
 impl From<Ipfs> for HermesIpfs {
     fn from(node: Ipfs) -> Self {
         Self { node }
-    }
-}
-
-/// File that will be added to IPFS
-pub enum AddIpfsFile {
-    /// Path in local disk storage to the file.
-    Path(std::path::PathBuf),
-    /// Stream of file bytes, with an optional name.
-    /// **NOTE** current implementation of `rust-ipfs` does not add names to published
-    /// files.
-    Stream((Option<String>, Vec<u8>)),
-}
-
-impl From<AddIpfsFile> for AddOpt {
-    fn from(value: AddIpfsFile) -> Self {
-        match value {
-            AddIpfsFile::Path(file_path) => file_path.into(),
-            AddIpfsFile::Stream((None, bytes)) => bytes.into(),
-            AddIpfsFile::Stream((Some(name), bytes)) => (name, bytes).into(),
-        }
-    }
-}
-
-impl From<String> for AddIpfsFile {
-    fn from(value: String) -> Self {
-        Self::Path(value.into())
-    }
-}
-
-impl From<std::path::PathBuf> for AddIpfsFile {
-    fn from(value: std::path::PathBuf) -> Self {
-        Self::Path(value)
-    }
-}
-
-impl From<Vec<u8>> for AddIpfsFile {
-    fn from(value: Vec<u8>) -> Self {
-        Self::Stream((None, value))
-    }
-}
-
-impl From<(String, Vec<u8>)> for AddIpfsFile {
-    fn from((name, stream): (String, Vec<u8>)) -> Self {
-        Self::Stream((Some(name), stream))
-    }
-}
-
-impl From<(Option<String>, Vec<u8>)> for AddIpfsFile {
-    fn from(value: (Option<String>, Vec<u8>)) -> Self {
-        Self::Stream(value)
     }
 }
 
