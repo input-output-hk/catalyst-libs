@@ -183,7 +183,7 @@ impl HermesIpfs {
         Ok(ipfs_path)
     }
 
-    /// Get a block from IPFS
+    /// Get a file from IPFS
     ///
     /// ## Parameters
     ///
@@ -191,16 +191,17 @@ impl HermesIpfs {
     ///
     /// ## Returns
     ///
-    /// * `A result with Block`.
+    /// * `A result with Vec<u8>`.
     ///
     /// ## Errors
     ///
-    /// Returns an error if the block fails to retrieve.
-    pub async fn get_ipfs_block(
+    /// Returns an error if the file fails to download.
+    pub async fn get_ipfs_file(
         &self,
         cid: Cid,
-    ) -> anyhow::Result<Block> {
-        self.node.get_block(cid).await
+    ) -> anyhow::Result<Vec<u8>> {
+        let block = self.node.get_block(cid).await?;
+        Ok(block.data().to_vec())
     }
 
     /// Pin content to IPFS.
