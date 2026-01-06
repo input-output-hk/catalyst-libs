@@ -75,6 +75,7 @@ mod tests {
         let doc_ref1 = create_dummy_doc_ref();
         let doc_ref2 = create_dummy_doc_ref();
 
+        #[allow(clippy::zero_sized_map_values)]
         let mut tally_map = HashMap::new();
         tally_map.insert(doc_ref1, EncryptedTallyProposalResult);
         tally_map.insert(doc_ref2, EncryptedTallyProposalResult);
