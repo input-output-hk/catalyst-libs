@@ -204,7 +204,7 @@ impl HermesIpfs {
     /// Returns an error if the file fails to download.
     pub async fn get_ipfs_file(
         &self,
-        cid: Cid,
+        cid: &Cid,
     ) -> anyhow::Result<Vec<u8>> {
         let block = self.node.get_block(cid).await?;
         Ok(block.data().to_vec())
