@@ -4,7 +4,7 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
-use crate::contest_ballot::ballot::payload;
+use crate::contest_ballot::ballot::{check_parameters, check_proof, payload};
 
 /// `CatalystSignedDocumentValidationRule` implementation for `ContentBallotPayload`.
 #[derive(Debug)]
@@ -16,8 +16,11 @@ impl CatalystSignedDocumentValidationRule for ContestBallotRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        // TODO: Validate parameters.
-        drop(payload(doc, doc.report()));
+        let payload = payload(doc, doc.report());
+        if let Some(payload) = &payload {
+            check_proof(payload, doc.report());
+        }
+        check_parameters(doc, provider, doc.report())?;
 
         Ok(doc.report().is_problematic())
     }

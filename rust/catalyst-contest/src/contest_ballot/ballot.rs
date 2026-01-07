@@ -41,8 +41,11 @@ impl ContestBallot {
 
         let report = ProblemReport::new("Contest Ballot");
 
-        // TODO: Validate parameters.
         let payload = payload(doc, &report);
+        if let Some(payload) = &payload {
+            check_proof(payload, &report);
+        }
+        check_parameters(doc, provider, &report)?;
 
         Ok(Self { payload, report })
     }
@@ -84,4 +87,56 @@ pub fn payload(
     };
 
     Some(payload)
+}
+
+pub fn check_parameters(
+    doc: &CatalystSignedDocument,
+    provider: &dyn CatalystSignedDocumentProvider,
+    report: &ProblemReport,
+) -> anyhow::Result<()> {
+    match doc.doc_meta().parameters().and_then(|v| v.first()) {
+        None => {
+            report.missing_field(
+                "parameters",
+                "Contest Ballot must have a 'parameters' metadata field",
+            )
+        },
+        Some(doc_ref) => {
+            if provider.try_get_doc(doc_ref)?.is_none() {
+                report.functional_validation(
+                    &format!("Cannot get referenced document: {doc_ref}"),
+                    "Missing 'Contest Parameters' document for the Contest Ballot document",
+                );
+            }
+        },
+    }
+
+    match doc.doc_meta().doc_ref().and_then(|v| v.first()) {
+        None => report.missing_field("ref", "Contest Ballot must have a 'ref' metadata field"),
+        Some(doc_ref) => {
+            if provider.try_get_doc(doc_ref)?.is_none() {
+                report.functional_validation(
+                    &format!("Cannot get referenced document: {doc_ref}"),
+                    "Missing 'Proposal' document for the Contest Ballot document",
+                );
+            }
+        },
+    }
+
+    if doc.doc_ver().is_err() {
+        report.missing_field(
+            "ver",
+            "Missing 'ver' metadata field for 'Contest Ballot' document",
+        );
+    }
+
+    Ok(())
+}
+
+pub fn check_proof(
+    payload: &ContentBallotPayload,
+    report: &ProblemReport,
+) {
+    // TODO: FIXME:
+    todo!()
 }
