@@ -36,9 +36,6 @@ use rust_ipfs::{
     dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
 };
 
-/// Codec for Hermes CID.
-const CODEC_CBOR: u64 = 0x51;
-
 #[derive(Debug, Display, From, Into)]
 /// `PubSub` Message ID.
 pub struct MessageId(pub PubsubMessageId);
@@ -180,6 +177,9 @@ impl HermesIpfs {
         &self,
         data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
+        /// Codec for Hermes CID.
+        const CODEC_CBOR: u64 = 0x51;
+
         let cbor_data = minicbor::to_vec(data)
             .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
         let cid = Cid::new_v1(CODEC_CBOR, Code::Sha2_256.digest(&cbor_data));
