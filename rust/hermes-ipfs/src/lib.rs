@@ -190,7 +190,7 @@ impl HermesIpfs {
         Ok(ipfs_path)
     }
 
-    /// Get a file from IPFS
+    /// Get a file from IPFS as CBOR encoded data.
     ///
     /// ## Parameters
     ///
@@ -203,7 +203,7 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if the file fails to download.
-    pub async fn get_ipfs_file(
+    pub async fn get_ipfs_file_cbor(
         &self,
         cid: &Cid,
     ) -> anyhow::Result<Vec<u8>> {
