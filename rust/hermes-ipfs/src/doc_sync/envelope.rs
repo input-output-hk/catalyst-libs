@@ -11,7 +11,10 @@ use catalyst_types::uuid::{self, CborContext, UuidV7};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{Decode, Encode, Encoder, data::Type, encode::Write};
 
-use crate::doc_sync::{PROTOCOL_VERSION, PublicKey, Signature};
+use crate::{
+    constant::PROTOCOL_VERSION,
+    doc_sync::{PublicKey, Signature},
+};
 
 /// The unsigned portion of the message envelope.
 /// This structure corresponds to the **signature input** array:
@@ -47,7 +50,7 @@ impl EnvelopePayload {
         Ok(Self {
             peer: PublicKey(peer),
             seq: UuidV7::new(),
-            ver: PROTOCOL_VERSION,
+            ver: PROTOCOL_VERSION.into(),
             payload,
         })
     }
@@ -99,7 +102,7 @@ impl EnvelopePayload {
         let seq: UuidV7 = decoder.decode_with(&mut CborContext::Tagged)?;
         let ver = decoder.u64()?;
 
-        if ver != PROTOCOL_VERSION {
+        if ver != PROTOCOL_VERSION.into() {
             return Err(minicbor::decode::Error::message(format!(
                 "unsupported protocol version: {ver}"
             )));
@@ -169,7 +172,7 @@ impl<'b, C> Decode<'b, C> for EnvelopePayload {
         let seq: UuidV7 = d.decode_with(&mut CborContext::Tagged)?;
         let ver = d.u64()?;
 
-        if ver != PROTOCOL_VERSION {
+        if ver != PROTOCOL_VERSION.into() {
             return Err(minicbor::decode::Error::message(format!(
                 "unsupported protocol version: {ver}"
             )));
@@ -428,7 +431,7 @@ mod tests {
         signed
             .encode_with(payload.seq, &mut CborContext::Tagged)
             .unwrap();
-        signed.u64(PROTOCOL_VERSION + 1).unwrap();
+        signed.u64(PROTOCOL_VERSION.into() + 1).unwrap();
         <Vec<u8> as Write>::write_all(signed.writer_mut(), &payload.payload).unwrap();
         signed.encode(Signature(signature)).unwrap();
 
@@ -512,7 +515,7 @@ mod tests {
         bad_array
             .encode_with(payload.seq, &mut CborContext::Tagged)
             .unwrap();
-        bad_array.u64(PROTOCOL_VERSION).unwrap();
+        bad_array.u64(PROTOCOL_VERSION.into()).unwrap();
         // Skip payload & signature to force length error or skip signature
 
         let mut envelope = Encoder::new(Vec::new());

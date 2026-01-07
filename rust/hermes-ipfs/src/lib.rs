@@ -2,6 +2,8 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
+pub(crate) mod constant;
+
 #[cfg(feature = "doc-sync")]
 pub mod doc_sync;
 
@@ -35,6 +37,8 @@ use rust_ipfs::{
     Block, GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
     dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
 };
+
+use crate::constant::CODEC_CBOR;
 
 #[derive(Debug, Display, From, Into)]
 /// `PubSub` Message ID.
@@ -177,12 +181,9 @@ impl HermesIpfs {
         &self,
         data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        /// Codec for Hermes CID.
-        const CODEC_CBOR: u64 = 0x51;
-
         let cbor_data = minicbor::to_vec(data)
             .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
-        let cid = Cid::new_v1(CODEC_CBOR, Code::Sha2_256.digest(&cbor_data));
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
         let block = Block::new(cid, cbor_data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
