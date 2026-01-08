@@ -102,7 +102,7 @@ impl EnvelopePayload {
         let seq: UuidV7 = decoder.decode_with(&mut CborContext::Tagged)?;
         let ver = decoder.u64()?;
 
-        if ver != <u8 as Into<T>>::into(PROTOCOL_VERSION) {
+        if ver != u64::from(PROTOCOL_VERSION) {
             return Err(minicbor::decode::Error::message(format!(
                 "unsupported protocol version: {ver}"
             )));
@@ -172,7 +172,7 @@ impl<'b, C> Decode<'b, C> for EnvelopePayload {
         let seq: UuidV7 = d.decode_with(&mut CborContext::Tagged)?;
         let ver = d.u64()?;
 
-        if ver != <u8 as Into<T>>::into(PROTOCOL_VERSION) {
+        if ver != u64::from(PROTOCOL_VERSION) {
             return Err(minicbor::decode::Error::message(format!(
                 "unsupported protocol version: {ver}"
             )));
