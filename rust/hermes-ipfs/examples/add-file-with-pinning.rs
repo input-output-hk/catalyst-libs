@@ -65,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
     println!("");
     println!("* Retrieving from {ipfs_path}");
     let get_file_bytes = hermes_ipfs
-        .get_ipfs_file(
+        .get_ipfs_file_cbor(
             ipfs_path
                 .root()
                 .cid()
