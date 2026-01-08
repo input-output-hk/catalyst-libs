@@ -7,7 +7,7 @@ use catalyst_signed_doc::{
 };
 use minicbor::Decode;
 
-use crate::ContentBallotPayload;
+use crate::{Choices, ContentBallotPayload};
 
 /// An individual Ballot cast in a Contest by a registered user.
 pub struct ContestBallot {
@@ -137,6 +137,16 @@ pub fn check_proof(
     payload: &ContentBallotPayload,
     report: &ProblemReport,
 ) {
-    // TODO: FIXME:
-    todo!()
+    for (_, choice) in payload.choices.iter() {
+        let Choices::Encrypted {
+            choices: _,
+            row_proof: Some(proof),
+        } = choice
+        else {
+            continue;
+        };
+
+        // TODO: FIXME:
+        todo!()
+    }
 }
