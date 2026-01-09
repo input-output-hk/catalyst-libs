@@ -46,7 +46,8 @@ pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
 pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
-where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
+where
+    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
 impl Default for HermesIpfsBuilder<dummy::Behaviour> {
     fn default() -> Self {
@@ -55,7 +56,8 @@ impl Default for HermesIpfsBuilder<dummy::Behaviour> {
 }
 
 impl<N> HermesIpfsBuilder<N>
-where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
+where
+    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync,
 {
     #[must_use]
     /// Create a new` IpfsBuilder`.
@@ -187,6 +189,21 @@ impl HermesIpfs {
         let block = Block::new(cid, cbor_data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
+        Ok(ipfs_path)
+    }
+
+    /// Add file with provider
+    pub async fn add_ipfs_file_with_provider(
+        &self,
+        data: Vec<u8>,
+    ) -> anyhow::Result<IpfsPath> {
+        let cbor_data = minicbor::to_vec(data)
+            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
+        let block = Block::new(cid, cbor_data)
+            .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
+        let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
+        self.node.provide(cid).await?;
         Ok(ipfs_path)
     }
 
@@ -506,11 +523,9 @@ impl HermesIpfs {
             .node
             .dht_get_providers(key)
             .await?
-            .try_fold(HashSet::new(), |mut acc, set| {
-                async move {
-                    acc.extend(set);
-                    Ok(acc)
-                }
+            .try_fold(HashSet::new(), |mut acc, set| async move {
+                acc.extend(set);
+                Ok(acc)
             })
             .await?)
     }
