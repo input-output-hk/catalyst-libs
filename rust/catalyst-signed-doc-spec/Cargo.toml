@@ -20,7 +20,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 
 quote = "1.0"
 proc-macro2 = "1.0"
-build-info = "0.0.39"
+const_format = "0.2.35"
 
 [build-dependencies]
-build-info-build = "0.0.39"
+built = { version = "0.8.0", features = ["chrono"] }
