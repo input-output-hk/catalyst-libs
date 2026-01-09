@@ -324,6 +324,12 @@ impl RegistrationChain {
         self.inner.certificate_uris.active_stake_addresses()
     }
 
+    /// Returns history information about stake addresses used in this chain.
+    #[must_use]
+    pub fn stake_addresses_history(&self) -> HashSet<StakeAddress> {
+        todo!()
+    }
+
     /// Returns the latest know applied registration's `PointTxnIdx`.
     #[must_use]
     pub fn latest_applied(&self) -> PointTxnIdx {
