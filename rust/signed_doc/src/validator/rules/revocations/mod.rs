@@ -3,14 +3,10 @@
 #[cfg(test)]
 mod tests;
 
-use catalyst_signed_doc_spec::{
-    DocSpecs, DocumentName, is_required::IsRequired, metadata::reply::Reply,
-};
+use catalyst_signed_doc_spec::{is_required::IsRequired, metadata::revocations::Revocations};
 
 use crate::{
-    CatalystSignedDocument, DocType,
-    providers::Provider,
-    validator::{CatalystSignedDocumentValidationRule, rules::doc_ref::doc_refs_check},
+    CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
 /// `revocations` field validation rule
@@ -29,27 +25,50 @@ impl CatalystSignedDocumentValidationRule for RevocationsRule {
     fn check(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn Provider,
+        _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        Ok(self.check_inner(doc))
     }
 }
 
 impl RevocationsRule {
-    pub(crate) fn new(
-        docs: &DocSpecs,
-        spec: &Reply,
-    ) -> anyhow::Result<Self> {
-        // TODO:
-        unimplemented!()
+    pub(crate) fn new(spec: &Revocations) -> Self {
+        let optional = match spec.required {
+            IsRequired::Yes => false,
+            IsRequired::Optional => true,
+            IsRequired::Excluded => {
+                return Self::NotSpecified;
+            },
+        };
+
+        Self::Specified { optional }
     }
 
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-        provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
-        // TODO:
-        unimplemented!()
+    ) -> bool {
+        if let Self::Specified { optional } = self
+            && doc.doc_meta().revocations().is_none()
+            && !optional
+        {
+            doc.report().missing_field(
+                "revocations",
+                "Document must have 'revocations' field specified",
+            );
+            return false;
+        }
+        if let Self::NotSpecified = self
+            && !doc.doc_meta().revocations().is_none()
+        {
+            doc.report().unknown_field(
+                "revocations",
+                &format!("{:#?}", doc.doc_meta().revocations().map(|v| v.to_string())),
+                "Document does not expect to have a 'revocations' field",
+            );
+            return false;
+        }
+
+        true
     }
 }

@@ -68,8 +68,7 @@ fn rules_for_doc(
         )?),
         Box::new(RefRule::new(all_docs_specs, &doc_spec.metadata.doc_ref)?),
         Box::new(ReplyRule::new(all_docs_specs, &doc_spec.metadata.reply)?),
-        // TODO:
-        // Box::new(RevocationsRule::new(all_docs_specs, &doc_spec.metadata.reply)?),
+        Box::new(RevocationsRule::new(&doc_spec.metadata.revocations)),
         Box::new(SectionRule::NotSpecified),
         Box::new(CollaboratorsRule::new(&doc_spec.metadata.collaborators)),
         Box::new(ContentRule::new(cddl_defs, &doc_spec.payload)?),
