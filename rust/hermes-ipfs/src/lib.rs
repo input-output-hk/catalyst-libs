@@ -206,13 +206,18 @@ impl HermesIpfs {
     pub async fn get_ipfs_file_cbor(
         &self,
         cid: &Cid,
-        peer_id: Option<PeerId>,
     ) -> anyhow::Result<Vec<u8>> {
-        let block = match peer_id {
-            Some(peer_id) => self.node.get_block(cid).provider(peer_id).await?,
-            None => self.node.get_block(cid).await?,
-        };
+        let block = self.node.get_block(cid).await?;
+        Ok(block.data().to_vec())
+    }
 
+    /// Get file with provider
+    pub async fn get_ipfs_file_cbor_with_provider(
+        &self,
+        cid: &Cid,
+        peer_id: PeerId,
+    ) -> anyhow::Result<Vec<u8>> {
+        let block = self.node.get_block(cid).provider(peer_id).await?;
         Ok(block.data().to_vec())
     }
 
