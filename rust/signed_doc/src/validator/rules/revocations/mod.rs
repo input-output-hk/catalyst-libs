@@ -32,6 +32,7 @@ impl CatalystSignedDocumentValidationRule for RevocationsRule {
 }
 
 impl RevocationsRule {
+    /// Constructs a rule from the given spec.
     pub(crate) fn new(spec: &Revocations) -> Self {
         let optional = match spec.required {
             IsRequired::Yes => false,
@@ -44,6 +45,7 @@ impl RevocationsRule {
         Self::Specified { optional }
     }
 
+    /// Performs the field validation.
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
@@ -59,11 +61,14 @@ impl RevocationsRule {
             return false;
         }
         if let Self::NotSpecified = self
-            && !doc.doc_meta().revocations().is_none()
+            && doc.doc_meta().revocations().is_some()
         {
             doc.report().unknown_field(
                 "revocations",
-                &format!("{:#?}", doc.doc_meta().revocations().map(|v| v.to_string())),
+                &format!(
+                    "{:#?}",
+                    doc.doc_meta().revocations().map(ToString::to_string)
+                ),
                 "Document does not expect to have a 'revocations' field",
             );
             return false;

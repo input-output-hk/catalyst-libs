@@ -52,9 +52,7 @@ fn rule_specified_optional_test(doc_gen: impl FnOnce() -> CatalystSignedDocument
     "missing 'revocations' field"
 )]
 
-fn rule_specified_not_optional_test(
-    doc_gen: impl FnOnce() -> CatalystSignedDocument
-) -> bool {
+fn rule_specified_not_optional_test(doc_gen: impl FnOnce() -> CatalystSignedDocument) -> bool {
     let rule = RevocationsRule::Specified { optional: false };
 
     let doc = doc_gen();
