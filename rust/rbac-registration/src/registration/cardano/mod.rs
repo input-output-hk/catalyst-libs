@@ -1,5 +1,6 @@
 //! Chain of Cardano registration data
 
+mod stake_addresses_history;
 mod update_rbac;
 
 use std::{
@@ -22,12 +23,15 @@ use update_rbac::{
 };
 use x509_cert::certificate::Certificate as X509Certificate;
 
-use crate::cardano::{
-    cip509::{
-        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
-        RoleData, RoleDataRecord, ValidationSignature,
+use crate::{
+    cardano::{
+        cip509::{
+            CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
+            RoleData, RoleDataRecord, ValidationSignature,
+        },
+        provider::RbacChainsProvider,
     },
-    provider::RbacChainsProvider,
+    registration::cardano::stake_addresses_history::StakeAddressesHistory,
 };
 
 /// Registration chains.
@@ -326,8 +330,8 @@ impl RegistrationChain {
 
     /// Returns history information about stake addresses used in this chain.
     #[must_use]
-    pub fn stake_addresses_history(&self) -> HashSet<StakeAddress> {
-        todo!()
+    pub fn stake_addresses_history(&self) -> &StakeAddressesHistory {
+        &self.inner.stake_addresses_history
     }
 
     /// Returns the latest know applied registration's `PointTxnIdx`.
@@ -374,6 +378,8 @@ struct RegistrationChainInner {
     role_data_record: HashMap<RoleId, RoleDataRecord>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
+    /// A history information about stake addresses used in this chain.
+    stake_addresses_history: StakeAddressesHistory,
 }
 
 impl RegistrationChainInner {
