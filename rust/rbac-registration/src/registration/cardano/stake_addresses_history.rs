@@ -70,8 +70,16 @@ impl StakeAddressesHistory {
     }
 
     /// Returns a list of addresses sorted by slots.
-    pub fn sorted() -> Vec<(StakeAddress, StakeAddressRange)> {
-        todo!()
+    #[must_use]
+    pub fn sorted(&self) -> Vec<(StakeAddress, StakeAddressRange)> {
+        let mut res: Vec<_> = self
+            .addresses
+            .iter()
+            .map(|(address, ranges)| ranges.iter().cloned().map(|range| (address.clone(), range)))
+            .flatten()
+            .collect();
+        res.sort_by(|(_, a), (_, b)| a.cmp(b));
+        res
     }
 }
 
@@ -102,4 +110,15 @@ impl Ord for StakeAddressRange {
         self.partial_cmp(other)
             .expect("StakeAddressRange should form a total order")
     }
+}
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+    //
+    // #[test]
+    // fn sorted() {
+    //     let mut history = StakeAddressesHistory::new();
+    //     //history.addresses.insert().
+    // }
 }
