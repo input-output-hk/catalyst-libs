@@ -544,13 +544,16 @@ mod tests {
     mod body {
         use minicbor::data::{Tag, Token};
 
+        use crate::constant::{CID_DIGEST_SIZE, CODEC_CBOR, MULTIHASH_SHA256, PROTOCOL_VERSION};
+
         // Generates a valid Doc Sync `CID` (according to the spec).
         const fn generate_cid(seed: u8) -> [u8; 36] {
-            const VERSION: u8 = 1;
-            const CODEC_CBOR: u8 = 0x51;
-            const CODE_SHA_256: u8 = 0x12;
-            const DIGEST_32: u8 = 0x20;
-            let prefix = [VERSION, CODEC_CBOR, CODE_SHA_256, DIGEST_32];
+            let prefix = [
+                PROTOCOL_VERSION,
+                CODEC_CBOR,
+                MULTIHASH_SHA256,
+                CID_DIGEST_SIZE,
+            ];
             let mut ret = [seed; 36];
             ret.split_at_mut(prefix.len()).0.copy_from_slice(&prefix);
             ret

@@ -2,6 +2,8 @@
 //!
 //! Provides support for storage, and `PubSub` functionality.
 
+pub(crate) mod constant;
+
 #[cfg(feature = "doc-sync")]
 pub mod doc_sync;
 
@@ -14,6 +16,7 @@ pub use ipld_core::cid::Cid;
 /// IPLD
 pub use ipld_core::ipld::Ipld;
 use libp2p::gossipsub::MessageId as PubsubMessageId;
+use multihash_codetable::{Code, MultihashDigest};
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
 /// Server, Client, or Auto mode
@@ -31,9 +34,11 @@ pub use rust_ipfs::path::IpfsPath;
 /// Storage type for IPFS node.
 pub use rust_ipfs::repo::StorageTypes;
 use rust_ipfs::{
-    GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
-    dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic, unixfs::AddOpt,
+    Block, GossipsubMessage, NetworkBehaviour, Quorum, ToRecordKey, builder::IpfsBuilder,
+    dag::ResolveError, dummy, gossipsub::IntoGossipsubTopic,
 };
+
+use crate::constant::CODEC_CBOR;
 
 #[derive(Debug, Display, From, Into)]
 /// `PubSub` Message ID.
@@ -41,7 +46,8 @@ pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
 pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
-where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
+where
+    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
 impl Default for HermesIpfsBuilder<dummy::Behaviour> {
     fn default() -> Self {
@@ -50,7 +56,8 @@ impl Default for HermesIpfsBuilder<dummy::Behaviour> {
 }
 
 impl<N> HermesIpfsBuilder<N>
-where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
+where
+    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync,
 {
     #[must_use]
     /// Create a new` IpfsBuilder`.
@@ -155,12 +162,15 @@ impl HermesIpfs {
         Ok(HermesIpfs { node })
     }
 
-    /// Add a file to IPFS.
+    /// Add a file to IPFS by creating a block
+    /// The CID is generated using
+    /// - Codec: CBOR 0x51
+    /// - CBOR encoded data
+    /// - Hash function: SHA2-256
     ///
     /// ## Parameters
     ///
-    /// * `file_path` The `file_path` can be specified as a type that converts into
-    ///   `std::path::PathBuf`.
+    /// * `data` - `Vec<u8>` Data to be uploaded.
     ///
     /// ## Returns
     ///
@@ -168,20 +178,40 @@ impl HermesIpfs {
     ///
     /// ## Errors
     ///
-    /// Returns an error if the file fails to upload.
+    /// Returns an error if the block fails to upload.
     pub async fn add_ipfs_file(
         &self,
-        ipfs_file: AddIpfsFile,
+        data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let ipfs_path = self.node.add_unixfs(ipfs_file).await?;
+        let cbor_data = minicbor::to_vec(data)
+            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
+        let block = Block::new(cid, cbor_data)
+            .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
+        let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
         Ok(ipfs_path)
     }
 
-    /// Get a file from IPFS
+    /// Add file with provider
+    pub async fn add_ipfs_file_with_provider(
+        &self,
+        data: Vec<u8>,
+    ) -> anyhow::Result<IpfsPath> {
+        let cbor_data = minicbor::to_vec(data)
+            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
+        let block = Block::new(cid, cbor_data)
+            .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
+        let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
+        self.node.provide(cid).await?;
+        Ok(ipfs_path)
+    }
+
+    /// Get a file from IPFS as CBOR encoded data.
     ///
     /// ## Parameters
     ///
-    /// * `ipfs_path` - `GetIpfsFile(IpfsPath)` Path used to get the file from IPFS.
+    /// * `cid` - `Cid` Content identifier to be downloaded.
     ///
     /// ## Returns
     ///
@@ -190,12 +220,26 @@ impl HermesIpfs {
     /// ## Errors
     ///
     /// Returns an error if the file fails to download.
-    pub async fn get_ipfs_file(
+    pub async fn get_ipfs_file_cbor(
         &self,
-        ipfs_path: GetIpfsFile,
+        cid: &Cid,
     ) -> anyhow::Result<Vec<u8>> {
-        let stream_bytes = self.node.cat_unixfs(ipfs_path).await?;
-        Ok(stream_bytes.to_vec())
+        let block = self.node.get_block(cid).await?;
+        Ok(block.data().to_vec())
+    }
+
+    /// Get file with provider
+    pub async fn get_ipfs_file_cbor_with_providers(
+        &self,
+        cid: &Cid,
+    ) -> anyhow::Result<Vec<u8>> {
+        let mut providers = self.node.get_providers(cid.clone()).await?;
+        let mut provider_list = Vec::new();
+        while let Some(Ok(peer_set)) = providers.next().await {
+            provider_list.extend(peer_set);
+        }
+        let block = self.node.get_block(cid).providers(provider_list).await?;
+        Ok(block.data().to_vec())
     }
 
     /// Pin content to IPFS.
@@ -483,11 +527,9 @@ impl HermesIpfs {
             .node
             .dht_get_providers(key)
             .await?
-            .try_fold(HashSet::new(), |mut acc, set| {
-                async move {
-                    acc.extend(set);
-                    Ok(acc)
-                }
+            .try_fold(HashSet::new(), |mut acc, set| async move {
+                acc.extend(set);
+                Ok(acc)
             })
             .await?)
     }
@@ -605,56 +647,6 @@ impl HermesIpfs {
 impl From<Ipfs> for HermesIpfs {
     fn from(node: Ipfs) -> Self {
         Self { node }
-    }
-}
-
-/// File that will be added to IPFS
-pub enum AddIpfsFile {
-    /// Path in local disk storage to the file.
-    Path(std::path::PathBuf),
-    /// Stream of file bytes, with an optional name.
-    /// **NOTE** current implementation of `rust-ipfs` does not add names to published
-    /// files.
-    Stream((Option<String>, Vec<u8>)),
-}
-
-impl From<AddIpfsFile> for AddOpt {
-    fn from(value: AddIpfsFile) -> Self {
-        match value {
-            AddIpfsFile::Path(file_path) => file_path.into(),
-            AddIpfsFile::Stream((None, bytes)) => bytes.into(),
-            AddIpfsFile::Stream((Some(name), bytes)) => (name, bytes).into(),
-        }
-    }
-}
-
-impl From<String> for AddIpfsFile {
-    fn from(value: String) -> Self {
-        Self::Path(value.into())
-    }
-}
-
-impl From<std::path::PathBuf> for AddIpfsFile {
-    fn from(value: std::path::PathBuf) -> Self {
-        Self::Path(value)
-    }
-}
-
-impl From<Vec<u8>> for AddIpfsFile {
-    fn from(value: Vec<u8>) -> Self {
-        Self::Stream((None, value))
-    }
-}
-
-impl From<(String, Vec<u8>)> for AddIpfsFile {
-    fn from((name, stream): (String, Vec<u8>)) -> Self {
-        Self::Stream((Some(name), stream))
-    }
-}
-
-impl From<(Option<String>, Vec<u8>)> for AddIpfsFile {
-    fn from(value: (Option<String>, Vec<u8>)) -> Self {
-        Self::Stream(value)
     }
 }
 

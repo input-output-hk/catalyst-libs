@@ -8,8 +8,8 @@ adminer
 admon
 anypolicy
 apskhem
-asat
 Arissara
+asat
 asyncio
 Attributes
 auditability
@@ -27,10 +27,10 @@ blockdiag
 blockfetch
 blosc
 bmac
-bytemuck
 Bogale
 bootstrapper
 BROTLI
+bytemuck
 Cabe
 cantopen
 cardano
@@ -55,6 +55,7 @@ ciphertexts
 Coap
 codegen
 codepoints
+codetable
 Collab
 connexa
 coti
@@ -255,8 +256,8 @@ pubk
 pubkey
 publickey
 pubspec
-pycardano
 pwrite
+pycardano
 pycodestyle
 pydantic
 pydot

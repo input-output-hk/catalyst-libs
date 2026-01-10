@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     println!("* Adding file to IPFS:");
     println!("");
     let ipfs_file = b"This is a demo file that is stored in IPFS.".to_vec();
-    let ipfs_path = hermes_ipfs.add_ipfs_file(ipfs_file.into()).await?;
+    let ipfs_path = hermes_ipfs.add_ipfs_file(ipfs_file).await?;
     println!("* IPFS file published at {ipfs_path}");
     let cid = ipfs_path.root().cid().ok_or(anyhow::anyhow!(
         "ERROR! Could not extract CID from IPFS path."
@@ -64,7 +64,14 @@ async fn main() -> anyhow::Result<()> {
     println!("* Get file from IPFS:");
     println!("");
     println!("* Retrieving from {ipfs_path}");
-    let get_file_bytes = hermes_ipfs.get_ipfs_file(ipfs_path.into()).await?;
+    let get_file_bytes = hermes_ipfs
+        .get_ipfs_file_cbor(
+            ipfs_path
+                .root()
+                .cid()
+                .ok_or(anyhow::anyhow!("Could not get CID"))?,
+        )
+        .await?;
     println!("* Got file, {} bytes:", get_file_bytes.len());
     let get_file = String::from_utf8(get_file_bytes)?;
     println!("* FILE CONTENTS:");
