@@ -3,7 +3,11 @@
 //! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
 
 #![allow(missing_docs)]
-#![allow(clippy::expect_used, clippy::missing_panics_doc)]
+#![allow(
+    clippy::expect_used,
+    clippy::missing_panics_doc,
+    clippy::missing_docs_in_private_items
+)]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;
@@ -34,7 +38,7 @@ pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
 pub use contest_ballot::contest_ballot_doc;
 pub use contest_ballot_checkpoint::contest_ballot_checkpoint_doc;
-pub use contest_delegation::contest_delegation_doc;
+pub use contest_delegation::{contest_delegation_by_representative_doc, contest_delegation_doc};
 pub use contest_parameters::contest_parameters_doc;
 pub use contest_parameters_form_template::contest_parameters_form_template_doc;
 pub use proposal::proposal_doc;

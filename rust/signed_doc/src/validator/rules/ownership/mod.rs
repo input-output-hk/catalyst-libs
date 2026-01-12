@@ -5,7 +5,7 @@ mod tests;
 
 use std::collections::HashSet;
 
-use anyhow::ensure;
+use anyhow::{Context, ensure};
 use catalyst_signed_doc_spec::{
     DocSpec,
     is_required::IsRequired,
@@ -111,9 +111,9 @@ impl DocumentOwnershipRule {
                     };
                     allowed_authors.extend(first_doc.authors());
 
-                    let last_doc = provider.try_get_last_doc(doc_id)?.ok_or(anyhow::anyhow!(
-                        "A latest version of the document must exist if a first version exists"
-                    ))?;
+                    let last_doc = provider.try_get_last_doc(doc_id)?.context(
+                        "A latest version of the document must exist if a first version exists",
+                    )?;
 
                     allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
                 }
@@ -137,11 +137,9 @@ impl DocumentOwnershipRule {
                 };
                 allowed_authors.extend(first_ref_doc.authors());
 
-                let last_doc = provider
-                    .try_get_last_doc(*doc_ref.id())?
-                    .ok_or(anyhow::anyhow!(
-                        "A latest version of the document must exist if a first version exists"
-                    ))?;
+                let last_doc = provider.try_get_last_doc(*doc_ref.id())?.context(
+                    "A latest version of the document must exist if a first version exists",
+                )?;
 
                 allowed_authors.extend(last_doc.doc_meta().collaborators().iter().cloned());
             },
