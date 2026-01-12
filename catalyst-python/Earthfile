@@ -10,7 +10,7 @@ builder:
     COPY rust-ffi .
     COPY tests .
 
-    RUN uv update
+    RUN uv sync
 
 build:
     FROM +builder
