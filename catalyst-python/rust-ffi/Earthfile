@@ -27,7 +27,7 @@ build:
         --libs=catalyst-python \
         --disable_tests \
         --disable_docs \
-        --disable_benche
+        --disable_benches
 
     DO rust-ci+EXECUTE \
                 --cmd="/scripts/std_build.py" \
