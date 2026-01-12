@@ -7,6 +7,7 @@ builder:
 
     COPY pyproject.toml uv.lock .
     COPY src .
+    COPY rust-ffi .
     COPY tests .
 
     RUN uv update
@@ -14,4 +15,5 @@ builder:
 build:
     FROM +builder
 
+    RUN uv run maturin develop
     RUN uv run pytest
