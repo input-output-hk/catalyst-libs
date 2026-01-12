@@ -13,6 +13,7 @@ mod doc_ref;
 mod id;
 mod ownership;
 mod parameters;
+mod rep_nomination;
 mod reply;
 mod section;
 mod signature;
