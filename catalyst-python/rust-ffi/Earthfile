@@ -16,12 +16,12 @@ builder:
 
 # check : Run basic check.
 check:
-    FROM +builder-src
+    FROM +builder
 
     DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
 
 build:
-    FROM +builder-src
+    FROM +builder
 
     LET ARGS=\
         --libs=catalyst-python
