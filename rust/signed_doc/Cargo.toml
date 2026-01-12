@@ -29,7 +29,6 @@ strum = { version = "0.27.1", features = ["derive"] }
 strum_macros = { version = "0.27.1" }
 clap = { version = "4.5.23", features = ["derive", "env"] }
 jsonpath-rust = "0.7.5"
-futures = "0.3.31"
 ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
 tracing = "0.1.40"
 thiserror = "2.0.11"
