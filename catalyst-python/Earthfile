@@ -2,9 +2,11 @@ VERSION 0.8
 
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.11 AS python-ci
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.11 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.6.11 AS debian
 
 builder:
     DO rust-ci+SETUP
+    DO debian+INSTALL --packages=curl
     DO python-ci+INSTALL
 
     COPY --keep-ts --dir \
