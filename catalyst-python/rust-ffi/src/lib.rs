@@ -9,7 +9,4 @@ mod catalyst_python {
     fn ffi_check(flag: bool) -> bool {
         flag
     }
-
-    // #[pyclass]
-    // struct CatalystSignedDocument(catalyst_signed_doc::CatalystSignedDocument);
 }

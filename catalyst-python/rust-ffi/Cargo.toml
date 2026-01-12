@@ -50,5 +50,3 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.27.2"
-# TODO: Use tag instead of path.
-# catalyst-signed-doc = { version = "0.0.10", path = "../../rust/signed_doc" }
