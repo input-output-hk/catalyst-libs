@@ -157,11 +157,11 @@ copyright: #copyrightNotice & {
 				"""
 		},
 		{
-			version: "0.2.3"
+			version:  "0.2.3"
 			modified: "2026-01-09"
 			changes: """
 				* Internal dependency updates.
 				"""
-      	}
+		},
 	]
 }
