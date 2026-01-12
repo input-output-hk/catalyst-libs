@@ -2,6 +2,11 @@
 name = "catalyst-python"
 version = "0.1.0"
 edition = "2024"
+authors = ["Alex Pozhylenkov <alex.pozhylenkov@iohk.io>"]
+homepage = "https://github.com/input-output-hk/catalyst-libs"
+repository = "https://github.com/input-output-hk/catalyst-libs"
+license = "MIT OR Apache-2.0"
+
 
 [lints.rust]
 warnings = "deny"
