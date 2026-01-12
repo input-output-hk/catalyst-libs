@@ -77,7 +77,8 @@ pub fn payload(
     };
 
     let mut decoder = minicbor::Decoder::new(&bytes);
-    // TODO: Pass a problem report in the decode context?
+    // TODO: Pass a problem report in the decode context. See the issue for more details:
+    // https://github.com/input-output-hk/catalyst-libs/issues/775
     let Ok(payload) = ContentBallotPayload::decode(&mut decoder, &mut ()) else {
         report.functional_validation(
             "Invalid document content: unable to decode CBOR",
