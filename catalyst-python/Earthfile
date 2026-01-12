@@ -5,10 +5,12 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.11 AS python-c
 builder:
     FROM python-ci+python-base
 
-    COPY pyproject.toml uv.lock .
-    COPY src .
-    COPY rust-ffi .
-    COPY tests .
+    COPY --keep-ts --dir \
+        pyproject.toml uv.lock README.md \
+        src \
+        rust-ffi \
+        tests \
+        .
 
 build:
     FROM +builder
