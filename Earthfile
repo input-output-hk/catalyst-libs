@@ -1,10 +1,10 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.6.11 AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.6.11 AS cspell-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.11 AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.6.12 AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.6.12 AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.12 AS python-ci
 IMPORT github.com/input-output-hk/catalyst-ci:v3.6.11 AS cat-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.6.11 AS debian
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.6.12 AS debian
 
 
 # check-markdown : markdown check using catalyst-ci.
