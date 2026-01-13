@@ -159,8 +159,10 @@ mod tests {
 
     use super::*;
 
+    // spell:disable 
     const CID_SMALL: &str = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
     const CID_LARGE: &str = "bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku";
+    // spell:enable 
 
     #[test_case(
         (0,0, CID_SMALL),
@@ -206,10 +208,9 @@ mod tests {
         => Ordering::Less;
         "first 'doc_locator' smaller"
     )]
-
     // --- 4. PRIORITY / DOMINANCE TESTS (Crucial) ---
     // These prove that ID beats Ver, and Ver beats Locator.
-    
+
     // Left has Greater ID (1 > 0), but Smaller Ver (0 < 5).
     // Result should be Greater because ID is checked first.
     #[test_case(
@@ -218,7 +219,6 @@ mod tests {
         => Ordering::Greater;
         "id dominates ver"
     )]
-
     // Left has Equal ID, Greater Ver (1 > 0), but Smaller Locator (a < b).
     // Result should be Greater because Ver is checked before Locator.
     #[test_case(
