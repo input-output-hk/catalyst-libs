@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::{CborContext, decode_cbor_uuid, encode_cbor_uuid};
 
 /// Type representing a `UUIDv4`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, serde::Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize)]
 pub struct UuidV4(Uuid);
 
 /// `UUIDv4` invalid error
