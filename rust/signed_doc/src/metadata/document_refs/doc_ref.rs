@@ -159,10 +159,10 @@ mod tests {
 
     use super::*;
 
-    // spell:disable 
+    // spell:disable
     const CID_SMALL: &str = "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
     const CID_LARGE: &str = "bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku";
-    // spell:enable 
+    // spell:enable
 
     #[test_case(
         (0,0, CID_SMALL),
