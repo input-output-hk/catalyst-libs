@@ -632,6 +632,11 @@
         "changes": "* Internal dependency updates.",
         "modified": "2026-01-09",
         "version": "0.2.3"
+      },
+      {
+        "changes": "* Internal dependency updates.",
+        "modified": "2026-01-13",
+        "version": "0.2.4"
       }
     ]
   },
