@@ -16,18 +16,20 @@ impl CatalystSignedDocumentValidationRule for RepNominationRule {
     fn check(
         &self,
         doc: &CatalystSignedDocument,
-        _provider: &dyn Provider,
+        provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Ok(self.check_inner(doc)?)
+        Ok(self.check_inner(doc, provider)?)
     }
 }
 
 impl RepNominationRule {
-    /// Field validation rule
+    /// Document validation rule
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
+        _provider: &dyn Provider
     ) -> anyhow::Result<bool> {
+        // enabling this rule check only for `REP_NOMINATION` doc
         if doc.doc_type()? != &doc_types::REP_NOMINATION {
             return Ok(true);
         }
