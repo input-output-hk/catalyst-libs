@@ -1,7 +1,7 @@
 //! Voters Choices.
 
 use catalyst_voting::crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof};
-use cbork_utils::decode_helper::decode_array_len;
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 /// A clear choice indicator. See the `Choices` CBOR schema for the details.
@@ -44,45 +44,57 @@ impl Decode<'_, ()> for Choices {
         d: &mut Decoder<'_>,
         ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        let len = decode_array_len(d, "choices")?;
-        if len < 2 {
+        let array = Array::decode(d, &mut DecodeCtx::Deterministic)?;
+        let [type_, choices @ ..] = array.as_slice() else {
             return Err(minicbor::decode::Error::message(format!(
-                "Unexpected choices array length {len}, expected at least 2"
+                "Unexpected choices array length: {}, expected at least 2",
+                array.len()
             )));
-        }
-        match u8::decode(d, ctx)? {
+        };
+
+        let mut type_decoder = Decoder::new(type_);
+        match type_decoder.u8()? {
             CLEAR_CHOICE => {
-                let mut values = Vec::with_capacity(
-                    len.checked_sub(1)
-                        .ok_or_else(|| {
-                            minicbor::decode::Error::message("Choices array length underflow")
-                        })?
-                        .try_into()
-                        .map_err(minicbor::decode::Error::message)?,
-                );
-                for _ in 1..len {
-                    values.push(u64::decode(d, ctx)?);
+                let mut values = Vec::with_capacity(choices.len());
+                for choice in choices {
+                    let mut d = Decoder::new(choice);
+                    values.push(u64::decode(&mut d, ctx)?);
                 }
                 Ok(Self::Clear(values))
             },
             ENCRYPTED_CHOICE => {
-                if len > 2 {
+                let [choices] = choices else {
                     return Err(minicbor::decode::Error::message(format!(
-                        "Unexpected encrypted choices array length {len}, expected 2"
+                        "Unexpected encrypted choices array length {}, expected 2",
+                        choices.len().saturating_add(1)
                     )));
-                }
+                };
 
-                let len = decode_array_len(d, "elgamal-ristretto255-encrypted-choices")?;
-                if !(1..=2).contains(&len) {
-                    return Err(minicbor::decode::Error::message(format!(
-                        "Unexpected elgamal-ristretto255-encrypted-choices array length {len}, expected 1 or 2"
-                    )));
-                }
-                let choices = <Vec<Ciphertext>>::decode(d, ctx)?;
-                let mut row_proof = None;
-                if len == 2 {
-                    row_proof = Some(UnitVectorProof::decode(d, ctx)?);
-                }
+                let mut d = Decoder::new(choices);
+                let array = Array::decode(&mut d, &mut DecodeCtx::Deterministic)?;
+                let (choices, row_proof) = match array.as_slice() {
+                    [choices] => {
+                        let mut d = Decoder::new(choices);
+                        let choices = <Vec<Ciphertext>>::decode(&mut d, ctx)?;
+                        (choices, None)
+                    },
+                    [choices, proof] => {
+                        let mut d = Decoder::new(choices);
+                        let choices = <Vec<Ciphertext>>::decode(&mut d, ctx)?;
+
+                        let mut d = Decoder::new(proof);
+                        let row_proof = UnitVectorProof::decode(&mut d, ctx)?;
+
+                        (choices, Some(row_proof))
+                    },
+                    _ => {
+                        return Err(minicbor::decode::Error::message(format!(
+                            "Unexpected elgamal-ristretto255-encrypted-choices array length {}, expected 1 or 2",
+                            array.len()
+                        )));
+                    },
+                };
+
                 Ok(Self::Encrypted { choices, row_proof })
             },
             val => {

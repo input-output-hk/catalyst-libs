@@ -7,7 +7,10 @@ use catalyst_signed_doc::{
 };
 use minicbor::Decode;
 
-use crate::{Choices, ContentBallotPayload};
+use cbork_utils::{decode_context::DecodeCtx, map::Map};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
+
+use crate::{Choices, EncryptedChoices, ContentBallotPayload};
 
 /// An individual Ballot cast in a Contest by a registered user.
 pub struct ContestBallot {

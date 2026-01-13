@@ -163,5 +163,12 @@ copyright: #copyrightNotice & {
 				* Internal dependency updates.
 				"""
 		},
+		{
+			version:  "0.2.4"
+			modified: "2026-01-13"
+			changes: """
+				* Internal dependency updates.
+				"""
+		},
 	]
 }
