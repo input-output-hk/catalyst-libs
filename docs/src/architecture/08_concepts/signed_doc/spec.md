@@ -565,7 +565,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2026-01-09 |
+| Modified | 2026-01-13 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -650,6 +650,10 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Added missing `signers: update: type: "ref"` definition for [Rep Nomination](./docs/rep_nomination.md) document type.
 
 #### 0.2.3 (2026-01-09)
+
+* Internal dependency updates.
+
+#### 0.2.4 (2026-01-13)
 
 * Internal dependency updates.
 
