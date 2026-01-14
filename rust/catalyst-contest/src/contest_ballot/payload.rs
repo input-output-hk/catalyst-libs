@@ -71,7 +71,8 @@ impl Decode<'_, ()> for ContentBallotPayload {
                             ));
                         },
                         "voter-choices" => {
-                            voter_choices = Some(EncryptedChoices::decode(&mut value_decoder, ctx)?)
+                            voter_choices =
+                                Some(EncryptedChoices::decode(&mut value_decoder, ctx)?);
                         },
                         key => {
                             return Err(minicbor::decode::Error::message(format!(

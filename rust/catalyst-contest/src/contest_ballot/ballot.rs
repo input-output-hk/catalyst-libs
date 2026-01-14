@@ -100,7 +100,7 @@ pub fn check_parameters(
             report.missing_field(
                 "parameters",
                 "Contest Ballot must have a 'parameters' metadata field",
-            )
+            );
         },
         Some(doc_ref) => {
             if provider.try_get_doc(doc_ref)?.is_none() {
@@ -136,18 +136,37 @@ pub fn check_parameters(
 
 pub fn check_proof(
     payload: &ContentBallotPayload,
-    report: &ProblemReport,
+    _report: &ProblemReport,
 ) {
-    for (_, choice) in payload.choices.iter() {
+    for (index, choice) in &payload.choices {
         let Choices::Encrypted {
-            choices: _,
+            choices,
             row_proof: Some(proof),
         } = choice
         else {
             continue;
         };
 
-        // TODO: FIXME:
-        todo!()
+        // TODO: Implement proof verification.
+        let _ = index;
+        let _ = choices;
+        let _ = proof;
+
+        // TODO: Get the election public key from the contest document parameters.
+        // let election_public_key = todo!();
+        // TODO: Clarify the commitment key parameter.
+        // let commitment_key = todo!();
+        // if !verify_unit_vector_proof(
+        //     proof,
+        //     choices.clone(),
+        //     &election_public_key,
+        //     &commitment_key,
+        // ) {
+        // TODO: Log choice index?
+        //     report.functional_validation(
+        //         "Failed to verify proof",
+        //         "'Contest Ballot' document validation",
+        //     );
+        // }
     }
 }
