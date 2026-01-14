@@ -10,7 +10,6 @@ mod catalyst_python_ffi {
         flag
     }
 
-    
     // #[pymodule]
     // mod catalyst_signed_doc {
     //     use pyo3::prelude::*;
