@@ -5,6 +5,8 @@ use std::{cmp::Ordering, collections::HashMap};
 use anyhow::anyhow;
 use cardano_blockchain_types::{Slot, StakeAddress};
 
+use crate::cardano::cip509::Cip0134UriSet;
+
 #[derive(Debug, Clone)]
 pub struct StakeAddressesHistory {
     addresses: HashMap<StakeAddress, Vec<StakeAddressRange>>,
@@ -25,10 +27,25 @@ pub struct StakeAddressRange {
 }
 
 impl StakeAddressesHistory {
-    pub fn new() -> Self {
-        Self {
-            addresses: HashMap::new(),
-        }
+    /// Creates a new `StakeAddressesHistory` instance with the given stake addresses set
+    /// and slot.
+    pub fn new(
+        certificate_uris: &Cip0134UriSet,
+        slot: Slot,
+    ) -> Self {
+        // This is called for the first registration in a chain, so all stake addresses are active
+        // and there are no removed ones.
+        let addresses = certificate_uris
+            .active_stake_addresses()
+            .into_iter()
+            .map(|a| {
+                (a, vec![StakeAddressRange {
+                    active_from: slot,
+                    inactive_from: None,
+                }])
+            })
+            .collect();
+        Self { addresses }
     }
 
     pub fn record_addresses(
@@ -39,7 +56,8 @@ impl StakeAddressesHistory {
         todo!()
     }
 
-    pub fn remove_address(
+    /// Marks the given addresses as removed.
+    pub fn remove_addresses(
         &mut self,
         addresses: &[StakeAddress],
         slot: Slot,
@@ -114,11 +132,31 @@ impl Ord for StakeAddressRange {
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
-    //
-    // #[test]
-    // fn sorted() {
-    //     let mut history = StakeAddressesHistory::new();
-    //     //history.addresses.insert().
-    // }
+    use super::*;
+
+    #[test]
+    fn sorted() {
+        let addresses = [].iter().collect();
+        let history = StakeAddressesHistory { addresses };
+        //history.addresses.insert().
+    }
+
+    // TODO: FIXME:
+    // 1. Ordering test.
+
+    /// Returns a stake address value for testing.
+    pub fn stake_address_1() -> StakeAddress {
+        let hash = "276fd18711931e2c0e21430192dbeac0e458093cd9d1fcd7210f64b3"
+            .parse()
+            .unwrap();
+        StakeAddress::new(Network::Mainnet, true, hash)
+    }
+
+    /// Returns a different stake address value for testing.
+    pub fn stake_address_2() -> StakeAddress {
+        let hash = "fe0e6d6312ffb2055509b8815ddd36e01f7c696f6e2e88d7fe4bc1f6"
+            .parse()
+            .unwrap();
+        StakeAddress::new(Network::Mainnet, true, hash)
+    }
 }

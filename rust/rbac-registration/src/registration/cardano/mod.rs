@@ -477,6 +477,8 @@ impl RegistrationChainInner {
             &point_tx_idx,
         );
         let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
+        let stake_addresses_history =
+            StakeAddressesHistory::new(&certificate_uris, point_tx_idx.point().slot_or_default());
         let current_tx_id_hash = PointData::new(point_tx_idx, cip509.txn_hash());
         let payment_history = cip509.payment_history().clone();
 
@@ -493,6 +495,7 @@ impl RegistrationChainInner {
             role_data_history,
             role_data_record,
             payment_history,
+            stake_addresses_history,
         })
     }
 
