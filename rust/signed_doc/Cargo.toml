@@ -11,12 +11,12 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.12", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.12" }
+catalyst-types = { version = "0.0.13", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.13" }
 cbork-utils = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils/v0.0.3" }
 
 # When updating the specification version, it should also be updated for the `catalyst-signed-doc-macro` crate.
 catalyst-signed-doc-macro = { version = "0.0.1", path = "../catalyst-signed-doc-macro" }
-catalyst-signed-doc-spec = { version = "0.2.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-signed-doc-spec/v0.2.2-wasm" }
+catalyst-signed-doc-spec = { version = "0.2.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-signed-doc-spec/v0.2.4" }
 
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
@@ -29,7 +29,6 @@ strum = { version = "0.27.1", features = ["derive"] }
 strum_macros = { version = "0.27.1" }
 clap = { version = "4.5.23", features = ["derive", "env"] }
 jsonpath-rust = "0.7.5"
-futures = "0.3.31"
 ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
 tracing = "0.1.40"
 thiserror = "2.0.11"

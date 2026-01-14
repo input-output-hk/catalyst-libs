@@ -260,11 +260,11 @@ Only the original author can update and sign a new version of documents.
 
 ## Copyright
 
-| Copyright | :copyright: 2024-2025 IOG Singapore, All Rights Reserved |
+| Copyright | :copyright: 2024-2026 IOG Singapore, All Rights Reserved |
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-12-15 |
+| Modified | 2026-01-13 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
