@@ -17,7 +17,7 @@ impl TryFrom<&[u8]> for Ed25519SigningKey {
     type Error = anyhow::Error;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-        if let Ok(sk) = ed25519_bip32::XPrv::from_slice_verified(&bytes) {
+        if let Ok(sk) = ed25519_bip32::XPrv::from_slice_verified(bytes) {
             Ok(Self::Bip32(sk))
         } else {
             let sk = ed25519_dalek::SigningKey::from_bytes(&bytes.try_into().map_err(|_| {
@@ -39,6 +39,7 @@ impl FromStr for Ed25519SigningKey {
 
 impl Ed25519SigningKey {
     /// Sign the given message and return a digital signature bytes.
+    #[must_use]
     pub fn sign(
         &self,
         m: &[u8],
