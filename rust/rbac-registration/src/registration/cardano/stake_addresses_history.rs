@@ -16,7 +16,7 @@ pub struct StakeAddressesHistory {
 ///
 /// Note that ordering for this type is implemented in the following way:
 /// - First the ranges are compared by the `active_from` value.
-/// - If both ranges have same `active_from` value, than the one with `inactive_from`
+/// - If both ranges have same `active_from` value, then the one with `inactive_from`
 ///   equal to `None` is considered greater.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StakeAddressRange {
@@ -50,9 +50,10 @@ impl StakeAddressesHistory {
 
     pub fn record_addresses(
         &mut self,
-        addresses: &[StakeAddress],
-        slot: Slot,
+        _addresses: &[StakeAddress],
+        _slot: Slot,
     ) {
+        // TODO: FIXME:
         todo!()
     }
 
@@ -132,31 +133,77 @@ impl Ord for StakeAddressRange {
 
 #[cfg(test)]
 mod tests {
+    use cardano_blockchain_types::Network;
+
     use super::*;
 
     #[test]
     fn sorted() {
-        let addresses = [].iter().collect();
+        let stake_1 = {
+            let hash = "276fd18711931e2c0e21430192dbeac0e458093cd9d1fcd7210f64b3"
+                .parse()
+                .unwrap();
+            StakeAddress::new(Network::Mainnet, true, hash)
+        };
+
+        let stake_2 = {
+            let hash = "fe0e6d6312ffb2055509b8815ddd36e01f7c696f6e2e88d7fe4bc1f6"
+                .parse()
+                .unwrap();
+            StakeAddress::new(Network::Mainnet, true, hash)
+        };
+
+        let stake_3 = {
+            let hash = "276fd18711931e2c0e21430192dbeac0e458093cd9d1fcd7210f64b3"
+                .parse()
+                .unwrap();
+            StakeAddress::new(Network::Preview, false, hash)
+        };
+
+        let addresses = [
+            (stake_1.clone(), vec![
+                StakeAddressRange {
+                    active_from: 10.into(),
+                    inactive_from: Some(20.into()),
+                },
+                StakeAddressRange {
+                    active_from: 50.into(),
+                    inactive_from: None,
+                },
+            ]),
+            (stake_2.clone(), vec![StakeAddressRange {
+                active_from: 50.into(),
+                inactive_from: Some(70.into()),
+            }]),
+            (stake_3.clone(), vec![StakeAddressRange {
+                active_from: 10.into(),
+                inactive_from: None,
+            }]),
+        ]
+        .iter()
+        .cloned()
+        .collect();
         let history = StakeAddressesHistory { addresses };
-        //history.addresses.insert().
-    }
 
-    // TODO: FIXME:
-    // 1. Ordering test.
-
-    /// Returns a stake address value for testing.
-    pub fn stake_address_1() -> StakeAddress {
-        let hash = "276fd18711931e2c0e21430192dbeac0e458093cd9d1fcd7210f64b3"
-            .parse()
-            .unwrap();
-        StakeAddress::new(Network::Mainnet, true, hash)
-    }
-
-    /// Returns a different stake address value for testing.
-    pub fn stake_address_2() -> StakeAddress {
-        let hash = "fe0e6d6312ffb2055509b8815ddd36e01f7c696f6e2e88d7fe4bc1f6"
-            .parse()
-            .unwrap();
-        StakeAddress::new(Network::Mainnet, true, hash)
+        let sorted = history.sorted();
+        let expected = [
+            (stake_1.clone(), StakeAddressRange {
+                active_from: 10.into(),
+                inactive_from: Some(20.into()),
+            }),
+            (stake_3, StakeAddressRange {
+                active_from: 10.into(),
+                inactive_from: None,
+            }),
+            (stake_2, StakeAddressRange {
+                active_from: 50.into(),
+                inactive_from: Some(70.into()),
+            }),
+            (stake_1, StakeAddressRange {
+                active_from: 50.into(),
+                inactive_from: None,
+            }),
+        ];
+        assert_eq!(sorted.as_slice(), expected);
     }
 }
