@@ -188,7 +188,11 @@ impl HermesIpfs {
         Ok(ipfs_path)
     }
 
-    /// Add file with provider
+    /// Add file with provider.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the block fails to upload or provide.
     pub async fn add_ipfs_file_with_provider(
         &self,
         data: Vec<u8>,
@@ -232,6 +236,10 @@ impl HermesIpfs {
     ///
     /// * `cid` - Content identifier to fetch.
     /// * `providers` - List of peer IDs that have the content (from DHT lookup).
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if connection to all providers fails or block retrieval fails.
     pub async fn get_ipfs_file_cbor_with_providers(
         &self,
         cid: &Cid,
