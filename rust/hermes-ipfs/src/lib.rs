@@ -183,10 +183,8 @@ impl HermesIpfs {
         &self,
         data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let cbor_data = minicbor::to_vec(data)
-            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
-        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
-        let block = Block::new(cid, cbor_data)
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&data));
+        let block = Block::new(cid, data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
         Ok(ipfs_path)
@@ -197,10 +195,8 @@ impl HermesIpfs {
         &self,
         data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let cbor_data = minicbor::to_vec(data)
-            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
-        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
-        let block = Block::new(cid, cbor_data)
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&data));
+        let block = Block::new(cid, data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
         self.node.provide(cid).await?;
