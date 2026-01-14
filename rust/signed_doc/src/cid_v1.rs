@@ -65,7 +65,7 @@ pub enum CidError {
 /// This type provides conversion methods and trait implementations for working with
 /// CID v1 identifiers, especially in the context of CBOR-encoded Catalyst Signed
 /// Documents.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Cid(cid::Cid);
 
 impl Deref for Cid {

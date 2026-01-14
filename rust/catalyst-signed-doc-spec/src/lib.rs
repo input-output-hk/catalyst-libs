@@ -13,14 +13,16 @@ pub mod signers;
 
 use std::{collections::HashMap, fmt::Display, ops::Deref};
 
-use build_info as build_info_lib;
-
 use crate::{
     cddl_definitions::CddlDefinitions, copyright::Copyright, headers::Headers, metadata::Metadata,
     payload::Payload, signers::Signers,
 };
 
-build_info_lib::build_info!(pub(crate) fn build_info);
+#[allow(clippy::doc_markdown)]
+/// Binary build info
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
 
 /// Catalyst Signed Document spec representation struct
 #[derive(serde::Deserialize)]
@@ -100,7 +102,7 @@ impl CatalystSignedDocSpec {
         let signed_doc_spec: CatalystSignedDocSpec = serde_json::from_str(signed_doc_str)
             .map_err(|e| anyhow::anyhow!("Invalid Catalyst Signed Documents JSON Spec: {e}"))?;
 
-        let crate_version = build_info().crate_info.version.to_string();
+        let crate_version = built_info::PKG_VERSION.to_string();
         let latest_version = signed_doc_spec
             .copyright
             .versions

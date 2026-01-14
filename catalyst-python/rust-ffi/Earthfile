@@ -1,0 +1,21 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.12 AS rust-ci
+
+builder:
+    DO rust-ci+SETUP
+
+    # Don't build the src in the home directory itself, because it contains stuff.
+    WORKDIR $HOME/build
+    RUN rm -rf *
+
+    COPY --keep-ts --dir \
+        Cargo.toml clippy.toml deny.toml rustfmt.toml \
+        .cargo .config \
+        src .
+
+# check : Run basic check.
+check:
+    FROM +builder
+
+    DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
