@@ -94,30 +94,12 @@ impl StakeAddressesHistory {
         let mut res: Vec<_> = self
             .addresses
             .iter()
-            .map(|(address, ranges)| ranges.iter().cloned().map(|range| (address.clone(), range)))
-            .flatten()
+            .flat_map(|(address, ranges)| {
+                ranges.iter().cloned().map(|range| (address.clone(), range))
+            })
             .collect();
         res.sort_by(|(_, a), (_, b)| a.cmp(b));
         res
-    }
-}
-
-impl PartialOrd for StakeAddressRange {
-    fn partial_cmp(
-        &self,
-        other: &Self,
-    ) -> Option<Ordering> {
-        match self.active_from.partial_cmp(&other.active_from) {
-            Some(Ordering::Equal) => {
-                match (self.inactive_from, other.inactive_from) {
-                    (None, None) => Some(Ordering::Equal),
-                    (None, Some(_)) => Some(Ordering::Greater),
-                    (Some(_), None) => Some(Ordering::Less),
-                    (Some(a), Some(b)) => a.partial_cmp(&b),
-                }
-            },
-            val => val,
-        }
     }
 }
 
@@ -126,8 +108,26 @@ impl Ord for StakeAddressRange {
         &self,
         other: &Self,
     ) -> Ordering {
-        self.partial_cmp(other)
-            .expect("StakeAddressRange should form a total order")
+        match self.active_from.cmp(&other.active_from) {
+            Ordering::Equal => {
+                match (self.inactive_from, other.inactive_from) {
+                    (None, None) => Ordering::Equal,
+                    (None, Some(_)) => Ordering::Greater,
+                    (Some(_), None) => Ordering::Less,
+                    (Some(a), Some(b)) => a.cmp(&b),
+                }
+            },
+            val => val,
+        }
+    }
+}
+
+impl PartialOrd for StakeAddressRange {
+    fn partial_cmp(
+        &self,
+        other: &Self,
+    ) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
