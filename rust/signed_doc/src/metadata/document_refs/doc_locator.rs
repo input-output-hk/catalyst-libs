@@ -19,7 +19,7 @@ const CID_MAP_KEY: &str = "cid";
 const DOC_LOC_MAP_ITEM: u64 = 1;
 
 /// Document locator wrapping a CID (Content Identifier).
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DocLocator(Cid);
 
 impl Deref for DocLocator {
