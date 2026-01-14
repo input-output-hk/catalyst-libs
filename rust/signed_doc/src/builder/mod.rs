@@ -17,6 +17,7 @@ pub mod contest_ballot_checkpoint;
 pub mod contest_delegation;
 pub mod contest_parameters;
 pub mod contest_parameters_form_template;
+pub mod ed25519;
 pub mod proposal;
 pub mod proposal_comment;
 pub mod proposal_comment_form_template;
@@ -194,6 +195,7 @@ impl SignaturesBuilder {
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
         mut self,
+        // TODO: use `Ed25519SigningKey` as an argument
         sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>,
         kid: CatalystId,
     ) -> anyhow::Result<Self> {

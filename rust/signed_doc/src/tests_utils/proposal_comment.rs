@@ -16,7 +16,7 @@ pub fn proposal_comment_doc(
         linked,
         template,
         parameters,
-        &sk,
+        &builder::ed25519::Ed25519SigningKey::Common(sk),
         kid,
         None,
     )

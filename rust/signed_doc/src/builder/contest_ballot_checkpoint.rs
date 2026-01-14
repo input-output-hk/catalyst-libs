@@ -1,14 +1,16 @@
-use ed25519_dalek::{SigningKey, ed25519::signature::Signer};
-
 use crate::{
-    CatalystSignedDocument, ContentEncoding, ContentType, builder::Builder,
-    catalyst_id::CatalystId, doc_types, metadata::Chain, uuid::UuidV7,
+    CatalystSignedDocument, ContentEncoding, ContentType,
+    builder::{Builder, ed25519::Ed25519SigningKey},
+    catalyst_id::CatalystId,
+    doc_types,
+    metadata::Chain,
+    uuid::UuidV7,
 };
 
 pub fn contest_ballot_checkpoint_doc(
     linked: &CatalystSignedDocument,
     parameters: &CatalystSignedDocument,
-    sk: &SigningKey,
+    sk: &Ed25519SigningKey,
     kid: CatalystId,
     id: Option<UuidV7>,
 ) -> anyhow::Result<CatalystSignedDocument> {
@@ -35,6 +37,6 @@ pub fn contest_ballot_checkpoint_doc(
             "chain": chain,
         }))?
         .with_cbor_content(1)?
-        .add_signature(|m| sk.sign(&m).to_vec(), kid)?
+        .add_signature(|m| sk.sign(&m), kid)?
         .build()
 }

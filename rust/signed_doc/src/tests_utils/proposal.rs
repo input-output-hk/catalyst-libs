@@ -10,5 +10,12 @@ pub fn proposal_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
     provider.add_sk(kid.clone(), sk.clone());
-    builder::proposal_doc(&serde_json::json!({}), template, parameters, &sk, kid, None)
+    builder::proposal_doc(
+        &serde_json::json!({}),
+        template,
+        parameters,
+        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        kid,
+        None,
+    )
 }

@@ -9,5 +9,11 @@ pub fn rep_nomination_form_template_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
-    builder::rep_nomination_form_template_doc(&serde_json::json!({}), parameters, &sk, kid, None)
+    builder::rep_nomination_form_template_doc(
+        &serde_json::json!({}),
+        parameters,
+        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        kid,
+        None,
+    )
 }
