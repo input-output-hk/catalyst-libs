@@ -16,7 +16,7 @@ pub fn proposal_comment_doc(
         linked,
         template,
         parameters,
-        sk,
+        &sk,
         kid,
         None,
     )

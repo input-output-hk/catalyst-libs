@@ -9,14 +9,17 @@ pub fn proposal_submission_action_doc(
     content: &serde_json::Value,
     linked: &CatalystSignedDocument,
     parameters: &CatalystSignedDocument,
-    sk: SigningKey,
-    kid: CatalystId,
+    sk: &SigningKey,
+    kid: &CatalystId,
     id: Option<UuidV7>,
 ) -> anyhow::Result<CatalystSignedDocument> {
-    let (id, ver) = id.map(|v| (v, UuidV7::new())).unwrap_or_else(|| {
-        let id = UuidV7::new();
-        (id, id)
-    });
+    let (id, ver) = id.map_or_else(
+        || {
+            let id = UuidV7::new();
+            (id, id)
+        },
+        |v| (v, UuidV7::new()),
+    );
     let linked_ref = linked.doc_ref()?;
     let parameters_ref = parameters.doc_ref()?;
 

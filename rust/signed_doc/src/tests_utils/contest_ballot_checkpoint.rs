@@ -10,5 +10,5 @@ pub fn contest_ballot_checkpoint_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
-    builder::contest_ballot_checkpoint_doc(linked, parameters, sk, kid, None)
+    builder::contest_ballot_checkpoint_doc(linked, parameters, &sk, kid, None)
 }

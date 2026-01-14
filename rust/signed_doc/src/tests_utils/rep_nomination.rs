@@ -18,7 +18,7 @@ pub fn rep_nomination_doc(
         linked,
         template,
         parameters,
-        sk,
+        &sk,
         kid,
         None,
     )

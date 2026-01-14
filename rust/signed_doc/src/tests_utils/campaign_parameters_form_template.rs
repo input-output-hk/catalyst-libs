@@ -12,7 +12,7 @@ pub fn campaign_parameters_form_template_doc(
     builder::campaign_parameters_form_template_doc(
         &serde_json::json!({}),
         parameters,
-        sk,
+        &sk,
         kid,
         None,
     )

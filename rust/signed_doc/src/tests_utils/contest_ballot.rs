@@ -12,5 +12,5 @@ pub fn contest_ballot_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
-    builder::contest_ballot_doc(linked, parameters, sk, kid, None)
+    builder::contest_ballot_doc(linked, parameters, &sk, kid, None)
 }

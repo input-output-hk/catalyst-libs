@@ -2,10 +2,11 @@
 //! # WARNING
 //! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
 
-#![allow(missing_docs)]
 #![allow(
+    missing_docs,
     clippy::expect_used,
     clippy::missing_panics_doc,
+    clippy::missing_errors_doc,
     clippy::missing_docs_in_private_items
 )]
 

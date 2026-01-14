@@ -18,8 +18,8 @@ pub fn proposal_submission_action_doc(
         }),
         linked,
         parameters,
-        sk,
-        kid,
+        &sk,
+        &kid,
         None,
     )
 }

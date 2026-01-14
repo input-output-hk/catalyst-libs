@@ -11,5 +11,5 @@ pub fn rep_profile_doc(
     let (sk, kid) = create_dummy_key_pair(RoleId::DelegatedRepresentative);
     provider.add_sk(kid.clone(), sk.clone());
 
-    builder::rep_profile_doc(&serde_json::json!({}), template, parameters, sk, kid, None)
+    builder::rep_profile_doc(&serde_json::json!({}), template, parameters, &sk, kid, None)
 }

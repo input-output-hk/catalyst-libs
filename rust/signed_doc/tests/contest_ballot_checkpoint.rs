@@ -2,6 +2,7 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot_checkpoint>
 
 use catalyst_signed_doc::{
+    builder::Builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
@@ -11,7 +12,6 @@ use catalyst_signed_doc::{
         create_dummy_key_pair, proposal_doc, proposal_form_template_doc,
     },
     validator::Validator,
-    builder::Builder,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;

@@ -10,5 +10,5 @@ pub fn campaign_parameters_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
-    builder::campaign_parameters_doc(&serde_json::json!({}), template, parameters, sk, kid, None)
+    builder::campaign_parameters_doc(&serde_json::json!({}), template, parameters, &sk, kid, None)
 }

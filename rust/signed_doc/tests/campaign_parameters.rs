@@ -2,13 +2,13 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/campaign_parameters>
 
 use catalyst_signed_doc::{
+    builder::Builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
         campaign_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
     },
     validator::Validator,
-    builder::Builder,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;

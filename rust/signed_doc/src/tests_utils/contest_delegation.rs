@@ -17,7 +17,7 @@ pub fn contest_delegation_by_representative_doc(
         &serde_json::json!({"weights" : []}),
         linked,
         parameters,
-        sk,
+        &sk,
         kid,
         None,
     )
@@ -34,7 +34,7 @@ pub fn contest_delegation_doc(
         &serde_json::json!({"weights" : []}),
         linked,
         parameters,
-        sk,
+        &sk,
         kid,
         None,
     )

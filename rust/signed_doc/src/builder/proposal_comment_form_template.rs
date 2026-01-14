@@ -8,14 +8,17 @@ use crate::{
 pub fn proposal_comment_form_template_doc(
     content: &serde_json::Value,
     parameters: &CatalystSignedDocument,
-    sk: SigningKey,
+    sk: &SigningKey,
     kid: CatalystId,
     id: Option<UuidV7>,
 ) -> anyhow::Result<CatalystSignedDocument> {
-    let (id, ver) = id.map(|v| (v, UuidV7::new())).unwrap_or_else(|| {
-        let id = UuidV7::new();
-        (id, id)
-    });
+    let (id, ver) = id.map_or_else(
+        || {
+            let id = UuidV7::new();
+            (id, id)
+        },
+        |v| (v, UuidV7::new()),
+    );
     let parameters_ref = parameters.doc_ref()?;
 
     Builder::new()
