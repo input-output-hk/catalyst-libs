@@ -8,6 +8,7 @@ use catalyst_signed_doc::{
         create_dummy_key_pair,
     },
     validator::Validator,
+    builder::Builder,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;

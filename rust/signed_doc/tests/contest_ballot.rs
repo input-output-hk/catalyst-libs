@@ -11,6 +11,7 @@ use catalyst_signed_doc::{
         proposal_doc, proposal_form_template_doc,
     },
     validator::Validator,
+    builder::Builder,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;

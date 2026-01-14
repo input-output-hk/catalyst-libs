@@ -8,6 +8,7 @@ use catalyst_signed_doc::{
         rep_profile_doc, rep_profile_form_template_doc,
     },
     validator::Validator,
+    builder::Builder,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;

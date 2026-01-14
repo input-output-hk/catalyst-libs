@@ -9,7 +9,7 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, catalyst_id::CatalystId};
+use catalyst_signed_doc::{builder::Builder, CatalystSignedDocument, catalyst_id::CatalystId};
 use clap::Parser;
 use ed25519_dalek::ed25519::signature::Signer;
 

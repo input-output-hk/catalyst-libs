@@ -151,7 +151,7 @@ mod tests {
         let ver = UuidV7::new();
 
         // Create a test document to generate a valid CID for DocLocator
-        let test_doc = crate::Builder::new()
+        let test_doc = crate::builder::Builder::new()
             .with_json_metadata(serde_json::json!({
                 "id": id.to_string(),
                 "ver": ver.to_string(),

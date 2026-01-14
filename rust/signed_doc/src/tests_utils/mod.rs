@@ -52,7 +52,8 @@ pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
 
 use crate::{
-    Builder, CatalystSignedDocument, ContentType, DocumentRef,
+    CatalystSignedDocument, ContentType, DocumentRef,
+    builder::Builder,
     catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     uuid::{UuidV4, UuidV7},

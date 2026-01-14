@@ -1,6 +1,6 @@
 //! Catalyst documents signing crate
 
-mod builder;
+pub mod builder;
 pub mod cid_v1;
 mod content;
 pub mod decode_context;
@@ -17,7 +17,6 @@ use std::{
     sync::Arc,
 };
 
-pub use builder::Builder;
 pub use catalyst_types::*;
 use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 pub use cid_v1::{Cid, CidError};

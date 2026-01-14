@@ -7,6 +7,7 @@ use catalyst_signed_doc::{
         brand_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
     },
     validator::Validator,
+    builder::Builder,
     *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
