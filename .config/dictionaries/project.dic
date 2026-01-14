@@ -182,6 +182,7 @@ ltstart
 maindbname
 mapref
 markdownlint
+maturin
 maxsplit
 mdformat
 mdit
@@ -256,6 +257,9 @@ pubkey
 publickey
 pubspec
 pycardano
+pyclass
+pyfunction
+pymodule
 pwrite
 pycodestyle
 pydantic
