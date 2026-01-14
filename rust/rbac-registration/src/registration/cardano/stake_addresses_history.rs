@@ -1,6 +1,9 @@
 //! An information about stake address used in a RBAC registration chain.
 
-use std::{cmp::Ordering, collections::HashMap};
+use std::{
+    cmp::Ordering,
+    collections::{HashMap, HashSet},
+};
 
 use anyhow::anyhow;
 use cardano_blockchain_types::{Slot, StakeAddress};
@@ -48,26 +51,51 @@ impl StakeAddressesHistory {
         Self { addresses }
     }
 
-    pub fn record_addresses(
+    /// Updates the history based on the given set of active addresses.
+    pub fn update(
         &mut self,
-        _addresses: &[StakeAddress],
-        _slot: Slot,
-    ) {
-        // TODO: FIXME:
-        todo!()
+        addresses: &HashSet<StakeAddress>,
+        slot: Slot,
+    ) -> anyhow::Result<()> {
+        let current_addresses: HashSet<_> = self.addresses.keys().cloned().collect();
+        let removed_addresses = current_addresses.difference(addresses).cloned().collect();
+
+        for address in addresses {
+            self.addresses
+                .entry(address.clone())
+                .and_modify(|ranges| {
+                    if let Some(StakeAddressRange {
+                        active_from: _,
+                        inactive_from: Some(_),
+                    }) = ranges.last_mut()
+                    {
+                        // The address was inactive - start a new range.
+                        ranges.push(StakeAddressRange {
+                            active_from: slot,
+                            inactive_from: None,
+                        });
+                    }
+                })
+                .or_insert(vec![StakeAddressRange {
+                    active_from: slot,
+                    inactive_from: None,
+                }]);
+        }
+
+        self.remove_addresses(&removed_addresses, slot)
     }
 
     /// Marks the given addresses as removed.
     pub fn remove_addresses(
         &mut self,
-        addresses: &[StakeAddress],
+        addresses: &HashSet<StakeAddress>,
         slot: Slot,
     ) -> anyhow::Result<()> {
         for address in addresses {
             let Some(ranges) = self.addresses.get_mut(address) else {
-                return Err(anyhow!(
-                    "Unable to record {address} address as removed as it isn't present in history"
-                ));
+                // This isn't an error because here we are processing all addresses of other chain
+                // and not of them are taken from this chain.
+                continue;
             };
 
             let Some(range) = ranges.last_mut() else {

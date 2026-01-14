@@ -18,6 +18,7 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
+use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
 };
@@ -503,6 +504,7 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
+    #[allow(clippy::too_many_lines)]
     #[must_use]
     fn update(
         &self,
@@ -595,6 +597,16 @@ impl RegistrationChainInner {
         let point_tx_idx = cip509.origin().clone();
 
         new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
+        if let Err(e) = new_inner.stake_addresses_history.update(
+            &new_inner.certificate_uris.active_stake_addresses(),
+            point_tx_idx.point().slot_or_default(),
+        ) {
+            error!(
+                cat_id = %self.catalyst_id,
+                err = ?e,
+                "Failed to update stake addresses history"
+            );
+        }
         new_inner
             .payment_history
             .extend(cip509.payment_history().clone());
@@ -642,6 +654,16 @@ impl RegistrationChainInner {
     ) -> Self {
         if let Some(reg) = cip509.metadata() {
             self.certificate_uris = self.certificate_uris.update_taken_uris(reg);
+            if let Err(e) = self.stake_addresses_history.remove_addresses(
+                &reg.certificate_uris.active_stake_addresses(),
+                cip509.origin().point().slot_or_default(),
+            ) {
+                error!(
+                    cat_id = %self.catalyst_id,
+                    err = ?e,
+                    "Failed to update stake addresses history by other chain"
+                );
+            }
         }
         self.latest_taken_uris_point = Some(cip509.origin().clone());
         self
