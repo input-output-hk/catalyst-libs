@@ -10,8 +10,10 @@ use cardano_blockchain_types::{Slot, StakeAddress};
 
 use crate::cardano::cip509::Cip0134UriSet;
 
+/// An information about stake address used in a RBAC registration chain.
 #[derive(Debug, Clone)]
 pub struct StakeAddressesHistory {
+    /// A map of addresses.
     addresses: HashMap<StakeAddress, Vec<StakeAddressRange>>,
 }
 
