@@ -24,6 +24,9 @@ impl UuidV7 {
     const UUID_VERSION_NUMBER: usize = 7;
 
     /// Generates a random `UUIDv7`.
+    ///
+    /// # Panics
+    ///  `Utc::now()` returns system before Unix epoch, cannot happen.
     #[must_use]
     #[allow(clippy::new_without_default, clippy::expect_used)]
     pub fn new() -> Self {
@@ -136,6 +139,7 @@ impl FromStr for UuidV7 {
     }
 }
 
+/// Retrieving `DateTime<Utc>` from a uuid timestamp component.
 fn uuid_v7_to_datetime(v: &Uuid) -> Result<DateTime<Utc>, InvalidUuidV7> {
     let (time_secs, time_nanos) = v.get_timestamp().ok_or(InvalidUuidV7(*v))?.to_unix();
     i64::try_from(time_secs)
