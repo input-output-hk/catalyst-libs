@@ -81,8 +81,8 @@ fn contest_delegation(
         .extend_rules_per_document(doc_types::CONTEST_DELEGATION.clone(), ContestDelegationRule);
 
     let is_valid = validator.validate(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
 
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
     // report

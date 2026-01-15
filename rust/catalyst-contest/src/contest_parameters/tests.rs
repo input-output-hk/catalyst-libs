@@ -2,12 +2,12 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_parameters>
 
 use catalyst_signed_doc::{
-    builder::contest_parameters_doc,
+    builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
         contest_parameters_form_template_doc, create_dummy_admin_key_pair,
-        create_key_pair_and_publish, build_doc_and_publish
+        create_key_pair_and_publish, contest_parameters_doc
     },
     validator::Validator,
     *,
@@ -19,16 +19,10 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
 
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
-        let contest = serde_json::json!({
-            "start": Utc::now(),
-            "end": Utc::now(),
-        });
-
         let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
-        contest_parameters_doc(&contest, &template, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None)
+        contest_parameters_doc(&template, &parameters, p)
     }
     => true
     ;
@@ -46,7 +40,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
         let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
-        contest_parameters_doc(&contest, &template, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None)
+        builder::contest_parameters_doc(&contest, &template, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None)
     }
     => false
     ;
@@ -64,15 +58,15 @@ fn contest_parameters(
         .extend_rules_per_document(doc_types::CONTEST_PARAMETERS.clone(), ContestParametersRule);
 
     let is_valid = validator.validate(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
 
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
     // report
     let doc = doc_gen(&mut provider).unwrap();
     let contest_delegation = ContestParameters::new(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !contest_delegation.report().is_problematic());
     println!("{:?}", contest_delegation.report());
+    assert_eq!(is_valid, !contest_delegation.report().is_problematic());
 
     is_valid
 }

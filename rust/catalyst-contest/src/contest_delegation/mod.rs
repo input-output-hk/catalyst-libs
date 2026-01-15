@@ -22,6 +22,8 @@ use catalyst_signed_doc::{
     uuid::UuidV7,
 };
 
+use crate::contest_parameters;
+
 /// `Contest Delegation` document type.
 #[derive(Debug, Clone)]
 pub struct ContestDelegation {
@@ -208,7 +210,7 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    let Some(_contest_parameters) = provider.try_get_doc(doc_ref)? else {
+    let Some(contest_parameters) = provider.try_get_doc(doc_ref)? else {
         report.functional_validation(
             &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing 'Contest Parameters' document for the Contest Delegation document",
@@ -223,6 +225,10 @@ fn contest_parameters_checks(
         );
         return Ok(false);
     };
+
+    let (_contest_parameters_payload, contest_parameters_payload_is_valid) =
+        contest_parameters::get_payload(&contest_parameters, report);
+    if contest_parameters_payload_is_valid {}
 
     // TODO: apply time based checks
     Ok(true)
