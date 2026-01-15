@@ -2,7 +2,7 @@
 //!
 //! See the [documentation] for more information.
 //!
-//! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
+//! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation
 
 pub mod rule;
 
@@ -162,7 +162,7 @@ fn get_delegator(
     (delegator, valid)
 }
 
-/// Get `CatalystSignedDocument` from the provided `CatalystSignedDocument`, fill the
+/// Get `ContestDelegationPayload` from the provided `CatalystSignedDocument`, fill the
 /// provided `ProblemReport` if something goes wrong.
 /// Returns additional boolean flag, was it valid or not.
 fn get_payload(
@@ -201,10 +201,6 @@ fn contest_parameters_checks(
     report: &ProblemReport,
 ) -> anyhow::Result<bool> {
     let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
-        report.missing_field(
-            "parameters",
-            "Contest Delegation must have a 'parameters' metadata field",
-        );
         report.missing_field(
             "parameters",
             "Contest Delegation must have a 'parameters' metadata field",
