@@ -76,7 +76,9 @@ impl ContentRule {
 
         match &spec.schema {
             Some(Schema::Json(schema)) => {
-                Ok(Self::StaticSchema(ContentSchema::Json(schema.clone())))
+                Ok(Self::StaticSchema(ContentSchema::Json(
+                    JsonSchema::try_from(schema)?,
+                )))
             },
             Some(Schema::Cddl(cddl_type)) => {
                 cddl_def

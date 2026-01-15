@@ -1,3 +1,5 @@
+use chrono::{Duration, Utc};
+
 use crate::{
     CatalystSignedDocument, builder, providers::tests::TestCatalystProvider,
     tests_utils::create_dummy_admin_key_pair,
@@ -10,8 +12,13 @@ pub fn contest_parameters_doc(
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
+    let content = serde_json::json!({
+        "start": Utc::now(),
+        "end": Utc::now().checked_add_signed(Duration::minutes(5)),
+    });
+
     builder::contest_parameters_doc(
-        &serde_json::json!({}),
+        &content,
         template,
         parameters,
         &builder::ed25519::Ed25519SigningKey::Common(sk),
