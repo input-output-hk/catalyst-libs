@@ -7,7 +7,7 @@ use catalyst_signed_doc::{
 };
 use minicbor::Decode;
 
-use crate::{Choices, ContentBallotPayload};
+use crate::{Choices, ContentBallotPayload, contest_parameters};
 
 /// An individual Ballot cast in a Contest by a registered user.
 pub struct ContestBallot {
@@ -96,39 +96,44 @@ pub fn check_parameters(
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
 ) -> anyhow::Result<()> {
-    match doc.doc_meta().parameters().and_then(|v| v.first()) {
-        None => {
-            report.missing_field(
-                "parameters",
-                "Contest Ballot must have a 'parameters' metadata field",
-            );
-        },
-        Some(doc_ref) => {
-            if provider.try_get_doc(doc_ref)?.is_none() {
-                report.functional_validation(
-                    &format!("Cannot get referenced document: {doc_ref}"),
-                    "Missing 'Contest Parameters' document for the Contest Ballot document",
-                );
-            }
-        },
-    }
+    let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
+        report.missing_field(
+            "parameters",
+            "Contest Ballot must have a 'parameters' metadata field",
+        );
+        return Ok(());
+    };
 
-    match doc.doc_meta().doc_ref().and_then(|v| v.first()) {
-        None => report.missing_field("ref", "Contest Ballot must have a 'ref' metadata field"),
-        Some(doc_ref) => {
-            if provider.try_get_doc(doc_ref)?.is_none() {
-                report.functional_validation(
-                    &format!("Cannot get referenced document: {doc_ref}"),
-                    "Missing 'Proposal' document for the Contest Ballot document",
-                );
-            }
-        },
-    }
+    let Some(contest_parameters) = provider.try_get_doc(doc_ref)? else {
+        report.functional_validation(
+            &format!("Cannot get referenced document by reference: {doc_ref}"),
+            "Missing 'Contest Parameters' document for the Contest Ballot document",
+        );
+        return Ok(());
+    };
 
-    if doc.doc_ver().is_err() {
+    let Ok(doc_ver) = doc.doc_ver() else {
         report.missing_field(
             "ver",
             "Missing 'ver' metadata field for 'Contest Ballot' document",
+        );
+        return Ok(());
+    };
+
+    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
+        contest_parameters::get_payload(&contest_parameters, report);
+    if contest_parameters_payload_is_valid
+        && (doc_ver.time() > &contest_parameters_payload.end
+            || doc_ver.time() < &contest_parameters_payload.start)
+    {
+        report.functional_validation(
+            &format!(
+                "'ver' metadata field must be in 'Contest Ballot' timeline range. 'ver': {}, start: {}, end: {}",
+                doc_ver.time(),
+                contest_parameters_payload.start,
+                contest_parameters_payload.end
+            ),
+            "'Contest Ballot' document contest timeline check",
         );
     }
 
