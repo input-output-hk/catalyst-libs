@@ -218,7 +218,7 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    let Ok(_doc_ver) = doc.doc_ver() else {
+    let Ok(doc_ver) = doc.doc_ver() else {
         report.missing_field(
             "ver",
             "Missing 'ver' metadata field for 'Contest Delegation' document",
@@ -226,11 +226,20 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    let (_contest_parameters_payload, contest_parameters_payload_is_valid) =
+    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
         contest_parameters::get_payload(&contest_parameters, report);
-    if contest_parameters_payload_is_valid {}
+    if contest_parameters_payload_is_valid {
+        if doc_ver.time() > &contest_parameters_payload.end
+            || doc_ver.time() < &contest_parameters_payload.start
+        {
+            report.functional_validation(
+                "'ver' metadata field must be in 'Contest Parameters' timeline range",
+                "'Contest Delegation' document contest timeline check",
+            );
+            return Ok(false);
+        }
+    }
 
-    // TODO: apply time based checks
     Ok(true)
 }
 
