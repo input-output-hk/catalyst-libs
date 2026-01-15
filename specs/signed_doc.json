@@ -637,6 +637,11 @@
         "changes": "* Internal dependency updates.",
         "modified": "2026-01-13",
         "version": "0.2.4"
+      },
+      {
+        "changes": "* `catalyst-signed-doc-spec` payload `Schema::Json` type.",
+        "modified": "2026-01-15",
+        "version": "0.2.5"
       }
     ]
   },
