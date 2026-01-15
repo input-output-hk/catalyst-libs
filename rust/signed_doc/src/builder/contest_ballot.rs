@@ -33,7 +33,7 @@ pub fn contest_ballot_doc(
             "ref": [linked_ref],
             "parameters": [parameters_ref],
         }))?
-        .with_cbor_content(1)?
+        .with_raw_cbor_content(&[160])?
         .add_signature(|m| sk.sign(&m), kid)?
         .build()
 }
