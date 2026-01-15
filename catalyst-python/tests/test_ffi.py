@@ -1,8 +1,8 @@
 # ruff: noqa: S101, D100, D103
 
-from catalyst_python import catalyst_python_ffi
+from catalyst_python.catalyst_python_ffi import ffi_check
 
 
 def test_ffi_integration() -> None:
-    assert catalyst_python_ffi.ffi_check(flag=True)
-    assert not catalyst_python_ffi.ffi_check(flag=False)
+    assert ffi_check(flag=True)
+    assert not ffi_check(flag=False)
