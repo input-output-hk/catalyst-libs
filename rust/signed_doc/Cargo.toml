@@ -11,12 +11,12 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.13", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.13" }
+catalyst-types = { version = "0.0.14", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.14" }
 cbork-utils = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils/v0.0.3" }
 
 # When updating the specification version, it should also be updated for the `catalyst-signed-doc-macro` crate.
 catalyst-signed-doc-macro = { version = "0.0.1", path = "../catalyst-signed-doc-macro" }
-catalyst-signed-doc-spec = { version = "0.2.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-signed-doc-spec/v0.2.4" }
+catalyst-signed-doc-spec = { version = "0.2.5", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "feat/catalyst-signed-doc-spec" }
 
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
@@ -32,7 +32,7 @@ jsonpath-rust = "0.7.5"
 ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
 tracing = "0.1.40"
 thiserror = "2.0.11"
-chrono = "0.4.42"
+chrono = { version = "0.4.42", features = ["serde"] }
 itertools = "0.14.0"
 
 # CID v1 support
