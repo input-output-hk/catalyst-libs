@@ -43,7 +43,7 @@ fn metadata() -> serde_json::Value {
 fn single_signature_validation_test() {
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
 
-    let signed_doc = Builder::new()
+    let signed_doc = builder::Builder::new()
         .with_json_metadata(metadata())
         .unwrap()
         .with_json_content(&serde_json::Value::Null)
@@ -79,7 +79,7 @@ fn single_signature_validation_test() {
     assert!(!SignatureRule::check_inner(&invalid_doc, &provider).unwrap());
 
     // case: missing signatures
-    let unsigned_doc = Builder::new()
+    let unsigned_doc = builder::Builder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "id": UuidV7::new(),
@@ -101,7 +101,7 @@ fn multiple_signatures_validation_test() {
     let (sk3, kid3) = create_dummy_key_pair(RoleId::Role0);
     let (sk_n, kid_n) = create_dummy_key_pair(RoleId::Role0);
 
-    let signed_doc = Builder::new()
+    let signed_doc = builder::Builder::new()
         .with_json_metadata(metadata())
         .unwrap()
         .with_json_content(&serde_json::Value::Null)

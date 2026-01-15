@@ -212,7 +212,7 @@ pub(crate) fn to_cid_v1(cbor_bytes: &[u8]) -> Result<Cid, CidError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, CatalystSignedDocument, ContentType};
+    use crate::{CatalystSignedDocument, ContentType, builder::Builder};
 
     /// SHA2-256 digest size in bytes.
     const SHA2_256_SIZE: usize = 32;

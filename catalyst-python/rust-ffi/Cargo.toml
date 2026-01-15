@@ -1,5 +1,5 @@
 [package]
-name = "catalyst-python"
+name = "catalyst-python-ffi"
 version = "0.1.0"
 edition = "2024"
 authors = ["Alex Pozhylenkov <alex.pozhylenkov@iohk.io>"]
@@ -45,8 +45,10 @@ missing_docs_in_private_items = "deny"
 arithmetic_side_effects = "deny"
 
 [lib]
-name = "catalyst_python"
 crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.27.2"
+
+# TODO: Use tag instead of path.
+# catalyst-signed-doc = { version = "0.0.10", path = "../../rust/signed_doc" }
