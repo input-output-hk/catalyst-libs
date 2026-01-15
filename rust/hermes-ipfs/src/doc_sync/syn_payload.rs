@@ -55,7 +55,7 @@ impl<C> Decode<'_, C> for SynNumericKeys {
 }
 
 /// Prefix array type.
-pub type PrefixArray = Vec<Blake3256>;
+pub type PrefixArray = Vec<Option<Blake3256>>;
 
 /// Payload for .syn topic.
 #[derive(Clone, Debug)]
@@ -224,7 +224,7 @@ fn is_valid_prefix_len(n: u64) -> bool {
 mod tests {
     use super::*;
 
-    fn test_pk() -> PublicKey {
+    fn test_public_key() -> PublicKey {
         [0u8; 32].try_into().unwrap()
     }
 
@@ -237,7 +237,7 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 10,
-            to: test_pk(),
+            to: test_public_key(),
             prefix: None,
             peer_root: test_blake3_256(),
             peer_count: 20,
@@ -262,8 +262,8 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 64,
-            to: test_pk(),
-            prefix: Some(vec![test_blake3_256(); 4]),
+            to: test_public_key(),
+            prefix: Some(vec![Some(test_blake3_256()); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -288,8 +288,8 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_pk(),
-            prefix: Some(vec![test_blake3_256(); 4]),
+            to: test_public_key(),
+            prefix: Some(vec![Some(test_blake3_256()); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -314,8 +314,8 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_pk(),
-            prefix: Some(vec![test_blake3_256(); 3]),
+            to: test_public_key(),
+            prefix: Some(vec![Some(test_blake3_256()); 3]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -334,9 +334,9 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_pk(),
+            to: test_public_key(),
             prefix: Some(vec![
-                test_blake3_256();
+                Some(test_blake3_256());
                 usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()
             ]),
             peer_root: test_blake3_256(),
