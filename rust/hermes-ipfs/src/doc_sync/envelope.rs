@@ -431,7 +431,7 @@ mod tests {
         signed
             .encode_with(payload.seq, &mut CborContext::Tagged)
             .unwrap();
-        signed.u64(PROTOCOL_VERSION.into() + 1).unwrap();
+        signed.u64((PROTOCOL_VERSION + 1_u8).into()).unwrap();
         <Vec<u8> as Write>::write_all(signed.writer_mut(), &payload.payload).unwrap();
         signed.encode(Signature(signature)).unwrap();
 
