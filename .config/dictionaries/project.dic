@@ -8,8 +8,8 @@ adminer
 admon
 anypolicy
 apskhem
-asat
 Arissara
+asat
 asyncio
 Attributes
 auditability
@@ -21,16 +21,17 @@ backpressure
 bech
 Behaviour
 bimap
+Bitswap
 bindgen
 bkioshn
 blockdiag
 blockfetch
 blosc
 bmac
-bytemuck
 Bogale
 bootstrapper
 BROTLI
+bytemuck
 Cabe
 cantopen
 cardano
@@ -55,6 +56,7 @@ ciphertexts
 Coap
 codegen
 codepoints
+codetable
 Collab
 connexa
 coti
@@ -261,6 +263,7 @@ pyclass
 pyfunction
 pymodule
 pwrite
+pycardano
 pycodestyle
 pydantic
 pydot

@@ -565,7 +565,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2026-01-13 |
+| Modified | 2026-01-15 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
@@ -656,6 +656,10 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 #### 0.2.4 (2026-01-13)
 
 * Internal dependency updates.
+
+#### 0.2.5 (2026-01-15)
+
+* `catalyst-signed-doc-spec` payload `Schema::Json` type.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
