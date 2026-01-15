@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{Duration, Utc};
 
 use crate::{
     CatalystSignedDocument, builder, providers::tests::TestCatalystProvider,
@@ -14,7 +14,7 @@ pub fn contest_parameters_doc(
     provider.add_sk(kid.clone(), sk.clone());
     let content = serde_json::json!({
         "start": Utc::now(),
-        "end": Utc::now(),
+        "end": Utc::now() + Duration::minutes(5),
     });
 
     builder::contest_parameters_doc(
