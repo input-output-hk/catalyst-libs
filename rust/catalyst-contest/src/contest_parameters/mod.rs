@@ -4,6 +4,8 @@
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_parameters/
 
+pub mod rule;
+
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
