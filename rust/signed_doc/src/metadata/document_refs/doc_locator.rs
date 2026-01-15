@@ -146,7 +146,7 @@ mod tests {
     use minicbor::{Decoder, Encoder};
 
     use super::*;
-    use crate::{Builder, ContentType, tests_utils::create_dummy_doc_ref};
+    use crate::{ContentType, builder::Builder, tests_utils::create_dummy_doc_ref};
 
     #[test]
     fn test_doc_locator_encode_decode() {

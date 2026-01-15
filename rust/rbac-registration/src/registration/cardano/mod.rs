@@ -1,5 +1,6 @@
 //! Chain of Cardano registration data
 
+mod stake_addresses_history;
 mod update_rbac;
 
 use std::{
@@ -17,17 +18,21 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
+use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
 };
 use x509_cert::certificate::Certificate as X509Certificate;
 
-use crate::cardano::{
-    cip509::{
-        CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
-        RoleData, RoleDataRecord, ValidationSignature,
+use crate::{
+    cardano::{
+        cip509::{
+            CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx,
+            RoleData, RoleDataRecord, ValidationSignature,
+        },
+        provider::RbacChainsProvider,
     },
-    provider::RbacChainsProvider,
+    registration::cardano::stake_addresses_history::StakeAddressesHistory,
 };
 
 /// Registration chains.
@@ -324,6 +329,12 @@ impl RegistrationChain {
         self.inner.certificate_uris.active_stake_addresses()
     }
 
+    /// Returns history information about stake addresses used in this chain.
+    #[must_use]
+    pub fn stake_addresses_history(&self) -> &StakeAddressesHistory {
+        &self.inner.stake_addresses_history
+    }
+
     /// Returns the latest know applied registration's `PointTxnIdx`.
     #[must_use]
     pub fn latest_applied(&self) -> PointTxnIdx {
@@ -368,6 +379,8 @@ struct RegistrationChainInner {
     role_data_record: HashMap<RoleId, RoleDataRecord>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
+    /// A history information about stake addresses used in this chain.
+    stake_addresses_history: StakeAddressesHistory,
 }
 
 impl RegistrationChainInner {
@@ -465,6 +478,8 @@ impl RegistrationChainInner {
             &point_tx_idx,
         );
         let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
+        let stake_addresses_history =
+            StakeAddressesHistory::new(&certificate_uris, point_tx_idx.point().slot_or_default());
         let current_tx_id_hash = PointData::new(point_tx_idx, cip509.txn_hash());
         let payment_history = cip509.payment_history().clone();
 
@@ -481,6 +496,7 @@ impl RegistrationChainInner {
             role_data_history,
             role_data_record,
             payment_history,
+            stake_addresses_history,
         })
     }
 
@@ -488,6 +504,7 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
+    #[allow(clippy::too_many_lines)]
     #[must_use]
     fn update(
         &self,
@@ -580,6 +597,16 @@ impl RegistrationChainInner {
         let point_tx_idx = cip509.origin().clone();
 
         new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
+        if let Err(e) = new_inner.stake_addresses_history.update(
+            &new_inner.certificate_uris.active_stake_addresses(),
+            point_tx_idx.point().slot_or_default(),
+        ) {
+            error!(
+                cat_id = %self.catalyst_id,
+                err = ?e,
+                "Failed to update stake addresses history"
+            );
+        }
         new_inner
             .payment_history
             .extend(cip509.payment_history().clone());
@@ -627,6 +654,16 @@ impl RegistrationChainInner {
     ) -> Self {
         if let Some(reg) = cip509.metadata() {
             self.certificate_uris = self.certificate_uris.update_taken_uris(reg);
+            if let Err(e) = self.stake_addresses_history.remove_addresses(
+                &reg.certificate_uris.active_stake_addresses(),
+                cip509.origin().point().slot_or_default(),
+            ) {
+                error!(
+                    cat_id = %self.catalyst_id,
+                    err = ?e,
+                    "Failed to update stake addresses history by other chain"
+                );
+            }
         }
         self.latest_taken_uris_point = Some(cip509.origin().clone());
         self
