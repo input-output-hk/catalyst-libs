@@ -657,6 +657,10 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 
 * Internal dependency updates.
 
+#### 0.2.5 (2026-01-15)
+
+* `catalyst-signed-doc-spec` payload `Schema::Json` type.
+
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
