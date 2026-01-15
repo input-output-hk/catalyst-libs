@@ -6,8 +6,9 @@ use catalyst_signed_doc::{
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
         contest_delegation_by_representative_doc, contest_delegation_doc, contest_parameters_doc,
-        contest_parameters_form_template_doc, rep_nomination_doc, rep_nomination_form_template_doc,
-        rep_profile_doc, rep_profile_form_template_doc, create_key_pair_and_publish, create_dummy_admin_key_pair
+        contest_parameters_form_template_doc, create_dummy_admin_key_pair,
+        create_key_pair_and_publish, rep_nomination_doc, rep_nomination_form_template_doc,
+        rep_profile_doc, rep_profile_form_template_doc,
     },
     validator::Validator,
     *,
@@ -38,8 +39,8 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let content = serde_json::json!({
-            "start": Utc::now() + Duration::hours(1),
-            "end": Utc::now() + Duration::hours(5),
+            "start": Utc::now().checked_add_signed(Duration::hours(1)),
+            "end": Utc::now().checked_add_signed(Duration::hours(5)),
         });
 
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
@@ -61,8 +62,8 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let content = serde_json::json!({
-            "start": Utc::now() - Duration::hours(5),
-            "end": Utc::now() - Duration::hours(1),
+            "start": Utc::now().checked_sub_signed(Duration::hours(5)),
+            "end": Utc::now().checked_sub_signed(Duration::hours(1)),
         });
 
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
@@ -98,7 +99,7 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
 )]
 #[test_case(
     |p| {
-        let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
+        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
         let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;

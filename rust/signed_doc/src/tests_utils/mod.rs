@@ -114,7 +114,6 @@ pub fn create_dummy_doc_ref() -> DocumentRef {
     test_doc.doc_ref().expect("Must be valid DocumentRef")
 }
 
-#[must_use]
 pub fn build_doc_and_publish(
     provider: &mut TestCatalystProvider,
     gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>,

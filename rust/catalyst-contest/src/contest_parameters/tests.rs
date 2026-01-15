@@ -19,7 +19,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
 
 #[test_case(
     |p| {
-        let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
+        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         contest_parameters_doc(&template, &parameters, p)
@@ -37,7 +37,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
             "end": time,
         });
 
-        let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
+        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         builder::contest_parameters_doc(&content, &template, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None)

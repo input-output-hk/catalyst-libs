@@ -229,11 +229,11 @@ fn contest_parameters_checks(
 
     let (contest_parameters_payload, contest_parameters_payload_is_valid) =
         contest_parameters::get_payload(&contest_parameters, report);
-    if contest_parameters_payload_is_valid {
-        if doc_ver.time() > &contest_parameters_payload.end
-            || doc_ver.time() < &contest_parameters_payload.start
-        {
-            report.functional_validation(
+    if contest_parameters_payload_is_valid
+        && (doc_ver.time() > &contest_parameters_payload.end
+            || doc_ver.time() < &contest_parameters_payload.start)
+    {
+        report.functional_validation(
                 &format!(
                     "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
                     doc_ver.time(),
@@ -242,8 +242,7 @@ fn contest_parameters_checks(
                 ),
                 "'Contest Delegation' document contest timeline check",
             );
-            return Ok(false);
-        }
+        return Ok(false);
     }
 
     Ok(true)
