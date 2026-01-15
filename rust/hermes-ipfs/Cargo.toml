@@ -11,7 +11,7 @@ repository.workspace = true
 workspace = true
 
 [features]
-doc-sync = ["ed25519-dalek", "catalyst-types", "blake3"]
+doc-sync = ["ed25519-dalek", "catalyst-types", "blake3", "minicbor"]
 
 [dependencies]
 anyhow = "1.0.100"
@@ -25,7 +25,7 @@ tokio = "1.46.0"
 futures = "0.3.31"
 libp2p = "0.56.0"
 connexa = { version = "0.4.1", features = ["full"] }
-minicbor = { version = "0.25.1", features = ["alloc", "derive", "half"] }
+minicbor = { version = "0.25.1", features = ["alloc", "derive", "half"], optional = true }
 ed25519-dalek = { version = "2.1.1", optional = true }
 catalyst-types = { version = "0.0.11", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.11", optional = true }
 tracing = "0.1.43"

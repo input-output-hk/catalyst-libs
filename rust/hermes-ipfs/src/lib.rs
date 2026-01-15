@@ -168,7 +168,7 @@ impl HermesIpfs {
     ///
     /// ## Parameters
     ///
-    /// * `data` - `Vec<u8>` Data to be uploaded.
+    /// * `cbor_data` - `Vec<u8>` CBOR-encoded data to be uploaded.
     ///
     /// ## Returns
     ///
@@ -179,10 +179,10 @@ impl HermesIpfs {
     /// Returns an error if the block fails to upload.
     pub async fn add_ipfs_file(
         &self,
-        data: Vec<u8>,
+        cbor_data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&data));
-        let block = Block::new(cid, data)
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
+        let block = Block::new(cid, cbor_data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
         Ok(ipfs_path)
@@ -195,10 +195,10 @@ impl HermesIpfs {
     /// Returns an error if the block fails to upload or provide.
     pub async fn add_ipfs_file_with_provider(
         &self,
-        data: Vec<u8>,
+        cbor_data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&data));
-        let block = Block::new(cid, data)
+        let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
+        let block = Block::new(cid, cbor_data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
         let ipfs_path: IpfsPath = self.node.put_block(&block).await?.into();
         self.node.provide(cid).await?;
