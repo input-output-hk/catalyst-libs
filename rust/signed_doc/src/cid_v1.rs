@@ -65,7 +65,7 @@ pub enum CidError {
 /// This type provides conversion methods and trait implementations for working with
 /// CID v1 identifiers, especially in the context of CBOR-encoded Catalyst Signed
 /// Documents.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Cid(cid::Cid);
 
 impl Deref for Cid {
@@ -212,7 +212,7 @@ pub(crate) fn to_cid_v1(cbor_bytes: &[u8]) -> Result<Cid, CidError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, CatalystSignedDocument, ContentType};
+    use crate::{CatalystSignedDocument, ContentType, builder::Builder};
 
     /// SHA2-256 digest size in bytes.
     const SHA2_256_SIZE: usize = 32;

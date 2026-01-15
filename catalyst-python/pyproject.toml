@@ -23,6 +23,7 @@ requires = ["maturin>=1.11,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
+module-name = "catalyst_python.catalyst_python_ffi"
 manifest-path = "rust-ffi/Cargo.toml"
 python-source = "src"
 

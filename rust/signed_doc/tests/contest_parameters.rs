@@ -2,6 +2,7 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_parameters>
 
 use catalyst_signed_doc::{
+    builder::Builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, campaign_parameters_doc,
