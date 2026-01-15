@@ -7,27 +7,27 @@ use catalyst_signed_doc::{
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc,
         contest_parameters_form_template_doc, create_dummy_admin_key_pair,
-        create_key_pair_and_publish,
+        create_key_pair_and_publish, build_doc_and_publish
     },
     validator::Validator,
     *,
 };
-use test_case::test_case;
 use chrono::Utc;
+use test_case::test_case;
 
 use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
 
 #[test_case(
-    |provider| {
-        let (sk, kid) = create_key_pair_and_publish(provider, create_dummy_admin_key_pair);
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let contest = serde_json::json!({
             "start": Utc::now(),
             "end": Utc::now(),
         });
 
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = contest_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
+        let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         contest_parameters_doc(&contest, &template, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None)
     }
     => true
@@ -35,17 +35,17 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
     "valid document"
 )]
 #[test_case(
-    |provider| {
-        let (sk, kid) = create_key_pair_and_publish(provider, create_dummy_admin_key_pair);
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let time = Utc::now();
         let contest = serde_json::json!({
             "start": time,
             "end": time,
         });
 
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = brand_parameters_doc(&template, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = contest_parameters_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
+        let template = build_doc_and_publish(p, |p| brand_parameters_form_template_doc(p))?;
+        let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         contest_parameters_doc(&contest, &template, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None)
     }
     => false

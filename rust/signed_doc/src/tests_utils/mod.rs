@@ -115,6 +115,16 @@ pub fn create_dummy_doc_ref() -> DocumentRef {
 }
 
 #[must_use]
+pub fn build_doc_and_publish(
+    provider: &mut TestCatalystProvider,
+    gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
+) -> anyhow::Result<CatalystSignedDocument> {
+    let doc = gen_fn(provider)?;
+    provider.add_document(&doc)?;
+    Ok(doc)
+}
+
+#[must_use]
 pub fn create_key_pair_and_publish(
     provider: &mut TestCatalystProvider,
     gen_fn: impl FnOnce() -> (ed25519_dalek::SigningKey, CatalystId),

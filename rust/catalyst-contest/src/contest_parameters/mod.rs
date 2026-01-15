@@ -38,11 +38,11 @@ impl PartialEq for ContestParameters {
 
 /// Content Parameters JSON payload type.
 #[derive(Debug, Clone, Default, serde::Deserialize)]
-struct ContestParametersPayload {
+pub(crate) struct ContestParametersPayload {
     /// Contest start date
-    start: DateTime<Utc>,
+    pub(crate) start: DateTime<Utc>,
     /// Contest end date
-    end: DateTime<Utc>,
+    pub(crate) end: DateTime<Utc>,
 }
 
 impl ContestParameters {
@@ -115,7 +115,7 @@ impl ContestParameters {
 /// Get `ContestParametersPayload` from the provided `CatalystSignedDocument`, fill the
 /// provided `ProblemReport` if something goes wrong.
 /// Returns additional boolean flag, was it valid or not.
-fn get_payload(
+pub(crate) fn get_payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
 ) -> (ContestParametersPayload, bool) {
