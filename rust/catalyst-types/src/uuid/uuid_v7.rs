@@ -31,14 +31,14 @@ impl UuidV7 {
     #[allow(clippy::new_without_default, clippy::expect_used)]
     pub fn new() -> Self {
         let dt = Utc::now();
-        Uuid::new_v7(Timestamp::from_unix(
+        let v = Uuid::new_v7(Timestamp::from_unix(
             NoContext,
             dt.timestamp()
                 .try_into()
                 .expect("Utc::now() returns system before Unix epoch"),
             dt.timestamp_subsec_nanos(),
         ));
-        Self(Uuid::now_v7(), dt)
+        Self(v, dt)
     }
 
     /// Returns the corresponding `DateTime<Utc>`.
