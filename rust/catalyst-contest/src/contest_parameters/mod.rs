@@ -6,6 +6,9 @@
 
 pub mod rule;
 
+#[cfg(test)]
+mod tests;
+
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
@@ -135,6 +138,14 @@ fn get_payload(
                 valid = false;
             })
             .unwrap_or_default();
+
+    if payload.start >= payload.end {
+        report.functional_validation(
+            "Invalid Document content, end date must be after the start date.",
+            "Cannot get a document content during Contest Parameters document validation.",
+        );
+        valid = false;
+    }
 
     (payload, valid)
 }
