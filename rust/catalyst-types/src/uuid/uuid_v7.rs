@@ -6,12 +6,12 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use minicbor::{Decode, Decoder, Encode};
-use uuid::{NoContext, Timestamp, Uuid};
+use uuid::Uuid;
 
 use super::{CborContext, decode_cbor_uuid, encode_cbor_uuid};
 
 /// Type representing a `UUIDv7`.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash, serde::Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct UuidV7(Uuid, DateTime<Utc>);
 
 /// `UUIDv7` invalid error
@@ -30,15 +30,10 @@ impl UuidV7 {
     #[must_use]
     #[allow(clippy::new_without_default, clippy::expect_used)]
     pub fn new() -> Self {
-        let dt = Utc::now();
-        let v = Uuid::new_v7(Timestamp::from_unix(
-            NoContext,
-            dt.timestamp()
-                .try_into()
-                .expect("Utc::now() returns system before Unix epoch"),
-            dt.timestamp_subsec_nanos(),
-        ));
-        Self(v, dt)
+        let uuid = Uuid::now_v7();
+        let dt =
+            uuid_v7_to_datetime(&uuid).expect("cannot retrieve datetime from the valid UUID V7");
+        Self(uuid, dt)
     }
 
     /// Returns the corresponding `DateTime<Utc>`.
@@ -119,6 +114,18 @@ impl<'de> serde::Deserialize<'de> for UuidV7 {
     }
 }
 
+impl serde::Serialize for UuidV7 {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
 /// `FromStr` invalid error
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ParsingError {
@@ -168,5 +175,21 @@ mod tests {
     #[test]
     fn test_valid_uuid() {
         assert!(UuidV7::try_from(Uuid::now_v7()).is_ok());
+    }
+
+    #[test]
+    fn datetime_and_uuid_timestamp_alignment() {
+        let uuid = UuidV7::new();
+        let uuid_timestamp = uuid.uuid().get_timestamp().unwrap();
+
+        assert_eq!(uuid.to_string().parse::<UuidV7>().unwrap(), uuid);
+        assert_eq!(
+            u64::try_from(uuid.time().timestamp()).unwrap(),
+            uuid_timestamp.to_unix().0
+        );
+        assert_eq!(
+            uuid.time().timestamp_subsec_nanos(),
+            uuid_timestamp.to_unix().1
+        );
     }
 }
