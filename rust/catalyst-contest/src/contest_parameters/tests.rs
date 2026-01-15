@@ -50,21 +50,21 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
 fn contest_parameters(
     doc_gen: impl Fn(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
-    let mut provider = TestCatalystProvider::default();
-    let doc = doc_gen(&mut provider).unwrap();
+    let mut p = TestCatalystProvider::default();
+    let doc = doc_gen(&mut p).unwrap();
 
     let mut validator = Validator::new();
     validator
         .extend_rules_per_document(doc_types::CONTEST_PARAMETERS.clone(), ContestParametersRule);
 
-    let is_valid = validator.validate(&doc, &provider).unwrap();
+    let is_valid = validator.validate(&doc, &p).unwrap();
     println!("{:?}", doc.report());
     assert_eq!(is_valid, !doc.report().is_problematic());
 
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
     // report
-    let doc = doc_gen(&mut provider).unwrap();
-    let contest_delegation = ContestParameters::new(&doc, &provider).unwrap();
+    let doc = doc_gen(&mut p).unwrap();
+    let contest_delegation = ContestParameters::new(&doc, &p).unwrap();
     println!("{:?}", contest_delegation.report());
     assert_eq!(is_valid, !contest_delegation.report().is_problematic());
 
