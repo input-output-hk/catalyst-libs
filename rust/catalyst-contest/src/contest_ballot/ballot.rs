@@ -90,6 +90,7 @@ pub fn payload(
     Some(payload)
 }
 
+/// Checks the parameters of a document.
 pub fn check_parameters(
     doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
@@ -134,6 +135,7 @@ pub fn check_parameters(
     Ok(())
 }
 
+/// Checks the proof.
 pub fn check_proof(
     payload: &ContentBallotPayload,
     _report: &ProblemReport,
