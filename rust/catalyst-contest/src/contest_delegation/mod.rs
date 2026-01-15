@@ -131,6 +131,7 @@ impl ContestDelegation {
 
         let (delegator, _) = get_delegator(doc, &report);
         let (payload, _) = get_payload(doc, &report);
+        contest_parameters_checks(doc, provider, &report)?;
         let (delegations, _) = get_delegations(doc, payload, provider, &report)?;
 
         Ok(ContestDelegation {
@@ -233,7 +234,12 @@ fn contest_parameters_checks(
             || doc_ver.time() < &contest_parameters_payload.start
         {
             report.functional_validation(
-                "'ver' metadata field must be in 'Contest Parameters' timeline range",
+                &format!(
+                    "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
+                    doc_ver.time(),
+                    contest_parameters_payload.start,
+                    contest_parameters_payload.end
+                ),
                 "'Contest Delegation' document contest timeline check",
             );
             return Ok(false);

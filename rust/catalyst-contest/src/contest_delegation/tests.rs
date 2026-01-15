@@ -7,11 +7,12 @@ use catalyst_signed_doc::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
         contest_delegation_by_representative_doc, contest_delegation_doc, contest_parameters_doc,
         contest_parameters_form_template_doc, rep_nomination_doc, rep_nomination_form_template_doc,
-        rep_profile_doc, rep_profile_form_template_doc,
+        rep_profile_doc, rep_profile_form_template_doc, create_key_pair_and_publish, create_dummy_admin_key_pair
     },
     validator::Validator,
     *,
 };
+use chrono::{Duration, Utc};
 use test_case::test_case;
 
 use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
@@ -32,6 +33,52 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
     => true
     ;
     "valid document"
+)]
+#[test_case(
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let content = serde_json::json!({
+            "start": Utc::now() + Duration::hours(1),
+            "end": Utc::now() + Duration::hours(5),
+        });
+
+        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_doc_and_publish(p, |_|  builder::contest_parameters_doc(&content, &template, &brand, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None))?;
+        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
+        contest_delegation_doc(&rep_nomination, &contest, p)
+    }
+    => false
+    ;
+    "failed timeline check, too early"
+)]
+#[test_case(
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let content = serde_json::json!({
+            "start": Utc::now() - Duration::hours(5),
+            "end": Utc::now() - Duration::hours(1),
+        });
+
+        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_doc_and_publish(p, |_|  builder::contest_parameters_doc(&content, &template, &brand, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None))?;
+        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
+        contest_delegation_doc(&rep_nomination, &contest, p)
+    }
+    => false
+    ;
+    "failed timeline check, too old"
 )]
 #[test_case(
     |p| {
