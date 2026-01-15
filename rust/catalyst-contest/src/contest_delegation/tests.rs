@@ -4,10 +4,10 @@
 use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
         contest_delegation_by_representative_doc, contest_delegation_doc, contest_parameters_doc,
         contest_parameters_form_template_doc, rep_nomination_doc, rep_nomination_form_template_doc,
-        rep_profile_doc, rep_profile_form_template_doc, build_doc_and_publish
+        rep_profile_doc, rep_profile_form_template_doc,
     },
     validator::Validator,
     *,

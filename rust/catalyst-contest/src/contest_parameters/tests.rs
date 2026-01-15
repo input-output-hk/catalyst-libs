@@ -6,8 +6,8 @@ use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
-        contest_parameters_form_template_doc, create_dummy_admin_key_pair,
-        create_key_pair_and_publish, contest_parameters_doc
+        contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_admin_key_pair,
+        create_key_pair_and_publish,
     },
     validator::Validator,
     *,
