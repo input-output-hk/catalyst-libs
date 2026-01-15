@@ -68,7 +68,7 @@ pub struct MsgSyn {
     pub to: PublicKey,
     /// Array of SMT node hashes at depth D left-to-right across the tree.
     /// The size of the array MUST be 2 to power of N (2,4,8...,16384).
-    pub prefix: Option<PrefixArray>,
+    pub prefixes: Option<PrefixArray>,
     /// Last observed SMT root (BLAKE3-256 hash) of the target peer.
     pub peer_root: Blake3256,
     /// Last observed document count of the target peer.
@@ -82,7 +82,7 @@ impl MsgSyn {
     /// Get the number of fields for .syn payload
     fn num_fields(&self) -> u64 {
         // Prefix is optional or count is less than or equal to the min threshold, skip the field
-        if self.prefix.is_none() || self.count <= MIN_DOC_COUNT_PREFIX_THRESHOLD {
+        if self.prefixes.is_none() || self.count <= MIN_DOC_COUNT_PREFIX_THRESHOLD {
             Self::MAX_NUM_FIELDS.saturating_sub(1)
         } else {
             Self::MAX_NUM_FIELDS
@@ -100,7 +100,7 @@ impl<C> Encode<C> for MsgSyn {
         encode_marked(SynNumericKeys::Root, &self.root, e)?;
         encode_marked(SynNumericKeys::Count, &self.count, e)?;
         encode_marked(SynNumericKeys::To, &self.to, e)?;
-        if let Some(prefix) = &self.prefix {
+        if let Some(prefix) = &self.prefixes {
             // Only encode the prefix if the doc count exceeds the threshold
             if self.count > MIN_DOC_COUNT_PREFIX_THRESHOLD {
                 encode_prefix(prefix, e)?;
@@ -172,7 +172,7 @@ impl<C> Decode<'_, C> for MsgSyn {
             root,
             count,
             to,
-            prefix,
+            prefixes: prefix,
             peer_root,
             peer_count,
         })
@@ -238,7 +238,7 @@ mod tests {
             root: test_blake3_256(),
             count: 10,
             to: test_public_key(),
-            prefix: None,
+            prefixes: None,
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -252,7 +252,8 @@ mod tests {
         assert_eq!(msg.root, decoded.root);
         assert_eq!(msg.count, decoded.count);
         assert_eq!(msg.to, decoded.to);
-        assert_eq!(msg.prefix, decoded.prefix);
+        assert_eq!(msg.prefixes, decoded.prefixes);
+        assert!(decoded.prefixes.is_none());
         assert_eq!(msg.peer_root, decoded.peer_root);
         assert_eq!(msg.peer_count, decoded.peer_count);
     }
@@ -263,7 +264,7 @@ mod tests {
             root: test_blake3_256(),
             count: 64,
             to: test_public_key(),
-            prefix: Some(vec![Some(test_blake3_256()); 4]),
+            prefixes: Some(vec![Some(test_blake3_256()); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -278,7 +279,7 @@ mod tests {
         assert_eq!(msg.count, decoded.count);
         assert_eq!(msg.to, decoded.to);
         // Prefix shouldn't be encoded
-        assert_eq!(None, decoded.prefix);
+        assert!(decoded.prefixes.is_none());
         assert_eq!(msg.peer_root, decoded.peer_root);
         assert_eq!(msg.peer_count, decoded.peer_count);
     }
@@ -289,7 +290,7 @@ mod tests {
             root: test_blake3_256(),
             count: 80,
             to: test_public_key(),
-            prefix: Some(vec![Some(test_blake3_256()); 4]),
+            prefixes: Some(vec![Some(test_blake3_256()); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -303,8 +304,40 @@ mod tests {
         assert_eq!(msg.root, decoded.root);
         assert_eq!(msg.count, decoded.count);
         assert_eq!(msg.to, decoded.to);
-        // Prefix shouldn't be encoded
-        assert_eq!(msg.prefix, decoded.prefix);
+        assert_eq!(msg.prefixes, decoded.prefixes);
+        assert!(decoded.prefixes.is_some());
+        assert_eq!(msg.peer_root, decoded.peer_root);
+        assert_eq!(msg.peer_count, decoded.peer_count);
+    }
+
+    #[test]
+    fn test_encode_decode_with_none_in_prefix_array() {
+        let prefixes = Some(vec![
+            Some(test_blake3_256()),
+            None,
+            Some(test_blake3_256()),
+            None,
+        ]);
+        let msg = MsgSyn {
+            root: test_blake3_256(),
+            count: 80,
+            to: test_public_key(),
+            prefixes,
+            peer_root: test_blake3_256(),
+            peer_count: 20,
+        };
+
+        let mut buf = minicbor::Encoder::new(vec![]);
+        buf.encode(&msg).expect("Encoding should succeed");
+        let encoded = buf.into_writer();
+        let decoded = Syn::decode(&mut minicbor::Decoder::new(&encoded), &mut ())
+            .expect("Decoding should succeed");
+
+        assert_eq!(msg.root, decoded.root);
+        assert_eq!(msg.count, decoded.count);
+        assert_eq!(msg.to, decoded.to);
+        assert_eq!(msg.prefixes, decoded.prefixes);
+        assert!(decoded.prefixes.is_some());
         assert_eq!(msg.peer_root, decoded.peer_root);
         assert_eq!(msg.peer_count, decoded.peer_count);
     }
@@ -315,7 +348,7 @@ mod tests {
             root: test_blake3_256(),
             count: 80,
             to: test_public_key(),
-            prefix: Some(vec![Some(test_blake3_256()); 3]),
+            prefixes: Some(vec![Some(test_blake3_256()); 3]),
             peer_root: test_blake3_256(),
             peer_count: 20,
         };
@@ -335,7 +368,7 @@ mod tests {
             root: test_blake3_256(),
             count: 80,
             to: test_public_key(),
-            prefix: Some(vec![
+            prefixes: Some(vec![
                 Some(test_blake3_256());
                 usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()
             ]),
