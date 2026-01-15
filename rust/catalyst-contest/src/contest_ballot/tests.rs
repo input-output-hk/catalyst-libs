@@ -39,11 +39,11 @@ fn contest_ballot(
     validator.extend_rules_per_document(doc_types::CONTEST_BALLOT.clone(), ContestBallotRule {});
 
     let is_valid = validator.validate(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !doc.report().is_problematic());
     println!("{:?}", doc.report());
+    assert_eq!(is_valid, !doc.report().is_problematic());
 
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
-    // report
+    // report.
     let doc = doc_gen(&mut provider).unwrap();
     let contest_ballot = ContestBallot::new(&doc, &provider).unwrap();
     assert_eq!(is_valid, !contest_ballot.report().is_problematic());

@@ -22,6 +22,6 @@ impl CatalystSignedDocumentValidationRule for ContestBallotRule {
         }
         check_parameters(doc, provider, doc.report())?;
 
-        Ok(doc.report().is_problematic())
+        Ok(!doc.report().is_problematic())
     }
 }
