@@ -4,14 +4,15 @@ use std::{
     str::FromStr,
 };
 
+use chrono::{DateTime, Utc};
 use minicbor::{Decode, Decoder, Encode};
-use uuid::Uuid;
+use uuid::{NoContext, Timestamp, Uuid};
 
 use super::{CborContext, decode_cbor_uuid, encode_cbor_uuid};
 
 /// Type representing a `UUIDv7`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash, serde::Serialize)]
-pub struct UuidV7(Uuid);
+pub struct UuidV7(Uuid, DateTime<Utc>);
 
 /// `UUIDv7` invalid error
 #[derive(Debug, Clone, thiserror::Error)]
@@ -22,29 +23,31 @@ impl UuidV7 {
     /// Version for `UUIDv7`.
     const UUID_VERSION_NUMBER: usize = 7;
 
-    /// Generates a random `UUIDv4`.
+    /// Generates a random `UUIDv7`.
     #[must_use]
-    #[allow(clippy::new_without_default)]
+    #[allow(clippy::new_without_default, clippy::expect_used)]
     pub fn new() -> Self {
-        Self(Uuid::now_v7())
+        let dt = Utc::now();
+        Uuid::new_v7(Timestamp::from_unix(
+            NoContext,
+            dt.timestamp()
+                .try_into()
+                .expect("Utc::now() returns system before Unix epoch"),
+            dt.timestamp_subsec_nanos(),
+        ));
+        Self(Uuid::now_v7(), dt)
+    }
+
+    /// Returns the corresponding `DateTime<Utc>`.
+    #[must_use]
+    pub fn time(&self) -> &DateTime<Utc> {
+        &self.1
     }
 
     /// Returns the `uuid::Uuid` type.
     #[must_use]
     pub fn uuid(&self) -> Uuid {
         self.0
-    }
-
-    /// A const alternative impl of `TryFrom<Uuid>`
-    ///
-    /// # Errors
-    ///   - `InvalidUuidV7`
-    pub const fn try_from_uuid(uuid: Uuid) -> Result<Self, InvalidUuidV7> {
-        if is_valid(&uuid) {
-            Ok(Self(uuid))
-        } else {
-            Err(InvalidUuidV7(uuid))
-        }
     }
 }
 
@@ -68,7 +71,7 @@ impl Decode<'_, CborContext> for UuidV7 {
         ctx: &mut CborContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let uuid = decode_cbor_uuid(d, ctx)?;
-        Self::try_from_uuid(uuid).map_err(minicbor::decode::Error::message)
+        Self::try_from(uuid).map_err(minicbor::decode::Error::message)
     }
 }
 
@@ -87,7 +90,12 @@ impl TryFrom<Uuid> for UuidV7 {
     type Error = InvalidUuidV7;
 
     fn try_from(uuid: Uuid) -> Result<Self, Self::Error> {
-        Self::try_from_uuid(uuid)
+        if is_valid(&uuid) {
+            let datetime = uuid_v7_to_datetime(&uuid)?;
+            Ok(Self(uuid, datetime))
+        } else {
+            Err(InvalidUuidV7(uuid))
+        }
     }
 }
 
@@ -104,7 +112,7 @@ impl<'de> serde::Deserialize<'de> for UuidV7 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         let uuid = Uuid::deserialize(deserializer)?;
-        Self::try_from_uuid(uuid).map_err(serde::de::Error::custom)
+        Self::try_from(uuid).map_err(serde::de::Error::custom)
     }
 }
 
@@ -124,8 +132,16 @@ impl FromStr for UuidV7 {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let uuid = Uuid::parse_str(s).map_err(|_| ParsingError::StringConversion(s.to_string()))?;
-        Ok(Self::try_from_uuid(uuid)?)
+        Ok(Self::try_from(uuid)?)
     }
+}
+
+fn uuid_v7_to_datetime(v: &Uuid) -> Result<DateTime<Utc>, InvalidUuidV7> {
+    let (time_secs, time_nanos) = v.get_timestamp().ok_or(InvalidUuidV7(*v))?.to_unix();
+    i64::try_from(time_secs)
+        .ok()
+        .and_then(|time_secs| DateTime::from_timestamp(time_secs, time_nanos))
+        .ok_or(InvalidUuidV7(*v))
 }
 
 #[cfg(test)]
