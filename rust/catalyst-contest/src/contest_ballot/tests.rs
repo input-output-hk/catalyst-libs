@@ -5,9 +5,9 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, doc_types,
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, contest_ballot_doc,
-        contest_parameters_doc, contest_parameters_form_template_doc, proposal_doc,
-        proposal_form_template_doc,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
+        contest_ballot_doc, contest_parameters_doc, contest_parameters_form_template_doc,
+        proposal_doc, proposal_form_template_doc,
     },
     validator::Validator,
 };
@@ -16,14 +16,14 @@ use test_case::test_case;
 use crate::{ContestBallotRule, contest_ballot::ballot::ContestBallot};
 
 #[test_case(
-    |provider| {
-        let brand = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let brand = brand_parameters_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = contest_parameters_form_template_doc(&brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let parameters = contest_parameters_doc(&template, &brand, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let template = proposal_form_template_doc(&parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        let proposal = proposal_doc(&template, &parameters, provider).inspect(|v| provider.add_document(v).unwrap())?;
-        contest_ballot_doc(&proposal, &parameters, provider)
+    |p| {
+        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        contest_ballot_doc(&proposal, &parameters, p)
     }
     => true
     ;
