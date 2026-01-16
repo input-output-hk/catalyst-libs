@@ -1,166 +1,179 @@
 //! An individual Ballot cast in a Contest by a registered user.
 
-use std::collections::BTreeMap;
+use anyhow::{bail, ensure};
+use catalyst_signed_doc::{
+    CatalystSignedDocument, doc_types::CONTEST_BALLOT, problem_report::ProblemReport,
+    providers::CatalystSignedDocumentProvider,
+};
+use minicbor::Decode;
 
-use cbork_utils::{decode_context::DecodeCtx, map::Map};
-use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
-
-use crate::{Choices, EncryptedChoices};
+use crate::{Choices, ContentBallotPayload, contest_parameters};
 
 /// An individual Ballot cast in a Contest by a registered user.
-///
-/// The CDDL schema:
-/// ```cddl
-/// contest-ballot-payload = {
-///     + uint => choices
-///     ? "column-proof" : column-proof
-///     ? "matrix-proof" : matrix-proof
-///     ? "voter-choice" : voter-choice
-/// }
-/// ```
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ContentBallotPayload {
-    /// A map of voters choices.
-    pub choices: BTreeMap<u64, Choices>,
-    /// A universal encrypted column proof.
-    ///
-    /// This is a placeholder for now and should always be `None`.
-    pub column_proof: Option<()>,
-    /// A universal encrypted matrix proof.
-    ///
-    /// This is a placeholder for now and should always be `None`.
-    pub matrix_proof: Option<()>,
-    /// An encrypted voter choice payload.
-    pub voter_choices: Option<EncryptedChoices>,
+pub struct ContestBallot {
+    /// A contest ballot payload.
+    payload: Option<ContentBallotPayload>,
+    /// A report containing all the issues occurred during `ContestBallot` validation.
+    report: ProblemReport,
 }
 
-impl Decode<'_, ()> for ContentBallotPayload {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
-        use minicbor::data::Type;
-
-        let map = Map::decode(d, &mut DecodeCtx::Deterministic)?;
-
-        let mut choices = BTreeMap::new();
-        let column_proof = None;
-        let matrix_proof = None;
-        let mut voter_choices = None;
-
-        for entry in map {
-            let mut key_decoder = Decoder::new(&entry.key_bytes);
-            let mut value_decoder = Decoder::new(&entry.value);
-
-            match key_decoder.datatype()? {
-                Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
-                    let key = key_decoder.u64()?;
-                    let val = Choices::decode(&mut value_decoder, ctx)?;
-                    choices.insert(key, val);
-                },
-                Type::String => {
-                    match key_decoder.str()? {
-                        "column-proof" => {
-                            return Err(minicbor::decode::Error::message(
-                                "column-proof is a placeholder and shouldn't be used",
-                            ));
-                        },
-                        "matrix-proof" => {
-                            return Err(minicbor::decode::Error::message(
-                                "matrix-proof is a placeholder and shouldn't be used",
-                            ));
-                        },
-                        "voter-choices" => {
-                            voter_choices =
-                                Some(EncryptedChoices::decode(&mut value_decoder, ctx)?);
-                        },
-                        key => {
-                            return Err(minicbor::decode::Error::message(format!(
-                                "Unexpected content ballot payload key value: {key:?}"
-                            )));
-                        },
-                    }
-                },
-                t => {
-                    return Err(minicbor::decode::Error::message(format!(
-                        "Unexpected content ballot payload key type: {t:?}"
-                    )));
-                },
-            }
+impl ContestBallot {
+    /// Creates a new `ContestBallot` instance.
+    ///
+    /// # Errors
+    /// - Wrong document type (`CONTEST_BALLOT` is expected).
+    /// - Invalid document (`report().is_problematic() == true`).
+    /// - `Provider` error.
+    pub fn new<Provider>(
+        doc: &CatalystSignedDocument,
+        provider: &Provider,
+    ) -> anyhow::Result<Self>
+    where
+        Provider: CatalystSignedDocumentProvider,
+    {
+        if doc.report().is_problematic() {
+            bail!("Provided document is not valid {:?}", doc.report())
         }
+        ensure!(
+            doc.doc_type()? == &CONTEST_BALLOT,
+            "Document must be Contest Ballot type"
+        );
 
-        Ok(Self {
+        let report = ProblemReport::new("Contest Ballot");
+
+        let payload = payload(doc, &report);
+        if let Some(payload) = &payload {
+            check_proof(payload, &report);
+        }
+        check_parameters(doc, provider, &report)?;
+
+        Ok(Self { payload, report })
+    }
+
+    /// Returns a contest ballot payload.
+    #[must_use]
+    pub fn payload(&self) -> Option<&ContentBallotPayload> {
+        self.payload.as_ref()
+    }
+
+    /// Returns a problem report.
+    #[must_use]
+    pub fn report(&self) -> &ProblemReport {
+        &self.report
+    }
+}
+
+/// Returns a decoded contest ballot payload.
+pub fn payload(
+    doc: &CatalystSignedDocument,
+    report: &ProblemReport,
+) -> Option<ContentBallotPayload> {
+    let Ok(bytes) = doc.decoded_content() else {
+        report.functional_validation(
+            "Invalid document content, cannot get decoded bytes",
+            "Cannot get a document content during Contest Ballot document validation.",
+        );
+        return None;
+    };
+
+    let mut decoder = minicbor::Decoder::new(&bytes);
+    // TODO: Pass a problem report in the decode context. See the issue for more details:
+    // https://github.com/input-output-hk/catalyst-libs/issues/775
+    let Ok(payload) = ContentBallotPayload::decode(&mut decoder, &mut ()) else {
+        report.functional_validation(
+            "Invalid document content: unable to decode CBOR",
+            "Cannot get a document content during Contest Ballot document validation.",
+        );
+        return None;
+    };
+
+    Some(payload)
+}
+
+/// Checks the parameters of a document.
+pub fn check_parameters(
+    doc: &CatalystSignedDocument,
+    provider: &dyn CatalystSignedDocumentProvider,
+    report: &ProblemReport,
+) -> anyhow::Result<()> {
+    let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
+        report.missing_field(
+            "parameters",
+            "Contest Ballot must have a 'parameters' metadata field",
+        );
+        return Ok(());
+    };
+
+    let Some(contest_parameters) = provider.try_get_doc(doc_ref)? else {
+        report.functional_validation(
+            &format!("Cannot get referenced document by reference: {doc_ref}"),
+            "Missing 'Contest Parameters' document for the Contest Ballot document",
+        );
+        return Ok(());
+    };
+
+    let Ok(doc_ver) = doc.doc_ver() else {
+        report.missing_field(
+            "ver",
+            "Missing 'ver' metadata field for 'Contest Ballot' document",
+        );
+        return Ok(());
+    };
+
+    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
+        contest_parameters::get_payload(&contest_parameters, report);
+    if contest_parameters_payload_is_valid
+        && (doc_ver.time() > &contest_parameters_payload.end
+            || doc_ver.time() < &contest_parameters_payload.start)
+    {
+        report.functional_validation(
+            &format!(
+                "'ver' metadata field must be in 'Contest Ballot' timeline range. 'ver': {}, start: {}, end: {}",
+                doc_ver.time(),
+                contest_parameters_payload.start,
+                contest_parameters_payload.end
+            ),
+            "'Contest Ballot' document contest timeline check",
+        );
+    }
+
+    Ok(())
+}
+
+/// Checks the proof.
+pub fn check_proof(
+    payload: &ContentBallotPayload,
+    _report: &ProblemReport,
+) {
+    for (index, choice) in &payload.choices {
+        let Choices::Encrypted {
             choices,
-            column_proof,
-            matrix_proof,
-            voter_choices,
-        })
-    }
-}
-
-impl Encode<()> for ContentBallotPayload {
-    fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        let len = u64::try_from(self.choices.len())
-            .map_err(minicbor::encode::Error::message)?
-            .checked_add(u64::from(self.column_proof.is_some()))
-            .and_then(|v| v.checked_add(u64::from(self.matrix_proof.is_some())))
-            .and_then(|v| v.checked_add(u64::from(self.voter_choices.is_some())))
-            .ok_or_else(|| {
-                minicbor::encode::Error::message("contest ballot payload map length overflow")
-            })?;
-        e.map(len)?;
-
-        for (&key, val) in &self.choices {
-            e.u64(key)?.encode(val)?;
-        }
-        if let Some(column_proof) = self.column_proof.as_ref() {
-            e.str("column-proof")?.encode(column_proof)?;
-        }
-        if let Some(matrix_proof) = self.matrix_proof.as_ref() {
-            e.str("matrix-proof")?.encode(matrix_proof)?;
-        }
-        if let Some(voter_choices) = self.voter_choices.as_ref() {
-            e.str("voter-choices")?.encode(voter_choices)?;
-        }
-
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use catalyst_voting::crypto::elgamal::Ciphertext;
-
-    use super::*;
-    use crate::contest_ballot::encrypted_block::EncryptedBlock;
-
-    #[test]
-    fn roundtrip() {
-        let original = ContentBallotPayload {
-            choices: [
-                (1, Choices::Clear(vec![1, 2, 3, 4, 5])),
-                (2, Choices::Encrypted {
-                    choices: vec![Ciphertext::zero()],
-                    row_proof: None,
-                }),
-            ]
-            .into(),
-            column_proof: None,
-            matrix_proof: None,
-            voter_choices: Some(EncryptedChoices(vec![
-                EncryptedBlock([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
-                EncryptedBlock([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-            ])),
+            row_proof: Some(proof),
+        } = choice
+        else {
+            continue;
         };
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let decoded = ContentBallotPayload::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
+
+        // TODO: Implement proof verification.
+        let _ = index;
+        let _ = choices;
+        let _ = proof;
+
+        // TODO: Get the election public key from the contest document parameters.
+        // let election_public_key = todo!();
+        // TODO: Clarify the commitment key parameter.
+        // let commitment_key = todo!();
+        // if !verify_unit_vector_proof(
+        //     proof,
+        //     choices.clone(),
+        //     &election_public_key,
+        //     &commitment_key,
+        // ) {
+        // TODO: Log choice index?
+        //     report.functional_validation(
+        //         "Failed to verify proof",
+        //         "'Contest Ballot' document validation",
+        //     );
+        // }
     }
 }

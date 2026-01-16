@@ -4,8 +4,12 @@ mod ballot;
 mod choices;
 mod encrypted_block;
 mod encrypted_choices;
+mod payload;
+mod rule;
+#[cfg(test)]
+mod tests;
 
 pub use self::{
-    ballot::ContentBallotPayload, choices::Choices, encrypted_block::EncryptedBlock,
-    encrypted_choices::EncryptedChoices,
+    ballot::ContestBallot, choices::Choices, encrypted_block::EncryptedBlock,
+    encrypted_choices::EncryptedChoices, payload::ContentBallotPayload, rule::ContestBallotRule,
 };
