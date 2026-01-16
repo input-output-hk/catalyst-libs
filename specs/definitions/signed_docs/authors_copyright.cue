@@ -170,5 +170,12 @@ copyright: #copyrightNotice & {
 				* Internal dependency updates.
 				"""
 		},
+		{
+			version:  "0.2.5"
+			modified: "2026-01-15"
+			changes: """
+				* `catalyst-signed-doc-spec` payload `Schema::Json` type.
+				"""
+		},
 	]
 }

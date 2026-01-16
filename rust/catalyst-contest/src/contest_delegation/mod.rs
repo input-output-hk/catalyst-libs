@@ -2,7 +2,7 @@
 //!
 //! See the [documentation] for more information.
 //!
-//! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation/#contest-delegation
+//! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation
 
 pub mod rule;
 
@@ -21,6 +21,8 @@ use catalyst_signed_doc::{
     },
     uuid::UuidV7,
 };
+
+use crate::contest_parameters;
 
 /// `Contest Delegation` document type.
 #[derive(Debug, Clone)]
@@ -129,6 +131,7 @@ impl ContestDelegation {
 
         let (delegator, _) = get_delegator(doc, &report);
         let (payload, _) = get_payload(doc, &report);
+        contest_parameters_checks(doc, provider, &report)?;
         let (delegations, _) = get_delegations(doc, payload, provider, &report)?;
 
         Ok(ContestDelegation {
@@ -162,7 +165,7 @@ fn get_delegator(
     (delegator, valid)
 }
 
-/// Get `CatalystSignedDocument` from the provided `CatalystSignedDocument`, fill the
+/// Get `ContestDelegationPayload` from the provided `CatalystSignedDocument`, fill the
 /// provided `ProblemReport` if something goes wrong.
 /// Returns additional boolean flag, was it valid or not.
 fn get_payload(
@@ -205,14 +208,10 @@ fn contest_parameters_checks(
             "parameters",
             "Contest Delegation must have a 'parameters' metadata field",
         );
-        report.missing_field(
-            "parameters",
-            "Contest Delegation must have a 'parameters' metadata field",
-        );
         return Ok(false);
     };
 
-    let Some(_contest_parameters) = provider.try_get_doc(doc_ref)? else {
+    let Some(contest_parameters) = provider.try_get_doc(doc_ref)? else {
         report.functional_validation(
             &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing 'Contest Parameters' document for the Contest Delegation document",
@@ -220,7 +219,7 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    let Ok(_doc_ver) = doc.doc_ver() else {
+    let Ok(doc_ver) = doc.doc_ver() else {
         report.missing_field(
             "ver",
             "Missing 'ver' metadata field for 'Contest Delegation' document",
@@ -228,7 +227,24 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    // TODO: apply time based checks
+    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
+        contest_parameters::get_payload(&contest_parameters, report);
+    if contest_parameters_payload_is_valid
+        && (doc_ver.time() > &contest_parameters_payload.end
+            || doc_ver.time() < &contest_parameters_payload.start)
+    {
+        report.functional_validation(
+                &format!(
+                    "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
+                    doc_ver.time(),
+                    contest_parameters_payload.start,
+                    contest_parameters_payload.end
+                ),
+                "'Contest Delegation' document contest timeline check",
+            );
+        return Ok(false);
+    }
+
     Ok(true)
 }
 

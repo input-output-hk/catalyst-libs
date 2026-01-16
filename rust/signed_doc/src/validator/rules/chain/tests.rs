@@ -24,7 +24,7 @@ mod helper {
         let ts = Timestamp::from_unix(uuid::NoContext, unix_secs, nanos);
         let uuid = Uuid::new_v7(ts);
 
-        UuidV7::try_from_uuid(uuid).unwrap()
+        UuidV7::try_from(uuid).unwrap()
     }
 }
 
