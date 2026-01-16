@@ -65,7 +65,7 @@ pub struct MsgSyn {
     /// Current number of documents of the requester.
     pub count: u64,
     /// Target peer to respond.
-    pub to: PublicKey,
+    pub to: Option<PublicKey>,
     /// Array of SMT node hashes at depth D left-to-right across the tree.
     /// The size of the array MUST be 2 to power of N (2,4,8...,16384).
     pub prefixes: Option<PrefixArray>,
@@ -237,7 +237,7 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 10,
-            to: test_public_key(),
+            to: Some(test_public_key()),
             prefixes: None,
             peer_root: test_blake3_256(),
             peer_count: 20,
@@ -259,11 +259,38 @@ mod tests {
     }
 
     #[test]
+    fn test_encode_decode_without_public_key() {
+        let msg = MsgSyn {
+            root: test_blake3_256(),
+            count: 10,
+            to: None,
+            prefixes: None,
+            peer_root: test_blake3_256(),
+            peer_count: 20,
+        };
+
+        let mut buf = minicbor::Encoder::new(vec![]);
+        buf.encode(&msg).expect("Encoding should succeed");
+        let encoded = buf.into_writer();
+        let decoded = Syn::decode(&mut minicbor::Decoder::new(&encoded), &mut ())
+            .expect("Decoding should succeed");
+
+        assert_eq!(msg.root, decoded.root);
+        assert_eq!(msg.count, decoded.count);
+        assert_eq!(msg.to, decoded.to);
+        assert!(msg.to.is_none());
+        assert_eq!(msg.prefixes, decoded.prefixes);
+        assert!(decoded.prefixes.is_none());
+        assert_eq!(msg.peer_root, decoded.peer_root);
+        assert_eq!(msg.peer_count, decoded.peer_count);
+    }
+
+    #[test]
     fn test_encode_decode_with_prefix_count_below_threshold() {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 64,
-            to: test_public_key(),
+            to: Some(test_public_key()),
             prefixes: Some(vec![Some(test_blake3_256()); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
@@ -289,7 +316,7 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_public_key(),
+            to: Some(test_public_key()),
             prefixes: Some(vec![Some(test_blake3_256()); 4]),
             peer_root: test_blake3_256(),
             peer_count: 20,
@@ -321,7 +348,7 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_public_key(),
+            to: Some(test_public_key()),
             prefixes,
             peer_root: test_blake3_256(),
             peer_count: 20,
@@ -347,7 +374,7 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_public_key(),
+            to: Some(test_public_key()),
             prefixes: Some(vec![Some(test_blake3_256()); 3]),
             peer_root: test_blake3_256(),
             peer_count: 20,
@@ -367,7 +394,7 @@ mod tests {
         let msg = MsgSyn {
             root: test_blake3_256(),
             count: 80,
-            to: test_public_key(),
+            to: Some(test_public_key()),
             prefixes: Some(vec![
                 Some(test_blake3_256());
                 usize::try_from(MAX_PREFIX_ARRAY_LENGTH + 1).unwrap()
