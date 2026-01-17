@@ -45,10 +45,19 @@ missing_docs_in_private_items = "deny"
 arithmetic_side_effects = "deny"
 
 [lib]
+name = "hello_world_ffi"
 crate-type = ["cdylib"]
 
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/uniffi_bindgen.rs"
+
 [dependencies]
-pyo3 = "0.27.2"
+uniffi = { version = "0.31",  features = ["cli"] }
 
 # TODO: Use tag instead of path.
 # catalyst-signed-doc = { version = "0.0.10", path = "../../rust/signed_doc" }
+
+[build-dependencies]
+# The "build" feature is strictly required here
+uniffi = { version = "0.31", features = ["build"] }
