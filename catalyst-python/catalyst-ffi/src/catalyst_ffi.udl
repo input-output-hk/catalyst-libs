@@ -1,3 +1,0 @@
-namespace catalyst_ffi {
-    boolean ffi_check(boolean flag);
-};    
