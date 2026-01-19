@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{
     CatalystId, Ed25519SigningKey, Error, Json, Result, Uuid,
-    catalyst_signed_doc::{self, CatalystSignedDocument},
+    catalyst_signed_doc::CatalystSignedDocument,
 };
 
 #[uniffi::export]
@@ -352,13 +352,12 @@ fn proposal_submission_action_doc(
         .transpose()
         .map_err(|e| Error::Anyhow(e.into()))?;
 
-    // Note: This specific library function requires `kid` to be passed as a reference
     catalyst_signed_doc_lib::builder::proposal_submission_action_doc(
         &content,
         &linked.0,
         &parameters.0,
         &sk,
-        &kid,
+        kid,
         id,
     )
     .map(CatalystSignedDocument)

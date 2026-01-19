@@ -33,6 +33,11 @@ impl CatalystSignedDocument {
     fn r#ref(&self) -> Result<DocumentRef> {
         self.0.doc_ref().map(DocumentRef).map_err(Error::Anyhow)
     }
+
+    fn hex_cbor(&self) -> Result<String> {
+        let bytes: Vec<u8> = self.0.to_bytes().map_err(Error::Anyhow)?;
+        Ok(hex::encode(bytes))
+    }
 }
 
 #[derive(uniffi::Object)]
