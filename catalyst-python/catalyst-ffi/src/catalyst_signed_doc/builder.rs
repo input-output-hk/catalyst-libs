@@ -1,3 +1,5 @@
+#![allow(clippy::needless_pass_by_value)]
+
 use std::str::FromStr;
 
 use crate::{
@@ -15,7 +17,7 @@ fn brand_parameters_form_template_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -25,7 +27,7 @@ fn brand_parameters_form_template_doc(
 
     catalyst_signed_doc_lib::builder::brand_parameters_form_template_doc(&content, &sk, kid, id)
         .map(CatalystSignedDocument)
-        .map_err(|e| Error::Anyhow(e.into()))
+        .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -39,7 +41,7 @@ fn brand_parameters_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -49,7 +51,7 @@ fn brand_parameters_doc(
 
     catalyst_signed_doc_lib::builder::brand_parameters_doc(&content, &template.0, &sk, kid, id)
         .map(CatalystSignedDocument)
-        .map_err(|e| Error::Anyhow(e.into()))
+        .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -63,7 +65,7 @@ fn campaign_parameters_form_template_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -79,7 +81,7 @@ fn campaign_parameters_form_template_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -94,7 +96,7 @@ fn campaign_parameters_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -111,7 +113,7 @@ fn campaign_parameters_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -125,7 +127,7 @@ fn category_parameters_form_template_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -141,7 +143,7 @@ fn category_parameters_form_template_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -156,7 +158,7 @@ fn category_parameters_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -173,7 +175,7 @@ fn category_parameters_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -187,7 +189,7 @@ fn contest_parameters_form_template_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -203,7 +205,7 @@ fn contest_parameters_form_template_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -218,7 +220,7 @@ fn contest_parameters_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -235,7 +237,7 @@ fn contest_parameters_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -249,7 +251,7 @@ fn proposal_comment_form_template_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -265,7 +267,7 @@ fn proposal_comment_form_template_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -281,7 +283,7 @@ fn proposal_comment_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -299,7 +301,7 @@ fn proposal_comment_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -313,7 +315,7 @@ fn proposal_form_template_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -329,7 +331,7 @@ fn proposal_form_template_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -344,7 +346,7 @@ fn proposal_submission_action_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -361,7 +363,7 @@ fn proposal_submission_action_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }
 
 #[uniffi::export]
@@ -376,7 +378,7 @@ fn proposal_doc(
     let content =
         serde_json::Value::from_str(content.as_str()).map_err(|e| Error::Anyhow(e.into()))?;
     let sk = catalyst_signed_doc_lib::builder::ed25519::Ed25519SigningKey::from_str(sk.as_str())
-        .map_err(|e| Error::Anyhow(e))?;
+        .map_err(Error::Anyhow)?;
     let kid = catalyst_signed_doc_lib::catalyst_id::CatalystId::from_str(kid.as_str())
         .map_err(|e| Error::Anyhow(e.into()))?;
     let id = id
@@ -393,5 +395,5 @@ fn proposal_doc(
         id,
     )
     .map(CatalystSignedDocument)
-    .map_err(|e| Error::Anyhow(e.into()))
+    .map_err(Error::Anyhow)
 }

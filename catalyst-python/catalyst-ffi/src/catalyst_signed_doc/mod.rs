@@ -1,7 +1,5 @@
 mod builder;
 
-use catalyst_signed_doc_lib;
-
 use crate::{Error, Result};
 
 #[derive(uniffi::Object)]
@@ -26,7 +24,7 @@ impl CatalystSignedDocument {
     fn r#type(&self) -> Result<String> {
         self.0
             .doc_type()
-            .map(|v| v.to_string())
+            .map(ToString::to_string)
             .map_err(Error::Anyhow)
     }
 
