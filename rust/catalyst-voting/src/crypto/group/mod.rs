@@ -3,4 +3,4 @@
 
 mod ristretto255;
 
-pub(crate) use ristretto255::{GroupElement, Scalar};
+pub use ristretto255::{GroupElement, Scalar};

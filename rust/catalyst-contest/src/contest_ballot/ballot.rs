@@ -5,9 +5,14 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, doc_types::CONTEST_BALLOT, problem_report::ProblemReport,
     providers::CatalystSignedDocumentProvider,
 };
+use catalyst_voting::crypto::{
+    group::GroupElement, hash::Blake2b512Hasher, zk_unit_vector::verify_unit_vector_proof,
+};
 use minicbor::Decode;
 
-use crate::{Choices, ContentBallotPayload, contest_parameters};
+use crate::{
+    Choices, ContentBallotPayload, contest_parameters, contest_parameters::ContestParametersPayload,
+};
 
 /// An individual Ballot cast in a Contest by a registered user.
 pub struct ContestBallot {
@@ -42,10 +47,10 @@ impl ContestBallot {
         let report = ProblemReport::new("Contest Ballot");
 
         let payload = payload(doc, &report);
-        if let Some(payload) = &payload {
-            check_proof(payload, &report);
+        let params = check_parameters(doc, provider, &report)?;
+        if let (Some(payload), Some(params)) = (&payload, &params) {
+            check_proof(payload, params, &report);
         }
-        check_parameters(doc, provider, &report)?;
 
         Ok(Self { payload, report })
     }
@@ -90,18 +95,18 @@ pub fn payload(
     Some(payload)
 }
 
-/// Checks the parameters of a document.
+/// Checks the parameters of a document and returns a payload.
 pub fn check_parameters(
     doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Option<ContestParametersPayload>> {
     let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
         report.missing_field(
             "parameters",
             "Contest Ballot must have a 'parameters' metadata field",
         );
-        return Ok(());
+        return Ok(None);
     };
 
     let Some(contest_parameters) = provider.try_get_doc(doc_ref)? else {
@@ -109,7 +114,7 @@ pub fn check_parameters(
             &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing 'Contest Parameters' document for the Contest Ballot document",
         );
-        return Ok(());
+        return Ok(None);
     };
 
     let Ok(doc_ver) = doc.doc_ver() else {
@@ -117,7 +122,7 @@ pub fn check_parameters(
             "ver",
             "Missing 'ver' metadata field for 'Contest Ballot' document",
         );
-        return Ok(());
+        return Ok(None);
     };
 
     let (contest_parameters_payload, contest_parameters_payload_is_valid) =
@@ -137,13 +142,14 @@ pub fn check_parameters(
         );
     }
 
-    Ok(())
+    Ok(Some(contest_parameters_payload))
 }
 
 /// Checks the proof.
 pub fn check_proof(
     payload: &ContentBallotPayload,
-    _report: &ProblemReport,
+    params: &ContestParametersPayload,
+    report: &ProblemReport,
 ) {
     for (index, choice) in &payload.choices {
         let Choices::Encrypted {
@@ -154,26 +160,20 @@ pub fn check_proof(
             continue;
         };
 
-        // TODO: Implement proof verification.
-        let _ = index;
-        let _ = choices;
-        let _ = proof;
+        // TODO: FIXME:
+        let hasher = Blake2b512Hasher::new();
+        let commitment_key = GroupElement::from_hash(hasher);
 
-        // TODO: Get the election public key from the contest document parameters.
-        // let election_public_key = todo!();
-        // TODO: Clarify the commitment key parameter.
-        // let commitment_key = todo!();
-        // if !verify_unit_vector_proof(
-        //     proof,
-        //     choices.clone(),
-        //     &election_public_key,
-        //     &commitment_key,
-        // ) {
-        // TODO: Log choice index?
-        //     report.functional_validation(
-        //         "Failed to verify proof",
-        //         "'Contest Ballot' document validation",
-        //     );
-        // }
+        if !verify_unit_vector_proof(
+            proof,
+            choices.clone(),
+            &params.election_public_key,
+            &commitment_key,
+        ) {
+            report.functional_validation(
+                &format!("Failed to verify proof ({index} index)"),
+                "'Contest Ballot' document validation",
+            );
+        }
     }
 }

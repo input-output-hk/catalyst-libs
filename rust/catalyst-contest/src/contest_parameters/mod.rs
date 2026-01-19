@@ -13,6 +13,7 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
 };
+use catalyst_voting::crypto::group::GroupElement;
 use chrono::{DateTime, Utc};
 
 /// `Contest Parameters` document type.
@@ -37,12 +38,14 @@ impl PartialEq for ContestParameters {
 }
 
 /// Content Parameters JSON payload type.
-#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub(crate) struct ContestParametersPayload {
     /// Contest start date
     pub(crate) start: DateTime<Utc>,
     /// Contest end date
     pub(crate) end: DateTime<Utc>,
+    /// An election public key.
+    pub(crate) election_public_key: GroupElement,
 }
 
 impl ContestParameters {
@@ -68,6 +71,12 @@ impl ContestParameters {
     #[must_use]
     pub fn end(&self) -> &DateTime<Utc> {
         &self.payload.end
+    }
+
+    /// Returns an election public key.
+    #[must_use]
+    pub fn election_public_key(&self) -> &GroupElement {
+        &self.payload.election_public_key
     }
 
     /// Returns `ProblemReport`
@@ -109,6 +118,16 @@ impl ContestParameters {
             payload,
             report,
         })
+    }
+}
+
+impl Default for ContestParametersPayload {
+    fn default() -> Self {
+        Self {
+            start: DateTime::default(),
+            end: DateTime::default(),
+            election_public_key: GroupElement::zero(),
+        }
     }
 }
 
