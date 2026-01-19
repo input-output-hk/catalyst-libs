@@ -16,7 +16,7 @@ workspace = true
 anyhow = "1.0.100"
 
 # TODO: Use tag instead of path.
-catalyst-signed-doc = { version = "0.0.10", path = "../signed_doc" }
+catalyst-signed-doc = { version = "0.0.11", path = "../signed_doc" }
 catalyst-voting = { version = "0.0.2", path = "../catalyst-voting" }
 cbork-utils = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils/v0.0.4" }
 
