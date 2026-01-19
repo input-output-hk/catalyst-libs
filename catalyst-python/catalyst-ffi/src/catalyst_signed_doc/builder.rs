@@ -29,7 +29,7 @@ fn brand_parameters_form_template_doc(
 }
 
 #[uniffi::export]
-fn brand_parameters(
+fn brand_parameters_doc(
     content: Json,
     template: &CatalystSignedDocument,
     sk: Ed25519SigningKey,
