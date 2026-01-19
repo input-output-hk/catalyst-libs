@@ -20,7 +20,7 @@ derive_more = {version = "2.0.1", features = ["from", "into", "display", "try_fr
 ipld-core = { version = "0.4.1", features = ["serde"]}
 # A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
 # rev-26b99cb as at July 30, 2025
-rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs", rev = "0a6269e05a4ccfaa547a47a56f92171e4abc0564", features = ["tcp", "quic", "dns", "noise"] }
+rust-ipfs = { version = "0.15.0", git = "https://github.com/input-output-hk/rust-ipfs", branch = "libp2p-next", features = ["tcp", "quic", "dns", "noise"] }
 tokio = "1.46.0"
 futures = "0.3.31"
 libp2p = "0.56.0"
