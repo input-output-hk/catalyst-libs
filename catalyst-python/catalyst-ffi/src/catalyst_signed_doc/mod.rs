@@ -29,4 +29,22 @@ impl CatalystSignedDocument {
             .map(|v| v.to_string())
             .map_err(Error::Anyhow)
     }
+
+    fn r#ref(&self) -> Result<DocumentRef> {
+        self.0.doc_ref().map(DocumentRef).map_err(Error::Anyhow)
+    }
+}
+
+#[derive(uniffi::Object)]
+struct DocumentRef(catalyst_signed_doc_lib::DocumentRef);
+
+#[uniffi::export]
+impl DocumentRef {
+    fn id(&self) -> String {
+        self.0.id().to_string()
+    }
+
+    fn ver(&self) -> String {
+        self.0.ver().to_string()
+    }
 }
