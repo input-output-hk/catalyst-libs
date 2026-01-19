@@ -1,5 +1,7 @@
-#![allow(missing_docs, clippy::missing_docs_in_private_items)]
+#![allow(missing_docs, unused_imports, clippy::missing_docs_in_private_items)]
+
+uniffi::include_scaffolding!("catalyst_ffi");
 
 mod ffi_check;
 
-use crate::ffi_check::UniFfiTag;
+use ffi_check::ffi_check;
