@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use catalyst_signed_doc::problem_report::ProblemReport;
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
@@ -34,12 +35,14 @@ pub struct ContentBallotPayload {
     pub voter_choices: Option<EncryptedChoices>,
 }
 
-impl Decode<'_, ()> for ContentBallotPayload {
+impl Decode<'_, ProblemReport> for ContentBallotPayload {
     fn decode(
         d: &mut Decoder<'_>,
-        ctx: &mut (),
+        report: &mut ProblemReport,
     ) -> Result<Self, minicbor::decode::Error> {
         use minicbor::data::Type;
+
+        let context = "Content ballot payload decoding";
 
         let map = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
@@ -55,36 +58,56 @@ impl Decode<'_, ()> for ContentBallotPayload {
             match key_decoder.datatype()? {
                 Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
                     let key = key_decoder.u64()?;
-                    let val = Choices::decode(&mut value_decoder, ctx)?;
-                    choices.insert(key, val);
+                    match Choices::decode(&mut value_decoder, &mut ()) {
+                        Ok(val) => {
+                            choices.insert(key, val);
+                        },
+                        Err(e) => {
+                            report.other(
+                                &format!("Unable to decode choices for {key} key: {e:?}"),
+                                context,
+                            );
+                        },
+                    }
                 },
                 Type::String => {
                     match key_decoder.str()? {
                         "column-proof" => {
-                            return Err(minicbor::decode::Error::message(
+                            report.other(
                                 "column-proof is a placeholder and shouldn't be used",
-                            ));
+                                context,
+                            );
                         },
                         "matrix-proof" => {
-                            return Err(minicbor::decode::Error::message(
+                            report.other(
                                 "matrix-proof is a placeholder and shouldn't be used",
-                            ));
+                                context,
+                            );
                         },
                         "voter-choices" => {
-                            voter_choices =
-                                Some(EncryptedChoices::decode(&mut value_decoder, ctx)?);
+                            match EncryptedChoices::decode(&mut value_decoder, &mut ()) {
+                                Ok(v) => voter_choices = Some(v),
+                                Err(e) => {
+                                    report.other(
+                                        &format!("Unable to decode encrypted choices: {e:?}"),
+                                        context,
+                                    );
+                                },
+                            }
                         },
                         key => {
-                            return Err(minicbor::decode::Error::message(format!(
-                                "Unexpected content ballot payload key value: {key:?}"
-                            )));
+                            report.other(
+                                &format!("Unexpected content ballot payload key value: {key:?}"),
+                                context,
+                            );
                         },
                     }
                 },
                 t => {
-                    return Err(minicbor::decode::Error::message(format!(
-                        "Unexpected content ballot payload key type: {t:?}"
-                    )));
+                    report.other(
+                        &format!("Unexpected content ballot payload key type: {t:?}"),
+                        context,
+                    );
                 },
             }
         }
@@ -160,7 +183,10 @@ mod tests {
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
-        let decoded = ContentBallotPayload::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        let mut report = ProblemReport::new("test");
+        let decoded =
+            ContentBallotPayload::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
+        assert!(!report.is_problematic());
     }
 }
