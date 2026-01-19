@@ -1,7 +1,5 @@
 #![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
-uniffi::include_scaffolding!("ffi_check");
+mod ffi_check;
 
-fn ffi_check(flag: bool) -> bool {
-    flag
-}
+use crate::ffi_check::UniFfiTag;
