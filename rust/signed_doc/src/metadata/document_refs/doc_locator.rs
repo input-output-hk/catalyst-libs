@@ -19,7 +19,7 @@ const CID_MAP_KEY: &str = "cid";
 const DOC_LOC_MAP_ITEM: u64 = 1;
 
 /// Document locator wrapping a CID (Content Identifier).
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DocLocator(Cid);
 
 impl Deref for DocLocator {
@@ -146,7 +146,7 @@ mod tests {
     use minicbor::{Decoder, Encoder};
 
     use super::*;
-    use crate::{Builder, ContentType, tests_utils::create_dummy_doc_ref};
+    use crate::{ContentType, builder::Builder, tests_utils::create_dummy_doc_ref};
 
     #[test]
     fn test_doc_locator_encode_decode() {

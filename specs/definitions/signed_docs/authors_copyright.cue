@@ -156,5 +156,26 @@ copyright: #copyrightNotice & {
 				* Added missing `signers: update: type: "ref"` definition for `Rep Nomination` document type.
 				"""
 		},
+		{
+			version:  "0.2.3"
+			modified: "2026-01-09"
+			changes: """
+				* Internal dependency updates.
+				"""
+		},
+		{
+			version:  "0.2.4"
+			modified: "2026-01-13"
+			changes: """
+				* Internal dependency updates.
+				"""
+		},
+		{
+			version:  "0.2.5"
+			modified: "2026-01-15"
+			changes: """
+				* `catalyst-signed-doc-spec` payload `Schema::Json` type.
+				"""
+		},
 	]
 }

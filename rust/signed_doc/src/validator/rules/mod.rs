@@ -14,6 +14,7 @@ mod id;
 mod ownership;
 mod parameters;
 mod reply;
+mod revocations;
 mod section;
 mod signature;
 mod signature_kid;
@@ -31,6 +32,7 @@ pub(crate) use id::IdRule;
 pub(crate) use ownership::DocumentOwnershipRule;
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
+pub(crate) use revocations::RevocationsRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature::SignatureRule;
 pub(crate) use signature_kid::SignatureKidRule;
@@ -66,6 +68,7 @@ fn rules_for_doc(
         )?),
         Box::new(RefRule::new(all_docs_specs, &doc_spec.metadata.doc_ref)?),
         Box::new(ReplyRule::new(all_docs_specs, &doc_spec.metadata.reply)?),
+        Box::new(RevocationsRule::new(&doc_spec.metadata.revocations)),
         Box::new(SectionRule::NotSpecified),
         Box::new(CollaboratorsRule::new(&doc_spec.metadata.collaborators)),
         Box::new(ContentRule::new(cddl_defs, &doc_spec.payload)?),

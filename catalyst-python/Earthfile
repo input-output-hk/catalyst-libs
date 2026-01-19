@@ -1,17 +1,21 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.10 AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.13 AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.6.13 AS rust-ci
 
 builder:
-    FROM python-ci+python-base
+    DO rust-ci+SETUP
+    DO python-ci+INSTALL
 
-    COPY pyproject.toml uv.lock .
-    COPY src .
-    COPY tests .
-
-    RUN uv update
+    COPY --keep-ts --dir \
+        pyproject.toml uv.lock README.md \
+        src \
+        rust-ffi \
+        tests \
+        .
 
 build:
     FROM +builder
 
+    RUN uv run maturin develop
     RUN uv run pytest

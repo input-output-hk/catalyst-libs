@@ -2,6 +2,7 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_delegation>
 
 use catalyst_signed_doc::{
+    builder::Builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, contest_delegation_doc,
@@ -199,7 +200,7 @@ use test_case::test_case;
     "missing 'parameters'"
 )]
 #[allow(clippy::unwrap_used)]
-fn contest_ballot(
+fn contest_delegation(
     doc_gen: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
     let mut provider = TestCatalystProvider::default();

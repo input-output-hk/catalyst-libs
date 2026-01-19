@@ -6,6 +6,7 @@
 
 pub mod checkpoint;
 pub mod contest_delegation;
+pub mod contest_parameters;
 
 mod contest_ballot;
 

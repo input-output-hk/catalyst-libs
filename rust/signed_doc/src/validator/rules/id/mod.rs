@@ -4,7 +4,7 @@
 mod tests;
 
 use anyhow::Context;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 
 use crate::{
     CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
@@ -45,27 +45,8 @@ impl IdRule {
 
         let mut is_valid = true;
 
-        let (id_time_secs, id_time_nanos) = id
-            .uuid()
-            .get_timestamp()
-            .ok_or(anyhow::anyhow!("Document `id` field must be a UUIDv7"))?
-            .to_unix();
-
-        let Some(id_time) = i64::try_from(id_time_secs)
-            .ok()
-            .and_then(|id_time_secs| DateTime::from_timestamp(id_time_secs, id_time_nanos))
-        else {
-            doc.report().invalid_value(
-                    "id",
-                    &id.to_string(),
-                    "Must a valid UTC date time since `UNIX_EPOCH`",
-                    "Cannot instantiate a valid `DateTime<Utc>` value from the provided `id` field timestamp.",
-                );
-            return Ok(false);
-        };
-
         let now = Utc::now();
-        let time_delta = id_time.signed_duration_since(now);
+        let time_delta = id.time().signed_duration_since(now);
 
         if let Ok(id_age) = time_delta.to_std() {
             // `now` is earlier than `id_time`

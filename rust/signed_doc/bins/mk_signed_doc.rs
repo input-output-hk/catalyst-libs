@@ -6,12 +6,16 @@ use std::{
     fs::File,
     io::{Read, Write},
     path::PathBuf,
+    str::FromStr,
 };
 
 use anyhow::Context;
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, catalyst_id::CatalystId};
+use catalyst_signed_doc::{
+    CatalystSignedDocument,
+    builder::{Builder, ed25519::Ed25519SigningKey},
+    catalyst_id::CatalystId,
+};
 use clap::Parser;
-use ed25519_dalek::ed25519::signature::Signer;
 
 fn main() -> anyhow::Result<()> {
     Cli::parse().exec()
@@ -71,28 +75,14 @@ impl Cli {
                 save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { doc, sk_hex, kid } => {
-                let sk_bytes = hex::decode(sk_hex)?;
+                let sk = Ed25519SigningKey::from_str(&sk_hex)?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
 
-                let builder = signed_doc.into_builder()?;
-
-                let builder = if let Ok(sk) = ed25519_bip32::XPrv::from_slice_verified(&sk_bytes) {
-                    builder.add_signature(
-                        |message| sk.sign::<()>(&message).to_bytes().to_vec(),
-                        kid.clone(),
-                    )?
-                } else {
-                    let sk = ed25519_dalek::SigningKey::from_bytes(&sk_bytes.try_into().map_err(
-                        |_| anyhow::anyhow!("Provided secret key must be 32 bytes long"),
-                    )?);
-                    builder.add_signature(
-                        |message| sk.sign(&message).to_bytes().to_vec(),
-                        kid.clone(),
-                    )?
-                };
-
-                let new_signed_doc = builder.build()?;
+                let new_signed_doc = signed_doc
+                    .into_builder()?
+                    .add_signature(|message| sk.sign(&message), kid.clone())?
+                    .build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {

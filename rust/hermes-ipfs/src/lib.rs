@@ -170,7 +170,7 @@ impl HermesIpfs {
     ///
     /// ## Parameters
     ///
-    /// * `data` - `Vec<u8>` Data to be uploaded.
+    /// * `cbor_data` - `Vec<u8>` CBOR-encoded data to be uploaded.
     ///
     /// ## Returns
     ///
@@ -181,10 +181,8 @@ impl HermesIpfs {
     /// Returns an error if the block fails to upload.
     pub async fn add_ipfs_file(
         &self,
-        data: Vec<u8>,
+        cbor_data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let cbor_data = minicbor::to_vec(data)
-            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
         let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
         let block = Block::new(cid, cbor_data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
@@ -192,13 +190,15 @@ impl HermesIpfs {
         Ok(ipfs_path)
     }
 
-    /// Add file with provider
+    /// Add file with provider.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the block fails to upload or provide.
     pub async fn add_ipfs_file_with_provider(
         &self,
-        data: Vec<u8>,
+        cbor_data: Vec<u8>,
     ) -> anyhow::Result<IpfsPath> {
-        let cbor_data = minicbor::to_vec(data)
-            .map_err(|e| anyhow::anyhow!("Failed to encode data to CBOR: {e:?}"))?;
         let cid = Cid::new_v1(CODEC_CBOR.into(), Code::Sha2_256.digest(&cbor_data));
         let block = Block::new(cid, cbor_data)
             .map_err(|e| anyhow::anyhow!("Failed to create IPFS block: {e:?}"))?;
@@ -228,17 +228,74 @@ impl HermesIpfs {
         Ok(block.data().to_vec())
     }
 
-    /// Get file with provider
+    /// Get file with specific providers.
+    ///
+    /// This method connects to providers first before fetching, working around
+    /// a rust-ipfs bug where `get_block().providers()` initiates dials but doesn't
+    /// wait for connection before checking connectivity.
+    ///
+    /// ## Parameters
+    ///
+    /// * `cid` - Content identifier to fetch.
+    /// * `providers` - List of peer IDs that have the content (from DHT lookup).
+    ///
+    /// ## Errors
+    ///
+    /// Returns an error if connection to all providers fails or block retrieval fails.
     pub async fn get_ipfs_file_cbor_with_providers(
         &self,
         cid: &Cid,
+        providers: &[PeerId],
     ) -> anyhow::Result<Vec<u8>> {
-        let mut providers = self.node.get_providers(cid.clone()).await?;
-        let mut provider_list = Vec::new();
-        while let Some(Ok(peer_set)) = providers.next().await {
-            provider_list.extend(peer_set);
+        use std::time::Duration;
+
+        use libp2p::swarm::dial_opts::DialOpts;
+        use tokio::time::timeout;
+
+        // Connect to providers first before calling get_block.
+        // This is a workaround for rust-ipfs Bitswap which initiates dials to providers
+        // but doesn't wait for them to complete before checking connectivity.
+        let mut connected_providers = Vec::new();
+        for peer_id in providers {
+            // Check if already connected
+            if self.node.is_connected(*peer_id).await.unwrap_or(false) {
+                tracing::debug!(%peer_id, "Already connected to provider");
+                connected_providers.push(*peer_id);
+                continue;
+            }
+
+            // Try to connect with a short timeout
+            let dial_opts = DialOpts::peer_id(*peer_id).build();
+            match timeout(Duration::from_secs(5), self.node.connect(dial_opts)).await {
+                Ok(Ok(_)) => {
+                    tracing::debug!(%peer_id, "Successfully connected to provider");
+                    connected_providers.push(*peer_id);
+                },
+                Ok(Err(err)) => {
+                    tracing::debug!(%peer_id, %err, "Failed to connect to provider");
+                },
+                Err(_) => {
+                    tracing::debug!(%peer_id, "Timeout connecting to provider");
+                },
+            }
         }
-        let block = self.node.get_block(cid).providers(provider_list).await?;
+
+        if connected_providers.is_empty() {
+            anyhow::bail!("Failed to connect to any providers for CID {cid}");
+        }
+
+        tracing::info!(
+            %cid,
+            total_providers = providers.len(),
+            connected_providers = connected_providers.len(),
+            "Fetching block with connected providers"
+        );
+
+        let block = self
+            .node
+            .get_block(cid)
+            .providers(&connected_providers)
+            .await?;
         Ok(block.data().to_vec())
     }
 

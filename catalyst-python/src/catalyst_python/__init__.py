@@ -1,1 +1,1 @@
-"""Catalyst Python Package."""
+"""Catalyst Python library."""

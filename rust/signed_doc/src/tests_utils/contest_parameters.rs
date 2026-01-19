@@ -1,34 +1,28 @@
-use ed25519_dalek::ed25519::signature::Signer;
+use chrono::{Duration, Utc};
 
 use crate::{
-    Builder, CatalystSignedDocument, ContentEncoding, ContentType, doc_types,
-    providers::tests::TestCatalystProvider, tests_utils::create_dummy_admin_key_pair, uuid::UuidV7,
+    CatalystSignedDocument, builder, providers::tests::TestCatalystProvider,
+    tests_utils::create_dummy_admin_key_pair,
 };
 
-#[allow(clippy::missing_errors_doc)]
 pub fn contest_parameters_doc(
     template: &CatalystSignedDocument,
-    parameters_doc: &CatalystSignedDocument,
+    parameters: &CatalystSignedDocument,
     provider: &mut TestCatalystProvider,
 ) -> anyhow::Result<CatalystSignedDocument> {
-    let id = UuidV7::new();
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
+    let content = serde_json::json!({
+        "start": Utc::now(),
+        "end": Utc::now().checked_add_signed(Duration::minutes(5)),
+    });
 
-    let template_ref = template.doc_ref()?;
-    let parameters_ref = parameters_doc.doc_ref()?;
-
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json,
-            "content-encoding": ContentEncoding::Brotli,
-            "type": doc_types::CONTEST_PARAMETERS.clone(),
-            "id": id,
-            "ver": id,
-            "template": [template_ref],
-            "parameters": [parameters_ref],
-        }))?
-        .with_json_content(&serde_json::json!({}))?
-        .add_signature(|m| sk.sign(&m).to_vec(), kid)?
-        .build()
+    builder::contest_parameters_doc(
+        &content,
+        template,
+        parameters,
+        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        kid,
+        None,
+    )
 }

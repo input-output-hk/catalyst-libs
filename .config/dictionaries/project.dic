@@ -21,6 +21,7 @@ backpressure
 bech
 Behaviour
 bimap
+Bitswap
 bindgen
 bkioshn
 blockdiag
@@ -183,6 +184,7 @@ ltstart
 maindbname
 mapref
 markdownlint
+maturin
 maxsplit
 mdformat
 mdit
@@ -256,6 +258,10 @@ pubk
 pubkey
 publickey
 pubspec
+pycardano
+pyclass
+pyfunction
+pymodule
 pwrite
 pycardano
 pycodestyle

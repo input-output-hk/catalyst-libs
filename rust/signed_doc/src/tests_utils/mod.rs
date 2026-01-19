@@ -2,8 +2,13 @@
 //! # WARNING
 //! FOR TESTING PURPOSES ONLY, DON'T USE IN PRODUCTION CODE
 
-#![allow(missing_docs)]
-#![allow(clippy::expect_used, clippy::missing_panics_doc)]
+#![allow(
+    missing_docs,
+    clippy::expect_used,
+    clippy::missing_panics_doc,
+    clippy::missing_errors_doc,
+    clippy::missing_docs_in_private_items
+)]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;
@@ -34,7 +39,7 @@ pub use category_parameters::category_parameters_doc;
 pub use category_parameters_form_template::category_parameters_form_template_doc;
 pub use contest_ballot::contest_ballot_doc;
 pub use contest_ballot_checkpoint::contest_ballot_checkpoint_doc;
-pub use contest_delegation::contest_delegation_doc;
+pub use contest_delegation::{contest_delegation_by_representative_doc, contest_delegation_doc};
 pub use contest_parameters::contest_parameters_doc;
 pub use contest_parameters_form_template::contest_parameters_form_template_doc;
 pub use proposal::proposal_doc;
@@ -48,7 +53,8 @@ pub use rep_profile::rep_profile_doc;
 pub use rep_profile_form_template::rep_profile_form_template_doc;
 
 use crate::{
-    Builder, CatalystSignedDocument, ContentType, DocumentRef,
+    CatalystSignedDocument, ContentType, DocumentRef,
+    builder::Builder,
     catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     uuid::{UuidV4, UuidV7},
@@ -106,4 +112,23 @@ pub fn create_dummy_doc_ref() -> DocumentRef {
         .expect("Must be valid document");
 
     test_doc.doc_ref().expect("Must be valid DocumentRef")
+}
+
+pub fn build_doc_and_publish(
+    provider: &mut TestCatalystProvider,
+    gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>,
+) -> anyhow::Result<CatalystSignedDocument> {
+    let doc = gen_fn(provider)?;
+    provider.add_document(&doc)?;
+    Ok(doc)
+}
+
+#[must_use]
+pub fn create_key_pair_and_publish(
+    provider: &mut TestCatalystProvider,
+    gen_fn: impl FnOnce() -> (ed25519_dalek::SigningKey, CatalystId),
+) -> (ed25519_dalek::SigningKey, CatalystId) {
+    let (sk, kid) = gen_fn();
+    provider.add_sk(kid.clone(), sk.clone());
+    (sk, kid)
 }
