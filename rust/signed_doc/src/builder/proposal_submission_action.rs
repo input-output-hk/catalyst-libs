@@ -11,7 +11,7 @@ pub fn proposal_submission_action_doc(
     linked: &CatalystSignedDocument,
     parameters: &CatalystSignedDocument,
     sk: &Ed25519SigningKey,
-    kid: &CatalystId,
+    kid: CatalystId,
     id: Option<UuidV7>,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (id, ver) = id.map_or_else(
@@ -35,6 +35,6 @@ pub fn proposal_submission_action_doc(
             "parameters": [parameters_ref]
         }))?
         .with_json_content(content)?
-        .add_signature(|m| sk.sign(&m), kid.clone())?
+        .add_signature(|m| sk.sign(&m), kid)?
         .build()
 }
