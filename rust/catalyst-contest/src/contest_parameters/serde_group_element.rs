@@ -3,6 +3,7 @@
 use catalyst_voting::crypto::group::GroupElement;
 use serde::{Deserialize, Deserializer, Serializer};
 
+/// A serialization implementation for `GroupElement`.
 // Allow dead code as for now it is only used in tests.
 #[allow(dead_code)]
 pub fn serialize<S>(
@@ -16,6 +17,7 @@ where
     serializer.serialize_str(&hex)
 }
 
+/// A deserialization implementation for `GroupElement`.
 pub fn deserialize<'de, D>(deserializer: D) -> Result<GroupElement, D::Error>
 where D: Deserializer<'de> {
     let hex = String::deserialize(deserializer)?;
