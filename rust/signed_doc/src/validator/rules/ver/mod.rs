@@ -96,6 +96,12 @@ impl VerRule {
     }
 }
 
+/// Time threshold validation check.
+/// 1. If `provider.future_threshold()` not `None`, document `ver` cannot be too far in
+///    the future (`future_threshold` arg) from `Utc::now()` based on the provided
+///    threshold
+/// 2. If `provider.past_threshold()` not `None`, document `ver` cannot be too far behind
+///    (`past_threshold` arg) from `Utc::now()` based on the provided threshold
 fn time_threshold_check(
     ver: UuidV7,
     provider: &dyn Provider,
