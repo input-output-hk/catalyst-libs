@@ -10,7 +10,7 @@ builder:
     COPY --keep-ts --dir \
         pyproject.toml uv.lock README.md \
         src \
-        rust-ffi \
+        catalyst-ffi \
         tests \
         .
 
