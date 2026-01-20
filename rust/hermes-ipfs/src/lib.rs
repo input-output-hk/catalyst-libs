@@ -46,8 +46,7 @@ pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
 pub struct HermesIpfsBuilder<N>(IpfsBuilder<N>)
-where
-    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync;
 
 impl Default for HermesIpfsBuilder<dummy::Behaviour> {
     fn default() -> Self {
@@ -56,8 +55,7 @@ impl Default for HermesIpfsBuilder<dummy::Behaviour> {
 }
 
 impl<N> HermesIpfsBuilder<N>
-where
-    N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync,
+where N: NetworkBehaviour<ToSwarm = Infallible> + Send + Sync
 {
     #[must_use]
     /// Create a new` IpfsBuilder`.
@@ -584,9 +582,11 @@ impl HermesIpfs {
             .node
             .dht_get_providers(key)
             .await?
-            .try_fold(HashSet::new(), |mut acc, set| async move {
-                acc.extend(set);
-                Ok(acc)
+            .try_fold(HashSet::new(), |mut acc, set| {
+                async move {
+                    acc.extend(set);
+                    Ok(acc)
+                }
             })
             .await?)
     }
