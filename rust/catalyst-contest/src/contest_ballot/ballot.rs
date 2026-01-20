@@ -82,9 +82,8 @@ pub fn payload(
     };
 
     let mut decoder = minicbor::Decoder::new(&bytes);
-    // TODO: Pass a problem report in the decode context. See the issue for more details:
-    // https://github.com/input-output-hk/catalyst-libs/issues/775
-    let Ok(payload) = ContentBallotPayload::decode(&mut decoder, &mut ()) else {
+
+    let Ok(payload) = ContentBallotPayload::decode(&mut decoder, &mut report.clone()) else {
         report.functional_validation(
             "Invalid document content: unable to decode CBOR",
             "Cannot get a document content during Contest Ballot document validation.",
@@ -125,21 +124,8 @@ pub fn check_parameters(
         return Ok(None);
     };
 
-    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
-        contest_parameters::get_payload(&contest_parameters, report);
-    if contest_parameters_payload_is_valid
-        && (doc_ver.time() > &contest_parameters_payload.end
-            || doc_ver.time() < &contest_parameters_payload.start)
-    {
-        report.functional_validation(
-            &format!(
-                "'ver' metadata field must be in 'Contest Ballot' timeline range. 'ver': {}, start: {}, end: {}",
-                doc_ver.time(),
-                contest_parameters_payload.start,
-                contest_parameters_payload.end
-            ),
-            "'Contest Ballot' document contest timeline check",
-        );
+    if !ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Ballot") {
+        return Ok(());
     }
 
     Ok(Some(contest_parameters_payload))

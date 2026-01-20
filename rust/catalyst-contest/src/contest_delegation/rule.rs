@@ -18,14 +18,11 @@ impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        let mut valid = true;
+        get_delegator(doc, doc.report());
+        let payload = get_payload(doc, doc.report());
+        contest_parameters_checks(doc, provider, doc.report())?;
+        get_delegations(doc, payload, provider, doc.report())?;
 
-        valid &= get_delegator(doc, doc.report()).1;
-        let (payload, is_payload_valid) = get_payload(doc, doc.report());
-        valid &= is_payload_valid;
-        valid &= contest_parameters_checks(doc, provider, doc.report())?;
-        valid &= get_delegations(doc, payload, provider, doc.report())?.1;
-
-        Ok(valid)
+        Ok(!doc.report().is_problematic())
     }
 }
