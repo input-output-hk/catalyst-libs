@@ -21,3 +21,6 @@ cat-libs.coverage.info
 
 # maturin generated catalyst_python.*.so files
 *.so
+
+# UniFFI bindgen generated
+src/catalyst_python/catalyst_ffi

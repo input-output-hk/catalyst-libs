@@ -16,7 +16,8 @@ impl CatalystSignedDocumentValidationRule for ContestBallotRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        let payload = payload(doc, doc.report());
+        let mut report = doc.report().clone();
+        let payload = payload(doc, &mut report);
         if let Some(payload) = &payload {
             check_proof(payload, doc.report());
         }
