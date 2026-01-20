@@ -61,67 +61,67 @@ export_doc_builder!(
 );
 
 export_doc_builder!(
-    campaign_parameters_form_template_doc, 
-    [parameters], 
+    campaign_parameters_form_template_doc,
+    [parameters],
     catalyst_signed_doc_lib::builder::campaign_parameters_form_template_doc
 );
 
 export_doc_builder!(
-    campaign_parameters_doc, 
-    [template, parameters], 
+    campaign_parameters_doc,
+    [template, parameters],
     catalyst_signed_doc_lib::builder::campaign_parameters_doc
 );
 
 export_doc_builder!(
-    category_parameters_form_template_doc, 
-    [parameters], 
+    category_parameters_form_template_doc,
+    [parameters],
     catalyst_signed_doc_lib::builder::category_parameters_form_template_doc
 );
 
 export_doc_builder!(
-    category_parameters_doc, 
-    [template, parameters], 
+    category_parameters_doc,
+    [template, parameters],
     catalyst_signed_doc_lib::builder::category_parameters_doc
 );
 
 export_doc_builder!(
-    contest_parameters_form_template_doc, 
-    [parameters], 
+    contest_parameters_form_template_doc,
+    [parameters],
     catalyst_signed_doc_lib::builder::contest_parameters_form_template_doc
 );
 
 export_doc_builder!(
-    contest_parameters_doc, 
-    [template, parameters], 
+    contest_parameters_doc,
+    [template, parameters],
     catalyst_signed_doc_lib::builder::contest_parameters_doc
 );
 
 export_doc_builder!(
-    proposal_comment_form_template_doc, 
-    [parameters], 
+    proposal_comment_form_template_doc,
+    [parameters],
     catalyst_signed_doc_lib::builder::proposal_comment_form_template_doc
 );
 
 export_doc_builder!(
-    proposal_comment_doc, 
-    [linked, template, parameters], 
+    proposal_comment_doc,
+    [linked, template, parameters],
     catalyst_signed_doc_lib::builder::proposal_comment_doc
 );
 
 export_doc_builder!(
-    proposal_form_template_doc, 
-    [parameters], 
+    proposal_form_template_doc,
+    [parameters],
     catalyst_signed_doc_lib::builder::proposal_form_template_doc
 );
 
 export_doc_builder!(
-    proposal_submission_action_doc, 
-    [linked, parameters], 
+    proposal_submission_action_doc,
+    [linked, parameters],
     catalyst_signed_doc_lib::builder::proposal_submission_action_doc
 );
 
 export_doc_builder!(
-    proposal_doc, 
-    [template, parameters], 
+    proposal_doc,
+    [template, parameters],
     catalyst_signed_doc_lib::builder::proposal_doc
 );
