@@ -6,6 +6,7 @@
 
 pub mod rule;
 
+mod serde_group_element;
 #[cfg(test)]
 mod tests;
 
@@ -45,6 +46,7 @@ pub(crate) struct ContestParametersPayload {
     /// Contest end date
     pub(crate) end: DateTime<Utc>,
     /// An election public key.
+    #[serde(with = "serde_group_element")]
     pub(crate) election_public_key: GroupElement,
 }
 

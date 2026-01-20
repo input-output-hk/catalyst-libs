@@ -91,30 +91,6 @@ impl Decode<'_, ()> for GroupElement {
     }
 }
 
-impl serde::Serialize for GroupElement {
-    fn serialize<S>(
-        &self,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let hex = hex::encode(self.to_bytes());
-        serializer.serialize_str(&hex)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for GroupElement {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
-        let hex = String::deserialize(deserializer)?;
-        let bytes = hex::decode(hex).map_err(serde::de::Error::custom)?;
-        let array = <[u8; GroupElement::BYTES_SIZE]>::try_from(bytes.as_slice())
-            .map_err(serde::de::Error::custom)?;
-        Self::from_bytes(&array).map_err(serde::de::Error::custom)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use test_strategy::proptest;
@@ -152,13 +128,6 @@ mod tests {
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
         let decoded = GroupElement::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
-    }
-
-    #[proptest]
-    fn group_element_json_roundtrip(original: GroupElement) {
-        let json = serde_json::to_string(&original).unwrap();
-        let decoded = serde_json::from_str(&json).unwrap();
         assert_eq!(original, decoded);
     }
 }
