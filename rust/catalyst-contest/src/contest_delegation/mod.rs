@@ -22,7 +22,7 @@ use catalyst_signed_doc::{
     uuid::UuidV7,
 };
 
-use crate::contest_parameters;
+use crate::contest_parameters::ContestParameters;
 
 /// `Contest Delegation` document type.
 #[derive(Debug, Clone)]
@@ -227,21 +227,12 @@ fn contest_parameters_checks(
         return Ok(false);
     };
 
-    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
-        contest_parameters::get_payload(&contest_parameters, report);
-    if contest_parameters_payload_is_valid
-        && (doc_ver.time() > &contest_parameters_payload.end
-            || doc_ver.time() < &contest_parameters_payload.start)
-    {
-        report.functional_validation(
-                &format!(
-                    "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
-                    doc_ver.time(),
-                    contest_parameters_payload.start,
-                    contest_parameters_payload.end
-                ),
-                "'Contest Delegation' document contest timeline check",
-            );
+    if !ContestParameters::timeline_check(
+        doc_ver,
+        &contest_parameters,
+        report,
+        "Contest Delegation",
+    ) {
         return Ok(false);
     }
 
