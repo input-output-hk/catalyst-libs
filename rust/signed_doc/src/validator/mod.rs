@@ -77,9 +77,8 @@ impl Validator {
     }
 
     /// A comprehensive document type based validation of the `CatalystSignedDocument`.
-    /// Includes time based validation of the `id` and `ver` fields based on the provided
-    /// `future_threshold` and `past_threshold` threshold values (in seconds).
-    /// Return true if it is valid, otherwise return false.
+    /// If something fails `doc.report()` would be properly filled, so
+    /// `doc.report().is_problematic()` would return `false`.
     ///
     /// # Errors
     /// If `provider` returns error, fails fast throwing that error.
@@ -87,13 +86,13 @@ impl Validator {
         &self,
         doc: &CatalystSignedDocument,
         provider: &impl Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let Ok(doc_type) = doc.doc_type() else {
             doc.report().missing_field(
                 "type",
                 "Can't get a document type during the validation process",
             );
-            return Ok(false);
+            return Ok(());
         };
 
         let Some(rules) = self.0.get(doc_type) else {
@@ -103,16 +102,15 @@ impl Validator {
                 "Must be a known document type value",
                 "Unsupported document type",
             );
-            return Ok(false);
+            return Ok(());
         };
 
-        let res = rules
+        rules
             .iter()
             .map(|v| v.check(doc, provider))
-            .collect::<anyhow::Result<Vec<_>>>()?
-            .iter()
-            .all(|res| *res);
-        Ok(res)
+            .collect::<anyhow::Result<Vec<_>>>()?;
+
+        Ok(())
     }
 
     /// Extend the current defined validation rules set for the provided document type.

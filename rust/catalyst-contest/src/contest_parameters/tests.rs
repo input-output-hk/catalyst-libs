@@ -57,9 +57,9 @@ fn contest_parameters(
     validator
         .extend_rules_per_document(doc_types::CONTEST_PARAMETERS.clone(), ContestParametersRule);
 
-    let is_valid = validator.validate(&doc, &p).unwrap();
+    validator.validate(&doc, &p).unwrap();
     println!("{:?}", doc.report());
-    assert_eq!(is_valid, !doc.report().is_problematic());
+    let is_valid = !doc.report().is_problematic();
 
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
     // report

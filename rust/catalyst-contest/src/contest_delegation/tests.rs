@@ -128,16 +128,16 @@ fn contest_delegation(
     validator
         .extend_rules_per_document(doc_types::CONTEST_DELEGATION.clone(), ContestDelegationRule);
 
-    let is_valid = validator.validate(&doc, &p).unwrap();
+    validator.validate(&doc, &p).unwrap();
     println!("{:?}", doc.report());
-    assert_eq!(is_valid, !doc.report().is_problematic());
+    let is_valid = !doc.report().is_problematic();
 
     // Generate similar `CatalystSignedDocument` instance to have a clean internal problem
     // report
     let doc = doc_gen(&mut p).unwrap();
     let contest_delegation = ContestDelegation::new(&doc, &p).unwrap();
-    assert_eq!(is_valid, !contest_delegation.report().is_problematic());
     println!("{:?}", contest_delegation.report());
+    assert_eq!(is_valid, !contest_delegation.report().is_problematic());
 
     is_valid
 }
