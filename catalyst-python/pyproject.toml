@@ -2,7 +2,7 @@
 
 [project]
 name = "catalyst-python"
-version = "0.1.0"
+version = "0.3.0"
 description = "Catalyst python library"
 readme = "README.md"
 authors = [
@@ -23,8 +23,8 @@ requires = ["maturin>=1.11,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
-module-name = "catalyst_python.catalyst_python_ffi"
-manifest-path = "rust-ffi/Cargo.toml"
+module-name = "catalyst_python.catalyst_ffi"
+manifest-path = "catalyst-ffi/Cargo.toml"
 python-source = "src"
 
 [dependency-groups]
