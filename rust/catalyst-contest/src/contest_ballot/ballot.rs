@@ -123,11 +123,11 @@ pub fn check_parameters(
             "ver",
             "Missing 'ver' metadata field for 'Contest Ballot' document",
         );
-        return Ok(None);
+        return Ok(Some(contest_parameters));
     };
 
     if !ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Ballot") {
-        return Ok(None);
+        return Ok(Some(contest_parameters));
     }
 
     Ok(Some(contest_parameters))
