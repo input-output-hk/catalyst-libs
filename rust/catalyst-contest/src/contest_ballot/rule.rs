@@ -19,7 +19,7 @@ impl CatalystSignedDocumentValidationRule for ContestBallotRule {
         let payload = payload(doc, doc.report());
         let params = check_parameters(doc, provider, doc.report())?;
         if let (Some(payload), Some(params)) = &(payload, params) {
-            check_proof(payload, params, doc.report());
+            check_proof(payload, params, doc.report())?;
         }
 
         Ok(!doc.report().is_problematic())

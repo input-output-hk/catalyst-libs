@@ -74,7 +74,6 @@ impl ContestParameters {
     }
 
     /// Returns an election public key.
-    #[must_use]
     pub fn election_public_key(&self) -> &GroupElement {
         &self.payload.election_public_key
     }

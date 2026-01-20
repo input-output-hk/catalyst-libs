@@ -6,12 +6,14 @@ use catalyst_signed_doc::{
     providers::CatalystSignedDocumentProvider,
 };
 use catalyst_voting::crypto::{
-    group::GroupElement, hash::Blake2b512Hasher, zk_unit_vector::verify_unit_vector_proof,
+    group::GroupElement,
+    hash::{Blake2b512Hasher, digest::Update},
+    zk_unit_vector::verify_unit_vector_proof,
 };
-use minicbor::Decode;
+use minicbor::{Decode, Encode};
 
 use crate::{
-    Choices, ContentBallotPayload, contest_parameters, contest_parameters::ContestParametersPayload,
+    Choices, ContentBallotPayload, contest_parameters, contest_parameters::ContestParameters,
 };
 
 /// An individual Ballot cast in a Contest by a registered user.
@@ -49,7 +51,7 @@ impl ContestBallot {
         let payload = payload(doc, &report);
         let params = check_parameters(doc, provider, &report)?;
         if let (Some(payload), Some(params)) = (&payload, &params) {
-            check_proof(payload, params, &report);
+            check_proof(payload, params, &report)?;
         }
 
         Ok(Self { payload, report })
@@ -94,12 +96,12 @@ pub fn payload(
     Some(payload)
 }
 
-/// Checks the parameters of a document and returns a payload.
+/// Checks the parameters of a document and returns a contest parameters document.
 pub fn check_parameters(
     doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<Option<ContestParametersPayload>> {
+) -> anyhow::Result<Option<CatalystSignedDocument>> {
     let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
         report.missing_field(
             "parameters",
@@ -125,18 +127,22 @@ pub fn check_parameters(
     };
 
     if !ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Ballot") {
-        return Ok(());
+        return Ok(None);
     }
 
-    Ok(Some(contest_parameters_payload))
+    Ok(Some(contest_parameters))
 }
 
 /// Checks the proof.
 pub fn check_proof(
     payload: &ContentBallotPayload,
-    params: &ContestParametersPayload,
+    contest_parameters: &CatalystSignedDocument,
     report: &ProblemReport,
-) {
+) -> anyhow::Result<()> {
+    let election_public_key =
+        contest_parameters::get_payload(contest_parameters, report).election_public_key;
+    let commitment_key = commitment_key(contest_parameters)?;
+
     for (index, choice) in &payload.choices {
         let Choices::Encrypted {
             choices,
@@ -146,14 +152,10 @@ pub fn check_proof(
             continue;
         };
 
-        // TODO: FIXME:
-        let hasher = Blake2b512Hasher::new();
-        let commitment_key = GroupElement::from_hash(hasher);
-
         if !verify_unit_vector_proof(
             proof,
             choices.clone(),
-            &params.election_public_key,
+            &election_public_key,
             &commitment_key,
         ) {
             report.functional_validation(
@@ -162,4 +164,17 @@ pub fn check_proof(
             );
         }
     }
+
+    Ok(())
+}
+
+/// Returns a commitment key calculated from the document reference of the given contest
+/// parameters document.
+fn commitment_key(contest_parameters: &CatalystSignedDocument) -> anyhow::Result<GroupElement> {
+    let params_ref = contest_parameters.doc_ref()?;
+    let mut buffer = Vec::new();
+    params_ref.encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())?;
+    let mut hasher = Blake2b512Hasher::new();
+    hasher.update(&buffer);
+    Ok(GroupElement::from_hash(hasher))
 }
