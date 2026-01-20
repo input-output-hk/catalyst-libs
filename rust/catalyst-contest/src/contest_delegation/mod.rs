@@ -158,8 +158,7 @@ fn get_delegator(
         );
     }
 
-    let delegator = authors.into_iter().next();
-    delegator
+    authors.into_iter().next()
 }
 
 /// Get `ContestDelegationPayload` from the provided `CatalystSignedDocument`, fill the
@@ -168,7 +167,7 @@ fn get_payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
 ) -> ContestDelegationPayload {
-    let payload = doc
+    doc
             .decoded_content()
             .inspect_err(|_| {
                 report.functional_validation(
@@ -183,9 +182,7 @@ fn get_payload(
                     "Cannot get a document content during Contest Delegation document validation.",
                 );
             })
-            .unwrap_or_default();
-
-    payload
+            .unwrap_or_default()
 }
 
 /// Get the 'Contest Parameters' document from the 'parameters' metadata field, applying

@@ -39,9 +39,9 @@ impl ContestBallot {
             "Document must be Contest Ballot type"
         );
 
-        let mut report = ProblemReport::new("Contest Ballot");
+        let report = ProblemReport::new("Contest Ballot");
 
-        let payload = payload(doc, &mut report);
+        let payload = payload(doc, &report);
         if let Some(payload) = &payload {
             check_proof(payload, &report);
         }

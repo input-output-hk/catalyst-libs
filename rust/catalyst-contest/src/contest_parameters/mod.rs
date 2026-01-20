@@ -117,7 +117,7 @@ impl ContestParameters {
         report: &ProblemReport,
         document_name: &str,
     ) -> bool {
-        let contest_parameters_payload = get_payload(&contest_parameters, report);
+        let contest_parameters_payload = get_payload(contest_parameters, report);
         if ver.time() > &contest_parameters_payload.end
             || ver.time() < &contest_parameters_payload.start
         {
