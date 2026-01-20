@@ -300,8 +300,7 @@ fn test_proposal_submission_action_doc(
         doc_types::PROPOSAL_SUBMISSION_ACTION.clone()
     );
 
-    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !doc.report().is_problematic());
+    Validator::new().validate(&doc, &provider).unwrap();
     println!("{:?}", doc.report());
-    is_valid
+    !doc.report().is_problematic()
 }
