@@ -3,6 +3,8 @@
 use catalyst_voting::crypto::group::GroupElement;
 use serde::{Deserialize, Deserializer, Serializer};
 
+// Allow dead code as for now it is only used in tests.
+#[allow(dead_code)]
 pub fn serialize<S>(
     val: &GroupElement,
     serializer: S,
