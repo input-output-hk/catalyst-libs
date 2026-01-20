@@ -66,7 +66,7 @@ impl ContestBallot {
 /// Returns a decoded contest ballot payload.
 pub fn payload(
     doc: &CatalystSignedDocument,
-    report: &mut ProblemReport,
+    report: &ProblemReport,
 ) -> Option<ContentBallotPayload> {
     let Ok(bytes) = doc.decoded_content() else {
         report.functional_validation(
@@ -77,7 +77,8 @@ pub fn payload(
     };
 
     let mut decoder = minicbor::Decoder::new(&bytes);
-    let Ok(payload) = ContentBallotPayload::decode(&mut decoder, report) else {
+
+    let Ok(payload) = ContentBallotPayload::decode(&mut decoder, &mut report.clone()) else {
         report.functional_validation(
             "Invalid document content: unable to decode CBOR",
             "Cannot get a document content during Contest Ballot document validation.",

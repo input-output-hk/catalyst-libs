@@ -101,8 +101,7 @@ impl ContestParameters {
         );
 
         let report = ProblemReport::new("Contest Parameters");
-
-        let (payload, _) = get_payload(doc, &report);
+        let payload = get_payload(doc, &report);
 
         Ok(ContestParameters {
             doc_ref: doc.doc_ref()?,
@@ -118,11 +117,9 @@ impl ContestParameters {
         report: &ProblemReport,
         document_name: &str,
     ) -> bool {
-        let (contest_parameters_payload, contest_parameters_payload_is_valid) =
-            get_payload(&contest_parameters, report);
-        if contest_parameters_payload_is_valid
-            && (ver.time() > &contest_parameters_payload.end
-                || ver.time() < &contest_parameters_payload.start)
+        let contest_parameters_payload = get_payload(&contest_parameters, report);
+        if ver.time() > &contest_parameters_payload.end
+            || ver.time() < &contest_parameters_payload.start
         {
             report.functional_validation(
                 &format!(
@@ -141,12 +138,10 @@ impl ContestParameters {
 
 /// Get `ContestParametersPayload` from the provided `CatalystSignedDocument`, fill the
 /// provided `ProblemReport` if something goes wrong.
-/// Returns additional boolean flag, was it valid or not.
 pub(crate) fn get_payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
-) -> (ContestParametersPayload, bool) {
-    let mut valid = true;
+) -> ContestParametersPayload {
     let payload = doc
             .decoded_content()
             .inspect_err(|_| {
@@ -154,7 +149,6 @@ pub(crate) fn get_payload(
                     "Invalid Document content, cannot get decoded bytes",
                     "Cannot get a document content during Contest Parameters document validation.",
                 );
-                valid = false;
             })
             .and_then(|v | Ok(serde_json::from_slice::<ContestParametersPayload>(&v)?))
             .inspect_err(|_| {
@@ -162,7 +156,6 @@ pub(crate) fn get_payload(
                     "Invalid Document content, must be a valid JSON object compliant with the JSON schema.",
                     "Cannot get a document content during Contest Parameters document validation.",
                 );
-                valid = false;
             })
             .unwrap_or_default();
 
@@ -171,8 +164,7 @@ pub(crate) fn get_payload(
             "Invalid Document content, end date must be after the start date.",
             "Cannot get a document content during Contest Parameters document validation.",
         );
-        valid = false;
     }
 
-    (payload, valid)
+    payload
 }
