@@ -10,7 +10,6 @@ mod content;
 mod content_encoding;
 mod content_type;
 mod doc_ref;
-mod id;
 mod ownership;
 mod parameters;
 mod reply;
@@ -19,6 +18,7 @@ mod section;
 mod signature;
 mod signature_kid;
 mod template;
+mod r#type;
 mod utils;
 mod ver;
 
@@ -28,7 +28,6 @@ pub(crate) use content::ContentRule;
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
-pub(crate) use id::IdRule;
 pub(crate) use ownership::DocumentOwnershipRule;
 pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
@@ -37,6 +36,7 @@ pub(crate) use section::SectionRule;
 pub(crate) use signature::SignatureRule;
 pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::TemplateRule;
+pub(crate) use r#type::TypeRule;
 pub(crate) use ver::VerRule;
 
 use crate::validator::Rules;
@@ -48,8 +48,8 @@ fn rules_for_doc(
     doc_spec: &DocSpec,
 ) -> anyhow::Result<Rules> {
     Ok(vec![
-        Box::new(IdRule),
         Box::new(VerRule),
+        Box::new(TypeRule),
         Box::new(ContentTypeRule::new(&doc_spec.headers.content_type)?),
         Box::new(ContentEncodingRule::new(
             &doc_spec.headers.content_encoding,
