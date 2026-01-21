@@ -16,7 +16,7 @@ use catalyst_signed_doc::{
 };
 use chrono::{DateTime, Utc};
 
-use crate::contest_parameters::payload::ContestParametersPayload;
+use crate::contest_parameters::payload::{Choices, ContestParametersPayload};
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]
@@ -62,6 +62,12 @@ impl ContestParameters {
     #[must_use]
     pub fn end(&self) -> &DateTime<Utc> {
         &self.payload.end
+    }
+
+    /// Returns contest choices
+    #[must_use]
+    pub fn choices(&self) -> &Choices {
+        &self.payload.choices
     }
 
     /// Returns `ProblemReport`
@@ -136,21 +142,21 @@ pub(crate) fn get_payload(
     report: &ProblemReport,
 ) -> ContestParametersPayload {
     let payload = doc
-            .decoded_content()
-            .inspect_err(|_| {
-                report.functional_validation(
-                    "Invalid Document content, cannot get decoded bytes",
-                    "Cannot get a document content during Contest Parameters document validation.",
-                );
-            })
-            .and_then(|v | Ok(serde_json::from_slice::<ContestParametersPayload>(&v)?))
-            .inspect_err(|_| {
-                report.functional_validation(
-                    "Invalid Document content, must be a valid JSON object compliant with the JSON schema.",
-                    "Cannot get a document content during Contest Parameters document validation.",
-                );
-            })
-            .unwrap_or_default();
+        .decoded_content()
+        .inspect_err(|_| {
+            report.functional_validation(
+                "Invalid Document content, cannot get decoded bytes",
+                "Cannot get a document content during Contest Parameters document validation.",
+            );
+        })
+        .and_then(|v| Ok(serde_json::from_slice::<ContestParametersPayload>(&v)?))
+        .inspect_err(|e| {
+            report.functional_validation(
+                &e.to_string(),
+                "Cannot get a document content during Contest Parameters document validation.",
+            );
+        })
+        .unwrap_or_default();
 
     if payload.start >= payload.end {
         report.functional_validation(

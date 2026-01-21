@@ -167,22 +167,21 @@ fn get_payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
 ) -> ContestDelegationPayload {
-    doc
-            .decoded_content()
-            .inspect_err(|_| {
-                report.functional_validation(
-                    "Invalid Document content, cannot get decoded bytes",
-                    "Cannot get a document content during Contest Delegation document validation.",
-                );
-            })
-            .and_then(|v | Ok(serde_json::from_slice::<ContestDelegationPayload>(&v)?))
-            .inspect_err(|_| {
-                report.functional_validation(
-                    "Invalid Document content, must be a valid JSON object compliant with the JSON schema.",
-                    "Cannot get a document content during Contest Delegation document validation.",
-                );
-            })
-            .unwrap_or_default()
+    doc.decoded_content()
+        .inspect_err(|_| {
+            report.functional_validation(
+                "Invalid Document content, cannot get decoded bytes",
+                "Cannot get a document content during Contest Delegation document validation.",
+            );
+        })
+        .and_then(|v| Ok(serde_json::from_slice::<ContestDelegationPayload>(&v)?))
+        .inspect_err(|e| {
+            report.functional_validation(
+                &e.to_string(),
+                "Cannot get a document content during Contest Delegation document validation.",
+            );
+        })
+        .unwrap_or_default()
 }
 
 /// Get the 'Contest Parameters' document from the 'parameters' metadata field, applying
