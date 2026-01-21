@@ -226,3 +226,141 @@ icon: material/run-fast
 - Shows integration patterns
 - Illustrates service-level architecture
 - Combines multiple crates effectively
+
+## Runtime Scenario 7: User Authentication and Session Management
+
+**Scenario**: User authenticates and establishes a session in the Catalyst Voices frontend application.
+
+**Runtime Flow**:
+
+```mermaid
+sequenceDiagram
+  participant UI as Login Page
+  participant BLOC as SessionCubit
+  participant REPO as Auth Repository
+  participant WASM as Key Derivation (WASM)
+  participant API as Gateway API
+  participant LDB as Local DB
+  participant SECURE as Secure Storage
+
+  UI->>BLOC: Login Event (mnemonic)
+  BLOC->>WASM: Derive keys from mnemonic
+  WASM-->>BLOC: Derived keys
+  BLOC->>REPO: Authenticate with keys
+  REPO->>API: GET /cardano/rbac/registrations
+  API-->>REPO: RBAC registration data
+  REPO->>LDB: Cache registration data
+  REPO->>SECURE: Store encrypted keys
+  REPO-->>BLOC: Authentication result
+  BLOC->>BLOC: Update SessionState
+  BLOC-->>UI: Authenticated state
+  UI->>UI: Navigate to workspace
+```
+
+**Notable Aspects**:
+- Keys are derived client-side using WASM for security
+- RBAC registration data is cached locally for offline access
+- Sensitive keys stored in secure storage (encrypted)
+- Session state managed reactively via BLoC
+
+## Runtime Scenario 8: Proposal Creation and Submission
+
+**Scenario**: User creates and submits a proposal in the Catalyst Voices frontend application.
+
+**Runtime Flow**:
+
+```mermaid
+sequenceDiagram
+  participant UI as Proposal Builder Page
+  participant BLOC as ProposalBuilderBloc
+  participant VM as ProposalViewModel
+  participant REPO as Document Repository
+  participant COSE as COSE Library
+  participant COMP as Compression (WASM)
+  participant API as Gateway API
+  participant LDB as Local DB
+
+  UI->>BLOC: Start Proposal Event
+  BLOC->>VM: Initialize form state
+  VM-->>UI: Form fields
+  
+  loop User Input
+    UI->>BLOC: Update Proposal Event
+    BLOC->>VM: Update form state
+    VM-->>UI: Updated UI
+  end
+  
+  UI->>BLOC: Submit Proposal Event
+  BLOC->>VM: Validate form
+  VM-->>BLOC: Validation result
+  
+  alt Valid
+    BLOC->>REPO: Create proposal document
+    REPO->>COSE: Sign document
+    COSE->>COMP: Compress document
+    COMP-->>REPO: Compressed CBOR
+    REPO->>API: PUT /v1/document
+    API-->>REPO: Document ID
+    REPO->>LDB: Cache document locally
+    REPO-->>BLOC: Success
+    BLOC-->>UI: Navigate to proposal page
+  else Invalid
+    BLOC-->>UI: Show validation errors
+  end
+```
+
+**Notable Aspects**:
+- Form state managed via ViewModel for separation of concerns
+- Document signing and compression happen client-side
+- Documents cached locally before submission
+- Optimistic updates provide immediate feedback
+
+## Runtime Scenario 9: Offline-First Data Synchronization
+
+**Scenario**: The frontend application handles offline operations and syncs when online.
+
+**Runtime Flow**:
+
+```mermaid
+sequenceDiagram
+  participant UI as Any Page
+  participant BLOC as Feature BLoC
+  participant REPO as Repository
+  participant SYNC as Sync Service
+  participant LDB as Local DB
+  participant API as Gateway API
+
+  Note over UI,LDB: Online Mode
+  UI->>BLOC: Request data
+  BLOC->>REPO: Fetch data
+  REPO->>LDB: Check local cache
+  LDB-->>REPO: Cached data (if available)
+  REPO->>API: Fetch fresh data
+  API-->>REPO: Fresh data
+  REPO->>LDB: Update cache
+  REPO-->>BLOC: Data
+  BLOC-->>UI: Update UI
+  
+  Note over UI,LDB: Offline Mode
+  UI->>BLOC: Request data
+  BLOC->>REPO: Fetch data
+  REPO->>LDB: Read from cache
+  LDB-->>REPO: Cached data
+  REPO-->>BLOC: Data
+  BLOC-->>UI: Update UI
+  
+  Note over UI,LDB: Background Sync
+  loop Periodic Sync
+    SYNC->>LDB: Check sync status
+    SYNC->>API: Fetch updates since last sync
+    API-->>SYNC: Changes
+    SYNC->>LDB: Apply updates
+    SYNC->>BLOC: Notify of updates (if UI active)
+  end
+```
+
+**Notable Aspects**:
+- Local database always checked first for responsiveness
+- Background sync keeps data fresh when online
+- UI updates reactively via BLoC streams
+- Conflict resolution handles concurrent modifications

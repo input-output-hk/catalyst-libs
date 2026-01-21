@@ -34,3 +34,7 @@ Each Concept will be documented in its own set of markdown files/images under th
 
 ### Integration
 - [cat-gateway Integration](cat_gateway_integration.md) - Integration patterns with cat-gateway service
+
+### Frontend Architecture
+- [Frontend State Management](frontend_state_management/index.md) - BLoC pattern, ViewModels, and state management concepts
+- [Frontend Navigation](frontend_navigation/index.md) - GoRouter routing and navigation patterns

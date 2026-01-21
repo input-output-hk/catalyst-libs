@@ -185,6 +185,165 @@ Provides Python bindings for catalyst-libs Rust crates via Foreign Function Inte
 - Catalyst API integration
 - Type-safe Python interfaces
 
+### Frontend Application Layer
+
+**Purpose/Responsibility**:  
+The Catalyst Voices frontend application is a Flutter-based cross-platform application (Web, iOS, Android) that provides the user interface for proposal creation, voting, and event management. It follows Clean Architecture principles with BLoC pattern for state management.
+
+**Architecture Layers**:
+
+```mermaid
+flowchart TB
+    subgraph Presentation Layer
+        UI[UI Widgets]
+        PAGES[Pages]
+        WIDGETS[Reusable Widgets]
+        ROUTER[GoRouter]
+    end
+    
+    subgraph Business Logic Layer
+        BLOCS[BLoCs/Cubits]
+        VIEWMODELS[ViewModels]
+        SIGNALS[Signals]
+    end
+    
+    subgraph Domain Layer
+        REPOS[Repositories]
+        MODELS[Domain Models]
+        SERVICES[Services]
+    end
+    
+    subgraph Data Layer
+        API[HTTP API Client]
+        LDB[(Local DB - Drift/SQLite)]
+        WASM[WASM Libraries]
+        SECURE[Secure Storage]
+    end
+    
+    UI --> BLOCS
+    PAGES --> BLOCS
+    WIDGETS --> BLOCS
+    ROUTER --> PAGES
+    BLOCS --> VIEWMODELS
+    BLOCS --> REPOS
+    VIEWMODELS --> REPOS
+    REPOS --> API
+    REPOS --> LDB
+    REPOS --> WASM
+    REPOS --> SECURE
+```
+
+**Contained Building Blocks**:
+
+* **Presentation Layer**:
+  * **Pages**: Feature-specific page widgets (proposal, voting, discovery, etc.)
+  * **Widgets**: Reusable UI components (288+ widget files)
+  * **Router**: GoRouter-based navigation with type-safe routes
+  * **Theming**: Material Design with custom theming system
+
+* **Business Logic Layer**:
+  * **BLoCs/Cubits**: State management using flutter_bloc
+    * Session management (SessionCubit)
+    * Workspace management (WorkspaceBloc)
+    * Voting (VotingCubit)
+    * Proposals (ProposalsCubit)
+    * Account (AccountCubit)
+    * Discovery (DiscoveryCubit)
+    * And 15+ more feature-specific BLoCs
+  * **ViewModels**: Presentation logic abstraction
+  * **Signals**: Cross-BLoC communication mechanism
+
+* **Domain Layer**:
+  * **Repositories**: Data access abstraction
+    * Document repository
+    * Event repository
+    * User repository
+    * Proposal repository
+    * Voting repository
+  * **Models**: Domain entities and value objects
+  * **Services**: Business logic services
+
+* **Data Layer**:
+  * **HTTP API Client**: OpenAPI-generated client for gateway API
+  * **Local Database**: Drift-based SQLite with JSONB support
+  * **WASM Libraries**: Cryptographic operations (key derivation, compression)
+  * **Secure Storage**: Flutter Secure Storage for sensitive data
+
+**Key Architectural Patterns**:
+
+* **Clean Architecture**: Clear separation of concerns across layers
+* **BLoC Pattern**: Reactive state management with events and states
+* **Repository Pattern**: Abstraction of data sources
+* **Dependency Injection**: Manual DI via constructor injection
+* **Offline-First**: Local database enables full offline functionality
+
+**Interfaces**:
+
+* **Navigation**: Type-safe routing via GoRouter
+* **State Management**: Stream-based reactive updates via BLoC
+* **Data Access**: Repository interfaces abstracting API and local storage
+* **Platform Integration**: Platform channels for native features
+
+**Quality Characteristics**:
+
+* **Testability**: Clear separation enables unit and widget testing
+* **Maintainability**: Consistent patterns across features
+* **Scalability**: Modular architecture supports feature growth
+* **Performance**: Local caching and reactive updates for responsiveness
+
+**Frontend Internal Packages**:
+
+The frontend application is organized into internal packages for separation of concerns:
+
+* **catalyst_voices_blocs**: State management (BLoCs, Cubits, States, Events)
+  * 20+ feature-specific BLoCs
+  * Common mixins for error handling and signals
+  * Cache management for performance
+
+* **catalyst_voices_repositories**: Data access layer
+  * Repository implementations
+  * Database schema and migrations (Drift)
+  * API client integration
+  * Local storage management
+
+* **catalyst_voices_models**: Domain models and value objects
+  * 220+ Dart model files
+  * Serialization/deserialization
+  * Validation logic
+
+* **catalyst_voices_view_models**: Presentation logic
+  * ViewModel implementations
+  * UI state transformations
+  * 105+ view model files
+
+* **catalyst_voices_services**: Business logic services
+  * Service implementations
+  * Cross-cutting concerns
+
+* **catalyst_voices_shared**: Shared utilities
+  * Common extensions
+  * Helper functions
+  * Constants
+
+* **catalyst_voices_assets**: Asset management
+  * SVG compilation
+  * Image assets
+  * 290+ SVG files
+
+* **catalyst_voices_localization**: Internationalization
+  * ARB files for translations
+  * Generated localization code
+
+* **catalyst_voices_brands**: Branding system
+  * Theme configuration
+  * Brand-specific styling
+
+**Directory Location**: `apps/voices/` (in catalyst-voices repository)
+
+**Dependencies**: Flutter 3.35.1+, flutter_bloc, go_router, drift, WASM libraries
+
+**Fulfilled Requirements**: Cross-platform UI, offline functionality, secure key management, document creation and voting
+
 ## Level 2: Detailed Building Blocks
 
 ### cardano-chain-follower
