@@ -3,7 +3,7 @@ VERSION 0.8
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.6.14 AS mdlint-ci
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.6.14 AS cspell-ci
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.6.14 AS python-ci
-IMPORT github.com/input-output-hk/catalyst-ci:v3.6.13 AS cat-ci
+IMPORT github.com/input-output-hk/catalyst-ci:v3.6.14 AS cat-ci
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/debian:v3.6.14 AS debian
 
 
