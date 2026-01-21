@@ -167,7 +167,7 @@ mod tests {
             choices: [
                 (1, Choices::Clear(vec![1, 2, 3, 4, 5])),
                 (2, Choices::Encrypted {
-                    choices: vec![Ciphertext::zero()],
+                    choices: vec![Ciphertext::zero()].into(),
                     row_proof: None,
                 }),
             ]

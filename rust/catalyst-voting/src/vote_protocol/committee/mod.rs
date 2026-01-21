@@ -36,6 +36,12 @@ impl ElectionSecretKey {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElectionPublicKey(pub(crate) GroupElement);
 
+impl From<GroupElement> for ElectionPublicKey {
+    fn from(value: GroupElement) -> Self {
+        Self(value)
+    }
+}
+
 #[cfg(test)]
 mod arbitrary_impl {
     use proptest::prelude::{Arbitrary, BoxedStrategy, Strategy, any};

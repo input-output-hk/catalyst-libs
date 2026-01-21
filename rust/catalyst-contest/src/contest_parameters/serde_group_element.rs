@@ -1,13 +1,13 @@
 //! A serialize/deserialize implementation for `GroupElement`.
 
-use catalyst_voting::crypto::group::GroupElement;
+use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use serde::{Deserialize, Deserializer, Serializer};
 
 /// A serialization implementation for `GroupElement`.
 // Allow dead code as for now it is only used in tests.
 #[allow(dead_code)]
 pub fn serialize<S>(
-    val: &GroupElement,
+    val: &ElectionPublicKey,
     serializer: S,
 ) -> Result<S::Ok, S::Error>
 where
@@ -18,13 +18,15 @@ where
 }
 
 /// A deserialization implementation for `GroupElement`.
-pub fn deserialize<'de, D>(deserializer: D) -> Result<GroupElement, D::Error>
+pub fn deserialize<'de, D>(deserializer: D) -> Result<ElectionPublicKey, D::Error>
 where D: Deserializer<'de> {
     let hex = String::deserialize(deserializer)?;
     let bytes = hex::decode(hex).map_err(serde::de::Error::custom)?;
     let array = <[u8; GroupElement::BYTES_SIZE]>::try_from(bytes.as_slice())
         .map_err(serde::de::Error::custom)?;
-    GroupElement::from_bytes(&array).map_err(serde::de::Error::custom)
+    Ok(GroupElement::from_bytes(&array)
+        .map_err(serde::de::Error::custom)?
+        .into())
 }
 
 #[cfg(test)]
@@ -36,13 +38,13 @@ mod tests {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Wrapper {
         #[serde(with = "super")]
-        value: GroupElement,
+        value: ElectionPublicKey,
     }
 
     #[test]
     fn group_element_json_roundtrip() {
         let original = Wrapper {
-            value: GroupElement::zero(),
+            value: GroupElement::zero().into(),
         };
         let json = serde_json::to_string(&original).unwrap();
         let decoded = serde_json::from_str(&json).unwrap();

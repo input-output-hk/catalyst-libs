@@ -5,10 +5,9 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, doc_types::CONTEST_BALLOT, problem_report::ProblemReport,
     providers::CatalystSignedDocumentProvider,
 };
-use catalyst_voting::crypto::{
-    group::GroupElement,
-    hash::{Blake2b512Hasher, digest::Update},
-    zk_unit_vector::verify_unit_vector_proof,
+use catalyst_voting::{
+    crypto::hash::{Blake2b512Hasher, digest::Update},
+    vote_protocol::voter::proof::{VoterProofCommitment, verify_voter_proof},
 };
 use minicbor::{Decode, Encode};
 
@@ -152,11 +151,11 @@ pub fn check_proof(
             continue;
         };
 
-        if !verify_unit_vector_proof(
-            proof,
+        if !verify_voter_proof(
             choices.clone(),
             &election_public_key,
             &commitment_key,
+            proof,
         ) {
             report.functional_validation(
                 &format!("Failed to verify proof ({index} index)"),
@@ -170,11 +169,13 @@ pub fn check_proof(
 
 /// Returns a commitment key calculated from the document reference of the given contest
 /// parameters document.
-fn commitment_key(contest_parameters: &CatalystSignedDocument) -> anyhow::Result<GroupElement> {
+fn commitment_key(
+    contest_parameters: &CatalystSignedDocument
+) -> anyhow::Result<VoterProofCommitment> {
     let params_ref = contest_parameters.doc_ref()?;
     let mut buffer = Vec::new();
     params_ref.encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())?;
     let mut hasher = Blake2b512Hasher::new();
     hasher.update(&buffer);
-    Ok(GroupElement::from_hash(hasher))
+    Ok(VoterProofCommitment::from_hash(hasher))
 }

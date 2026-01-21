@@ -3,9 +3,14 @@
 use std::io::Read;
 
 use anyhow::anyhow;
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
 use super::EncryptedVote;
-use crate::{crypto::elgamal::Ciphertext, utils::read_array};
+use crate::{
+    crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof},
+    utils::read_array,
+    vote_protocol::voter::proof::VoterProof,
+};
 
 impl EncryptedVote {
     /// Get an underlying vector length.
@@ -50,6 +55,44 @@ impl EncryptedVote {
     }
 }
 
+impl Encode<()> for EncryptedVote {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.0.encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for EncryptedVote {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        Ok(Self(Vec::<Ciphertext>::decode(d, ctx)?))
+    }
+}
+
+impl Encode<()> for VoterProof {
+    fn encode<W: Write>(
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.0.encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for VoterProof {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        Ok(Self(UnitVectorProof::decode(d, ctx)?))
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::explicit_deref_methods)]
 mod tests {
@@ -68,5 +111,25 @@ mod tests {
         assert_eq!(bytes.len(), vote1.bytes_size());
         let vote2 = EncryptedVote::from_bytes(&mut Cursor::new(bytes), vote1.size()).unwrap();
         assert_eq!(vote1, vote2);
+    }
+
+    #[proptest]
+    fn encrypted_vote_cbor_roundtrip(original: EncryptedVote) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = EncryptedVote::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
+    }
+
+    #[proptest]
+    fn voter_proof_cbor_roundtrip(original: VoterProof) {
+        let mut buffer = Vec::new();
+        original
+            .encode(&mut Encoder::new(&mut buffer), &mut ())
+            .unwrap();
+        let decoded = VoterProof::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        assert_eq!(original, decoded);
     }
 }

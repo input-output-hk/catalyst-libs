@@ -14,7 +14,7 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
 };
-use catalyst_voting::crypto::group::GroupElement;
+use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use chrono::{DateTime, Utc};
 
 /// `Contest Parameters` document type.
@@ -47,7 +47,7 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) end: DateTime<Utc>,
     /// An election public key.
     #[serde(with = "serde_group_element")]
-    pub(crate) election_public_key: GroupElement,
+    pub(crate) election_public_key: ElectionPublicKey,
 }
 
 impl ContestParameters {
@@ -76,7 +76,8 @@ impl ContestParameters {
     }
 
     /// Returns an election public key.
-    pub fn election_public_key(&self) -> &GroupElement {
+    #[must_use]
+    pub fn election_public_key(&self) -> &ElectionPublicKey {
         &self.payload.election_public_key
     }
 
@@ -151,7 +152,7 @@ impl Default for ContestParametersPayload {
         Self {
             start: DateTime::default(),
             end: DateTime::default(),
-            election_public_key: GroupElement::zero(),
+            election_public_key: GroupElement::zero().into(),
         }
     }
 }
