@@ -160,6 +160,31 @@ Handles creation of vote transactions for Cardano blockchain submission.
 
 **Fulfilled Requirements**: Vote transaction creation, multiple format support
 
+### Python Integration Layer
+
+**Purpose/Responsibility**:  
+Provides Python bindings for catalyst-libs Rust crates via Foreign Function Interface (FFI).
+
+**Building Blocks**:
+- `catalyst-python`: Python package with FFI bindings to Rust crates
+
+**Interfaces**:
+- Python API wrapping Rust crates
+- FFI bindings for core functionality
+- Python package distribution
+
+**Directory Location**: `catalyst-python/`
+
+**Dependencies**: Rust crates (via FFI), Python 3.x
+
+**Fulfilled Requirements**: Python integration, cross-language support
+
+**Key Features**:
+- RBAC operations from Python
+- Catalyst Signed Documents from Python
+- Catalyst API integration
+- Type-safe Python interfaces
+
 ## Level 2: Detailed Building Blocks
 
 ### cardano-chain-follower
@@ -280,6 +305,28 @@ IPFS integration for decentralized document storage.
 **Dependencies**: IPFS libraries
 
 **Fulfilled Requirements**: IPFS integration for document storage
+
+### catalyst-python
+
+**Purpose**:  
+Python bindings for catalyst-libs Rust crates via FFI.
+
+**Key Features**:
+- Python API for RBAC operations
+- Python API for Catalyst Signed Documents
+- Python API for Catalyst API integration
+- Type-safe Python interfaces
+
+**Interfaces**:
+- Python package API
+- FFI bindings to Rust crates
+- Python type definitions
+
+**Directory**: `catalyst-python/`
+
+**Dependencies**: Rust crates (via FFI), Python 3.x
+
+**Fulfilled Requirements**: Python integration, cross-language support
 
 ## Integration with External Systems
 

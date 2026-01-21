@@ -1,6 +1,12 @@
 # Cardano Chain Follower Instances
 
-This document details how the individual chain follower instances are organized within the Hermes runtime extension.
+!!! note "Historical Context"
+    This document originally described chain follower organization within a "Hermes runtime extension" concept.
+    The current implementation of `cardano-chain-follower` is a standalone library that can be used in any Rust application.
+    The concepts described here (pooling, stream optimization) are still relevant for applications using the chain follower,
+    but the "Hermes runtime" specific context may be outdated.
+
+This document details how individual chain follower instances can be organized and optimized when used in applications.
 
 ## Basic Principles
 
@@ -14,7 +20,7 @@ It is not efficient or necessary to have multiple followers syncing from the sam
 ## Pool of Node followers
 
 We will maintain a Pool of active node followers.
-When a wasm module in an application subscribes to a Node followers data stream, IF there is a pre-existing node follower
+When an application or module subscribes to a chain follower's data stream, IF there is a pre-existing follower
 which can serve its needs, then it should simply receive the events from that stream.
 
 It will not create a new stream for every subscription.
@@ -23,7 +29,7 @@ When the last subscriber to a Node followers connection/stream unsubscribes, it 
 
 This means that there is not one follower per application, there is one follower per stream type.
 
-For example,  if a wasm module subscribes to a stream of events from Genesis, and Tip, it will have two active streams.
+For example, if an application subscribes to a stream of events from Genesis, and Tip, it will have two active streams.
 If a second application also subscribes to Genesis, it can retrieve the same events and there is no need to start a third follower.
 
 ## Implementation details
@@ -119,4 +125,4 @@ Then all subscribed modules in the app (including any recently added from the co
 
 The initial set of connection optimizations are detailed here.
 Further connection optimization work will only be conducted after these are implemented and the characteristics of the
-followers running in a Hermes environment are better understood.
+followers running in production environments are better understood.
