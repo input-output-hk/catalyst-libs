@@ -254,8 +254,7 @@ fn test_brand_parameters_doc(
     let doc = doc_gen(&mut provider).unwrap();
     assert_eq!(*doc.doc_type().unwrap(), doc_types::REP_NOMINATION.clone());
 
-    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !doc.report().is_problematic());
+    Validator::new().validate(&doc, &provider).unwrap();
     println!("{:?}", doc.report());
-    is_valid
+    !doc.report().is_problematic()
 }
