@@ -1,6 +1,6 @@
 //! Voters Choices.
 
-use catalyst_voting::crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof};
+use catalyst_voting::vote_protocol::voter::{EncryptedVote, proof::VoterProof};
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
@@ -33,9 +33,9 @@ pub enum Choices {
     /// ElGamal/Ristretto255 encrypted choices.
     Encrypted {
         /// A list of ElGamal/Ristretto255 encrypted choices.
-        choices: Vec<Ciphertext>,
+        choices: EncryptedVote,
         /// A universal encrypted row proof.
-        row_proof: Option<UnitVectorProof>,
+        row_proof: Option<VoterProof>,
     },
 }
 
@@ -75,15 +75,15 @@ impl Decode<'_, ()> for Choices {
                 let (choices, row_proof) = match array.as_slice() {
                     [choices] => {
                         let mut d = Decoder::new(choices);
-                        let choices = <Vec<Ciphertext>>::decode(&mut d, ctx)?;
+                        let choices = EncryptedVote::decode(&mut d, ctx)?;
                         (choices, None)
                     },
                     [choices, proof] => {
                         let mut d = Decoder::new(choices);
-                        let choices = <Vec<Ciphertext>>::decode(&mut d, ctx)?;
+                        let choices = EncryptedVote::decode(&mut d, ctx)?;
 
                         let mut d = Decoder::new(proof);
-                        let row_proof = UnitVectorProof::decode(&mut d, ctx)?;
+                        let row_proof = VoterProof::decode(&mut d, ctx)?;
 
                         (choices, Some(row_proof))
                     },
@@ -140,6 +140,8 @@ impl Encode<()> for Choices {
 
 #[cfg(test)]
 mod tests {
+    use catalyst_voting::crypto::elgamal::Ciphertext;
+
     use super::*;
 
     #[test]
@@ -156,7 +158,7 @@ mod tests {
     #[test]
     fn encrypted_roundtrip() {
         let original = Choices::Encrypted {
-            choices: vec![Ciphertext::zero(), Ciphertext::zero()],
+            choices: vec![Ciphertext::zero(), Ciphertext::zero()].into(),
             row_proof: None,
         };
         let mut buffer = Vec::new();

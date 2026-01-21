@@ -14,6 +14,7 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
 };
+use catalyst_voting::vote_protocol::committee::ElectionPublicKey;
 use chrono::{DateTime, Utc};
 
 use crate::contest_parameters::payload::{Choices, ContestParametersPayload};
@@ -68,6 +69,12 @@ impl ContestParameters {
     #[must_use]
     pub fn choices(&self) -> &Choices {
         &self.payload.choices
+    }
+
+    /// Returns an election public key.
+    #[must_use]
+    pub fn election_public_key(&self) -> &ElectionPublicKey {
+        &self.payload.election_public_key
     }
 
     /// Returns `ProblemReport`

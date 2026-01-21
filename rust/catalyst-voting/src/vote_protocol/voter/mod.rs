@@ -27,7 +27,7 @@ pub struct Vote {
 }
 
 /// A representation of the encrypted vote.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EncryptedVote(Vec<Ciphertext>);
 
 /// A representation of the encryption randomness, used to encrypt the vote.
@@ -157,6 +157,12 @@ pub fn decrypt_vote(
         }
     }
     bail!("Invalid encrypted vote, not a valid unit vector.")
+}
+
+impl From<Vec<Ciphertext>> for EncryptedVote {
+    fn from(value: Vec<Ciphertext>) -> Self {
+        Self(value)
+    }
 }
 
 #[cfg(test)]

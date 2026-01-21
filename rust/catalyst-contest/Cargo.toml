@@ -17,7 +17,7 @@ anyhow = "1.0.100"
 
 # TODO: Use tag instead of path.
 catalyst-signed-doc = { version = "0.0.11", path = "../signed_doc" }
-catalyst-voting = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-voting/v0.0.2" }
+catalyst-voting = { version = "0.0.2", path = "../catalyst-voting" }
 cbork-utils = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils/v0.0.4" }
 
 minicbor = { version = "0.25.1", features = ["std"] }
@@ -25,6 +25,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 strum = { version = "0.27", features = ["derive"] }
 chrono = { version = "0.4.42", features = ["serde"] }
+hex = "0.4.3"
 
 [dev-dependencies]
 proptest = { version = "1.6.0", features = ["attr-macro"] }

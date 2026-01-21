@@ -17,10 +17,10 @@ impl CatalystSignedDocumentValidationRule for ContestBallotRule {
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
         let payload = payload(doc, doc.report());
-        if let Some(payload) = &payload {
-            check_proof(payload, doc.report());
+        let params = check_parameters(doc, provider, doc.report())?;
+        if let (Some(payload), Some(params)) = &(payload, params) {
+            check_proof(payload, params, doc.report())?;
         }
-        check_parameters(doc, provider, doc.report())?;
 
         Ok(!doc.report().is_problematic())
     }

@@ -35,6 +35,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
         let content = serde_json::json!({
             "start": time,
             "end": time,
+            "election_public_key": "0000000000000000000000000000000000000000000000000000000000000000",
             "choices": ["Yes", "No", "Abstain"],
         });
 

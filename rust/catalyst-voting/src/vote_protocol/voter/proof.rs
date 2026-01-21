@@ -18,7 +18,7 @@ use crate::{
 
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[must_use]
 pub struct VoterProof(pub(super) UnitVectorProof);
 
