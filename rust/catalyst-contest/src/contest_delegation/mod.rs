@@ -216,14 +216,7 @@ fn contest_parameters_checks(
         return Ok(());
     };
 
-    if !ContestParameters::timeline_check(
-        doc_ver,
-        &contest_parameters,
-        report,
-        "Contest Delegation",
-    ) {
-        return Ok(());
-    }
+    ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Delegation");
 
     Ok(())
 }

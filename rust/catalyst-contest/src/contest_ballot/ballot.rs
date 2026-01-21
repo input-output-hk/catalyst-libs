@@ -119,9 +119,7 @@ pub fn check_parameters(
         return Ok(());
     };
 
-    if !ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Ballot") {
-        return Ok(());
-    }
+    ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Ballot");
 
     Ok(())
 }

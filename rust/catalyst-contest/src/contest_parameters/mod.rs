@@ -1,9 +1,10 @@
-//! //! `Contest Parameters` document.
+//! `Contest Parameters` document.
 //!
 //! See the [documentation] for more information.
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_parameters/
 
+mod payload;
 pub mod rule;
 
 #[cfg(test)]
@@ -14,6 +15,8 @@ use catalyst_signed_doc::{
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
 };
 use chrono::{DateTime, Utc};
+
+use crate::contest_parameters::payload::ContestParametersPayload;
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]
@@ -34,15 +37,6 @@ impl PartialEq for ContestParameters {
     ) -> bool {
         self.doc_ref.eq(&other.doc_ref)
     }
-}
-
-/// Content Parameters JSON payload type.
-#[derive(Debug, Clone, Default, serde::Deserialize)]
-pub(crate) struct ContestParametersPayload {
-    /// Contest start date
-    pub(crate) start: DateTime<Utc>,
-    /// Contest end date
-    pub(crate) end: DateTime<Utc>,
 }
 
 impl ContestParameters {
@@ -111,12 +105,13 @@ impl ContestParameters {
     }
 
     /// Timeline verification, based on the 'Contest Parameters' 'start' and 'end' fields.
+    /// Filling to provided problem report.
     pub(crate) fn timeline_check(
         ver: UuidV7,
         contest_parameters: &CatalystSignedDocument,
         report: &ProblemReport,
         document_name: &str,
-    ) -> bool {
+    ) {
         let contest_parameters_payload = get_payload(contest_parameters, report);
         if ver.time() > &contest_parameters_payload.end
             || ver.time() < &contest_parameters_payload.start
@@ -130,9 +125,7 @@ impl ContestParameters {
                 ),
                 &format!("'{document_name}' timeline check"),
             );
-            return false;
         }
-        true
     }
 }
 
