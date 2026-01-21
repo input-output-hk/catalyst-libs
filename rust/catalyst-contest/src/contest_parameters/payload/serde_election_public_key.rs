@@ -1,4 +1,4 @@
-//! A serialize/deserialize implementation for `GroupElement`.
+//! A serialize/deserialize implementation for `ElectionPublicKey`.
 
 use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use serde::{Deserialize, Deserializer, Serializer};

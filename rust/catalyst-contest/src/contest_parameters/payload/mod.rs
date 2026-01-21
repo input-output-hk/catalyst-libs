@@ -1,11 +1,14 @@
 //! Contest Parameters payload type.
 
+mod serde_election_public_key;
+
 use std::ops::Deref;
 
+use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use chrono::{DateTime, Utc};
 
 /// Content Parameters JSON payload type.
-#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub(crate) struct ContestParametersPayload {
     /// Contest start date
     pub(crate) start: DateTime<Utc>,
@@ -13,6 +16,9 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) end: DateTime<Utc>,
     /// Contest choices
     pub(crate) choices: Choices,
+    /// An election public key.
+    #[serde(with = "serde_election_public_key")]
+    pub(crate) election_public_key: ElectionPublicKey,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -23,6 +29,17 @@ impl Deref for Choices {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Default for ContestParametersPayload {
+    fn default() -> Self {
+        Self {
+            start: DateTime::default(),
+            end: DateTime::default(),
+            choices: Choices::default(),
+            election_public_key: GroupElement::zero().into(),
+        }
     }
 }
 
