@@ -11,8 +11,14 @@ pub mod rule;
 mod tests;
 
 use catalyst_signed_doc::{
-    CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
-    problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
+    CatalystSignedDocument, DocumentRef, DocumentRefs,
+    doc_types::{CONTEST_PARAMETERS, PROPOSAL},
+    problem_report::ProblemReport,
+    providers::{
+        CatalystSignedDocumentProvider, CatalystSignedDocumentSearchQuery, DocTypeSelector,
+        DocumentRefSelector,
+    },
+    uuid::UuidV7,
 };
 use chrono::{DateTime, Utc};
 
@@ -25,6 +31,8 @@ pub struct ContestParameters {
     doc_ref: DocumentRef,
     /// Contest Parameters payload
     payload: ContestParametersPayload,
+    /// 'parameters' metadata field
+    parameters: Option<DocumentRefs>,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
@@ -85,13 +93,10 @@ impl ContestParameters {
     ///  - If provided document not a Contest Parameters type
     ///  - If provided document is invalid (`report().is_problematic()`)
     ///  - `provider` returns error
-    pub fn new<Provider>(
+    pub fn new(
         doc: &CatalystSignedDocument,
-        _provider: &Provider,
-    ) -> anyhow::Result<Self>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        _provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Self> {
         if doc.report().is_problematic() {
             anyhow::bail!("Provided document is not valid {:?}", doc.report())
         }
@@ -102,10 +107,22 @@ impl ContestParameters {
 
         let report = ProblemReport::new("Contest Parameters");
         let payload = get_payload(doc, &report);
+        let parameters = doc
+            .doc_meta()
+            .parameters()
+            .or_else(|| {
+                doc.report().missing_field(
+                    "parameters",
+                    "'Contest Parameter' document must have 'parameters' field",
+                );
+                None
+            })
+            .cloned();
 
         Ok(ContestParameters {
             doc_ref: doc.doc_ref()?,
             payload,
+            parameters,
             report,
         })
     }
@@ -132,6 +149,27 @@ impl ContestParameters {
                 &format!("'{document_name}' timeline check"),
             );
         }
+    }
+
+    /// Return a list of associated 'Proposal' documents
+    /// to the provided 'Contest Parameters' document.
+    /// If something goes wrong filling the `contest_parameters` problem report
+    ///
+    /// # Errors
+    ///  - `provider` returns error.
+    pub(crate) fn get_associated_proposals(
+        &self,
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+        let Some(ref param) = self.parameters else {
+            return Ok(vec![]);
+        };
+        let query = CatalystSignedDocumentSearchQuery {
+            doc_type: Some(DocTypeSelector::In(vec![PROPOSAL])),
+            parameters: Some(DocumentRefSelector::Eq(param.clone())),
+            ..Default::default()
+        };
+        provider.try_search_docs(&query)
     }
 }
 
