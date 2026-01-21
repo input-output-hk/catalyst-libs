@@ -16,6 +16,7 @@ pub fn contest_parameters_doc(
         "start": Utc::now(),
         "end": Utc::now().checked_add_signed(Duration::minutes(5)),
         "election_public_key": "0000000000000000000000000000000000000000000000000000000000000000",
+        "choices": ["Yes", "No"]
     });
 
     builder::contest_parameters_doc(
