@@ -53,7 +53,7 @@ The private key can then be used to authoritatively sign documents for that regi
 
 ## Reference Implementation
 
-The first implementation will be Catalyst Voices.
+The first implementation was Catalyst Voices. This specification is now implemented in the `rbac-registration` crate and used by multiple applications.
 
 *TODO: Generate a set of test vectors which conform to this specification.*
 

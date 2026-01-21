@@ -8,6 +8,11 @@
         - flutter
 ---
 
+!!! note "Application-Specific ADR"
+    This ADR describes the architecture of the Catalyst Voices application, not the catalyst-libs libraries.
+    It is kept here for reference as Catalyst Voices is a major consumer of catalyst-libs.
+    For library-specific architecture decisions, see other ADRs.
+
 ## Context
 
 Our goal for the Catalyst Voices Frontend App is to establish a structure that ensures scalability,

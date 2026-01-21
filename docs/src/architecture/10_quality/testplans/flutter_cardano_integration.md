@@ -1,8 +1,13 @@
 <!--
-Based on: https://books.google.it/books?id=vHlTOVTKHeUC&hl=it&source=gbs_navlinks_s
+Based: https://books.google.it/books?id=vHlTOVTKHeUC&hl=it&source=gbs_navlinks_s
           https://testing.googleblog.com/2016/06/the-inquiry-method-for-test-planning.html
           https://testing.googleblog.com/2011/09/10-minute-test-plan.html
 -->
+
+!!! note "Test Plan Context"
+    This test plan was created for Catalyst Voices Flutter integration, which uses catalyst-libs Flutter/Dart packages.
+    The test plan is relevant for catalyst-libs as it validates the Flutter integration of catalyst-libs libraries.
+    Issue references point to catalyst-voices repository as that's where the integration work was tracked.
 
 # [Flutter Cardano Integration](https://github.com/input-output-hk/catalyst-voices/issues/546)
 

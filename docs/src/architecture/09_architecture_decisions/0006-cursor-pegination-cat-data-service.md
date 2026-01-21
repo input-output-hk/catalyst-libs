@@ -8,6 +8,10 @@
         - api
 ---
 
+!!! note "Service-Level ADR"
+    This ADR describes pagination for the cat-gateway service (Catalyst Data Service), which uses catalyst-libs crates.
+    While this is a service-level decision, it's relevant as it demonstrates how catalyst-libs is used in practice.
+
 ## Context
 
 Our API currently lacks a pagination mechanism, leading to inefficiencies in data retrieval processes,
