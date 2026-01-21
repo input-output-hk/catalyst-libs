@@ -22,7 +22,7 @@ use catalyst_signed_doc::{
     uuid::UuidV7,
 };
 
-use crate::contest_parameters;
+use crate::contest_parameters::ContestParameters;
 
 /// `Contest Delegation` document type.
 #[derive(Debug, Clone)]
@@ -129,10 +129,10 @@ impl ContestDelegation {
 
         let report = ProblemReport::new("Contest Delegation");
 
-        let (delegator, _) = get_delegator(doc, &report);
-        let (payload, _) = get_payload(doc, &report);
+        let delegator = get_delegator(doc, &report);
+        let payload = get_payload(doc, &report);
         contest_parameters_checks(doc, provider, &report)?;
-        let (delegations, _) = get_delegations(doc, payload, provider, &report)?;
+        let delegations = get_delegations(doc, payload, provider, &report)?;
 
         Ok(ContestDelegation {
             doc_ref: doc.doc_ref()?,
@@ -144,12 +144,10 @@ impl ContestDelegation {
 }
 
 /// Get signer of the provided document, which defines as delegator.
-/// Returns additional boolean flag, was it valid or not.
 fn get_delegator(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
-) -> (Option<CatalystId>, bool) {
-    let mut valid = true;
+) -> Option<CatalystId> {
     let authors = doc.authors();
     if authors.len() != 1 {
         report.invalid_value(
@@ -158,29 +156,24 @@ fn get_delegator(
             "1",
             "Contest Delegation document must have only one author/signer",
         );
-        valid = false;
     }
 
-    let delegator = authors.into_iter().next();
-    (delegator, valid)
+    authors.into_iter().next()
 }
 
 /// Get `ContestDelegationPayload` from the provided `CatalystSignedDocument`, fill the
 /// provided `ProblemReport` if something goes wrong.
-/// Returns additional boolean flag, was it valid or not.
 fn get_payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
-) -> (ContestDelegationPayload, bool) {
-    let mut valid = true;
-    let payload = doc
+) -> ContestDelegationPayload {
+    doc
             .decoded_content()
             .inspect_err(|_| {
                 report.functional_validation(
                     "Invalid Document content, cannot get decoded bytes",
                     "Cannot get a document content during Contest Delegation document validation.",
                 );
-                valid = false;
             })
             .and_then(|v | Ok(serde_json::from_slice::<ContestDelegationPayload>(&v)?))
             .inspect_err(|_| {
@@ -188,27 +181,23 @@ fn get_payload(
                     "Invalid Document content, must be a valid JSON object compliant with the JSON schema.",
                     "Cannot get a document content during Contest Delegation document validation.",
                 );
-                valid = false;
             })
-            .unwrap_or_default();
-
-    (payload, valid)
+            .unwrap_or_default()
 }
 
 /// Get the 'Contest Parameters' document from the 'parameters' metadata field, applying
 /// all necessary validations.
-/// Returns boolean flag, was it valid or not.
 fn contest_parameters_checks(
     doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool> {
+) -> anyhow::Result<()> {
     let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
         report.missing_field(
             "parameters",
             "Contest Delegation must have a 'parameters' metadata field",
         );
-        return Ok(false);
+        return Ok(());
     };
 
     let Some(contest_parameters) = provider.try_get_doc(doc_ref)? else {
@@ -216,7 +205,7 @@ fn contest_parameters_checks(
             &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing 'Contest Parameters' document for the Contest Delegation document",
         );
-        return Ok(false);
+        return Ok(());
     };
 
     let Ok(doc_ver) = doc.doc_ver() else {
@@ -224,38 +213,28 @@ fn contest_parameters_checks(
             "ver",
             "Missing 'ver' metadata field for 'Contest Delegation' document",
         );
-        return Ok(false);
+        return Ok(());
     };
 
-    let (contest_parameters_payload, contest_parameters_payload_is_valid) =
-        contest_parameters::get_payload(&contest_parameters, report);
-    if contest_parameters_payload_is_valid
-        && (doc_ver.time() > &contest_parameters_payload.end
-            || doc_ver.time() < &contest_parameters_payload.start)
-    {
-        report.functional_validation(
-                &format!(
-                    "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
-                    doc_ver.time(),
-                    contest_parameters_payload.start,
-                    contest_parameters_payload.end
-                ),
-                "'Contest Delegation' document contest timeline check",
-            );
-        return Ok(false);
+    if !ContestParameters::timeline_check(
+        doc_ver,
+        &contest_parameters,
+        report,
+        "Contest Delegation",
+    ) {
+        return Ok(());
     }
 
-    Ok(true)
+    Ok(())
 }
 
 /// Get a list of delegations
-/// Returns additional boolean flag, was it valid or not.
 fn get_delegations(
     doc: &CatalystSignedDocument,
     payload: ContestDelegationPayload,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<(Vec<Delegation>, bool)> {
+) -> anyhow::Result<Vec<Delegation>> {
     const DEFAULT_WEIGHT: u32 = 1;
 
     if let Some(ref_field) = doc.doc_meta().doc_ref() {
@@ -263,8 +242,6 @@ fn get_delegations(
             .iter()
             .map(|doc_ref| get_author_kid(doc_ref, provider, report))
             .collect::<anyhow::Result<Vec<_>>>()?;
-
-        let valid = kids.iter().all(|(_, valid)| *valid);
 
         // If there are fewer entries than delegates, then the missing weights are set to
         // `1`. If there are more weights, then the extra weights are ignored.
@@ -278,7 +255,7 @@ fn get_delegations(
         let delegations = kids
             .into_iter()
             .zip(weights_iter)
-            .filter_map(|((kid, _), weight)| {
+            .filter_map(|(kid, weight)| {
                 Some(Delegation {
                     weight,
                     rep_kid: kid?,
@@ -286,34 +263,31 @@ fn get_delegations(
             })
             .collect();
 
-        Ok((delegations, valid))
+        Ok(delegations)
     } else {
         report.missing_field(
             "ref",
             "Contest Delegation document must have least one reference to Rep Nomination document.",
         );
-        Ok((Vec::new(), false))
+        Ok(Vec::new())
     }
 }
 
 /// Get a corresponding authors/signers `CatalystId` for the provided document reference.
-/// Returns additional boolean flag, was it valid or not.
 fn get_author_kid(
     doc_ref: &DocumentRef,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<(Option<CatalystId>, bool)> {
-    let mut valid = true;
+) -> anyhow::Result<Option<CatalystId>> {
     let Some(ref_doc) = provider.try_get_doc(doc_ref)? else {
         report.functional_validation(
             &format!("Cannot get referenced document by reference: {doc_ref}"),
             "Missing 'Rep Nomination' document for the Contest Delegation document",
         );
-        valid = false;
-        return Ok((None, valid));
+        return Ok(None);
     };
 
-    valid &= rep_nomination_ref_check(&ref_doc, provider, report)?;
+    rep_nomination_ref_check(&ref_doc, provider, report)?;
 
     let rep_nomination_authors = ref_doc.authors();
     if rep_nomination_authors.len() != 1 {
@@ -323,14 +297,14 @@ fn get_author_kid(
             "1",
             "Rep Nomination document must have only one author/signer",
         );
-        valid = false;
     }
 
     let rep_kid = rep_nomination_authors.into_iter().next();
-    Ok((rep_kid, valid))
+    Ok(rep_kid)
 }
 
-/// Verifies that the corresponding 'Rep Nomination' document reference is valid:
+/// Verifies that the corresponding 'Rep Nomination' document reference is valid by
+/// filling provided report if something fails:
 /// - References to the latest version of 'Rep Nomination' document ever submitted to the
 ///   corresponding 'Contest Parameters' document.
 /// - A Representative MUST Delegate to their latest Nomination for a 'Contest
@@ -339,9 +313,7 @@ fn rep_nomination_ref_check(
     ref_doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool> {
-    let mut valid = true;
-
+) -> anyhow::Result<()> {
     // We could use 'Rep Nomination'->'parameters' field,
     // because it must be the same as the 'Contest Delegation' document according the
     // `ParametersRule::link_check` verification.
@@ -350,7 +322,7 @@ fn rep_nomination_ref_check(
             "parameters",
             "Missing 'parameters' metadata field for the 'Rep Nomination' document during 'Content Delegation' validation"
         );
-        return Ok(false);
+        return Ok(());
     };
     // Trying to find ALL available 'Rep Nomination' documents which reference to the `Contest
     // Parameters`
@@ -367,7 +339,7 @@ fn rep_nomination_ref_check(
             "document reference",
             "Cannot get document reference for the 'Rep Nomination' document during 'Content Delegation' validation",
         );
-        return Ok(false);
+        return Ok(());
     };
 
     let latest_ref_doc_ref = all_nominations
@@ -381,7 +353,6 @@ fn rep_nomination_ref_check(
             "It must be the latest Rep Nomination document",
             "Content Delegation must reference to the latest version Rep Nomination document",
         );
-        valid = false;
     }
 
     // Trying to find the latest 'Contest Delegation' submitted by the representative ('Rep
@@ -398,8 +369,7 @@ fn rep_nomination_ref_check(
             "A Representative MUST Delegate to their latest Nomination for a 'Contest Parameters', otherwise their Nomination is invalid.", 
             "Fails to validate a 'Contest Delegation' referenced representative nomination"
         );
-        valid = false;
     }
 
-    Ok(valid)
+    Ok(())
 }

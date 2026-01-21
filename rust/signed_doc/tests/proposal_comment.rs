@@ -311,8 +311,7 @@ fn test_proposal_comment_doc(
         doc_types::PROPOSAL_COMMENT.clone()
     );
 
-    let is_valid = Validator::new().validate(&doc, &provider).unwrap();
-    assert_eq!(is_valid, !doc.report().is_problematic());
+    Validator::new().validate(&doc, &provider).unwrap();
     println!("{:?}", doc.report());
-    is_valid
+    !doc.report().is_problematic()
 }

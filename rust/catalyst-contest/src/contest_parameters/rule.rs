@@ -18,11 +18,8 @@ impl CatalystSignedDocumentValidationRule for ContestParametersRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        let mut valid = true;
+        get_payload(doc, doc.report());
 
-        let (_, is_payload_valid) = get_payload(doc, doc.report());
-        valid &= is_payload_valid;
-
-        Ok(valid)
+        Ok(!doc.report().is_problematic())
     }
 }
