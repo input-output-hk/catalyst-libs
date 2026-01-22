@@ -62,7 +62,7 @@ impl Decode<'_, ProblemReport> for ContestBallotPayload {
             match key_decoder.datatype()? {
                 Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
                     let key = key_decoder.u64()?;
-                    match Choices::decode(&mut value_decoder, &mut ()) {
+                    match Choices::decode(&mut value_decoder, report) {
                         Ok(val) => {
                             choices.insert(key, val);
                         },

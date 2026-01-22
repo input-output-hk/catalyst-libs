@@ -1,5 +1,6 @@
 //! Voters Choices.
 
+use catalyst_signed_doc::problem_report::ProblemReport;
 use catalyst_voting::vote_protocol::voter::{EncryptedVote, proof::VoterProof};
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
@@ -39,10 +40,10 @@ pub enum Choices {
     },
 }
 
-impl Decode<'_, ()> for Choices {
+impl Decode<'_, ProblemReport> for Choices {
     fn decode(
         d: &mut Decoder<'_>,
-        ctx: &mut (),
+        report: &mut ProblemReport,
     ) -> Result<Self, minicbor::decode::Error> {
         let array = Array::decode(d, &mut DecodeCtx::Deterministic)?;
         let [type_, choices @ ..] = array.as_slice() else {
@@ -58,7 +59,7 @@ impl Decode<'_, ()> for Choices {
                 let mut values = Vec::with_capacity(choices.len());
                 for choice in choices {
                     let mut d = Decoder::new(choice);
-                    values.push(u64::decode(&mut d, ctx)?);
+                    values.push(u64::decode(&mut d, &mut ())?);
                 }
                 Ok(Self::Clear(values))
             },
@@ -75,15 +76,16 @@ impl Decode<'_, ()> for Choices {
                 let (choices, row_proof) = match array.as_slice() {
                     [choices] => {
                         let mut d = Decoder::new(choices);
-                        let choices = EncryptedVote::decode(&mut d, ctx)?;
+                        let choices = EncryptedVote::decode(&mut d, &mut ())?;
+                        report.missing_field("row_proof", "Contest ballot payload decoding");
                         (choices, None)
                     },
                     [choices, proof] => {
                         let mut d = Decoder::new(choices);
-                        let choices = EncryptedVote::decode(&mut d, ctx)?;
+                        let choices = EncryptedVote::decode(&mut d, &mut ())?;
 
                         let mut d = Decoder::new(proof);
-                        let row_proof = VoterProof::decode(&mut d, ctx)?;
+                        let row_proof = VoterProof::decode(&mut d, &mut ())?;
 
                         (choices, Some(row_proof))
                     },
@@ -151,8 +153,10 @@ mod tests {
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
-        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        let mut report = ProblemReport::new("test");
+        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
+        assert!(!report.is_problematic());
     }
 
     #[test]
@@ -165,7 +169,9 @@ mod tests {
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
-        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        let mut report = ProblemReport::new("test");
+        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
+        assert!(!report.is_problematic());
     }
 }

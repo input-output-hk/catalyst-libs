@@ -71,6 +71,49 @@ use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
     ;
     "failed timeline check, too old"
 )]
+#[test_case(
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+
+        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &[160])
+    }
+    => false
+    ;
+    "missing proof"
+)]
+// #[test_case(
+//     |p| {
+//         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+//
+//         // TODO: FIXME:
+//         let choices = [(0, Choices::Encrypted {})].iter().collect();
+//         let payload = ContestBallotPayload {
+//             choices,
+//             column_proof: None,
+//             matrix_proof: None,
+//             voter_choices: None,
+//         };
+//
+//         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+//         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+//         let template = build_doc_and_publish(p, |p|
+// contest_parameters_form_template_doc(&brand, p))?;         let parameters =
+// build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+//         let template = build_doc_and_publish(p, |p|
+// proposal_form_template_doc(&parameters, p))?;         let proposal =
+// build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+//         builder::contest_ballot_doc(&proposal, &parameters,
+// &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, payload)     }
+//     => false
+//     ;
+//     "invalid proof"
+// )]
 fn contest_ballot(
     doc_gen: impl Fn(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {

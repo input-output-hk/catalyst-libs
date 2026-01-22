@@ -18,5 +18,6 @@ pub fn contest_ballot_doc(
         &builder::ed25519::Ed25519SigningKey::Common(sk),
         kid,
         None,
+        &[160],
     )
 }
