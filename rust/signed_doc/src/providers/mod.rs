@@ -75,7 +75,7 @@ pub trait CatalystSignedDocumentProvider {
         query: &CatalystSignedDocumentSearchQuery,
     ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
         let mut res = HashMap::new();
-        for d in self.try_search_docs(&query)? {
+        for d in self.try_search_docs(query)? {
             // We are assuming that the returned from the `provider` documents must be at least
             // structurally valid.
             let d_ref = d.doc_ref()?;

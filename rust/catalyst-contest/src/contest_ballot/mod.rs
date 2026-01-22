@@ -84,7 +84,7 @@ impl ContestBallot {
     }
 
     /// Returns 'voter'.
-
+    #[must_use]
     pub fn voter(&self) -> &CatalystId {
         &self.voter
     }

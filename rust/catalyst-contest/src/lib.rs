@@ -41,23 +41,21 @@ pub fn tally(
     let ballots = contest_parameters.get_associated_ballots(provider)?;
     let ballots = ballots
         .iter()
-        .map(|d| ContestBallot::new(&d, provider))
+        .map(|d| ContestBallot::new(d, provider))
         .map(|d| {
-            d.map(|d| {
+            d.and_then(|d| {
                 if d.report().is_problematic() {
                     anyhow::bail!(
                         "'Contest Ballot' document ({}) is problematic: {:?}",
                         d.doc_ref(),
                         d.report()
                     )
-                } else {
-                    Ok(d)
                 }
+                Ok(d)
             })
-            .flatten()
         })
         .collect::<anyhow::Result<Vec<_>>>()?;
-    let _voters = ballots.iter().map(|d| d.voter());
+    let _voters = ballots.iter().map(ContestBallot::voter);
     // Filter out all invalid 'Contest Ballot' documents
 
     Ok(res)

@@ -75,6 +75,7 @@ impl ContestDelegation {
     }
 
     /// Returns 'delegator'.
+    #[must_use]
     pub fn delegator(&self) -> &CatalystId {
         &self.delegator
     }
