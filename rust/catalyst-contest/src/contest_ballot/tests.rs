@@ -15,7 +15,7 @@ use catalyst_signed_doc::{
 use chrono::{Duration, Utc};
 use test_case::test_case;
 
-use crate::{ContestBallotRule, contest_ballot::ballot::ContestBallot};
+use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
 
 #[test_case(
     |p| {
