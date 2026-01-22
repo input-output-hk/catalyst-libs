@@ -8,3 +8,33 @@ pub mod checkpoint;
 pub mod contest_ballot;
 pub mod contest_delegation;
 pub mod contest_parameters;
+
+use catalyst_signed_doc::providers::CatalystSignedDocumentProvider;
+use contest_parameters::{Choices, ContestParameters};
+
+/// Contest Tally Result type
+#[derive(Debug, Clone)]
+pub struct TallyResult {
+    /// Contest choices, defined by the 'Contest Parameters' document
+    #[allow(dead_code)]
+    choices: Choices,
+}
+
+/// Contest tally procedure based on the provided 'Contest Parameters' document.
+/// Collects all necessary `ContestBallot`, `Proposal`, `ContestDelegation` documents
+/// which are associate with the provided `ContestParameters`.
+///
+/// # Errors
+///  - `provider` returns error
+pub fn tally(
+    contest_parameters: &ContestParameters,
+    provider: &dyn CatalystSignedDocumentProvider,
+) -> anyhow::Result<TallyResult> {
+    let res = TallyResult {
+        choices: contest_parameters.choices().clone(),
+    };
+
+    let _proposals = contest_parameters.get_associated_proposals(provider)?;
+
+    Ok(res)
+}

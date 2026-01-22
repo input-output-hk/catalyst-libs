@@ -21,6 +21,7 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) election_public_key: ElectionPublicKey,
 }
 
+/// Contest Choices
 #[derive(Debug, Clone, Default)]
 pub struct Choices(Vec<String>);
 
