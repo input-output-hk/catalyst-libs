@@ -318,7 +318,10 @@ pub(crate) mod tests {
     }
 
     impl Builder {
-        /// Start building a signed document
+        /// Start building a signed document.
+        ///
+        /// The `type` metadata field is added because it is required by the
+        /// `Metadata::from_fields` method.
         #[must_use]
         pub(crate) fn new() -> Self {
             Self::default().with_metadata_field(SupportedField::Type(UuidV4::new().into()))
