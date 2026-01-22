@@ -21,7 +21,8 @@ impl CatalystSignedDocumentValidationRule for VerRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Self::check_inner(doc, provider)
+        Self::check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -40,23 +41,23 @@ impl VerRule {
     fn check_inner(
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let Ok(id) = doc.doc_id() else {
             doc.report().missing_field(
                 "id",
                 "Cannot get the document field during the field validation",
             );
-            return Ok(false);
+            return Ok(());
         };
         let Ok(ver) = doc.doc_ver() else {
             doc.report().missing_field(
                 "ver",
                 "Cannot get the document field during the field validation",
             );
-            return Ok(false);
+            return Ok(());
         };
 
-        let mut is_valid = time_threshold_check(ver, provider, doc.report())?;
+        time_threshold_check(ver, provider, doc.report())?;
 
         if ver < id {
             doc.report().invalid_value(
@@ -65,7 +66,6 @@ impl VerRule {
                 "ver < id",
                 &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
             );
-            is_valid = false;
         } else if let Some(last_doc) = provider.try_get_last_doc(id)? {
             let Ok(last_doc_ver) = last_doc.doc_ver() else {
                 doc.report().missing_field(
@@ -74,7 +74,7 @@ impl VerRule {
                         "Missing `ver` field in the latest known document, for the the id {id}"
                     ),
                 );
-                return Ok(false);
+                return Ok(());
             };
 
             if last_doc_ver >= ver {
@@ -82,17 +82,15 @@ impl VerRule {
                     &format!("New document ver should be greater that the submitted latest known. New document ver: {ver}, latest known ver: {last_doc_ver}"),
                     &format!("Document's `ver` field should continuously increasing, for the the id {id}"),
                 );
-                is_valid = false;
             }
         } else if ver != id {
             doc.report().functional_validation(
                 &format!("`ver` and `id` are not equal, ver: {ver}, id: {id}. Document with `id` and `ver` being equal MUST exist"),
                 "Cannot get a first version document from the provider, document for which `id` and `ver` are equal.",
             );
-            is_valid = false;
         }
 
-        Ok(is_valid)
+        Ok(())
     }
 }
 
@@ -106,7 +104,7 @@ fn time_threshold_check(
     ver: UuidV7,
     provider: &dyn Provider,
     report: &ProblemReport,
-) -> anyhow::Result<bool> {
+) -> anyhow::Result<()> {
     let now = Utc::now();
     let time_delta = ver.time().signed_duration_since(now);
 
@@ -121,7 +119,6 @@ fn time_threshold_check(
                         "ver < now + future_threshold",
                         &format!("Document 'ver' timestamp {ver} cannot be too far in future (threshold: {future_threshold:?}) from now: {now}"),
                     );
-            return Ok(false);
         }
     } else {
         // `ver_time` is earlier than `now`
@@ -139,9 +136,8 @@ fn time_threshold_check(
                         "ver > now - past_threshold",
                         &format!("Document 'ver' timestamp {ver} cannot be too far behind (threshold: {past_threshold:?}) from now: {now:?}",),
                     );
-            return Ok(false);
         }
     }
 
-    Ok(true)
+    Ok(())
 }

@@ -300,7 +300,10 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use catalyst_types::uuid::UuidV4;
     use cbork_utils::with_cbor_bytes::WithCborBytes;
+
+    use crate::metadata::SupportedField;
 
     /// A test version of the builder, which allows to build a not fully valid catalyst
     /// signed document
@@ -315,16 +318,19 @@ pub(crate) mod tests {
     }
 
     impl Builder {
-        /// Start building a signed document
+        /// Start building a signed document.
+        ///
+        /// The `type` metadata field is added because it is required by the
+        /// `Metadata::from_fields` method.
         #[must_use]
         pub(crate) fn new() -> Self {
-            Self::default()
+            Self::default().with_metadata_field(SupportedField::Type(UuidV4::new().into()))
         }
 
         /// Add provided `SupportedField` into the `Metadata`.
         pub(crate) fn with_metadata_field(
             mut self,
-            field: crate::metadata::SupportedField,
+            field: SupportedField,
         ) -> Self {
             self.metadata.add_field(field);
             self

@@ -199,7 +199,7 @@ fn ver_test(doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDoc
     let mut provider = TestCatalystProvider::default();
     let doc = doc_gen(&mut provider);
 
-    let res = VerRule::check_inner(&doc, &provider).unwrap();
+    VerRule::check_inner(&doc, &provider).unwrap();
     println!("{:?}", doc.report());
-    res
+    !doc.report().is_problematic()
 }
