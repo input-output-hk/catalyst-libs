@@ -4,7 +4,7 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
-use crate::contest_ballot::ballot::{check_parameters, check_proof, payload};
+use crate::contest_ballot::{check_parameters, check_proof, payload};
 
 /// `CatalystSignedDocumentValidationRule` implementation for `ContentBallotPayload`.
 #[derive(Debug)]

@@ -1,12 +1,16 @@
 //! A contest ballot payload.
 
+mod choices;
+mod encrypted_block;
+mod encrypted_choices;
+
 use std::collections::BTreeMap;
 
 use catalyst_signed_doc::problem_report::ProblemReport;
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::{Choices, EncryptedChoices};
+pub(crate) use self::{choices::Choices, encrypted_choices::EncryptedChoices};
 
 /// A contest ballot payload.
 ///
@@ -20,7 +24,7 @@ use crate::{Choices, EncryptedChoices};
 /// }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ContentBallotPayload {
+pub struct ContestBallotPayload {
     /// A map of voters choices.
     pub choices: BTreeMap<u64, Choices>,
     /// A universal encrypted column proof.
@@ -35,7 +39,7 @@ pub struct ContentBallotPayload {
     pub voter_choices: Option<EncryptedChoices>,
 }
 
-impl Decode<'_, ProblemReport> for ContentBallotPayload {
+impl Decode<'_, ProblemReport> for ContestBallotPayload {
     fn decode(
         d: &mut Decoder<'_>,
         report: &mut ProblemReport,
@@ -121,7 +125,7 @@ impl Decode<'_, ProblemReport> for ContentBallotPayload {
     }
 }
 
-impl Encode<()> for ContentBallotPayload {
+impl Encode<()> for ContestBallotPayload {
     fn encode<W: Write>(
         &self,
         e: &mut Encoder<W>,
@@ -157,13 +161,13 @@ impl Encode<()> for ContentBallotPayload {
 #[cfg(test)]
 mod tests {
     use catalyst_voting::crypto::elgamal::Ciphertext;
+    use encrypted_block::EncryptedBlock;
 
     use super::*;
-    use crate::contest_ballot::encrypted_block::EncryptedBlock;
 
     #[test]
     fn roundtrip() {
-        let original = ContentBallotPayload {
+        let original = ContestBallotPayload {
             choices: [
                 (1, Choices::Clear(vec![1, 2, 3, 4, 5])),
                 (2, Choices::Encrypted {
@@ -185,7 +189,7 @@ mod tests {
             .unwrap();
         let mut report = ProblemReport::new("test");
         let decoded =
-            ContentBallotPayload::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
+            ContestBallotPayload::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
         assert!(!report.is_problematic());
     }
