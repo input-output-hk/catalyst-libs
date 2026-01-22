@@ -9,9 +9,10 @@ pub mod rule;
 #[cfg(test)]
 mod tests;
 
+use anyhow::Context;
 use catalyst_signed_doc::{
-    CatalystSignedDocument, doc_types::CONTEST_BALLOT, problem_report::ProblemReport,
-    providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument, DocumentRef, catalyst_id::CatalystId, doc_types::CONTEST_BALLOT,
+    problem_report::ProblemReport, providers::CatalystSignedDocumentProvider,
 };
 use catalyst_voting::{
     crypto::hash::{Blake2b512Hasher, digest::Digest},
@@ -26,6 +27,10 @@ use crate::{
 
 /// An individual Ballot cast in a Contest by a registered user.
 pub struct ContestBallot {
+    /// Document reference info
+    doc_ref: DocumentRef,
+    /// A corresponding `CatalystId` of the voter (author of the document).
+    voter: CatalystId,
     /// A contest ballot payload.
     #[allow(dead_code)]
     payload: Option<ContestBallotPayload>,
@@ -40,13 +45,10 @@ impl ContestBallot {
     /// - Wrong document type (`CONTEST_BALLOT` is expected).
     /// - Invalid document (`report().is_problematic() == true`).
     /// - `Provider` error.
-    pub fn new<Provider>(
+    pub fn new(
         doc: &CatalystSignedDocument,
-        provider: &Provider,
-    ) -> anyhow::Result<Self>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Self> {
         if doc.report().is_problematic() {
             anyhow::bail!("Provided document is not valid {:?}", doc.report())
         }
@@ -63,7 +65,28 @@ impl ContestBallot {
             check_proof(payload, params, &report)?;
         }
 
-        Ok(Self { payload, report })
+        Ok(Self {
+            doc_ref: doc.doc_ref()?,
+            voter: doc
+                .authors()
+                .into_iter()
+                .next()
+                .context("Contest Ballot document must have only one author/signer")?,
+            payload,
+            report,
+        })
+    }
+
+    /// Returns document reference
+    #[must_use]
+    pub fn doc_ref(&self) -> &DocumentRef {
+        &self.doc_ref
+    }
+
+    /// Returns 'voter'.
+
+    pub fn voter(&self) -> &CatalystId {
+        &self.voter
     }
 
     /// Returns a problem report.

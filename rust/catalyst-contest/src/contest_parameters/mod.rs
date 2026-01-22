@@ -12,7 +12,7 @@ mod tests;
 
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, DocumentRefs,
-    doc_types::{CONTEST_PARAMETERS, PROPOSAL},
+    doc_types::{CONTEST_BALLOT, CONTEST_PARAMETERS, PROPOSAL},
     problem_report::ProblemReport,
     providers::{
         CatalystSignedDocumentProvider, CatalystSignedDocumentSearchQuery, DocTypeSelector,
@@ -50,16 +50,10 @@ impl PartialEq for ContestParameters {
 }
 
 impl ContestParameters {
-    /// Returns 'id' metadata field
+    /// Returns document reference
     #[must_use]
-    pub fn id(&self) -> &UuidV7 {
-        self.doc_ref.id()
-    }
-
-    /// Returns 'ver' metadata field
-    #[must_use]
-    pub fn ver(&self) -> &UuidV7 {
-        self.doc_ref.ver()
+    pub fn doc_ref(&self) -> &DocumentRef {
+        &self.doc_ref
     }
 
     /// Returns contest start date
@@ -72,6 +66,12 @@ impl ContestParameters {
     #[must_use]
     pub fn end(&self) -> &DateTime<Utc> {
         &self.payload.end
+    }
+
+    /// Returns contest snapshot taking date
+    #[must_use]
+    pub fn snapshot(&self) -> &DateTime<Utc> {
+        &self.payload.snapshot
     }
 
     /// Returns contest choices
@@ -160,8 +160,7 @@ impl ContestParameters {
     }
 
     /// Return a list of associated 'Proposal' documents
-    /// to the provided 'Contest Parameters' document.
-    /// If something goes wrong filling the `contest_parameters` problem report
+    /// with the 'Contest Parameters' document.
     ///
     /// # Errors
     ///  - `provider` returns error.
@@ -177,7 +176,30 @@ impl ContestParameters {
             parameters: Some(DocumentRefSelector::Eq(param.clone())),
             ..Default::default()
         };
-        provider.try_search_docs(&query)
+        let proposals = provider.try_search_latest_docs(&query)?;
+        //TODO: Leave only proposals with the corresponding 'Proposal Submission Action' final
+        // document.
+
+        Ok(proposals)
+    }
+
+    /// Return a list of associated 'Contest Ballot' documents
+    /// with the 'Contest Parameters' document.
+    ///
+    /// # Errors
+    ///  - `provider` returns error.
+    pub(crate) fn get_associated_ballots(
+        &self,
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+        let query = CatalystSignedDocumentSearchQuery {
+            doc_type: Some(DocTypeSelector::In(vec![CONTEST_BALLOT])),
+            parameters: Some(DocumentRefSelector::Eq(vec![self.doc_ref.clone()].into())),
+            ..Default::default()
+        };
+        // Consider ONLY latest versions.
+        let ballots = provider.try_search_latest_docs(&query)?;
+        Ok(ballots)
     }
 }
 
