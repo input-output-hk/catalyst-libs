@@ -1,12 +1,16 @@
 //! A contest ballot payload.
 
+pub(crate) mod choices;
+pub(crate) mod encrypted_block;
+pub(crate) mod encrypted_choices;
+
 use std::collections::BTreeMap;
 
 use catalyst_signed_doc::problem_report::ProblemReport;
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::{Choices, EncryptedChoices};
+use self::{choices::Choices, encrypted_choices::EncryptedChoices};
 
 /// A contest ballot payload.
 ///
@@ -20,7 +24,7 @@ use crate::{Choices, EncryptedChoices};
 /// }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ContentBallotPayload {
+pub(crate) struct ContentBallotPayload {
     /// A map of voters choices.
     pub choices: BTreeMap<u64, Choices>,
     /// A universal encrypted column proof.
@@ -158,8 +162,8 @@ impl Encode<()> for ContentBallotPayload {
 mod tests {
     use catalyst_voting::crypto::elgamal::Ciphertext;
 
+    use self::encrypted_block::EncryptedBlock;
     use super::*;
-    use crate::contest_ballot::encrypted_block::EncryptedBlock;
 
     #[test]
     fn roundtrip() {

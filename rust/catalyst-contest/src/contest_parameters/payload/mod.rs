@@ -15,6 +15,7 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) choices: Choices,
 }
 
+/// Contest Choices
 #[derive(Debug, Clone, Default)]
 pub struct Choices(Vec<String>);
 

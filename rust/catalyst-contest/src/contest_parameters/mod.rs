@@ -22,7 +22,8 @@ use catalyst_signed_doc::{
 };
 use chrono::{DateTime, Utc};
 
-use crate::contest_parameters::payload::{Choices, ContestParametersPayload};
+pub use self::payload::Choices;
+use self::payload::ContestParametersPayload;
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]

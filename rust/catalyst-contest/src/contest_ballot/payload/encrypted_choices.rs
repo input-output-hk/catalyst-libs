@@ -3,7 +3,7 @@
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::contest_ballot::encrypted_block::EncryptedBlock;
+use super::encrypted_block::EncryptedBlock;
 
 /// A CBOR version of the `EncryptedChoices`.
 const VERSION: u64 = 0;
