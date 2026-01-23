@@ -62,7 +62,7 @@ impl ContestBallot {
         let payload = payload(doc, &report);
         let params = check_parameters(doc, provider, &report)?;
         if let Some(params) = &params {
-            check_proof(&payload, params, &report)?;
+            check_choices(&payload, params, &report)?;
         }
 
         Ok(Self {
@@ -165,8 +165,8 @@ fn check_parameters(
     Ok(Some(contest_parameters))
 }
 
-/// Checks the proof.
-fn check_proof(
+/// Checks choices ither they are encrypted or not.
+fn check_choices(
     payload: &ContestBallotPayload,
     contest_parameters: &CatalystSignedDocument,
     report: &ProblemReport,
