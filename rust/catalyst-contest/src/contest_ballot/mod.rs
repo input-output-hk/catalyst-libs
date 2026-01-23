@@ -33,7 +33,7 @@ pub struct ContestBallot {
     voter: CatalystId,
     /// A contest ballot payload.
     #[allow(dead_code)]
-    payload: Option<ContestBallotPayload>,
+    payload: ContestBallotPayload,
     /// A report containing all the issues occurred during `ContestBallot` validation.
     report: ProblemReport,
 }
@@ -61,8 +61,8 @@ impl ContestBallot {
 
         let payload = payload(doc, &report);
         let params = check_parameters(doc, provider, &report)?;
-        if let (Some(payload), Some(params)) = (&payload, &params) {
-            check_proof(payload, params, &report)?;
+        if let Some(params) = &params {
+            check_proof(&payload, params, &report)?;
         }
 
         Ok(Self {
@@ -89,6 +89,13 @@ impl ContestBallot {
         &self.voter
     }
 
+    /// Returns
+    pub fn get_choices_for_proposal(
+        &self,
+        _doc_ref: &DocumentRef,
+    ) {
+    }
+
     /// Returns a problem report.
     #[must_use]
     pub fn report(&self) -> &ProblemReport {
@@ -100,26 +107,27 @@ impl ContestBallot {
 fn payload(
     doc: &CatalystSignedDocument,
     report: &ProblemReport,
-) -> Option<ContestBallotPayload> {
-    let Ok(bytes) = doc.decoded_content() else {
-        report.functional_validation(
-            "Invalid document content, cannot get decoded bytes",
-            "Cannot get a document content during Contest Ballot document validation.",
-        );
-        return None;
-    };
-
-    let mut decoder = minicbor::Decoder::new(&bytes);
-
-    let Ok(payload) = ContestBallotPayload::decode(&mut decoder, &mut report.clone()) else {
-        report.functional_validation(
-            "Invalid document content: unable to decode CBOR",
-            "Cannot get a document content during Contest Ballot document validation.",
-        );
-        return None;
-    };
-
-    Some(payload)
+) -> ContestBallotPayload {
+    doc.decoded_content()
+        .inspect_err(|_| {
+            report.functional_validation(
+                "Invalid document content, cannot get decoded bytes",
+                "Cannot get a document content during Contest Ballot document validation.",
+            );
+        })
+        .and_then(|bytes| {
+            Ok(ContestBallotPayload::decode(
+                &mut minicbor::Decoder::new(&bytes),
+                &mut report.clone(),
+            )?)
+        })
+        .inspect_err(|_| {
+            report.functional_validation(
+                "Invalid document content: unable to decode CBOR",
+                "Cannot get a document content during Contest Ballot document validation.",
+            );
+        })
+        .unwrap_or_default()
 }
 
 /// Checks the parameters of a document and returns a contest parameters document.
