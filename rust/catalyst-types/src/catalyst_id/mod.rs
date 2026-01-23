@@ -620,6 +620,7 @@ impl FromStr for CatalystId {
 
     /// This will parse a URI or a RAW ID.\
     /// The only difference between them is a URI has the scheme, a raw ID does not.
+    #[allow(clippy::too_many_lines)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (uri, r#type) = {
             if s.contains("://") {
