@@ -62,7 +62,7 @@ impl ContestBallot {
         let payload = payload(doc, &report);
         let params = check_parameters(doc, provider, &report)?;
         if let Some(params) = &params {
-            check_choices(&payload, params, &report)?;
+            check_choices(doc, &payload, params, &report)?;
         }
 
         Ok(Self {
@@ -168,6 +168,7 @@ fn check_parameters(
 
 /// Checks choices ither they are encrypted or not.
 fn check_choices(
+    _doc: &CatalystSignedDocument,
     payload: &ContestBallotPayload,
     contest_parameters: &ContestParameters,
     report: &ProblemReport,
@@ -192,9 +193,9 @@ fn check_choices(
                 }
 
                 if choices.n_options() != contest_parameters.choices().n_options() {
-                        report.invalid_value(
+                    report.invalid_value(
                         "encrypted choices", 
-                        &choices.n_options().to_string(), 
+                        &choices.n_options().to_string(),
                         &contest_parameters.choices().n_options().to_string(),
                         "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
                     );
@@ -204,7 +205,7 @@ fn check_choices(
                 if choices.len() != contest_parameters.choices().n_options() {
                     report.invalid_value(
                         "clear choices", 
-                        &choices.len().to_string(), 
+                        &choices.len().to_string(),
                         &contest_parameters.choices().n_options().to_string(),
                         "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
                     );

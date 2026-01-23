@@ -23,7 +23,7 @@ use catalyst_signed_doc::{
 use catalyst_voting::vote_protocol::committee::ElectionPublicKey;
 use chrono::{DateTime, Utc};
 
-pub use self::payload::Choices;
+pub use self::payload::VotingOptions;
 use self::payload::ContestParametersPayload;
 
 /// `Contest Parameters` document type.
@@ -76,8 +76,8 @@ impl ContestParameters {
 
     /// Returns contest choices
     #[must_use]
-    pub fn choices(&self) -> &Choices {
-        &self.payload.choices
+    pub fn choices(&self) -> &VotingOptions {
+        &self.payload.options
     }
 
     /// Returns an election public key.

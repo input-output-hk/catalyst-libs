@@ -7,7 +7,7 @@ use catalyst_voting::vote_protocol::tally::DecryptionTallySetup;
 
 use crate::{
     contest_ballot::ContestBallot,
-    contest_parameters::{Choices, ContestParameters},
+    contest_parameters::{VotingOptions, ContestParameters},
 };
 
 /// Contest Tally Result type
@@ -15,7 +15,7 @@ use crate::{
 pub struct TallyResult {
     /// Contest choices, defined by the 'Contest Parameters' document
     #[allow(dead_code)]
-    choices: Choices,
+    choices: VotingOptions,
 }
 
 /// Voter's voting power provider
