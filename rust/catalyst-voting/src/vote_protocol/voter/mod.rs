@@ -46,6 +46,7 @@ impl EncryptionRandomness {
 
 impl EncryptedVote {
     /// Returns the number of voting options
+    #[must_use]
     pub fn n_options(&self) -> usize {
         self.0.len()
     }

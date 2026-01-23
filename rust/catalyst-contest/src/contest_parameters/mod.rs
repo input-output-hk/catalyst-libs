@@ -139,7 +139,7 @@ impl ContestParameters {
         report: &ProblemReport,
         document_name: &str,
     ) {
-        if ver.time() > &self.end() || ver.time() < &self.start() {
+        if ver.time() > self.end() || ver.time() < self.start() {
             report.functional_validation(
                 &format!(
                     "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",

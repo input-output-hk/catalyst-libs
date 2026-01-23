@@ -92,6 +92,7 @@ impl ContestBallot {
     }
 
     /// Returns Contest Ballot choices made for proposal
+    #[must_use]
     pub fn get_choices_for_proposal(
         &self,
         p_ref: &DocumentRef,
@@ -169,7 +170,7 @@ fn check_parameters(
     Ok(Some(contest_parameter))
 }
 
-/// Checks choices ither they are encrypted or not.
+/// Checks choices either they are encrypted or not.
 fn check_choices(
     doc: &CatalystSignedDocument,
     payload: &ContestBallotPayload,
@@ -184,11 +185,11 @@ fn check_choices(
             .inspect(|(proposal_ref, choice)| {
                 check_choice(
                     proposal_ref,
-                    &choice,
+                    choice,
                     contest_parameters,
                     &commitment_key,
                     report,
-                )
+                );
             })
             .map(|(p, c)| (p.clone(), c.clone()))
             .collect::<HashMap<_, _>>();
@@ -223,7 +224,7 @@ fn check_choice(
             if !verify_voter_proof(
                 choices.clone(),
                 contest_parameters.election_public_key(),
-                &commitment_key,
+                commitment_key,
                 proof,
             ) {
                 report.functional_validation(

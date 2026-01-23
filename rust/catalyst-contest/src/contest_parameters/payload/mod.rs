@@ -27,6 +27,7 @@ pub struct VotingOptions(Vec<String>);
 
 impl VotingOptions {
     /// Returns the number of voting options
+    #[must_use]
     pub fn n_options(&self) -> usize {
         self.0.len()
     }
