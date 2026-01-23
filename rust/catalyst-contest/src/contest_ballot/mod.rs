@@ -173,26 +173,51 @@ fn check_choices(
     report: &ProblemReport,
 ) -> anyhow::Result<()> {
     let commitment_key = commitment_key(contest_parameters.doc_ref())?;
-
     for (index, choice) in &payload.choices {
-        let Choices::Encrypted {
-            choices,
-            row_proof: Some(proof),
-        } = choice
-        else {
-            continue;
-        };
+        match choice {
+            Choices::Encrypted {
+                choices,
+                row_proof: Some(proof),
+            } => {
+                if !verify_voter_proof(
+                    choices.clone(),
+                    contest_parameters.election_public_key(),
+                    &commitment_key,
+                    proof,
+                ) {
+                    report.functional_validation(
+                        &format!("Failed to verify proof ({index} index)"),
+                        "'Contest Ballot' document validation",
+                    );
+                }
 
-        if !verify_voter_proof(
-            choices.clone(),
-            contest_parameters.election_public_key(),
-            &commitment_key,
-            proof,
-        ) {
-            report.functional_validation(
-                &format!("Failed to verify proof ({index} index)"),
-                "'Contest Ballot' document validation",
-            );
+                if choices.n_options() != contest_parameters.choices().n_options() {
+                        report.invalid_value(
+                        "encrypted choices", 
+                        &choices.n_options().to_string(), 
+                        &contest_parameters.choices().n_options().to_string(),
+                        "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
+                    );
+                }
+            },
+            Choices::Clear(choices) => {
+                if choices.len() != contest_parameters.choices().n_options() {
+                    report.invalid_value(
+                        "clear choices", 
+                        &choices.len().to_string(), 
+                        &contest_parameters.choices().n_options().to_string(),
+                        "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
+                    );
+                }
+            },
+            Choices::Encrypted {
+                row_proof: None, ..
+            } => {
+                report.missing_field(
+                    "row_proof",
+                    "'Contest Ballot' must have a proof for an encrypted choice",
+                );
+            },
         }
     }
 

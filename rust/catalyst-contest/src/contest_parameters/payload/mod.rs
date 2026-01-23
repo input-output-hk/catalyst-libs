@@ -2,8 +2,6 @@
 
 mod serde_election_public_key;
 
-use std::ops::Deref;
-
 use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use chrono::{DateTime, Utc};
 
@@ -27,11 +25,10 @@ pub(crate) struct ContestParametersPayload {
 #[derive(Debug, Clone, Default)]
 pub struct Choices(Vec<String>);
 
-impl Deref for Choices {
-    type Target = Vec<String>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl Choices {
+    /// Returns the number of voting options
+    pub fn n_options(&self) -> usize {
+        self.0.len()
     }
 }
 
