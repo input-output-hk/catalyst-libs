@@ -26,6 +26,7 @@ pub(crate) use self::{choices::Choices, encrypted_choices::EncryptedChoices};
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct ContestBallotPayload {
     /// A map of voters choices.
+    // TODO must be replaced with the `Vec`
     pub choices: BTreeMap<u64, Choices>,
     /// A universal encrypted column proof.
     ///

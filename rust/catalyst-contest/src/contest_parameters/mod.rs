@@ -23,8 +23,8 @@ use catalyst_signed_doc::{
 use catalyst_voting::vote_protocol::committee::ElectionPublicKey;
 use chrono::{DateTime, Utc};
 
-pub use self::payload::VotingOptions;
 use self::payload::ContestParametersPayload;
+pub use self::payload::VotingOptions;
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]

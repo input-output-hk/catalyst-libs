@@ -7,7 +7,7 @@ use catalyst_voting::vote_protocol::tally::DecryptionTallySetup;
 
 use crate::{
     contest_ballot::ContestBallot,
-    contest_parameters::{VotingOptions, ContestParameters},
+    contest_parameters::{ContestParameters, VotingOptions},
 };
 
 /// Contest Tally Result type

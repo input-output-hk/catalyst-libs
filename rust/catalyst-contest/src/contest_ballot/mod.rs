@@ -9,6 +9,8 @@ pub mod rule;
 #[cfg(test)]
 mod tests;
 
+use std::collections::HashMap;
+
 use anyhow::Context;
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, catalyst_id::CatalystId, doc_types::CONTEST_BALLOT,
@@ -31,9 +33,8 @@ pub struct ContestBallot {
     doc_ref: DocumentRef,
     /// A corresponding `CatalystId` of the voter (author of the document).
     voter: CatalystId,
-    /// A contest ballot payload.
-    #[allow(dead_code)]
-    payload: ContestBallotPayload,
+    /// A contest ballot choices per proposal.
+    choices: HashMap<DocumentRef, Choices>,
     /// A report containing all the issues occurred during `ContestBallot` validation.
     report: ProblemReport,
 }
@@ -61,8 +62,9 @@ impl ContestBallot {
 
         let payload = payload(doc, &report);
         let params = check_parameters(doc, provider, &report)?;
+        let mut choices = HashMap::new();
         if let Some(params) = &params {
-            check_choices(doc, &payload, params, &report)?;
+            choices = check_choices(doc, &payload, params, &report)?;
         }
 
         Ok(Self {
@@ -72,7 +74,7 @@ impl ContestBallot {
                 .into_iter()
                 .next()
                 .context("Contest Ballot document must have only one author/signer")?,
-            payload,
+            choices,
             report,
         })
     }
@@ -89,11 +91,12 @@ impl ContestBallot {
         &self.voter
     }
 
-    /// Returns
+    /// Returns Contest Ballot choices made for proposal
     pub fn get_choices_for_proposal(
         &self,
-        _doc_ref: &DocumentRef,
-    ) {
+        p_ref: &DocumentRef,
+    ) -> Option<&Choices> {
+        self.choices.get(p_ref)
     }
 
     /// Returns a problem report.
@@ -168,68 +171,104 @@ fn check_parameters(
 
 /// Checks choices ither they are encrypted or not.
 fn check_choices(
-    _doc: &CatalystSignedDocument,
+    doc: &CatalystSignedDocument,
     payload: &ContestBallotPayload,
     contest_parameters: &ContestParameters,
     report: &ProblemReport,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<HashMap<DocumentRef, Choices>> {
     let commitment_key = commitment_key(contest_parameters.doc_ref())?;
-    for (index, choice) in &payload.choices {
-        match choice {
-            Choices::Encrypted {
-                choices,
-                row_proof: Some(proof),
-            } => {
-                if !verify_voter_proof(
-                    choices.clone(),
-                    contest_parameters.election_public_key(),
+    if let Some(doc_ref) = doc.doc_meta().doc_ref() {
+        let choices = doc_ref
+            .iter()
+            .zip(payload.choices.values())
+            .inspect(|(proposal_ref, choice)| {
+                check_choice(
+                    proposal_ref,
+                    &choice,
+                    contest_parameters,
                     &commitment_key,
-                    proof,
-                ) {
-                    report.functional_validation(
-                        &format!("Failed to verify proof ({index} index)"),
-                        "'Contest Ballot' document validation",
-                    );
-                }
-
-                if choices.n_options() != contest_parameters.choices().n_options() {
-                    report.invalid_value(
-                        "encrypted choices", 
-                        &choices.n_options().to_string(),
-                        &contest_parameters.choices().n_options().to_string(),
-                        "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
-                    );
-                }
-            },
-            Choices::Clear(choices) => {
-                if choices.len() != contest_parameters.choices().n_options() {
-                    report.invalid_value(
-                        "clear choices", 
-                        &choices.len().to_string(),
-                        &contest_parameters.choices().n_options().to_string(),
-                        "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
-                    );
-                }
-            },
-            Choices::Encrypted {
-                row_proof: None, ..
-            } => {
-                report.missing_field(
-                    "row_proof",
-                    "'Contest Ballot' must have a proof for an encrypted choice",
-                );
-            },
+                    report,
+                )
+            })
+            .map(|(p, c)| (p.clone(), c.clone()))
+            .collect::<HashMap<_, _>>();
+        if choices.len() != doc_ref.len() {
+            report.invalid_value(
+                "choices",
+                &choices.len().to_string(),
+                &doc_ref.len().to_string(),
+                "The number of referenced 'Proposal' documents in 'ref' field must align with payload's choices",
+            );
         }
+        Ok(choices)
+    } else {
+        report.missing_field("ref", "'Contest Ballot' must have a ref metadata field");
+        Ok(HashMap::new())
     }
+}
 
-    Ok(())
+/// Verifies an individual choice filling the provided problem report
+fn check_choice(
+    proposal_ref: &DocumentRef,
+    choice: &Choices,
+    contest_parameters: &ContestParameters,
+    commitment_key: &VoterProofCommitment,
+    report: &ProblemReport,
+) {
+    match choice {
+        Choices::Encrypted {
+            choices,
+            row_proof: Some(proof),
+        } => {
+            if !verify_voter_proof(
+                choices.clone(),
+                contest_parameters.election_public_key(),
+                &commitment_key,
+                proof,
+            ) {
+                report.functional_validation(
+                    &format!("Failed to verify proof related to {proposal_ref}"),
+                    "'Contest Ballot' document validation",
+                );
+            }
+
+            if choices.n_options() != contest_parameters.choices().n_options() {
+                report.invalid_value(
+                    "encrypted choices", 
+                    &choices.n_options().to_string(),
+                    &contest_parameters.choices().n_options().to_string(),
+                    "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
+                );
+            }
+        },
+        Choices::Clear(choices) => {
+            if choices.len() != contest_parameters.choices().n_options() {
+                report.invalid_value(
+                    "clear choices", 
+                    &choices.len().to_string(),
+                    &contest_parameters.choices().n_options().to_string(),
+                    "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
+                );
+            }
+        },
+        Choices::Encrypted {
+            row_proof: None, ..
+        } => {
+            report.missing_field(
+                "row_proof",
+                "'Contest Ballot' must have a proof for an encrypted choice",
+            );
+        },
+    }
 }
 
 /// Returns a commitment key calculated from the document reference of the given contest
 /// parameters document.
 fn commitment_key(doc_ref: &DocumentRef) -> anyhow::Result<VoterProofCommitment> {
     let mut buffer = Vec::new();
-    doc_ref.encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())?;
+    doc_ref
+        .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())
+        .context("Cannot encode 'DocumentRef' for Commitment Key calculation")?;
     let mut hasher = Blake2b512Hasher::new();
     hasher.update(&buffer);
     Ok(VoterProofCommitment::from_hash(hasher))
