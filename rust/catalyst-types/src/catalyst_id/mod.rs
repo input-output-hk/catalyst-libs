@@ -854,8 +854,7 @@ mod tests {
         for id_string in CATALYST_ID_TEST_VECTOR {
             let username = id_string
                 .split_once("://")
-                .map(|(_, id)| id)
-                .unwrap_or(id_string)
+                .map_or(id_string, |(_, id)| id)
                 .split_once('@')
                 .map(|s| s.0);
             let (username, nonce) = username
