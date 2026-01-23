@@ -623,19 +623,21 @@ impl FromStr for CatalystId {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (uri, r#type) = {
             if s.contains("://") {
-                let uri = Uri::parse(s.to_owned())?;
+                let uri = Uri::parse(s.to_owned())
+                    .map_err(|e| errors::CatalystIdError::InvalidURI(s.to_string(), e))?;
                 // Check if its the correct scheme.
                 let r#type = if uri.scheme() == Self::SCHEME {
                     CatalystIdType::Uri
                 } else if uri.scheme() == Self::ADMIN_SCHEME {
                     CatalystIdType::AdminUri
                 } else {
-                    return Err(errors::CatalystIdError::InvalidScheme);
+                    return Err(errors::CatalystIdError::InvalidScheme(s.to_string()));
                 };
                 (uri, r#type)
             } else {
                 // It might be a RAW ID, so try and parse with the correct scheme.
-                let uri = Uri::parse(format!("{}://{}", Self::SCHEME, s))?;
+                let uri = Uri::parse(format!("{}://{}", Self::SCHEME, s))
+                    .map_err(|e| errors::CatalystIdError::InvalidURI(s.to_string(), e))?;
                 let r#type = CatalystIdType::Id;
                 (uri, r#type)
             }
@@ -644,7 +646,7 @@ impl FromStr for CatalystId {
         // Decode the network and subnet
         let auth = uri
             .authority()
-            .ok_or(errors::CatalystIdError::NoDefinedNetwork)?;
+            .ok_or_else(|| errors::CatalystIdError::NoDefinedNetwork(s.to_string()))?;
         let (subnet, network) = {
             let host = auth.host();
             if let Some((subnet, host)) = host.rsplit_once('.') {
@@ -662,9 +664,9 @@ impl FromStr for CatalystId {
 
                     let nonce_val: i64 = nonce_str
                         .parse()
-                        .map_err(|_| errors::CatalystIdError::InvalidNonce)?;
+                        .map_err(|_| errors::CatalystIdError::InvalidNonce(s.to_string()))?;
                     if !(CatalystId::MIN_NONCE..=CatalystId::MAX_NONCE).contains(&nonce_val) {
-                        return Err(errors::CatalystIdError::InvalidNonce);
+                        return Err(errors::CatalystIdError::InvalidNonce(s.to_string()));
                     }
 
                     let nonce = DateTime::<Utc>::from_timestamp(nonce_val, 0);
@@ -684,23 +686,26 @@ impl FromStr for CatalystId {
         // Can ONLY have 3 path components, no more and no less
         // Less than 3 handled by errors below (4 because of leading `/` in path).
         if path.len() > 4 {
-            return Err(errors::CatalystIdError::InvalidPath);
+            return Err(errors::CatalystIdError::InvalidPath(s.to_string()));
         }
 
         // Decode and validate the Role0 Public key from the path
         let encoded_role0_key = path
             .get(1)
-            .ok_or(errors::CatalystIdError::InvalidRole0Key)?;
+            .ok_or_else(|| errors::CatalystIdError::InvalidRole0Key(s.to_string()))?;
         let decoded_role0_key =
-            base64_url::decode(encoded_role0_key.decode().into_string_lossy().as_ref())?;
+            base64_url::decode(encoded_role0_key.decode().into_string_lossy().as_ref())
+                .map_err(|e| errors::CatalystIdError::InvalidRole0KeyEncoding(s.to_string(), e))?;
         let role0_pk = crate::conversion::vkey_from_bytes(&decoded_role0_key)
-            .or(Err(errors::CatalystIdError::InvalidRole0Key))?;
+            .or(Err(errors::CatalystIdError::InvalidRole0Key(s.to_string())))?;
 
         // Decode and validate the Role Index from the path.
         let role_index: RoleId = {
             if let Some(encoded_role_index) = path.get(2) {
                 let decoded_role_index = encoded_role_index.decode().into_string_lossy();
-                decoded_role_index.parse::<RoleId>()?
+                decoded_role_index
+                    .parse::<RoleId>()
+                    .map_err(|e| errors::CatalystIdError::InvalidRoleId(s.to_string(), e))?
             } else {
                 RoleId::default()
             }
@@ -710,7 +715,9 @@ impl FromStr for CatalystId {
         let rotation: KeyRotation = {
             if let Some(encoded_rotation) = path.get(3) {
                 let decoded_rotation = encoded_rotation.decode().into_string_lossy();
-                decoded_rotation.parse::<KeyRotation>()?
+                decoded_rotation
+                    .parse::<KeyRotation>()
+                    .map_err(|e| errors::CatalystIdError::InvalidRotationValue(s.to_string(), e))?
             } else {
                 KeyRotation::default()
             }
@@ -719,7 +726,11 @@ impl FromStr for CatalystId {
         let encryption = match uri.fragment() {
             None => false,
             Some(f) if f == Self::ENCRYPTION_FRAGMENT => true,
-            Some(_) => return Err(errors::CatalystIdError::InvalidEncryptionKeyFragment),
+            Some(_) => {
+                return Err(errors::CatalystIdError::InvalidEncryptionKeyFragment(
+                    s.to_string(),
+                ));
+            },
         };
 
         let inner = CatalystIdInner {
@@ -796,7 +807,8 @@ impl TryFrom<&[u8]> for CatalystId {
     type Error = errors::CatalystIdError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        let kid_str = String::from_utf8(value.to_vec())?;
+        let kid_str = String::from_utf8(value.to_vec())
+            .map_err(|e| errors::CatalystIdError::InvalidTextEncoding(hex::encode(value), e))?;
         CatalystId::from_str(&kid_str)
     }
 }
