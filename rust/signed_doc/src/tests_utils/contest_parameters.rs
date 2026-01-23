@@ -5,6 +5,7 @@ use crate::{
     tests_utils::create_dummy_admin_key_pair,
 };
 
+#[must_use]
 pub fn contest_parameters_default_content() -> serde_json::Value {
     serde_json::json!({
         "start": Utc::now(),
