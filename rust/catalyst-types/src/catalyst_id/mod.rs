@@ -852,11 +852,12 @@ mod tests {
     /// Tests that deserialization and re-serialization round trip correctly
     fn test_catalyst_id_from_str() {
         for id_string in CATALYST_ID_TEST_VECTOR {
-            let id_string = id_string
+            let username = id_string
                 .split_once("://")
                 .map(|(_, id)| id)
-                .unwrap_or(id_string);
-            let username = id_string.split_once('@').map(|s| s.0);
+                .unwrap_or(id_string)
+                .split_once('@')
+                .map(|s| s.0);
             let (username, nonce) = username
                 .and_then(|s| s.split_once(':').map(|(u, n)| (u, Some(n))))
                 .or_else(|| username.map(|u| (u, None)))
