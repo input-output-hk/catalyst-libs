@@ -6,13 +6,14 @@ use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
-        contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_admin_key_pair,
+        contest_parameters::contest_parameters_default_content, contest_parameters_doc,
+        contest_parameters_form_template_doc, create_dummy_admin_key_pair,
         create_key_pair_and_publish,
     },
     validator::Validator,
     *,
 };
-use chrono::{Duration, Utc};
+use chrono::Utc;
 use test_case::test_case;
 
 use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
@@ -32,12 +33,9 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let time = Utc::now();
-        let content = serde_json::json!({
-            "start": time,
-            "end": time,
-            "election_public_key": "0000000000000000000000000000000000000000000000000000000000000000",
-            "choices": ["Yes", "No", "Abstain"],
-        });
+        let mut content = contest_parameters_default_content();
+        content["start"] = serde_json::json!(time);
+        content["end"] = serde_json::json!(time);
 
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
@@ -51,11 +49,8 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
 #[test_case(
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
-        let content = serde_json::json!({
-            "start": Utc::now(),
-            "end": Utc::now().checked_add_signed(Duration::minutes(5)),
-            "choices": ["Yes"],
-        });
+        let mut content = contest_parameters_default_content();
+        content["choices"] = serde_json::json!(["Yes"]);
 
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
