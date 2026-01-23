@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use catalyst_signed_doc::{catalyst_id::CatalystId, providers::CatalystSignedDocumentProvider, DocumentRef};
+use catalyst_signed_doc::{catalyst_id::CatalystId, providers::CatalystSignedDocumentProvider};
 use catalyst_voting::vote_protocol::tally::DecryptionTallySetup;
 
 use crate::{
@@ -63,7 +63,7 @@ pub fn tally(
             })
         })
         .collect::<anyhow::Result<Vec<_>>>()?;
-    
+
     let voters = ballots
         .iter()
         .map(|d| Ok((d.voter(), provider.try_get_voting_power(d.voter())?)))
@@ -72,12 +72,12 @@ pub fn tally(
     let total_voting_power = voters.values().sum::<u64>();
     let _decryption_tally_setup = DecryptionTallySetup::new(total_voting_power)?;
 
-
-
-
     Ok(res)
 }
 
-fn tally_per_proposal(proposal_ref: DocumentRef, ballots: &[ContestBallot]) -> anyhow::Result<()> {
-    Ok(())
-}
+// fn tally_per_proposal(
+//     proposal_ref: DocumentRef,
+//     ballots: &[ContestBallot],
+// ) -> anyhow::Result<()> {
+//     Ok(())
+// }

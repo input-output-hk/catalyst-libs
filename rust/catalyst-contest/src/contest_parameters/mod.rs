@@ -34,7 +34,7 @@ pub struct ContestParameters {
     /// Contest Parameters payload
     payload: ContestParametersPayload,
     /// 'parameters' metadata field
-    parameters: Option<DocumentRefs>,
+    parameters: DocumentRefs,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
@@ -118,14 +118,10 @@ impl ContestParameters {
         let parameters = doc
             .doc_meta()
             .parameters()
-            .or_else(|| {
-                doc.report().missing_field(
-                    "parameters",
-                    "'Contest Parameter' document must have 'parameters' field",
-                );
-                None
+            .ok_or_else(|| {
+                anyhow::anyhow!("'Contest Parameter' document must have 'parameters' field")
             })
-            .cloned();
+            .cloned()?;
 
         Ok(ContestParameters {
             doc_ref: doc.doc_ref()?,
@@ -168,12 +164,9 @@ impl ContestParameters {
         &self,
         provider: &dyn CatalystSignedDocumentProvider,
     ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
-        let Some(ref param) = self.parameters else {
-            return Ok(vec![]);
-        };
         let query = CatalystSignedDocumentSearchQuery {
             doc_type: Some(DocTypeSelector::In(vec![PROPOSAL])),
-            parameters: Some(DocumentRefSelector::Eq(param.clone())),
+            parameters: Some(DocumentRefSelector::Eq(self.parameters.clone())),
             ..Default::default()
         };
         let proposals = provider.try_search_latest_docs(&query)?;

@@ -130,7 +130,7 @@ fn payload(
         .unwrap_or_default()
 }
 
-/// Checks the parameters of a document and returns a contest parameters document.
+/// Checks the document against the 'Contest Parameters' and returns it as a result.
 fn check_parameters(
     doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
