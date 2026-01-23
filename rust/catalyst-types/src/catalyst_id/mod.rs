@@ -829,13 +829,15 @@ mod tests {
 
     use super::CatalystId;
 
-    const CATALYST_ID_TEST_VECTOR: [&str; 13] = [
+    const CATALYST_ID_TEST_VECTOR: [&str; 15] = [
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
+        "user%201@cardano/H3jR27ekAfoiV58o0GDLBH2S0fiMw_48djjXYdf9qYE/0/0",
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         ":1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
+        "id.catalyst://user%201@preprod.cardano/H3jR27ekAfoiV58o0GDLBH2S0fiMw_48djjXYdf9qYE/0/0",
         "id.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",
@@ -850,6 +852,10 @@ mod tests {
     /// Tests that deserialization and re-serialization round trip correctly
     fn test_catalyst_id_from_str() {
         for id_string in CATALYST_ID_TEST_VECTOR {
+            let id_string = id_string
+                .split_once("://")
+                .map(|(_, id)| id)
+                .unwrap_or(id_string);
             let username = id_string.split_once('@').map(|s| s.0);
             let (username, nonce) = username
                 .and_then(|s| s.split_once(':').map(|(u, n)| (u, Some(n))))
