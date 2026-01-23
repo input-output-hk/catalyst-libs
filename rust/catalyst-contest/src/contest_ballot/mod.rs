@@ -22,7 +22,7 @@ use minicbor::{Decode, Encode};
 
 use crate::{
     contest_ballot::payload::{Choices, ContestBallotPayload},
-    contest_parameters::{self, ContestParameters},
+    contest_parameters::ContestParameters,
 };
 
 /// An individual Ballot cast in a Contest by a registered user.
@@ -135,7 +135,7 @@ fn check_parameters(
     doc: &CatalystSignedDocument,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<Option<CatalystSignedDocument>> {
+) -> anyhow::Result<Option<ContestParameters>> {
     let Some(doc_ref) = doc.doc_meta().parameters().and_then(|v| v.first()) else {
         report.missing_field(
             "parameters",
@@ -151,29 +151,28 @@ fn check_parameters(
         );
         return Ok(None);
     };
+    let contest_parameter = ContestParameters::new(&contest_parameters, provider)?;
 
     let Ok(doc_ver) = doc.doc_ver() else {
         report.missing_field(
             "ver",
             "Missing 'ver' metadata field for 'Contest Ballot' document",
         );
-        return Ok(Some(contest_parameters));
+        return Ok(Some(contest_parameter));
     };
 
-    ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Ballot");
+    contest_parameter.timeline_check(doc_ver, report, "Contest Ballot");
 
-    Ok(Some(contest_parameters))
+    Ok(Some(contest_parameter))
 }
 
 /// Checks choices ither they are encrypted or not.
 fn check_choices(
     payload: &ContestBallotPayload,
-    contest_parameters: &CatalystSignedDocument,
+    contest_parameters: &ContestParameters,
     report: &ProblemReport,
 ) -> anyhow::Result<()> {
-    let election_public_key =
-        contest_parameters::get_payload(contest_parameters, report).election_public_key;
-    let commitment_key = commitment_key(contest_parameters)?;
+    let commitment_key = commitment_key(contest_parameters.doc_ref())?;
 
     for (index, choice) in &payload.choices {
         let Choices::Encrypted {
@@ -186,7 +185,7 @@ fn check_choices(
 
         if !verify_voter_proof(
             choices.clone(),
-            &election_public_key,
+            contest_parameters.election_public_key(),
             &commitment_key,
             proof,
         ) {
@@ -202,12 +201,9 @@ fn check_choices(
 
 /// Returns a commitment key calculated from the document reference of the given contest
 /// parameters document.
-fn commitment_key(
-    contest_parameters: &CatalystSignedDocument
-) -> anyhow::Result<VoterProofCommitment> {
-    let params_ref = contest_parameters.doc_ref()?;
+fn commitment_key(doc_ref: &DocumentRef) -> anyhow::Result<VoterProofCommitment> {
     let mut buffer = Vec::new();
-    params_ref.encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())?;
+    doc_ref.encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())?;
     let mut hasher = Blake2b512Hasher::new();
     hasher.update(&buffer);
     Ok(VoterProofCommitment::from_hash(hasher))

@@ -134,21 +134,18 @@ impl ContestParameters {
     /// Timeline verification, based on the 'Contest Parameters' 'start' and 'end' fields.
     /// Filling to provided problem report.
     pub(crate) fn timeline_check(
+        &self,
         ver: UuidV7,
-        contest_parameters: &CatalystSignedDocument,
         report: &ProblemReport,
         document_name: &str,
     ) {
-        let contest_parameters_payload = get_payload(contest_parameters, report);
-        if ver.time() > &contest_parameters_payload.end
-            || ver.time() < &contest_parameters_payload.start
-        {
+        if ver.time() > &self.end() || ver.time() < &self.start() {
             report.functional_validation(
                 &format!(
                     "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
                     ver.time(),
-                    contest_parameters_payload.start,
-                    contest_parameters_payload.end
+                    self.start(),
+                    self.end()
                 ),
                 &format!("'{document_name}' timeline check"),
             );

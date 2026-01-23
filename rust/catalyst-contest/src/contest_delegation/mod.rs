@@ -180,6 +180,7 @@ fn contest_parameters_checks(
         );
         return Ok(());
     };
+    let contest_parameters = ContestParameters::new(&contest_parameters, provider)?;
 
     let Ok(doc_ver) = doc.doc_ver() else {
         report.missing_field(
@@ -188,9 +189,7 @@ fn contest_parameters_checks(
         );
         return Ok(());
     };
-
-    ContestParameters::timeline_check(doc_ver, &contest_parameters, report, "Contest Delegation");
-
+    contest_parameters.timeline_check(doc_ver, report, "Contest Delegation");
     Ok(())
 }
 
