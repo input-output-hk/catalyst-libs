@@ -660,8 +660,8 @@ impl FromStr for CatalystId {
         let (username, nonce) = {
             if let Some(userinfo) = auth.userinfo() {
                 if let Some((username, nonce)) = userinfo.split_once(':') {
-                    let username = username.decode().into_string_lossy().to_string();
-                    let nonce_str = nonce.decode().into_string_lossy().to_string();
+                    let username = username.to_string();
+                    let nonce_str = nonce.to_string();
 
                     let nonce_val: i64 = nonce_str
                         .parse()
@@ -674,7 +674,7 @@ impl FromStr for CatalystId {
 
                     (Some(username), nonce)
                 } else {
-                    let username = userinfo.decode().into_string_lossy().to_string();
+                    let username = userinfo.to_string();
                     (Some(username), None)
                 }
             } else {
@@ -832,12 +832,12 @@ mod tests {
     const CATALYST_ID_TEST_VECTOR: [&str; 15] = [
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
-        "user%201@cardano/H3jR27ekAfoiV58o0GDLBH2S0fiMw_48djjXYdf9qYE/0/0",
+        "user%201@cardano/H3jR27ekAfoiV58o0GDLBH2S0fiMw_48djjXYdf9qYE/1/2",
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         ":1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
-        "id.catalyst://user%201@preprod.cardano/H3jR27ekAfoiV58o0GDLBH2S0fiMw_48djjXYdf9qYE/0/0",
+        "id.catalyst://user%201@preprod.cardano/H3jR27ekAfoiV58o0GDLBH2S0fiMw_48djjXYdf9qYE/1/2",
         "id.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",
