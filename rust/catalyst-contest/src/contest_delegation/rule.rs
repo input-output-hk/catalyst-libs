@@ -6,7 +6,7 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, providers::Provider, validator::CatalystSignedDocumentValidationRule,
 };
 
-use super::{contest_parameters_checks, get_delegations, get_delegator, get_payload};
+use super::{contest_parameters_checks, get_delegations, get_payload};
 
 /// `CatalystSignedDocumentValidationRule` implementation for Contest Delegation document.
 #[derive(Debug)]
@@ -18,7 +18,6 @@ impl CatalystSignedDocumentValidationRule for ContestDelegationRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        get_delegator(doc, doc.report());
         let payload = get_payload(doc, doc.report());
         contest_parameters_checks(doc, provider, doc.report())?;
         get_delegations(doc, payload, provider, doc.report())?;
