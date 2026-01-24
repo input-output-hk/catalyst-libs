@@ -11,13 +11,20 @@ pub mod rule;
 mod tests;
 
 use catalyst_signed_doc::{
-    CatalystSignedDocument, DocumentRef, doc_types::CONTEST_PARAMETERS,
-    problem_report::ProblemReport, providers::CatalystSignedDocumentProvider, uuid::UuidV7,
+    CatalystSignedDocument, DocumentRef, DocumentRefs,
+    doc_types::{CONTEST_BALLOT, CONTEST_PARAMETERS, PROPOSAL},
+    problem_report::ProblemReport,
+    providers::{
+        CatalystSignedDocumentProvider, CatalystSignedDocumentSearchQuery, DocTypeSelector,
+        DocumentRefSelector,
+    },
+    uuid::UuidV7,
 };
 use catalyst_voting::vote_protocol::committee::ElectionPublicKey;
 use chrono::{DateTime, Utc};
 
-use crate::contest_parameters::payload::{Choices, ContestParametersPayload};
+pub use self::payload::Choices;
+use self::payload::ContestParametersPayload;
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]
@@ -26,6 +33,8 @@ pub struct ContestParameters {
     doc_ref: DocumentRef,
     /// Contest Parameters payload
     payload: ContestParametersPayload,
+    /// 'parameters' metadata field
+    parameters: Option<DocumentRefs>,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
@@ -41,16 +50,10 @@ impl PartialEq for ContestParameters {
 }
 
 impl ContestParameters {
-    /// Returns 'id' metadata field
+    /// Returns document reference
     #[must_use]
-    pub fn id(&self) -> &UuidV7 {
-        self.doc_ref.id()
-    }
-
-    /// Returns 'ver' metadata field
-    #[must_use]
-    pub fn ver(&self) -> &UuidV7 {
-        self.doc_ref.ver()
+    pub fn doc_ref(&self) -> &DocumentRef {
+        &self.doc_ref
     }
 
     /// Returns contest start date
@@ -63,6 +66,12 @@ impl ContestParameters {
     #[must_use]
     pub fn end(&self) -> &DateTime<Utc> {
         &self.payload.end
+    }
+
+    /// Returns contest snapshot taking date
+    #[must_use]
+    pub fn snapshot(&self) -> &DateTime<Utc> {
+        &self.payload.snapshot
     }
 
     /// Returns contest choices
@@ -92,13 +101,10 @@ impl ContestParameters {
     ///  - If provided document not a Contest Parameters type
     ///  - If provided document is invalid (`report().is_problematic()`)
     ///  - `provider` returns error
-    pub fn new<Provider>(
+    pub fn new(
         doc: &CatalystSignedDocument,
-        _provider: &Provider,
-    ) -> anyhow::Result<Self>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+        _provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Self> {
         if doc.report().is_problematic() {
             anyhow::bail!("Provided document is not valid {:?}", doc.report())
         }
@@ -109,10 +115,22 @@ impl ContestParameters {
 
         let report = ProblemReport::new("Contest Parameters");
         let payload = get_payload(doc, &report);
+        let parameters = doc
+            .doc_meta()
+            .parameters()
+            .or_else(|| {
+                doc.report().missing_field(
+                    "parameters",
+                    "'Contest Parameter' document must have 'parameters' field",
+                );
+                None
+            })
+            .cloned();
 
         Ok(ContestParameters {
             doc_ref: doc.doc_ref()?,
             payload,
+            parameters,
             report,
         })
     }
@@ -139,6 +157,49 @@ impl ContestParameters {
                 &format!("'{document_name}' timeline check"),
             );
         }
+    }
+
+    /// Return a list of associated 'Proposal' documents
+    /// with the 'Contest Parameters' document.
+    ///
+    /// # Errors
+    ///  - `provider` returns error.
+    pub(crate) fn get_associated_proposals(
+        &self,
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+        let Some(ref param) = self.parameters else {
+            return Ok(vec![]);
+        };
+        let query = CatalystSignedDocumentSearchQuery {
+            doc_type: Some(DocTypeSelector::In(vec![PROPOSAL])),
+            parameters: Some(DocumentRefSelector::Eq(param.clone())),
+            ..Default::default()
+        };
+        let proposals = provider.try_search_latest_docs(&query)?;
+        //TODO: Leave only proposals with the corresponding 'Proposal Submission Action' final
+        // document.
+
+        Ok(proposals)
+    }
+
+    /// Return a list of associated 'Contest Ballot' documents
+    /// with the 'Contest Parameters' document.
+    ///
+    /// # Errors
+    ///  - `provider` returns error.
+    pub(crate) fn get_associated_ballots(
+        &self,
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+        let query = CatalystSignedDocumentSearchQuery {
+            doc_type: Some(DocTypeSelector::In(vec![CONTEST_BALLOT])),
+            parameters: Some(DocumentRefSelector::Eq(vec![self.doc_ref.clone()].into())),
+            ..Default::default()
+        };
+        // Consider ONLY latest versions.
+        let ballots = provider.try_search_latest_docs(&query)?;
+        Ok(ballots)
     }
 }
 

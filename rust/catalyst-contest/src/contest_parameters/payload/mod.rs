@@ -14,6 +14,8 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) start: DateTime<Utc>,
     /// Contest end date
     pub(crate) end: DateTime<Utc>,
+    /// Contest snapshot taking date
+    pub(crate) snapshot: DateTime<Utc>,
     /// Contest choices
     pub(crate) choices: Choices,
     /// An election public key.
@@ -21,6 +23,7 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) election_public_key: ElectionPublicKey,
 }
 
+/// Contest Choices
 #[derive(Debug, Clone, Default)]
 pub struct Choices(Vec<String>);
 
@@ -37,6 +40,7 @@ impl Default for ContestParametersPayload {
         Self {
             start: DateTime::default(),
             end: DateTime::default(),
+            snapshot: DateTime::default(),
             choices: Choices::default(),
             election_public_key: GroupElement::zero().into(),
         }

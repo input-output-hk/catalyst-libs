@@ -19,7 +19,6 @@ use catalyst_signed_doc::{
         CatalystIdSelector, CatalystSignedDocumentProvider, CatalystSignedDocumentSearchQuery,
         DocTypeSelector, DocumentRefSelector,
     },
-    uuid::UuidV7,
 };
 
 use crate::contest_parameters::ContestParameters;
@@ -30,7 +29,7 @@ pub struct ContestDelegation {
     /// Document reference info
     doc_ref: DocumentRef,
     /// A corresponding `CatalystId` of the delegator (author of the document).
-    delegator: Option<CatalystId>,
+    delegator: CatalystId,
     /// Delegations
     delegations: Vec<Delegation>,
     /// A comprehensive problem report, which could include a decoding errors along with
@@ -69,26 +68,16 @@ struct ContestDelegationPayload {
 }
 
 impl ContestDelegation {
-    /// Returns 'id' metadata field
+    /// Returns document reference
     #[must_use]
-    pub fn id(&self) -> &UuidV7 {
-        self.doc_ref.id()
-    }
-
-    /// Returns 'ver' metadata field
-    #[must_use]
-    pub fn ver(&self) -> &UuidV7 {
-        self.doc_ref.ver()
+    pub fn doc_ref(&self) -> &DocumentRef {
+        &self.doc_ref
     }
 
     /// Returns 'delegator'.
-    ///
-    /// # Errors
-    ///  - Missing 'delegator'.
-    pub fn delegator(&self) -> anyhow::Result<&CatalystId> {
-        self.delegator
-            .as_ref()
-            .ok_or(anyhow::anyhow!("Missing 'delegator'"))
+    #[must_use]
+    pub fn delegator(&self) -> &CatalystId {
+        &self.delegator
     }
 
     /// Returns delegations
@@ -129,36 +118,21 @@ impl ContestDelegation {
 
         let report = ProblemReport::new("Contest Delegation");
 
-        let delegator = get_delegator(doc, &report);
         let payload = get_payload(doc, &report);
         contest_parameters_checks(doc, provider, &report)?;
         let delegations = get_delegations(doc, payload, provider, &report)?;
 
         Ok(ContestDelegation {
             doc_ref: doc.doc_ref()?,
-            delegator,
+            delegator: doc
+                .authors()
+                .into_iter()
+                .next()
+                .context("Contest Delegation document must have only one author/signer")?,
             report,
             delegations,
         })
     }
-}
-
-/// Get signer of the provided document, which defines as delegator.
-fn get_delegator(
-    doc: &CatalystSignedDocument,
-    report: &ProblemReport,
-) -> Option<CatalystId> {
-    let authors = doc.authors();
-    if authors.len() != 1 {
-        report.invalid_value(
-            "signatures",
-            &authors.len().to_string(),
-            "1",
-            "Contest Delegation document must have only one author/signer",
-        );
-    }
-
-    authors.into_iter().next()
 }
 
 /// Get `ContestDelegationPayload` from the provided `CatalystSignedDocument`, fill the

@@ -503,6 +503,33 @@ impl ProblemReport {
             context,
         );
     }
+
+    /// Merges the contents of another problem report into the current one preserving the
+    /// context of current.
+    ///
+    /// # Parameters:
+    /// - `other`: The source `ProblemReport` containing the entries to be added to the
+    ///   current report. The entries from this instance will be appended to the current
+    ///   instance.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use catalyst_types::problem_report::ProblemReport;
+    ///
+    /// let main_report = ProblemReport::new("Main Transaction");
+    /// let sub_report = ProblemReport::new("Validation Step");
+    ///
+    /// main_report.merge(&sub_report);
+    /// ```
+    pub fn merge(
+        &self,
+        other: &Self,
+    ) {
+        for e in other.entries() {
+            self.0.report.0.push(e.cloned());
+        }
+    }
 }
 
 #[cfg(test)]

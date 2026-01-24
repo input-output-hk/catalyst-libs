@@ -1,6 +1,6 @@
 //! Providers traits, which are used during different validation procedures.
 
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 mod search_query;
 
 use catalyst_types::{catalyst_id::CatalystId, uuid::UuidV7};
@@ -65,6 +65,33 @@ pub trait CatalystSignedDocumentProvider {
         &self,
         query: &CatalystSignedDocumentSearchQuery,
     ) -> anyhow::Result<Vec<CatalystSignedDocument>>;
+
+    /// Try to find a ONLY latest versions `CatalystSignedDocument` by the provided query.
+    ///
+    /// # Errors
+    /// If `provider` returns error, fails fast throwing that error.
+    fn try_search_latest_docs(
+        &self,
+        query: &CatalystSignedDocumentSearchQuery,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+        let mut res = HashMap::new();
+        for d in self.try_search_docs(query)? {
+            // We are assuming that the returned from the `provider` documents must be at least
+            // structurally valid.
+            let d_ref = d.doc_ref()?;
+
+            // Found document with the same id and newer version
+            if let Some((another_ref, another_d)) = res.get_mut(d_ref.id())
+                && *another_ref < d_ref
+            {
+                *another_ref = d_ref;
+                *another_d = d;
+            } else {
+                res.insert(*d_ref.id(), (d_ref, d));
+            }
+        }
+        Ok(res.into_iter().map(|(_, (_, d))| d).collect())
+    }
 }
 
 /// `TimeThresholdProvider` Provider trait

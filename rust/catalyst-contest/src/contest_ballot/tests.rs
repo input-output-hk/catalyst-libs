@@ -6,9 +6,9 @@ use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
-        contest_ballot_doc, contest_parameters_doc, contest_parameters_form_template_doc,
-        create_dummy_admin_key_pair, create_key_pair_and_publish, proposal_doc,
-        proposal_form_template_doc,
+        contest_ballot_doc, contest_parameters::contest_parameters_default_content,
+        contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_admin_key_pair,
+        create_key_pair_and_publish, proposal_doc, proposal_form_template_doc,
     },
     validator::Validator,
 };
@@ -34,10 +34,9 @@ use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
 #[test_case(
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
-        let content = serde_json::json!({
-            "start": Utc::now().checked_add_signed(Duration::hours(1)),
-            "end": Utc::now().checked_add_signed(Duration::hours(5)),
-        });
+        let mut content = contest_parameters_default_content();
+        content["start"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(1)));
+        content["end"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(5)));
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
@@ -54,10 +53,9 @@ use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
 #[test_case(
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
-        let content = serde_json::json!({
-            "start": Utc::now().checked_sub_signed(Duration::hours(5)),
-            "end": Utc::now().checked_sub_signed(Duration::hours(1)),
-        });
+        let mut content = contest_parameters_default_content();
+        content["start"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(5)));
+        content["end"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(1)));
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
