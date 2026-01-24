@@ -17,7 +17,10 @@ use catalyst_signed_doc::{
 };
 use catalyst_voting::{
     crypto::group::GroupElement,
-    vote_protocol::voter::{Vote, encrypt_vote_with_default_rng},
+    vote_protocol::voter::{
+        EncryptedVote, Vote, encrypt_vote_with_default_rng,
+        proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
+    },
 };
 use chrono::{Duration, Utc};
 use minicbor::{Encode, Encoder};
@@ -98,33 +101,23 @@ use crate::contest_ballot::{
     ;
     "missing proof"
 )]
-// #[test_case(
-//     |p| {
-//         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
-//
-//         // TODO: FIXME:
-//         let choices = [(0, Choices::Encrypted {})].iter().collect();
-//         let payload = ContestBallotPayload {
-//             choices,
-//             column_proof: None,
-//             matrix_proof: None,
-//             voter_choices: None,
-//         };
-//
-//         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-//         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-//         let template = build_doc_and_publish(p, |p|
-// contest_parameters_form_template_doc(&brand, p))?;         let parameters =
-// build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-//         let template = build_doc_and_publish(p, |p|
-// proposal_form_template_doc(&parameters, p))?;         let proposal =
-// build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-//         builder::contest_ballot_doc(&proposal, &parameters,
-// &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, payload)     }
-//     => false
-//     ;
-//     "invalid proof"
-// )]
+#[test_case(
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let payload = invalid_proof_payload();
+
+        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &payload)
+    }
+    => false
+    ;
+    "invalid proof"
+)]
 fn contest_ballot(
     doc_gen: impl Fn(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>
 ) -> bool {
@@ -152,15 +145,37 @@ fn contest_ballot(
 fn empty_proof_payload() -> Vec<u8> {
     let vote = Vote::new(0, 1).unwrap();
     let key = GroupElement::zero().into();
-    let choices = encrypt_vote_with_default_rng(&vote, &key).0;
-    let choices = [(0, Choices::Encrypted {
-        choices,
-        row_proof: None,
-    })]
-    .iter()
-    .cloned()
-    .collect();
+    let vote = encrypt_vote_with_default_rng(&vote, &key).0;
+    encode_payload(vote, None)
+}
 
+/// Constructs an encoded payload with encrypted choices, but with an invalid proof.
+fn invalid_proof_payload() -> Vec<u8> {
+    let vote = Vote::new(0, 1).unwrap();
+    let key = GroupElement::zero().into();
+    let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &key);
+    let public_key = GroupElement::zero().into();
+    let commitment = VoterProofCommitment::random_with_default_rng();
+    let proof = generate_voter_proof_with_default_rng(
+        &vote,
+        encrypted_vote.clone(),
+        randomness,
+        &public_key,
+        &commitment,
+    )
+    .unwrap();
+    encode_payload(encrypted_vote, Some(proof))
+}
+
+/// Encodes contest ballot payload.
+fn encode_payload(
+    vote: EncryptedVote,
+    row_proof: Option<VoterProof>,
+) -> Vec<u8> {
+    let choices = [(0, Choices::Encrypted { vote, row_proof })]
+        .iter()
+        .cloned()
+        .collect();
     let payload = ContestBallotPayload {
         choices,
         column_proof: None,

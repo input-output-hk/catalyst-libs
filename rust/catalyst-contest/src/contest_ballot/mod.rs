@@ -169,19 +169,14 @@ fn check_proof(
 
     for (index, choice) in &payload.choices {
         let Choices::Encrypted {
-            choices,
+            vote,
             row_proof: Some(proof),
         } = choice
         else {
             continue;
         };
 
-        if !verify_voter_proof(
-            choices.clone(),
-            &election_public_key,
-            &commitment_key,
-            proof,
-        ) {
+        if !verify_voter_proof(vote.clone(), &election_public_key, &commitment_key, proof) {
             report.functional_validation(
                 &format!("Failed to verify proof ({index} index)"),
                 "'Contest Ballot' document validation",
