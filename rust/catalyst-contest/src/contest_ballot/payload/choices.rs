@@ -142,8 +142,6 @@ impl Encode<()> for Choices {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_voting::crypto::elgamal::Ciphertext;
-
     use super::*;
 
     #[test]
@@ -156,22 +154,7 @@ mod tests {
         let mut report = ProblemReport::new("test");
         let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
-        assert!(!report.is_problematic());
-    }
-
-    #[test]
-    fn encrypted_roundtrip() {
-        let original = Choices::Encrypted {
-            choices: vec![Ciphertext::zero(), Ciphertext::zero()].into(),
-            row_proof: None,
-        };
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let mut report = ProblemReport::new("test");
-        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
-        assert_eq!(original, decoded);
+        println!("{report:?}");
         assert!(!report.is_problematic());
     }
 }

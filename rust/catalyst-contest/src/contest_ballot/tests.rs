@@ -2,20 +2,32 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot>
 
 use catalyst_signed_doc::{
-    CatalystSignedDocument, builder, doc_types,
+    CatalystSignedDocument, builder,
+    catalyst_id::role_index::RoleId,
+    doc_types,
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
         contest_ballot_doc, contest_parameters::contest_parameters_default_content,
         contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_admin_key_pair,
-        create_key_pair_and_publish, proposal_doc, proposal_form_template_doc,
+        create_dummy_key_pair, create_key_pair_and_publish, proposal_doc,
+        proposal_form_template_doc,
     },
     validator::Validator,
 };
+use catalyst_voting::{
+    crypto::group::GroupElement,
+    vote_protocol::voter::{Vote, encrypt_vote_with_default_rng},
+};
 use chrono::{Duration, Utc};
+use minicbor::{Encode, Encoder};
 use test_case::test_case;
 
-use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
+use crate::contest_ballot::{
+    ContestBallot,
+    payload::{Choices, ContestBallotPayload},
+    rule::ContestBallotRule,
+};
 
 #[test_case(
     |p| {
@@ -71,7 +83,8 @@ use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+        let payload = empty_proof_payload();
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
@@ -79,7 +92,7 @@ use crate::contest_ballot::{ContestBallot, rule::ContestBallotRule};
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-        builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &[160])
+        builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &payload)
     }
     => false
     ;
@@ -133,4 +146,30 @@ fn contest_ballot(
     assert_eq!(is_valid, !contest_ballot.report().is_problematic());
 
     is_valid
+}
+
+/// Constructs an encoded payload with encrypted choices, but without proof.
+fn empty_proof_payload() -> Vec<u8> {
+    let vote = Vote::new(0, 1).unwrap();
+    let key = GroupElement::zero().into();
+    let choices = encrypt_vote_with_default_rng(&vote, &key).0;
+    let choices = [(0, Choices::Encrypted {
+        choices,
+        row_proof: None,
+    })]
+    .iter()
+    .cloned()
+    .collect();
+
+    let payload = ContestBallotPayload {
+        choices,
+        column_proof: None,
+        matrix_proof: None,
+        voter_choices: None,
+    };
+    let mut buffer = Vec::new();
+    payload
+        .encode(&mut Encoder::new(&mut buffer), &mut ())
+        .unwrap();
+    buffer
 }

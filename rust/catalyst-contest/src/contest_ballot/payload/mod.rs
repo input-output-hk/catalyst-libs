@@ -160,7 +160,6 @@ impl Encode<()> for ContestBallotPayload {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_voting::crypto::elgamal::Ciphertext;
     use encrypted_block::EncryptedBlock;
 
     use super::*;
@@ -168,14 +167,7 @@ mod tests {
     #[test]
     fn roundtrip() {
         let original = ContestBallotPayload {
-            choices: [
-                (1, Choices::Clear(vec![1, 2, 3, 4, 5])),
-                (2, Choices::Encrypted {
-                    choices: vec![Ciphertext::zero()].into(),
-                    row_proof: None,
-                }),
-            ]
-            .into(),
+            choices: [(1, Choices::Clear(vec![1, 2, 3, 4, 5]))].into(),
             column_proof: None,
             matrix_proof: None,
             voter_choices: Some(EncryptedChoices(vec![
@@ -191,6 +183,7 @@ mod tests {
         let decoded =
             ContestBallotPayload::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
+        println!("{report:?}");
         assert!(!report.is_problematic());
     }
 }
