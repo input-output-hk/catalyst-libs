@@ -9,9 +9,8 @@ use catalyst_signed_doc::{
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
         contest_ballot_doc, contest_parameters::contest_parameters_default_content,
-        contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_admin_key_pair,
-        create_dummy_key_pair, create_key_pair_and_publish, proposal_doc,
-        proposal_form_template_doc,
+        contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_key_pair,
+        create_key_pair_and_publish, proposal_doc, proposal_form_template_doc,
     },
     validator::Validator,
 };
@@ -48,7 +47,24 @@ use crate::contest_ballot::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+        let payload = clear_payload();
+
+        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &payload)
+    }
+    => true
+    ;
+    "valid document, clear payload"
+)]
+#[test_case(
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(1)));
         content["end"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(5)));
@@ -67,7 +83,7 @@ use crate::contest_ballot::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(5)));
         content["end"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(1)));
@@ -103,7 +119,7 @@ use crate::contest_ballot::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let payload = invalid_proof_payload();
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
@@ -146,7 +162,7 @@ fn empty_proof_payload() -> Vec<u8> {
     let vote = Vote::new(0, 1).unwrap();
     let key = GroupElement::zero().into();
     let vote = encrypt_vote_with_default_rng(&vote, &key).0;
-    encode_payload(vote, None)
+    encode_encrypted_payload(vote, None)
 }
 
 /// Constructs an encoded payload with encrypted choices, but with an invalid proof.
@@ -164,11 +180,26 @@ fn invalid_proof_payload() -> Vec<u8> {
         &commitment,
     )
     .unwrap();
-    encode_payload(encrypted_vote, Some(proof))
+    encode_encrypted_payload(encrypted_vote, Some(proof))
 }
 
-/// Encodes contest ballot payload.
-fn encode_payload(
+/// Constructs a payload with clear choices.
+fn clear_payload() -> Vec<u8> {
+    let choices = [(0, Choices::Clear(vec![0, 1, 2]))]
+        .iter()
+        .cloned()
+        .collect();
+    let payload = ContestBallotPayload {
+        choices,
+        column_proof: None,
+        matrix_proof: None,
+        voter_choices: None,
+    };
+    encode_payload(&payload)
+}
+
+/// Encodes an encrypted contest ballot payload.
+fn encode_encrypted_payload(
     vote: EncryptedVote,
     row_proof: Option<VoterProof>,
 ) -> Vec<u8> {
@@ -182,6 +213,11 @@ fn encode_payload(
         matrix_proof: None,
         voter_choices: None,
     };
+    encode_payload(&payload)
+}
+
+/// Encodes the given contest ballot payload.
+fn encode_payload(payload: &ContestBallotPayload) -> Vec<u8> {
     let mut buffer = Vec::new();
     payload
         .encode(&mut Encoder::new(&mut buffer), &mut ())
