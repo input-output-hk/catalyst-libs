@@ -131,7 +131,7 @@ fn type_test(doc_gen: impl FnOnce(&mut TestCatalystProvider) -> CatalystSignedDo
     let mut provider = TestCatalystProvider::default();
     let doc = doc_gen(&mut provider);
 
-    let res = TypeRule::check_inner(&doc, &provider).unwrap();
+    TypeRule::check_inner(&doc, &provider).unwrap();
     println!("{:?}", doc.report());
-    res
+    !doc.report().is_problematic()
 }
