@@ -172,7 +172,6 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
