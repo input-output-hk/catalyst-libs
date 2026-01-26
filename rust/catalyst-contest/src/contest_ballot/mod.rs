@@ -218,11 +218,11 @@ fn check_choice(
 ) {
     match choice {
         Choices::Encrypted {
-            choices,
+            vote,
             row_proof: Some(proof),
         } => {
             if !verify_voter_proof(
-                choices.clone(),
+                vote.clone(),
                 contest_parameters.election_public_key(),
                 commitment_key,
                 proof,
@@ -233,10 +233,10 @@ fn check_choice(
                 );
             }
 
-            if choices.n_options() != contest_parameters.choices().n_options() {
+            if vote.n_options() != contest_parameters.choices().n_options() {
                 report.invalid_value(
                     "encrypted choices", 
-                    &choices.n_options().to_string(),
+                    &vote.n_options().to_string(),
                     &contest_parameters.choices().n_options().to_string(),
                     "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
                 );
