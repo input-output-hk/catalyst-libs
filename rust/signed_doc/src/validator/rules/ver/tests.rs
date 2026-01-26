@@ -13,10 +13,9 @@ use crate::{
 #[test_case(
     |_| {
         let uuid_v7 = UuidV7::new();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(uuid_v7))
             .with_metadata_field(SupportedField::Ver(uuid_v7))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => true;
@@ -31,10 +30,9 @@ use crate::{
             .try_into()
             .unwrap();
 
-        let first_doc = Builder::new()
+        let first_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
         provider.add_document(&first_doc).unwrap();
 
@@ -42,10 +40,9 @@ use crate::{
             .try_into()
             .unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => true;
@@ -66,10 +63,9 @@ use crate::{
         .try_into()
         .unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(too_far_in_past))
             .with_metadata_field(SupportedField::Ver(too_far_in_past))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -90,10 +86,9 @@ use crate::{
         .try_into()
         .unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(too_far_in_future))
             .with_metadata_field(SupportedField::Ver(too_far_in_future))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -118,10 +113,9 @@ use crate::{
             .try_into()
             .unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -136,20 +130,18 @@ use crate::{
             .try_into()
             .unwrap();
 
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
         provider.add_document(&doc).unwrap();
 
         let ver_1 = Uuid::new_v7(Timestamp::from_unix_time(u64::try_from(now + 3).unwrap_or(0), 0, 0, 0))
             .try_into()
             .unwrap();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver_1))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
         provider.add_document(&doc).unwrap();
 
@@ -157,10 +149,9 @@ use crate::{
             .try_into()
             .unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver_2))
-            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
