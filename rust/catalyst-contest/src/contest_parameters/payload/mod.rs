@@ -2,8 +2,6 @@
 
 mod serde_election_public_key;
 
-use std::ops::Deref;
-
 use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use chrono::{DateTime, Utc};
 
@@ -16,8 +14,8 @@ pub(crate) struct ContestParametersPayload {
     pub(crate) end: DateTime<Utc>,
     /// Contest snapshot taking date
     pub(crate) snapshot: DateTime<Utc>,
-    /// Contest choices
-    pub(crate) choices: Choices,
+    /// Contest voting options
+    pub(crate) options: VotingOptions,
     /// An election public key.
     #[serde(with = "serde_election_public_key")]
     pub(crate) election_public_key: ElectionPublicKey,
@@ -25,13 +23,13 @@ pub(crate) struct ContestParametersPayload {
 
 /// Contest Choices
 #[derive(Debug, Clone, Default)]
-pub struct Choices(Vec<String>);
+pub struct VotingOptions(Vec<String>);
 
-impl Deref for Choices {
-    type Target = Vec<String>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl VotingOptions {
+    /// Returns the number of voting options
+    #[must_use]
+    pub fn n_options(&self) -> usize {
+        self.0.len()
     }
 }
 
@@ -41,13 +39,13 @@ impl Default for ContestParametersPayload {
             start: DateTime::default(),
             end: DateTime::default(),
             snapshot: DateTime::default(),
-            choices: Choices::default(),
+            options: VotingOptions::default(),
             election_public_key: GroupElement::zero().into(),
         }
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Choices {
+impl<'de> serde::Deserialize<'de> for VotingOptions {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         let res = Vec::<String>::deserialize(deserializer)?;

@@ -12,7 +12,7 @@ pub fn contest_parameters_default_content() -> serde_json::Value {
         "end": Utc::now().checked_add_signed(Duration::minutes(5)),
         "snapshot": Utc::now(),
         "election_public_key": "0000000000000000000000000000000000000000000000000000000000000000",
-        "choices": ["Yes", "No", "Abstain"]
+        "options": ["Yes", "No", "Abstain"]
     })
 }
 

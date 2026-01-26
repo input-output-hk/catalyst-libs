@@ -45,6 +45,12 @@ impl EncryptionRandomness {
 }
 
 impl EncryptedVote {
+    /// Returns the number of voting options
+    #[must_use]
+    pub fn n_options(&self) -> usize {
+        self.0.len()
+    }
+
     /// Get the ciphertext to the corresponding `voting_option`.
     pub(crate) fn get_ciphertext_for_choice(
         &self,
