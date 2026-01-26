@@ -16,7 +16,7 @@ use crate::{
             .build();
         provider.add_document(&parameter_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Parameters(
                 vec![parameter_doc.doc_ref().unwrap()].into(),
             ))
@@ -45,7 +45,7 @@ use crate::{
         provider.add_document(&template_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_doc.doc_ref().unwrap()].into()
             ))
@@ -65,7 +65,7 @@ use crate::{
             .build();
         provider.add_document(&parameter_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![create_dummy_doc_ref()].into()
             ))
@@ -94,7 +94,7 @@ use crate::{
         provider.add_document(&template_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_doc.doc_ref().unwrap()]
                 .into()
@@ -160,7 +160,7 @@ use crate::{
         provider.add_document(&replied_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Reply(
                 vec![replied_doc.doc_ref().unwrap()].into()
             ))
@@ -274,7 +274,7 @@ use crate::{
         provider.add_document(&ref_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![ref_doc.doc_ref().unwrap()].into()
             ))
@@ -294,7 +294,7 @@ use crate::{
             .build();
         provider.add_document(&parameter_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![create_dummy_doc_ref()].into()
             ))
@@ -323,7 +323,7 @@ use crate::{
         provider.add_document(&ref_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![ref_doc.doc_ref().unwrap()].into()
             ))
@@ -355,7 +355,7 @@ use crate::{
         provider.add_document(&ref_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![ref_doc.doc_ref().unwrap()].into()
             ))
@@ -395,7 +395,7 @@ use crate::{
             .build();
         provider.add_document(&parameter_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Parameters(
                 vec![parameter_doc.doc_ref().unwrap()].into(),
             ))
@@ -447,7 +447,7 @@ use crate::{
         provider.add_document(&t2_doc).unwrap();
 
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![t2_doc.doc_ref().unwrap()].into()
             ))
@@ -536,7 +536,7 @@ fn parameters_specified_optional_test() {
         optional: true,
     };
 
-    let doc = Builder::new().build();
+    let doc = Builder::with_required_fields().build();
     assert!(rule.check(&doc, &provider).unwrap());
 
     let provider = TestCatalystProvider::default();
@@ -545,7 +545,7 @@ fn parameters_specified_optional_test() {
         optional: false,
     };
 
-    let doc = Builder::new().build();
+    let doc = Builder::with_required_fields().build();
     assert!(!rule.check(&doc, &provider).unwrap());
 }
 
@@ -554,10 +554,10 @@ fn parameters_rule_not_specified_test() {
     let rule = ParametersRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 
-    let doc = Builder::new().build();
+    let doc = Builder::with_required_fields().build();
     assert!(rule.check(&doc, &provider).unwrap());
 
-    let doc = Builder::new()
+    let doc = Builder::with_required_fields()
         .with_metadata_field(SupportedField::Parameters(
             vec![create_dummy_doc_ref()].into(),
         ))
