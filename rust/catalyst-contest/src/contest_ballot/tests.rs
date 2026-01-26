@@ -34,7 +34,6 @@ use crate::contest_ballot::{
     rule::ContestBallotRule,
 };
 
-#[ignore = "Enable it when the proper 'Contest Ballot' building functionality would be implemented"]
 #[test_case(
     |p| {
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
