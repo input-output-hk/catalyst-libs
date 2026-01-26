@@ -7,7 +7,7 @@ use crate::{
     builder::tests::Builder,
     metadata::SupportedField,
     providers::{TimeThresholdProvider, tests::TestCatalystProvider},
-    uuid::UuidV7,
+    uuid::{UuidV4, UuidV7},
 };
 
 #[test_case(
@@ -16,6 +16,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(uuid_v7))
             .with_metadata_field(SupportedField::Ver(uuid_v7))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => true;
@@ -33,6 +34,7 @@ use crate::{
         let first_doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
         provider.add_document(&first_doc).unwrap();
 
@@ -43,6 +45,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => true;
@@ -66,6 +69,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(too_far_in_past))
             .with_metadata_field(SupportedField::Ver(too_far_in_past))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -89,6 +93,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(too_far_in_future))
             .with_metadata_field(SupportedField::Ver(too_far_in_future))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -116,6 +121,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -133,6 +139,7 @@ use crate::{
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
         provider.add_document(&doc).unwrap();
 
@@ -142,6 +149,7 @@ use crate::{
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver_1))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build();
         provider.add_document(&doc).unwrap();
 
@@ -152,6 +160,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver_2))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -172,6 +181,7 @@ use crate::{
         Builder::new()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(ver))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -181,6 +191,7 @@ use crate::{
     |_| {
         Builder::new()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;
@@ -190,6 +201,7 @@ use crate::{
     |_| {
         Builder::new()
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
+            .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .build()
     }
     => false;

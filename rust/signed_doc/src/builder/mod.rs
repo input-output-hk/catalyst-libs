@@ -319,19 +319,17 @@ pub(crate) mod tests {
 
     impl Builder {
         /// Start building a signed document.
-        ///
-        /// The `type` metadata field is added because it is required by the
-        /// `Metadata::from_fields` method.
         #[must_use]
         pub(crate) fn new() -> Self {
-            Self::default().with_metadata_field(SupportedField::Type(UuidV4::new().into()))
+            Self::default()
         }
 
         /// Crates a signed document build with minimally required fields (`ver`, `id` and
-        /// `type`).
+        /// `type`). These fields are required by the `Metadata::from_fields` method.
         #[must_use]
         pub(crate) fn with_required_fields() -> Self {
             Self::new()
+                .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
                 .with_metadata_field(SupportedField::Id(UuidV7::new()))
                 .with_metadata_field(SupportedField::Ver(UuidV7::new()))
         }
