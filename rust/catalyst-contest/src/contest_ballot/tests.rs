@@ -16,9 +16,12 @@ use catalyst_signed_doc::{
 };
 use catalyst_voting::{
     crypto::group::GroupElement,
-    vote_protocol::voter::{
-        EncryptedVote, Vote, encrypt_vote_with_default_rng,
-        proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
+    vote_protocol::{
+        committee::ElectionSecretKey,
+        voter::{
+            EncryptedVote, Vote, encrypt_vote_with_default_rng,
+            proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
+        },
     },
 };
 use chrono::{Duration, Utc};
@@ -65,7 +68,8 @@ use crate::contest_ballot::{
 #[test_case(
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-        let payload = encrypted_payload();
+        let commitment = VoterProofCommitment::random_with_default_rng();
+        let payload = encrypted_payload(&commitment);
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
@@ -175,13 +179,13 @@ fn contest_ballot(
 }
 
 /// Constructs an encoded payload with encrypted choices
-fn encrypted_payload() -> Vec<u8> {
-    // TODO: FIXME:
-    let vote = Vote::new(0, 1).unwrap();
-    let key = GroupElement::zero().into();
-    let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &key);
-    let public_key = GroupElement::zero().into();
-    let commitment = VoterProofCommitment::random_with_default_rng();
+fn encrypted_payload(commitment: &VoterProofCommitment) -> Vec<u8> {
+    let secret_key = ElectionSecretKey::random_with_default_rng();
+    let public_key = secret_key.public_key();
+
+    let vote = Vote::new(1, 10).unwrap();
+    let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &public_key);
+
     let proof = generate_voter_proof_with_default_rng(
         &vote,
         encrypted_vote.clone(),
