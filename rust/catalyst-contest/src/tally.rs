@@ -128,7 +128,12 @@ impl TallyPerOption {
     }
 }
 
-/// Calculate a tally
+// Calculates the voting tally for a specific proposal, processing both encrypted and cleartext votes.
+///
+/// This function aggregates votes across all provided ballots, applying the respective voting power 
+/// to each choice. It performs two parallel tallies:
+/// 1. **Encrypted Tally**: Aggregates ciphertexts, generates a decryption proof, and decrypts the result.
+/// 2. **Clear Tally**: Sums plain-text votes multiplied by voting power.
 fn tally_per_proposal(
     p_ref: &DocumentRef,
     ballots_with_voting_power: &[(ContestBallot, u64)],
