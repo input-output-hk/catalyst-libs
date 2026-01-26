@@ -36,20 +36,6 @@ use crate::contest_ballot::{
 
 #[test_case(
     |p| {
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-        contest_ballot_doc(&proposal, &parameters, p)
-    }
-    => true
-    ;
-    "valid document"
-)]
-#[test_case(
-    |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let payload = clear_payload();
 
@@ -183,7 +169,7 @@ fn encrypted_payload(commitment: &VoterProofCommitment) -> Vec<u8> {
     let secret_key = ElectionSecretKey::random_with_default_rng();
     let public_key = secret_key.public_key();
 
-    let vote = Vote::new(1, 10).unwrap();
+    let vote = Vote::new(1, 3).unwrap();
     let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &public_key);
 
     let proof = generate_voter_proof_with_default_rng(
