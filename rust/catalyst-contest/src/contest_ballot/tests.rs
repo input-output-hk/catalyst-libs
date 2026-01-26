@@ -48,6 +48,23 @@ use crate::contest_ballot::{
 #[test_case(
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+        let payload = encrypted_payload();
+
+        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &payload)
+    }
+    => true
+    ;
+    "valid document, clear choices payload"
+)]
+#[test_case(
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let payload = clear_payload();
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
@@ -60,7 +77,7 @@ use crate::contest_ballot::{
     }
     => true
     ;
-    "valid document, clear payload"
+    "valid document, encrypted choices payload"
 )]
 #[test_case(
     |p| {
@@ -155,6 +172,25 @@ fn contest_ballot(
     assert_eq!(is_valid, !contest_ballot.report().is_problematic());
 
     is_valid
+}
+
+/// Constructs an encoded payload with encrypted choices
+fn encrypted_payload() -> Vec<u8> {
+    // TODO: FIXME:
+    let vote = Vote::new(0, 1).unwrap();
+    let key = GroupElement::zero().into();
+    let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &key);
+    let public_key = GroupElement::zero().into();
+    let commitment = VoterProofCommitment::random_with_default_rng();
+    let proof = generate_voter_proof_with_default_rng(
+        &vote,
+        encrypted_vote.clone(),
+        randomness,
+        &public_key,
+        &commitment,
+    )
+    .unwrap();
+    encode_encrypted_payload(encrypted_vote, Some(proof))
 }
 
 /// Constructs an encoded payload with encrypted choices, but without proof.
