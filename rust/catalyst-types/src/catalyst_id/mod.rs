@@ -20,8 +20,8 @@ use fluent_uri::{
     Uri,
     component::Scheme,
     encoding::{
-        EStr,
-        encoder::{Fragment, Path},
+        EStr, EString,
+        encoder::{Fragment, Path, Userinfo},
     },
 };
 use key_rotation::KeyRotation;
@@ -46,7 +46,7 @@ pub struct CatalystId {
 #[derive(Debug, Clone)]
 struct CatalystIdInner {
     /// Username
-    username: Option<String>,
+    username: Option<EString<Userinfo>>,
     /// Nonce (like the password in http basic auth, but NOT a password, just a nonce)
     nonce: Option<DateTime<Utc>>,
     /// Network
@@ -95,7 +95,10 @@ impl CatalystId {
     /// Get the cosmetic username from the URI.
     #[must_use]
     pub fn username(&self) -> Option<String> {
-        self.inner.username.clone()
+        self.inner
+            .username
+            .as_ref()
+            .map(|v| v.decode().into_string_lossy().to_string())
     }
 
     /// Get the nonce from the URI.
@@ -208,17 +211,19 @@ impl CatalystId {
     }
 
     /// Add or change the username in a Catalyst ID URI.
+    /// Return `None` if the conversion fails from the provided `name` into the
+    /// percent-encoded string.
     #[must_use]
     pub fn with_username(
         self,
         name: &str,
-    ) -> Self {
+    ) -> Option<Self> {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner {
-            username: Some(name.to_string()),
+            username: Some(EStr::new(name)?.to_owned()),
             ..inner
         });
-        Self { inner }
+        Some(Self { inner })
     }
 
     /// Add or change the username in a Catalyst ID URI.
@@ -660,7 +665,7 @@ impl FromStr for CatalystId {
         let (username, nonce) = {
             if let Some(userinfo) = auth.userinfo() {
                 if let Some((username, nonce)) = userinfo.split_once(':') {
-                    let username = username.decode().into_string_lossy().to_string();
+                    let username = username.to_owned();
                     let nonce_str = nonce.decode().into_string_lossy().to_string();
 
                     let nonce_val: i64 = nonce_str
@@ -674,7 +679,7 @@ impl FromStr for CatalystId {
 
                     (Some(username), nonce)
                 } else {
-                    let username = userinfo.decode().into_string_lossy().to_string();
+                    let username = userinfo.to_owned();
                     (Some(username), None)
                 }
             } else {
@@ -764,7 +769,7 @@ impl Display for CatalystId {
 
         let mut needs_at = false;
         if let Some(username) = &self.inner.username {
-            write!(f, "{username}")?;
+            write!(f, "{username}",)?;
             needs_at = true;
         }
 
@@ -824,18 +829,27 @@ impl From<&CatalystId> for Vec<u8> {
 mod tests {
     use chrono::{DateTime, Utc};
     use ed25519_dalek::SigningKey;
+    use fluent_uri::encoding::EStr;
     use rand::rngs::OsRng;
     use test_case::test_case;
 
-    use super::CatalystId;
+    use super::*;
 
-    const CATALYST_ID_TEST_VECTOR: [&str; 13] = [
+    const CATALYST_ID_TEST_VECTOR: [&str; 21] = [
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
+        "user%201@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "user%25251@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "user%7C1@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "user%5C1@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         ":1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
+        "id.catalyst://user%201@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "id.catalyst://user%25251@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "id.catalyst://user%7C1@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "id.catalyst://user%5C1@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
         "id.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",
@@ -850,7 +864,11 @@ mod tests {
     /// Tests that deserialization and re-serialization round trip correctly
     fn test_catalyst_id_from_str() {
         for id_string in CATALYST_ID_TEST_VECTOR {
-            let username = id_string.split_once('@').map(|s| s.0);
+            let username = id_string
+                .split_once("://")
+                .map_or(id_string, |(_, id)| id)
+                .split_once('@')
+                .map(|s| s.0);
             let (username, nonce) = username
                 .and_then(|s| s.split_once(':').map(|(u, n)| (u, Some(n))))
                 .or_else(|| username.map(|u| (u, None)))
@@ -868,7 +886,15 @@ mod tests {
             let id = id_string.parse::<CatalystId>().unwrap();
 
             assert_eq!(format!("{id}"), id_string);
-            assert_eq!(username, id.username());
+            assert_eq!(
+                username.map(|v| {
+                    EStr::<Userinfo>::new_or_panic(v.as_str())
+                        .decode()
+                        .into_string_lossy()
+                        .to_string()
+                }),
+                id.username()
+            );
             assert_eq!(nonce, id.nonce());
             assert!(id.is_signature_key() ^ encryption);
             assert!(id.is_encryption_key() ^ !encryption);
@@ -889,15 +915,15 @@ mod tests {
 
     #[test]
     fn catalyst_id_type_test() {
-        for id_string in &CATALYST_ID_TEST_VECTOR[0..5] {
+        for id_string in &CATALYST_ID_TEST_VECTOR[0..9] {
             let id = id_string.parse::<CatalystId>().unwrap();
             assert!(id.is_id());
         }
-        for id_string in &CATALYST_ID_TEST_VECTOR[5..9] {
+        for id_string in &CATALYST_ID_TEST_VECTOR[9..17] {
             let id = id_string.parse::<CatalystId>().unwrap();
             assert!(id.is_uri());
         }
-        for id_string in &CATALYST_ID_TEST_VECTOR[9..13] {
+        for id_string in &CATALYST_ID_TEST_VECTOR[17..] {
             let id = id_string.parse::<CatalystId>().unwrap();
             assert!(id.is_admin());
         }
@@ -906,14 +932,14 @@ mod tests {
     #[test_case(0, 1, true, false, false; "base vs user")]
     #[test_case(0, 2, true, false, false; "base vs user_nonce")]
     #[test_case(0, 3, true, false, false; "base vs nonce")]
-    #[test_case(0, 4, true, true, true; "base vs base_duplicate")]
-    #[test_case(7, 8, true, true, false; "midnight_0_1 vs midnight_2_1")]
-    #[test_case(0, 5, false, false, false; "cardano vs preprod")]
-    #[test_case(5, 6, false, false, false; "preprod vs preview")]
-    #[test_case(6, 7, false, false, false; "preview vs midnight")]
+    #[test_case(0, 8, true, true, true; "base vs base_duplicate")]
+    #[test_case(15, 16, true, true, false; "midnight_0_1 vs midnight_2_1")]
+    #[test_case(0, 9, false, false, false; "cardano vs preprod")]
+    #[test_case(9, 14, false, false, false; "preprod vs preview")]
+    #[test_case(14, 15, false, false, false; "preview vs midnight")]
     #[test_case(1, 2, true, false, false; "user vs user_nonce")]
-    #[test_case(2, 3, true, false, false; "user_nonce vs nonce")]
-    #[test_case(8, 8, true, true, true; "identical self comparison")]
+    #[test_case(2, 7, true, false, false; "user_nonce vs nonce")]
+    #[test_case(16, 16, true, true, true; "identical self comparison")]
     #[allow(clippy::indexing_slicing, clippy::similar_names)]
     fn test_all_comparisons(
         idx_a: usize,
