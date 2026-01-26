@@ -191,7 +191,7 @@ fn encrypted_payload(commitment: &VoterProofCommitment) -> Vec<u8> {
         encrypted_vote.clone(),
         randomness,
         &public_key,
-        &commitment,
+        commitment,
     )
     .unwrap();
     encode_encrypted_payload(encrypted_vote, Some(proof))
