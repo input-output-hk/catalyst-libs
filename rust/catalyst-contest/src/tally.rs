@@ -13,7 +13,7 @@ use catalyst_voting::vote_protocol::{
 };
 
 use crate::{
-    contest_ballot::ContestBallot,
+    contest_ballot::{ContestBallot, payload::Choices},
     contest_parameters::{ContestParameters, VotingOptions},
 };
 
@@ -144,9 +144,43 @@ fn tally_per_proposal(
         (c, p)
     });
 
-    // ------
-    // tallying encrypted choices
-    // ------
+    let for_encrypted_choices = tally_encrypted_choices(
+        choices_with_voting_power_iter.clone(),
+        options.n_options(),
+        election_secret_key,
+        decryption_tally_setup,
+    )?;
+    let for_clear_choices =
+        tally_clear_choices(choices_with_voting_power_iter, options.n_options())?;
+
+    for_clear_choices
+        .into_iter()
+        .zip(for_encrypted_choices.into_iter())
+        .zip(options.clone().into_iter())
+        .map(
+            |((clear_tally, (decrypted_tally, encrypted_tally, tally_proof)), option)| {
+                anyhow::Ok(TallyPerOption {
+                    clear_tally,
+                    decrypted_tally,
+                    encrypted_tally,
+                    tally_proof,
+                    option,
+                })
+            },
+        )
+        .collect()
+}
+
+/// Aggregates encrypted votes using homomorphic addition and generates decryption proofs.
+fn tally_encrypted_choices<'a, I>(
+    choices_with_voting_power_iter: I,
+    n_options: usize,
+    election_secret_key: &ElectionSecretKey,
+    decryption_tally_setup: &DecryptionTallySetup,
+) -> anyhow::Result<Vec<(u64, EncryptedTally, TallyProof)>>
+where
+    I: Iterator<Item = (anyhow::Result<&'a Choices>, &'a u64)> + Clone,
+{
     let encrypted_choices_with_voting_power_iter =
         choices_with_voting_power_iter.clone().filter_map(|(c, p)| {
             let c = c.map(|c| c.as_encrypted_choices()).transpose()?;
@@ -158,58 +192,54 @@ fn tally_per_proposal(
         (encrypted_choices.push(c?), encrypted_power.push(p));
     }
 
-    let for_encrypted_choices = (0..options.n_options()).map(|i| {
-        let encrypted_tally =
-            tally::tally(i, encrypted_choices.as_slice(), encrypted_power.as_slice())?;
-        let tally_proof =
-            generate_tally_proof_with_default_rng(&encrypted_tally, election_secret_key);
+    (0..n_options)
+        .map(|i| {
+            let encrypted_tally =
+                tally::tally(i, encrypted_choices.as_slice(), encrypted_power.as_slice())?;
+            let tally_proof =
+                generate_tally_proof_with_default_rng(&encrypted_tally, election_secret_key);
 
-        let tally = decrypt_tally(
-            &encrypted_tally,
-            election_secret_key,
-            decryption_tally_setup,
-        )?;
+            let tally = decrypt_tally(
+                &encrypted_tally,
+                election_secret_key,
+                decryption_tally_setup,
+            )?;
 
-        anyhow::Ok((tally, encrypted_tally, tally_proof))
-    });
+            anyhow::Ok((tally, encrypted_tally, tally_proof))
+        })
+        .collect()
+}
 
-    // ------
-    // tallying clear choices
-    // ------
+/// Aggregates clear votes by summing (choice * power) for each option.
+fn tally_clear_choices<'a, I>(
+    choices_with_voting_power_iter: I,
+    n_options: usize,
+) -> anyhow::Result<Vec<u64>>
+where
+    I: Iterator<Item = (anyhow::Result<&'a Choices>, &'a u64)> + Clone,
+{
     let clear_choices_with_voting_power_iter =
-        choices_with_voting_power_iter.clone().filter_map(|(c, p)| {
+        choices_with_voting_power_iter.filter_map(|(c, p)| {
             let c = c.map(|c| c.as_clear_choices()).transpose()?;
             Some((c.cloned(), *p))
         });
-    let for_clear_choices = (0..options.n_options()).map({
-        |i| {
-            let clear_tally =
-                clear_choices_with_voting_power_iter
-                    .clone()
-                    .try_fold(0, |sum, (c, p)| {
-                        let c = c?;
-                        let c = c.get(i).context(format!(
-                            "Invalid clear vote, does not have choice at voting option {i}"
-                        ))?;
-                        anyhow::Ok(sum + c * p)
-                    })?;
 
-            anyhow::Ok(clear_tally)
-        }
-    });
+    (0..n_options)
+        .map({
+            |i| {
+                let clear_tally =
+                    clear_choices_with_voting_power_iter
+                        .clone()
+                        .try_fold(0, |sum, (c, p)| {
+                            let c = c?;
+                            let c = c.get(i).context(format!(
+                                "Invalid clear vote, does not have choice at voting option {i}"
+                            ))?;
+                            anyhow::Ok(sum + c * p)
+                        })?;
 
-    for_clear_choices
-        .zip(for_encrypted_choices)
-        .zip(options.clone().into_iter())
-        .map(|((clear_tally, enc), option)| {
-            let (decrypted_tally, encrypted_tally, tally_proof) = enc?;
-            anyhow::Ok(TallyPerOption {
-                clear_tally: clear_tally?,
-                decrypted_tally,
-                encrypted_tally,
-                tally_proof,
-                option,
-            })
+                anyhow::Ok(clear_tally)
+            }
         })
         .collect()
 }
