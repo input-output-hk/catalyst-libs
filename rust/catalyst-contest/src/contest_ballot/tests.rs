@@ -25,10 +25,13 @@ use chrono::{Duration, Utc};
 use minicbor::{Encode, Encoder};
 use test_case::test_case;
 
-use crate::contest_ballot::{
-    ContestBallot,
-    payload::{Choices, ContestBallotPayload},
-    rule::ContestBallotRule,
+use crate::{
+    contest_ballot::{
+        ContestBallot, commitment_key,
+        payload::{Choices, ContestBallotPayload},
+        rule::ContestBallotRule,
+    },
+    contest_parameters::ContestParameters,
 };
 
 #[test_case(
@@ -51,13 +54,14 @@ use crate::contest_ballot::{
 #[test_case(
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-        let commitment = VoterProofCommitment::random_with_default_rng();
-        let payload = encrypted_payload(&commitment);
 
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let contest_parameters = ContestParameters::new(&parameters, p)?;
+        let commitment = commitment_key(contest_parameters.doc_ref())?;
+        let payload = encrypted_payload(&commitment);
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
         builder::contest_ballot_doc(&proposal, &parameters, &builder::ed25519::Ed25519SigningKey::Common(sk), kid, None, &payload)
