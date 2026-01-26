@@ -37,7 +37,8 @@ impl CatalystSignedDocumentValidationRule for ParametersRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        self.check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -90,7 +91,7 @@ impl ParametersRule {
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let context: &str = "Parameter rule check";
         if let Self::Specified {
             allowed_type: exp_parameters_type,
@@ -98,7 +99,7 @@ impl ParametersRule {
         } = self
         {
             if let Some(parameters_ref) = doc.doc_meta().parameters() {
-                let parameters_check = doc_refs_check(
+                doc_refs_check(
                     parameters_ref,
                     exp_parameters_type,
                     false,
@@ -106,61 +107,46 @@ impl ParametersRule {
                     provider,
                     doc.report(),
                     |_| true,
-                );
+                )?;
 
-                let template_link_check = link_check(
+                link_check(
                     doc.doc_meta().template(),
                     parameters_ref,
                     "template",
                     provider,
                     doc.report(),
-                );
-                let ref_link_check = link_check(
+                )?;
+                link_check(
                     doc.doc_meta().doc_ref(),
                     parameters_ref,
                     "ref",
                     provider,
                     doc.report(),
-                );
-                let reply_link_check = link_check(
+                )?;
+                link_check(
                     doc.doc_meta().reply(),
                     parameters_ref,
                     "reply",
                     provider,
                     doc.report(),
-                );
+                )?;
                 let chain_field = doc
                     .doc_meta()
                     .chain()
                     .and_then(|v| v.document_ref().cloned())
                     .map(|v| vec![v].into());
-                let chain_link_check = link_check(
+                link_check(
                     chain_field.as_ref(),
                     parameters_ref,
                     "chain",
                     provider,
                     doc.report(),
-                );
-
-                let res = [
-                    parameters_check,
-                    template_link_check,
-                    ref_link_check,
-                    reply_link_check,
-                    chain_link_check,
-                ]
-                .into_iter()
-                .collect::<anyhow::Result<Vec<_>>>()?
-                .iter()
-                .all(|res| *res);
-
-                return Ok(res);
+                )?;
             } else if !optional {
                 doc.report().missing_field(
                     "parameters",
                     &format!("{context}, document must have parameters field"),
                 );
-                return Ok(false);
             }
         }
         if let Self::NotSpecified = self
@@ -171,10 +157,9 @@ impl ParametersRule {
                 &parameters.to_string(),
                 &format!("{context}, document does not expect to have a parameters field"),
             );
-            return Ok(false);
         }
 
-        Ok(true)
+        Ok(())
     }
 }
 
@@ -194,17 +179,14 @@ pub(crate) fn link_check(
     field_name: &str,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool> {
+) -> anyhow::Result<()> {
     let Some(ref_field) = ref_field else {
-        return Ok(true);
+        return Ok(());
     };
 
     let mut allowed_params = HashSet::new();
-    let mut all_valid = true;
     for doc_ref in exp_parameters.iter() {
-        let (valid, result) =
-            collect_parameters_recursively(doc_ref, field_name, provider, report)?;
-        all_valid &= valid;
+        let result = collect_parameters_recursively(doc_ref, field_name, provider, report)?;
         allowed_params.extend(result);
     }
 
@@ -218,25 +200,22 @@ pub(crate) fn link_check(
                         &format!("[{}]", allowed_params.iter().map(ToString::to_string).join(",")),
                         &format!("Referenced document {doc_ref} via {field_name} `parameters` field must match one of the allowed params"),
                     );
-                    all_valid = false;
                 }
             } else {
                 report.missing_field(
                     "'parameters'",
                     &format!("Referenced document {doc_ref} must have `parameters` field"),
                 );
-                all_valid = false;
             }
         } else {
             report.functional_validation(
                 &format!("Cannot retrieve a document {doc_ref}"),
                 &format!("Referenced document link validation for `{field_name}`"),
             );
-            all_valid = false;
         }
     }
 
-    Ok(all_valid)
+    Ok(())
 }
 
 /// Recursively traverses the parameter chain starting from a given `root` document
@@ -253,8 +232,7 @@ fn collect_parameters_recursively(
     field_name: &str,
     provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
-) -> anyhow::Result<(bool, HashSet<DocumentRef>)> {
-    let mut all_valid = true;
+) -> anyhow::Result<HashSet<DocumentRef>> {
     let mut result: HashSet<_> = HashSet::new();
     let mut visited = HashSet::new();
     let mut stack = vec![root.clone()];
@@ -278,11 +256,10 @@ fn collect_parameters_recursively(
                 &format!("Cannot retrieve a document {current}"),
                 &format!("Referenced document link validation for `{field_name}`"),
             );
-            all_valid = false;
         }
 
         result.insert(current);
     }
 
-    Ok((all_valid, result))
+    Ok(result)
 }
