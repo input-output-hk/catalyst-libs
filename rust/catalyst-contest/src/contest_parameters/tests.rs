@@ -50,7 +50,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let mut content = contest_parameters_default_content();
-        content["choices"] = serde_json::json!(["Yes"]);
+        content["options"] = serde_json::json!(["Yes"]);
 
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;

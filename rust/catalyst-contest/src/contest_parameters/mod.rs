@@ -23,8 +23,8 @@ use catalyst_signed_doc::{
 use catalyst_voting::vote_protocol::committee::ElectionPublicKey;
 use chrono::{DateTime, Utc};
 
-pub use self::payload::Choices;
 use self::payload::ContestParametersPayload;
+pub use self::payload::VotingOptions;
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ pub struct ContestParameters {
     /// Contest Parameters payload
     payload: ContestParametersPayload,
     /// 'parameters' metadata field
-    parameters: Option<DocumentRefs>,
+    parameters: DocumentRefs,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
@@ -76,8 +76,8 @@ impl ContestParameters {
 
     /// Returns contest choices
     #[must_use]
-    pub fn choices(&self) -> &Choices {
-        &self.payload.choices
+    pub fn choices(&self) -> &VotingOptions {
+        &self.payload.options
     }
 
     /// Returns an election public key.
@@ -118,14 +118,10 @@ impl ContestParameters {
         let parameters = doc
             .doc_meta()
             .parameters()
-            .or_else(|| {
-                doc.report().missing_field(
-                    "parameters",
-                    "'Contest Parameter' document must have 'parameters' field",
-                );
-                None
+            .ok_or_else(|| {
+                anyhow::anyhow!("'Contest Parameter' document must have 'parameters' field")
             })
-            .cloned();
+            .cloned()?;
 
         Ok(ContestParameters {
             doc_ref: doc.doc_ref()?,
@@ -138,21 +134,18 @@ impl ContestParameters {
     /// Timeline verification, based on the 'Contest Parameters' 'start' and 'end' fields.
     /// Filling to provided problem report.
     pub(crate) fn timeline_check(
+        &self,
         ver: UuidV7,
-        contest_parameters: &CatalystSignedDocument,
         report: &ProblemReport,
         document_name: &str,
     ) {
-        let contest_parameters_payload = get_payload(contest_parameters, report);
-        if ver.time() > &contest_parameters_payload.end
-            || ver.time() < &contest_parameters_payload.start
-        {
+        if ver.time() > self.end() || ver.time() < self.start() {
             report.functional_validation(
                 &format!(
                     "'ver' metadata field must be in 'Contest Parameters' timeline range. 'ver': {}, start: {}, end: {}",
                     ver.time(),
-                    contest_parameters_payload.start,
-                    contest_parameters_payload.end
+                    self.start(),
+                    self.end()
                 ),
                 &format!("'{document_name}' timeline check"),
             );
@@ -168,12 +161,9 @@ impl ContestParameters {
         &self,
         provider: &dyn CatalystSignedDocumentProvider,
     ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
-        let Some(ref param) = self.parameters else {
-            return Ok(vec![]);
-        };
         let query = CatalystSignedDocumentSearchQuery {
             doc_type: Some(DocTypeSelector::In(vec![PROPOSAL])),
-            parameters: Some(DocumentRefSelector::Eq(param.clone())),
+            parameters: Some(DocumentRefSelector::Eq(self.parameters.clone())),
             ..Default::default()
         };
         let proposals = provider.try_search_latest_docs(&query)?;
