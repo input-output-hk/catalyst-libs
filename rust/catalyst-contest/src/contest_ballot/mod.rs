@@ -265,7 +265,7 @@ fn check_choice(
 
 /// Returns a commitment key calculated from the document reference of the given contest
 /// parameters document.
-fn commitment_key(doc_ref: &DocumentRef) -> anyhow::Result<VoterProofCommitment> {
+pub(crate) fn commitment_key(doc_ref: &DocumentRef) -> anyhow::Result<VoterProofCommitment> {
     let mut buffer = Vec::new();
     doc_ref
         .encode(&mut minicbor::Encoder::new(&mut buffer), &mut ())

@@ -16,12 +16,9 @@ use catalyst_signed_doc::{
 };
 use catalyst_voting::{
     crypto::group::GroupElement,
-    vote_protocol::{
-        committee::ElectionSecretKey,
-        voter::{
-            EncryptedVote, Vote, encrypt_vote_with_default_rng,
-            proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
-        },
+    vote_protocol::voter::{
+        EncryptedVote, Vote, encrypt_vote_with_default_rng,
+        proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
     },
 };
 use chrono::{Duration, Utc};
@@ -166,10 +163,8 @@ fn contest_ballot(
 
 /// Constructs an encoded payload with encrypted choices
 fn encrypted_payload(commitment: &VoterProofCommitment) -> Vec<u8> {
-    let secret_key = ElectionSecretKey::random_with_default_rng();
-    let public_key = secret_key.public_key();
-
     let vote = Vote::new(1, 3).unwrap();
+    let public_key = GroupElement::zero().into();
     let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &public_key);
 
     let proof = generate_voter_proof_with_default_rng(
