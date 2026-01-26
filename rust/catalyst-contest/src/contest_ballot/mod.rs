@@ -4,7 +4,7 @@
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot/
 
-mod payload;
+pub mod payload;
 pub mod rule;
 #[cfg(test)]
 mod tests;
@@ -233,21 +233,21 @@ fn check_choice(
                 );
             }
 
-            if choices.n_options() != contest_parameters.choices().n_options() {
+            if choices.n_options() != contest_parameters.options().n_options() {
                 report.invalid_value(
                     "encrypted choices", 
                     &choices.n_options().to_string(),
-                    &contest_parameters.choices().n_options().to_string(),
+                    &contest_parameters.options().n_options().to_string(),
                     "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
                 );
             }
         },
         Choices::Clear(choices) => {
-            if choices.len() != contest_parameters.choices().n_options() {
+            if choices.len() != contest_parameters.options().n_options() {
                 report.invalid_value(
                     "clear choices", 
                     &choices.len().to_string(),
-                    &contest_parameters.choices().n_options().to_string(),
+                    &contest_parameters.options().n_options().to_string(),
                     "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
                 );
             }

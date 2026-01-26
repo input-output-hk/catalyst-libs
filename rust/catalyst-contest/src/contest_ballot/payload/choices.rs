@@ -39,6 +39,26 @@ pub enum Choices {
     },
 }
 
+impl Choices {
+    /// Returns encrypted choices if `Choices::Encrypted`
+    pub fn as_encrypted_choices(&self) -> Option<&EncryptedVote> {
+        if let Choices::Encrypted { choices, .. } = self {
+            Some(choices)
+        } else {
+            None
+        }
+    }
+
+    /// Returns clear choices if `Choices::Clear`
+    pub fn as_clear_choices(&self) -> Option<&Vec<u64>> {
+        if let Choices::Clear(choices) = self {
+            Some(choices)
+        } else {
+            None
+        }
+    }
+}
+
 impl Decode<'_, ()> for Choices {
     fn decode(
         d: &mut Decoder<'_>,
