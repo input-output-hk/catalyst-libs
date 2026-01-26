@@ -20,8 +20,8 @@ use fluent_uri::{
     Uri,
     component::Scheme,
     encoding::{
-        EStr,
-        encoder::{Fragment, Path},
+        EStr, EString,
+        encoder::{Fragment, Path, Userinfo},
     },
 };
 use key_rotation::KeyRotation;
@@ -46,7 +46,7 @@ pub struct CatalystId {
 #[derive(Debug, Clone)]
 struct CatalystIdInner {
     /// Username
-    username: Option<String>,
+    username: Option<EString<Userinfo>>,
     /// Nonce (like the password in http basic auth, but NOT a password, just a nonce)
     nonce: Option<DateTime<Utc>>,
     /// Network
@@ -95,7 +95,10 @@ impl CatalystId {
     /// Get the cosmetic username from the URI.
     #[must_use]
     pub fn username(&self) -> Option<String> {
-        self.inner.username.clone()
+        self.inner
+            .username
+            .as_ref()
+            .map(|v| v.decode().into_string_lossy().to_string())
     }
 
     /// Get the nonce from the URI.
@@ -208,17 +211,19 @@ impl CatalystId {
     }
 
     /// Add or change the username in a Catalyst ID URI.
+    /// Return `None` if the conversion fails from the provided `name` into the
+    /// percent-encoded string.
     #[must_use]
     pub fn with_username(
         self,
         name: &str,
-    ) -> Self {
+    ) -> Option<Self> {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner {
-            username: Some(name.to_string()),
+            username: Some(EStr::new(name)?.to_owned()),
             ..inner
         });
-        Self { inner }
+        Some(Self { inner })
     }
 
     /// Add or change the username in a Catalyst ID URI.
@@ -660,8 +665,8 @@ impl FromStr for CatalystId {
         let (username, nonce) = {
             if let Some(userinfo) = auth.userinfo() {
                 if let Some((username, nonce)) = userinfo.split_once(':') {
-                    let username = username.to_string();
-                    let nonce_str = nonce.to_string();
+                    let username = username.to_owned();
+                    let nonce_str = nonce.decode().into_string_lossy().to_string();
 
                     let nonce_val: i64 = nonce_str
                         .parse()
@@ -674,7 +679,7 @@ impl FromStr for CatalystId {
 
                     (Some(username), nonce)
                 } else {
-                    let username = userinfo.to_string();
+                    let username = userinfo.to_owned();
                     (Some(username), None)
                 }
             } else {
@@ -764,7 +769,7 @@ impl Display for CatalystId {
 
         let mut needs_at = false;
         if let Some(username) = &self.inner.username {
-            write!(f, "{username}")?;
+            write!(f, "{username}",)?;
             needs_at = true;
         }
 
@@ -824,20 +829,27 @@ impl From<&CatalystId> for Vec<u8> {
 mod tests {
     use chrono::{DateTime, Utc};
     use ed25519_dalek::SigningKey;
+    use fluent_uri::encoding::EStr;
     use rand::rngs::OsRng;
     use test_case::test_case;
 
-    use super::CatalystId;
+    use super::*;
 
-    const CATALYST_ID_TEST_VECTOR: [&str; 15] = [
+    const CATALYST_ID_TEST_VECTOR: [&str; 21] = [
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user%201@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "user%25251@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "user%7C1@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "user%5C1@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         ":1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
         "id.catalyst://user%201@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "id.catalyst://user%25251@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "id.catalyst://user%7C1@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
+        "id.catalyst://user%5C1@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/1/2",
         "id.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",
@@ -874,7 +886,15 @@ mod tests {
             let id = id_string.parse::<CatalystId>().unwrap();
 
             assert_eq!(format!("{id}"), id_string);
-            assert_eq!(username, id.username());
+            assert_eq!(
+                username.map(|v| {
+                    EStr::<Userinfo>::new_or_panic(v.as_str())
+                        .decode()
+                        .into_string_lossy()
+                        .to_string()
+                }),
+                id.username()
+            );
             assert_eq!(nonce, id.nonce());
             assert!(id.is_signature_key() ^ encryption);
             assert!(id.is_encryption_key() ^ !encryption);
@@ -895,15 +915,15 @@ mod tests {
 
     #[test]
     fn catalyst_id_type_test() {
-        for id_string in &CATALYST_ID_TEST_VECTOR[0..5] {
+        for id_string in &CATALYST_ID_TEST_VECTOR[0..9] {
             let id = id_string.parse::<CatalystId>().unwrap();
             assert!(id.is_id());
         }
-        for id_string in &CATALYST_ID_TEST_VECTOR[5..9] {
+        for id_string in &CATALYST_ID_TEST_VECTOR[9..17] {
             let id = id_string.parse::<CatalystId>().unwrap();
             assert!(id.is_uri());
         }
-        for id_string in &CATALYST_ID_TEST_VECTOR[9..13] {
+        for id_string in &CATALYST_ID_TEST_VECTOR[17..] {
             let id = id_string.parse::<CatalystId>().unwrap();
             assert!(id.is_admin());
         }
