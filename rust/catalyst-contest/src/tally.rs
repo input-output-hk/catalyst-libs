@@ -1,3 +1,5 @@
+//! Contest tally functionality with all necessary types
+
 use std::collections::HashMap;
 
 use anyhow::Context;
@@ -75,12 +77,14 @@ pub fn tally(
         })
         .collect::<anyhow::Result<Vec<_>>>()?;
 
-    let voters = ballots
-        .iter()
-        .map(|d| Ok((d.voter(), provider.try_get_voting_power(d.voter())?)))
-        .collect::<anyhow::Result<HashMap<_, _>>>()?;
+    let mut ballots_with_voting_power = Vec::new();
+    let mut total_voting_power = 0;
+    for b in ballots {
+        let voting_power = provider.try_get_voting_power(b.voter())?;
+        ballots_with_voting_power.push((b, voting_power));
+        total_voting_power += voting_power;
+    }
 
-    let total_voting_power = voters.values().sum::<u64>();
     let decryption_tally_setup = DecryptionTallySetup::new(total_voting_power)?;
 
     let proposals = contest_parameters.get_associated_proposals(provider)?;
@@ -90,7 +94,7 @@ pub fn tally(
             let p_ref = p.doc_ref()?;
             let tally_res = tally_per_proposal(
                 &p_ref,
-                &[],
+                &ballots_with_voting_power,
                 contest_parameters.options(),
                 &decryption_tally_setup,
                 election_secret_key,
@@ -128,11 +132,13 @@ impl TallyPerOption {
     }
 }
 
-// Calculates the voting tally for a specific proposal, processing both encrypted and cleartext votes.
+// Calculates the voting tally for a specific proposal, processing both encrypted and
+// cleartext votes.
 ///
-/// This function aggregates votes across all provided ballots, applying the respective voting power 
-/// to each choice. It performs two parallel tallies:
-/// 1. **Encrypted Tally**: Aggregates ciphertexts, generates a decryption proof, and decrypts the result.
+/// This function aggregates votes across all provided ballots, applying the respective
+/// voting power to each choice. It performs two parallel tallies:
+/// 1. **Encrypted Tally**: Aggregates ciphertexts, generates a decryption proof, and
+///    decrypts the result.
 /// 2. **Clear Tally**: Sums plain-text votes multiplied by voting power.
 fn tally_per_proposal(
     p_ref: &DocumentRef,
