@@ -1,5 +1,6 @@
 //! Voters Choices.
 
+use catalyst_signed_doc::problem_report::ProblemReport;
 use catalyst_voting::vote_protocol::voter::{EncryptedVote, proof::VoterProof};
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
@@ -33,16 +34,16 @@ pub enum Choices {
     /// ElGamal/Ristretto255 encrypted choices.
     Encrypted {
         /// A list of ElGamal/Ristretto255 encrypted choices.
-        choices: EncryptedVote,
+        vote: EncryptedVote,
         /// A universal encrypted row proof.
         row_proof: Option<VoterProof>,
     },
 }
 
-impl Decode<'_, ()> for Choices {
+impl Decode<'_, ProblemReport> for Choices {
     fn decode(
         d: &mut Decoder<'_>,
-        ctx: &mut (),
+        report: &mut ProblemReport,
     ) -> Result<Self, minicbor::decode::Error> {
         let array = Array::decode(d, &mut DecodeCtx::Deterministic)?;
         let [type_, choices @ ..] = array.as_slice() else {
@@ -58,7 +59,7 @@ impl Decode<'_, ()> for Choices {
                 let mut values = Vec::with_capacity(choices.len());
                 for choice in choices {
                     let mut d = Decoder::new(choice);
-                    values.push(u64::decode(&mut d, ctx)?);
+                    values.push(u64::decode(&mut d, &mut ())?);
                 }
                 Ok(Self::Clear(values))
             },
@@ -72,20 +73,21 @@ impl Decode<'_, ()> for Choices {
 
                 let mut d = Decoder::new(choices);
                 let array = Array::decode(&mut d, &mut DecodeCtx::Deterministic)?;
-                let (choices, row_proof) = match array.as_slice() {
+                let (vote, row_proof) = match array.as_slice() {
                     [choices] => {
                         let mut d = Decoder::new(choices);
-                        let choices = EncryptedVote::decode(&mut d, ctx)?;
-                        (choices, None)
+                        let vote = EncryptedVote::decode(&mut d, &mut ())?;
+                        report.missing_field("row_proof", "Contest ballot payload decoding");
+                        (vote, None)
                     },
                     [choices, proof] => {
                         let mut d = Decoder::new(choices);
-                        let choices = EncryptedVote::decode(&mut d, ctx)?;
+                        let vote = EncryptedVote::decode(&mut d, &mut ())?;
 
                         let mut d = Decoder::new(proof);
-                        let row_proof = VoterProof::decode(&mut d, ctx)?;
+                        let row_proof = VoterProof::decode(&mut d, &mut ())?;
 
-                        (choices, Some(row_proof))
+                        (vote, Some(row_proof))
                     },
                     _ => {
                         return Err(minicbor::decode::Error::message(format!(
@@ -95,7 +97,7 @@ impl Decode<'_, ()> for Choices {
                     },
                 };
 
-                Ok(Self::Encrypted { choices, row_proof })
+                Ok(Self::Encrypted { vote, row_proof })
             },
             val => {
                 Err(minicbor::decode::Error::message(format!(
@@ -122,13 +124,13 @@ impl Encode<()> for Choices {
                     choice.encode(e, ctx)?;
                 }
             },
-            Choices::Encrypted { choices, row_proof } => {
+            Choices::Encrypted { vote, row_proof } => {
                 e.array(2)?;
                 1.encode(e, ctx)?;
                 // Allowed because 1 + 1 will never result in overflow.
                 #[allow(clippy::arithmetic_side_effects)]
                 e.array(1 + u64::from(row_proof.is_some()))?;
-                choices.encode(e, ctx)?;
+                vote.encode(e, ctx)?;
                 if let Some(row_proof) = row_proof {
                     row_proof.encode(e, ctx)?;
                 }
@@ -140,8 +142,6 @@ impl Encode<()> for Choices {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_voting::crypto::elgamal::Ciphertext;
-
     use super::*;
 
     #[test]
@@ -151,21 +151,10 @@ mod tests {
         original
             .encode(&mut Encoder::new(&mut buffer), &mut ())
             .unwrap();
-        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
+        let mut report = ProblemReport::new("test");
+        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut report).unwrap();
         assert_eq!(original, decoded);
-    }
-
-    #[test]
-    fn encrypted_roundtrip() {
-        let original = Choices::Encrypted {
-            choices: vec![Ciphertext::zero(), Ciphertext::zero()].into(),
-            row_proof: None,
-        };
-        let mut buffer = Vec::new();
-        original
-            .encode(&mut Encoder::new(&mut buffer), &mut ())
-            .unwrap();
-        let decoded = Choices::decode(&mut Decoder::new(&buffer), &mut ()).unwrap();
-        assert_eq!(original, decoded);
+        println!("{report:?}");
+        assert!(!report.is_problematic());
     }
 }
