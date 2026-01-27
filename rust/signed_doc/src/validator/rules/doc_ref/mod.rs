@@ -127,6 +127,7 @@ impl RefRule {
 /// Validate all the document references by the defined validation rules,
 /// plus conducting additional validations with the provided `validator`.
 /// Document all possible error in doc report (no fail fast)
+// TODO: Change the return type to `Result<()>` when other rules are updated.
 pub(crate) fn doc_refs_check<Validator>(
     doc_refs: &DocumentRefs,
     exp_ref_types: &[DocType],
