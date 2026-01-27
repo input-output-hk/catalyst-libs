@@ -133,7 +133,7 @@ impl TallyPerOption {
 }
 
 // Calculates the voting tally for a specific proposal, processing both encrypted and
-// cleartext votes.
+// clear votes.
 ///
 /// This function aggregates votes across all provided ballots, applying the respective
 /// voting power to each choice. It performs two parallel tallies:
