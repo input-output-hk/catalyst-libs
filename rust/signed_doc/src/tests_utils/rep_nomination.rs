@@ -18,7 +18,7 @@ pub fn rep_nomination_doc(
         linked,
         template,
         parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )
