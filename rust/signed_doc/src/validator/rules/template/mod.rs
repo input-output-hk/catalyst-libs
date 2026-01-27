@@ -35,7 +35,8 @@ impl CatalystSignedDocumentValidationRule for TemplateRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        self.check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -76,14 +77,14 @@ impl TemplateRule {
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let context = "Template rule check";
 
         if let Self::Specified { allowed_type } = self {
             let Some(template_ref) = doc.doc_meta().template() else {
                 doc.report()
                     .missing_field("template", &format!("{context}, doc"));
-                return Ok(false);
+                return Ok(());
             };
 
             let template_validator = |template_doc: &CatalystSignedDocument| {
@@ -119,7 +120,7 @@ impl TemplateRule {
                 }
             };
 
-            return doc_refs_check(
+            doc_refs_check(
                 template_ref,
                 std::slice::from_ref(allowed_type),
                 false,
@@ -127,7 +128,7 @@ impl TemplateRule {
                 provider,
                 doc.report(),
                 template_validator,
-            );
+            )?;
         }
         if let Self::NotSpecified = self
             && let Some(template) = doc.doc_meta().template()
@@ -139,10 +140,9 @@ impl TemplateRule {
                     "{context} Not Specified, Document does not expect to have a template field",
                 ),
             );
-            return Ok(false);
         }
 
-        Ok(true)
+        Ok(())
     }
 }
 
