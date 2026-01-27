@@ -6,6 +6,7 @@ use crate::{
     uuid::UuidV7,
 };
 
+// TODO: use doc_builder! macro
 pub fn proposal_doc(
     content: &serde_json::Value,
     template: &CatalystSignedDocument,
