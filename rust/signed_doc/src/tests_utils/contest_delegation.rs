@@ -14,9 +14,9 @@ pub fn contest_delegation_by_representative_doc(
         .map(|(sk, kid)| (sk, kid.with_role(RoleId::Role0)))
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
     builder::contest_delegation_doc(
+        &linked.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({"weights" : []}),
-        linked,
-        parameters,
         &sk.into(),
         kid,
         None,
@@ -31,9 +31,9 @@ pub fn contest_delegation_doc(
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
     builder::contest_delegation_doc(
+        &linked.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({"weights" : []}),
-        linked,
-        parameters,
         &sk.into(),
         kid,
         None,
