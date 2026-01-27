@@ -13,6 +13,7 @@ use crate::CompatibilityPolicy;
 
 /// List of document reference instance.
 #[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Deserialize, serde::Serialize)]
+#[serde(from = "DocumentRefOrList")]
 pub struct DocumentRefs(Vec<DocumentRef>);
 
 impl Deref for DocumentRefs {
@@ -151,6 +152,23 @@ impl Encode<()> for DocumentRefs {
             doc_ref.encode(e, ctx)?;
         }
         Ok(())
+    }
+}
+
+#[derive(serde::Deserialize)]
+#[serde(untagged)]
+enum DocumentRefOrList {
+    Single(DocumentRef),
+    Multiple(Vec<DocumentRef>),
+}
+
+// Convert the helper enum back into our desired struct
+impl From<DocumentRefOrList> for DocumentRefs {
+    fn from(value: DocumentRefOrList) -> Self {
+        match value {
+            DocumentRefOrList::Single(ref_item) => DocumentRefs(vec![ref_item]),
+            DocumentRefOrList::Multiple(list) => DocumentRefs(list),
+        }
     }
 }
 

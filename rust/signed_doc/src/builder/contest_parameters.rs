@@ -1,10 +1,12 @@
 use crate::{
-    CatalystSignedDocument, ContentEncoding, ContentType,
-    builder::{Builder, ed25519::Ed25519SigningKey},
+    CatalystSignedDocument, ContentEncoding, ContentType, DocumentRef,
+    builder::{Builder, doc_builder, ed25519::Ed25519SigningKey},
     catalyst_id::CatalystId,
     doc_types,
     uuid::UuidV7,
 };
+
+doc_builder!(contest_parameters_doc1, doc_types::CONTEST_PARAMETERS, Json, template: &[DocumentRef], parameters: &[DocumentRef]);
 
 pub fn contest_parameters_doc(
     content: &serde_json::Value,

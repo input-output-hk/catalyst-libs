@@ -44,7 +44,7 @@ use crate::{
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-        builder::contest_ballot_doc(&proposal, &parameters, &sk.into(), kid, None, &payload)
+        builder::contest_ballot_doc(&[proposal.doc_ref()?], &parameters.doc_ref()?,&payload, &sk.into(), kid, None)
     }
     => true
     ;
@@ -63,7 +63,7 @@ use crate::{
         let payload = encrypted_payload(&commitment);
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-        builder::contest_ballot_doc(&proposal, &parameters, &sk.into(), kid, None, &payload)
+        builder::contest_ballot_doc(&[proposal.doc_ref()?], &parameters.doc_ref()?, &payload, &sk.into(), kid, None)
     }
     => true
     ;
@@ -118,7 +118,7 @@ use crate::{
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-        builder::contest_ballot_doc(&proposal, &parameters, &sk.into(), kid, None, &payload)
+        builder::contest_ballot_doc(&[proposal.doc_ref()?], &parameters.doc_ref()?, &payload, &sk.into(), kid, None)
     }
     => false
     ;
@@ -135,7 +135,7 @@ use crate::{
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-        builder::contest_ballot_doc(&proposal, &parameters, &sk.into(), kid, None, &payload)
+        builder::contest_ballot_doc(&[proposal.doc_ref()?], &parameters.doc_ref()?, &payload, &sk.into(), kid, None)
     }
     => false
     ;
