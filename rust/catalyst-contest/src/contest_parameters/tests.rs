@@ -40,7 +40,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
-        builder::contest_parameters_doc(&content, &template, &parameters, &sk.into(), kid, None)
+        builder::contest_parameters_doc(&template.doc_ref()?, &parameters.doc_ref()?, &content, &sk.into(), kid, None)
     }
     => false
     ;
@@ -55,7 +55,7 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
         let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
-        builder::contest_parameters_doc(&content, &template, &parameters, &sk.into(), kid, None)
+        builder::contest_parameters_doc(&template.doc_ref()?, &parameters.doc_ref()?, &content, &sk.into(), kid, None)
     }
     => false
     ;

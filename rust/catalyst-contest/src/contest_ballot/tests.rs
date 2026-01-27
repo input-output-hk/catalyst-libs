@@ -79,7 +79,7 @@ use crate::{
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&content, &template, &brand, &sk.into(), kid, None))?;
+        let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
         contest_ballot_doc(&proposal, &parameters, p)
@@ -98,7 +98,7 @@ use crate::{
         let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&content, &template, &brand, &sk.into(), kid, None))?;
+        let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
         let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
         contest_ballot_doc(&proposal, &parameters, p)
