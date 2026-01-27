@@ -290,6 +290,21 @@ macro_rules! doc_builder {
         }
 
     };
+    ($fn_name:ident, $type_const:expr, SchemaJson, $($metadata_field:ident : $metadata_type:ty),*) => {
+        pub fn $fn_name(
+            $($metadata_field : $metadata_type ,)*
+            content: &serde_json::Value,
+            sk: &crate::builder::ed25519::Ed25519SigningKey,
+            kid: crate::catalyst_id::CatalystId,
+            id: Option<crate::uuid::UuidV7>,
+        ) -> anyhow::Result<crate::CatalystSignedDocument> {
+                doc_builder!{$type_const, SchemaJson, id, $($metadata_field),*}
+                    .with_json_content(content)?
+                    .add_signature(|m| sk.sign(&m), kid)?
+                    .build()
+        }
+
+    };
     ($fn_name:ident, $type_const:expr, Cbor, $($metadata_field:ident : $metadata_type:ty),*) => {
         pub fn $fn_name<P: minicbor::Encode<()>>(
             $($metadata_field : $metadata_type ,)*
