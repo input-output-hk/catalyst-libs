@@ -13,7 +13,7 @@ use crate::CompatibilityPolicy;
 
 /// List of document reference instance.
 #[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Deserialize, serde::Serialize)]
-#[serde(from = "DocumentRefOrList")]
+#[serde(from = "SerdeDocumentRef")]
 pub struct DocumentRefs(Vec<DocumentRef>);
 
 impl Deref for DocumentRefs {
@@ -155,19 +155,20 @@ impl Encode<()> for DocumentRefs {
     }
 }
 
+/// A helper type to implement a `serde::Deserialize` for `DocumentRef`
 #[derive(serde::Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
 #[serde(untagged)]
-enum DocumentRefOrList {
+enum SerdeDocumentRef {
     Single(DocumentRef),
     Multiple(Vec<DocumentRef>),
 }
 
-// Convert the helper enum back into our desired struct
-impl From<DocumentRefOrList> for DocumentRefs {
-    fn from(value: DocumentRefOrList) -> Self {
+impl From<SerdeDocumentRef> for DocumentRefs {
+    fn from(value: SerdeDocumentRef) -> Self {
         match value {
-            DocumentRefOrList::Single(ref_item) => DocumentRefs(vec![ref_item]),
-            DocumentRefOrList::Multiple(list) => DocumentRefs(list),
+            SerdeDocumentRef::Single(ref_item) => DocumentRefs(vec![ref_item]),
+            SerdeDocumentRef::Multiple(list) => DocumentRefs(list),
         }
     }
 }

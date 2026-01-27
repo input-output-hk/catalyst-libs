@@ -4,7 +4,6 @@
     clippy::missing_errors_doc,
     clippy::missing_docs_in_private_items
 )]
-#[macro_use]
 
 pub mod brand_parameters;
 pub mod brand_parameters_form_template;
