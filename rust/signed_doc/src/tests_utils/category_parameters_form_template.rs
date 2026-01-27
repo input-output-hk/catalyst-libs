@@ -12,7 +12,7 @@ pub fn category_parameters_form_template_doc(
     builder::category_parameters_form_template_doc(
         &serde_json::json!({}),
         parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )

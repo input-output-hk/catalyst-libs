@@ -12,7 +12,7 @@ pub fn rep_nomination_form_template_doc(
     builder::rep_nomination_form_template_doc(
         &serde_json::json!({}),
         parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )

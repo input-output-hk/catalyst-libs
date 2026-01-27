@@ -6,13 +6,13 @@ use crate::{
     uuid::UuidV7,
 };
 
-pub fn contest_ballot_doc(
+pub fn contest_ballot_doc<P: minicbor::Encode<()>>(
     linked: &CatalystSignedDocument,
     parameters: &CatalystSignedDocument,
     sk: &Ed25519SigningKey,
     kid: CatalystId,
     id: Option<UuidV7>,
-    payload: &[u8],
+    payload: P,
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (id, ver) = id.map_or_else(
         || {
@@ -34,7 +34,7 @@ pub fn contest_ballot_doc(
             "ref": [linked_ref],
             "parameters": [parameters_ref],
         }))?
-        .with_raw_cbor_content(payload)?
+        .with_cbor_content(payload)?
         .add_signature(|m| sk.sign(&m), kid)?
         .build()
 }

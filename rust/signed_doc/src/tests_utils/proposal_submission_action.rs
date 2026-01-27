@@ -18,7 +18,7 @@ pub fn proposal_submission_action_doc(
         }),
         linked,
         parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )

@@ -14,7 +14,7 @@ pub fn proposal_doc(
         &serde_json::json!({}),
         template,
         parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )
