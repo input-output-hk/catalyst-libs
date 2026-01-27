@@ -12,6 +12,7 @@ pub fn contest_ballot_doc(
     sk: &Ed25519SigningKey,
     kid: CatalystId,
     id: Option<UuidV7>,
+    payload: &[u8],
 ) -> anyhow::Result<CatalystSignedDocument> {
     let (id, ver) = id.map_or_else(
         || {
@@ -33,7 +34,7 @@ pub fn contest_ballot_doc(
             "ref": [linked_ref],
             "parameters": [parameters_ref],
         }))?
-        .with_raw_cbor_content(&[160])?
+        .with_raw_cbor_content(payload)?
         .add_signature(|m| sk.sign(&m), kid)?
         .build()
 }
