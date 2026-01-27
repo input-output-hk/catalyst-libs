@@ -78,11 +78,13 @@ pub fn tally(
         .collect::<anyhow::Result<Vec<_>>>()?;
 
     let mut ballots_with_voting_power = Vec::new();
-    let mut total_voting_power = 0;
+    let mut total_voting_power: u64 = 0;
     for b in ballots {
         let voting_power = provider.try_get_voting_power(b.voter())?;
         ballots_with_voting_power.push((b, voting_power));
-        total_voting_power += voting_power;
+        total_voting_power = total_voting_power
+            .checked_add(voting_power)
+            .context("Total voting power overflow")?;
     }
 
     let decryption_tally_setup = DecryptionTallySetup::new(total_voting_power)?;
@@ -127,8 +129,9 @@ pub struct TallyPerOption {
 
 impl TallyPerOption {
     /// Returns a sum of `clear_tally` and `decrypted_tally`
+    #[must_use]
     pub fn total_tally(&self) -> u64 {
-        self.clear_tally + self.decrypted_tally
+        self.clear_tally.saturating_add(self.decrypted_tally)
     }
 }
 
@@ -156,7 +159,7 @@ fn tally_per_proposal(
     });
 
     let for_encrypted_choices = tally_encrypted_choices(
-        choices_with_voting_power_iter.clone(),
+        &choices_with_voting_power_iter.clone(),
         options.n_options(),
         election_secret_key,
         decryption_tally_setup,
@@ -166,8 +169,8 @@ fn tally_per_proposal(
 
     for_clear_choices
         .into_iter()
-        .zip(for_encrypted_choices.into_iter())
-        .zip(options.clone().into_iter())
+        .zip(for_encrypted_choices)
+        .zip(options.clone())
         .map(
             |((clear_tally, (decrypted_tally, encrypted_tally, tally_proof)), option)| {
                 anyhow::Ok(TallyPerOption {
@@ -184,7 +187,7 @@ fn tally_per_proposal(
 
 /// Aggregates encrypted votes using homomorphic addition and generates decryption proofs.
 fn tally_encrypted_choices<'a, I>(
-    choices_with_voting_power_iter: I,
+    choices_with_voting_power_iter: &I,
     n_options: usize,
     election_secret_key: &ElectionSecretKey,
     decryption_tally_setup: &DecryptionTallySetup,
@@ -200,7 +203,8 @@ where
 
     let (mut encrypted_choices, mut encrypted_power) = (Vec::new(), Vec::new());
     for (c, p) in encrypted_choices_with_voting_power_iter {
-        (encrypted_choices.push(c?), encrypted_power.push(p));
+        encrypted_choices.push(c?);
+        encrypted_power.push(p);
     }
 
     (0..n_options)
@@ -238,16 +242,20 @@ where
     (0..n_options)
         .map({
             |i| {
-                let clear_tally =
-                    clear_choices_with_voting_power_iter
-                        .clone()
-                        .try_fold(0, |sum, (c, p)| {
-                            let c = c?;
-                            let c = c.get(i).context(format!(
-                                "Invalid clear vote, does not have choice at voting option {i}"
-                            ))?;
-                            anyhow::Ok(sum + c * p)
-                        })?;
+                let clear_tally = clear_choices_with_voting_power_iter.clone().try_fold(
+                    0_u64,
+                    |sum, (c, p)| {
+                        let c = c?;
+                        let c = c.get(i).context(format!(
+                            "Invalid clear vote, does not have choice at voting option {i}"
+                        ))?;
+                        let res = c
+                            .checked_mul(p)
+                            .context("Multiplying voting choice to voting power overflow")?;
+                        sum.checked_add(res)
+                            .context("Total clear tally result overflow")
+                    },
+                )?;
 
                 anyhow::Ok(clear_tally)
             }
