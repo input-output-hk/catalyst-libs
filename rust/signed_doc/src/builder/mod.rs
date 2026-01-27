@@ -158,30 +158,6 @@ impl ContentBuilder {
         self.into_signatures_builder()
     }
 
-    /// Sets the provided raw CBOR content (bytes), applying already set
-    /// `content-encoding`.
-    ///
-    /// # Errors
-    ///  - Verifies that `content-type` field is set to CBOR.
-    ///  - Compression failure.
-    pub fn with_raw_cbor_content(
-        mut self,
-        content: &[u8],
-    ) -> anyhow::Result<SignaturesBuilder> {
-        anyhow::ensure!(
-            self.metadata.content_type() == Some(ContentType::Cbor),
-            "Already set metadata field `content-type` is not CBOR value"
-        );
-
-        if let Some(encoding) = self.metadata.content_encoding() {
-            self.content = encoding.encode(content)?.into();
-        } else {
-            self.content = content.to_vec().into();
-        }
-
-        self.into_signatures_builder()
-    }
-
     /// Set the provided JSON content, applying already set `content-encoding`.
     ///
     /// # Errors

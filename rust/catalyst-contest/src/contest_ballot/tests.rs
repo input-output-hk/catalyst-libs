@@ -17,12 +17,11 @@ use catalyst_signed_doc::{
 use catalyst_voting::{
     crypto::group::GroupElement,
     vote_protocol::voter::{
-        EncryptedVote, Vote, encrypt_vote_with_default_rng,
-        proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
+        Vote, encrypt_vote_with_default_rng,
+        proof::{VoterProofCommitment, generate_voter_proof_with_default_rng},
     },
 };
 use chrono::{Duration, Utc};
-use minicbor::{Encode, Encoder};
 use test_case::test_case;
 
 use crate::{
@@ -166,7 +165,7 @@ fn contest_ballot(
 }
 
 /// Constructs an encoded payload with encrypted choices
-fn encrypted_payload(commitment: &VoterProofCommitment) -> Vec<u8> {
+fn encrypted_payload(commitment: &VoterProofCommitment) -> ContestBallotPayload {
     let vote = Vote::new(1, 3).unwrap();
     let public_key = GroupElement::zero().into();
     let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &public_key);
@@ -179,19 +178,43 @@ fn encrypted_payload(commitment: &VoterProofCommitment) -> Vec<u8> {
         commitment,
     )
     .unwrap();
-    encode_encrypted_payload(encrypted_vote, Some(proof))
+    let choices = [(0, Choices::Encrypted {
+        vote: encrypted_vote,
+        row_proof: Some(proof),
+    })]
+    .iter()
+    .cloned()
+    .collect();
+    ContestBallotPayload {
+        choices,
+        column_proof: None,
+        matrix_proof: None,
+        voter_choices: None,
+    }
 }
 
 /// Constructs an encoded payload with encrypted choices, but without proof.
-fn empty_proof_payload() -> Vec<u8> {
+fn empty_proof_payload() -> ContestBallotPayload {
     let vote = Vote::new(0, 1).unwrap();
     let key = GroupElement::zero().into();
     let vote = encrypt_vote_with_default_rng(&vote, &key).0;
-    encode_encrypted_payload(vote, None)
+    let choices = [(0, Choices::Encrypted {
+        vote,
+        row_proof: None,
+    })]
+    .iter()
+    .cloned()
+    .collect();
+    ContestBallotPayload {
+        choices,
+        column_proof: None,
+        matrix_proof: None,
+        voter_choices: None,
+    }
 }
 
 /// Constructs an encoded payload with encrypted choices, but with an invalid proof.
-fn invalid_proof_payload() -> Vec<u8> {
+fn invalid_proof_payload() -> ContestBallotPayload {
     let vote = Vote::new(0, 1).unwrap();
     let key = GroupElement::zero().into();
     let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &key);
@@ -205,47 +228,32 @@ fn invalid_proof_payload() -> Vec<u8> {
         &commitment,
     )
     .unwrap();
-    encode_encrypted_payload(encrypted_vote, Some(proof))
+
+    let choices = [(0, Choices::Encrypted {
+        vote: encrypted_vote,
+        row_proof: Some(proof),
+    })]
+    .iter()
+    .cloned()
+    .collect();
+    ContestBallotPayload {
+        choices,
+        column_proof: None,
+        matrix_proof: None,
+        voter_choices: None,
+    }
 }
 
 /// Constructs a payload with clear choices.
-fn clear_payload() -> Vec<u8> {
+fn clear_payload() -> ContestBallotPayload {
     let choices = [(0, Choices::Clear(vec![0, 1, 2]))]
         .iter()
         .cloned()
         .collect();
-    let payload = ContestBallotPayload {
+    ContestBallotPayload {
         choices,
         column_proof: None,
         matrix_proof: None,
         voter_choices: None,
-    };
-    encode_payload(&payload)
-}
-
-/// Encodes an encrypted contest ballot payload.
-fn encode_encrypted_payload(
-    vote: EncryptedVote,
-    row_proof: Option<VoterProof>,
-) -> Vec<u8> {
-    let choices = [(0, Choices::Encrypted { vote, row_proof })]
-        .iter()
-        .cloned()
-        .collect();
-    let payload = ContestBallotPayload {
-        choices,
-        column_proof: None,
-        matrix_proof: None,
-        voter_choices: None,
-    };
-    encode_payload(&payload)
-}
-
-/// Encodes the given contest ballot payload.
-fn encode_payload(payload: &ContestBallotPayload) -> Vec<u8> {
-    let mut buffer = Vec::new();
-    payload
-        .encode(&mut Encoder::new(&mut buffer), &mut ())
-        .unwrap();
-    buffer
+    }
 }
