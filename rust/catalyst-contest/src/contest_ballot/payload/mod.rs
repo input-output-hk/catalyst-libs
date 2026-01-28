@@ -4,8 +4,6 @@ mod choices;
 mod encrypted_block;
 mod encrypted_choices;
 
-use std::collections::BTreeMap;
-
 use catalyst_signed_doc::problem_report::ProblemReport;
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
@@ -26,8 +24,7 @@ pub(crate) use self::{choices::Choices, encrypted_choices::EncryptedChoices};
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct ContestBallotPayload {
     /// A map of voters choices.
-    // TODO must be replaced with the `Vec`
-    pub choices: BTreeMap<u64, Choices>,
+    pub choices: Vec<Choices>,
     /// A universal encrypted column proof.
     ///
     /// This is a placeholder for now and should always be `None`.
@@ -51,7 +48,7 @@ impl Decode<'_, ProblemReport> for ContestBallotPayload {
 
         let map = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        let mut choices = BTreeMap::new();
+        let mut choices = Vec::new();
         let column_proof = None;
         let matrix_proof = None;
         let mut voter_choices = None;
@@ -67,11 +64,11 @@ impl Decode<'_, ProblemReport> for ContestBallotPayload {
                         report.other(
                             &format!("choices keys must be continuous, expected {i}, found {key}"),
                             context,
-                        ); 
+                        );
                     }
                     match Choices::decode(&mut value_decoder, report) {
                         Ok(val) => {
-                            choices.insert(key, val);
+                            choices.push(val);
                         },
                         Err(e) => {
                             report.other(
@@ -148,8 +145,9 @@ impl Encode<()> for ContestBallotPayload {
             })?;
         e.map(len)?;
 
-        for (&key, val) in &self.choices {
-            e.u64(key)?.encode(val)?;
+        for (key, val) in self.choices.iter().enumerate() {
+            e.u64(key.try_into().map_err(minicbor::encode::Error::message)?)?
+                .encode(val)?;
         }
         if let Some(column_proof) = self.column_proof.as_ref() {
             e.str("column-proof")?.encode(column_proof)?;
@@ -174,7 +172,7 @@ mod tests {
     #[test]
     fn roundtrip() {
         let original = ContestBallotPayload {
-            choices: [(0, Choices::Clear(vec![1, 2, 3, 4, 5]))].into(),
+            choices: [Choices::Clear(vec![1, 2, 3, 4, 5])].into(),
             column_proof: None,
             matrix_proof: None,
             voter_choices: Some(EncryptedChoices(vec![

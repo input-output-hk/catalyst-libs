@@ -178,13 +178,11 @@ fn encrypted_payload(commitment: &VoterProofCommitment) -> ContestBallotPayload 
         commitment,
     )
     .unwrap();
-    let choices = [(0, Choices::Encrypted {
+    let choices = [Choices::Encrypted {
         vote: encrypted_vote,
         row_proof: Some(proof),
-    })]
-    .iter()
-    .cloned()
-    .collect();
+    }]
+    .to_vec();
     ContestBallotPayload {
         choices,
         column_proof: None,
@@ -198,13 +196,11 @@ fn empty_proof_payload() -> ContestBallotPayload {
     let vote = Vote::new(0, 1).unwrap();
     let key = GroupElement::zero().into();
     let vote = encrypt_vote_with_default_rng(&vote, &key).0;
-    let choices = [(0, Choices::Encrypted {
+    let choices = [Choices::Encrypted {
         vote,
         row_proof: None,
-    })]
-    .iter()
-    .cloned()
-    .collect();
+    }]
+    .to_vec();
     ContestBallotPayload {
         choices,
         column_proof: None,
@@ -229,13 +225,11 @@ fn invalid_proof_payload() -> ContestBallotPayload {
     )
     .unwrap();
 
-    let choices = [(0, Choices::Encrypted {
+    let choices = [Choices::Encrypted {
         vote: encrypted_vote,
         row_proof: Some(proof),
-    })]
-    .iter()
-    .cloned()
-    .collect();
+    }]
+    .to_vec();
     ContestBallotPayload {
         choices,
         column_proof: None,
@@ -246,10 +240,7 @@ fn invalid_proof_payload() -> ContestBallotPayload {
 
 /// Constructs a payload with clear choices.
 fn clear_payload() -> ContestBallotPayload {
-    let choices = [(0, Choices::Clear(vec![0, 1, 0]))]
-        .iter()
-        .cloned()
-        .collect();
+    let choices = [Choices::Clear(vec![0, 1, 0])].to_vec();
     ContestBallotPayload {
         choices,
         column_proof: None,

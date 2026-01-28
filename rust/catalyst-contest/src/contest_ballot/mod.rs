@@ -181,7 +181,7 @@ fn check_choices(
     if let Some(doc_ref) = doc.doc_meta().doc_ref() {
         let choices = doc_ref
             .iter()
-            .zip(payload.choices.values())
+            .zip(payload.choices.iter())
             .inspect(|(proposal_ref, choice)| {
                 check_choice(
                     proposal_ref,
