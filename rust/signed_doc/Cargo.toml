@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.14", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.14" }
+catalyst-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "main" }
 cbork-utils = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils/v0.0.3" }
 
 # When updating the specification version, it should also be updated for the `catalyst-signed-doc-macro` crate.
