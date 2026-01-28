@@ -12,9 +12,9 @@ pub fn rep_profile_doc(
     provider.add_sk(kid.clone(), sk.clone());
 
     builder::rep_profile_doc(
+        &template.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        template,
-        parameters,
         &sk.into(),
         kid,
         None,

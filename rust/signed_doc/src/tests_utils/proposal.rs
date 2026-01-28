@@ -11,9 +11,9 @@ pub fn proposal_doc(
     let (sk, kid) = create_dummy_key_pair(RoleId::Proposer);
     provider.add_sk(kid.clone(), sk.clone());
     builder::proposal_doc(
+        &template.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        template,
-        parameters,
         &sk.into(),
         kid,
         None,
