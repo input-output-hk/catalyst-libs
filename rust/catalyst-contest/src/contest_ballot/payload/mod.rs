@@ -4,8 +4,6 @@ mod choices;
 mod encrypted_block;
 mod encrypted_choices;
 
-use std::collections::BTreeMap;
-
 use catalyst_signed_doc::problem_report::ProblemReport;
 use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
@@ -26,8 +24,7 @@ pub(crate) use self::{choices::Choices, encrypted_choices::EncryptedChoices};
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct ContestBallotPayload {
     /// A map of voters choices.
-    // TODO must be replaced with the `Vec`
-    pub choices: BTreeMap<u64, Choices>,
+    pub choices: Vec<Choices>,
     /// A universal encrypted column proof.
     ///
     /// This is a placeholder for now and should always be `None`.
@@ -38,6 +35,18 @@ pub struct ContestBallotPayload {
     pub matrix_proof: Option<()>,
     /// An encrypted voter choice payload.
     pub voter_choices: Option<EncryptedChoices>,
+}
+
+impl ContestBallotPayload {
+    /// Create a `ContestBallotPayload` with provided `choices` and default values for the
+    /// rest of the fields
+    #[must_use]
+    pub fn new(choices: Vec<Choices>) -> Self {
+        Self {
+            choices,
+            ..Default::default()
+        }
+    }
 }
 
 impl Decode<'_, ProblemReport> for ContestBallotPayload {
@@ -51,21 +60,27 @@ impl Decode<'_, ProblemReport> for ContestBallotPayload {
 
         let map = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        let mut choices = BTreeMap::new();
+        let mut choices = Vec::new();
         let column_proof = None;
         let matrix_proof = None;
         let mut voter_choices = None;
 
-        for entry in map {
+        for (i, entry) in map.into_iter().enumerate() {
             let mut key_decoder = Decoder::new(&entry.key_bytes);
             let mut value_decoder = Decoder::new(&entry.value);
 
             match key_decoder.datatype()? {
                 Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
                     let key = key_decoder.u64()?;
+                    if !u64::try_from(i).is_ok_and(|i| i == key) {
+                        report.other(
+                            &format!("choices keys must be continuous, expected {i}, found {key}"),
+                            context,
+                        );
+                    }
                     match Choices::decode(&mut value_decoder, report) {
                         Ok(val) => {
-                            choices.insert(key, val);
+                            choices.push(val);
                         },
                         Err(e) => {
                             report.other(
@@ -142,8 +157,9 @@ impl Encode<()> for ContestBallotPayload {
             })?;
         e.map(len)?;
 
-        for (&key, val) in &self.choices {
-            e.u64(key)?.encode(val)?;
+        for (key, val) in self.choices.iter().enumerate() {
+            e.u64(key.try_into().map_err(minicbor::encode::Error::message)?)?
+                .encode(val)?;
         }
         if let Some(column_proof) = self.column_proof.as_ref() {
             e.str("column-proof")?.encode(column_proof)?;
@@ -168,7 +184,7 @@ mod tests {
     #[test]
     fn roundtrip() {
         let original = ContestBallotPayload {
-            choices: [(1, Choices::Clear(vec![1, 2, 3, 4, 5]))].into(),
+            choices: [Choices::Clear(vec![1, 2, 3, 4, 5])].into(),
             column_proof: None,
             matrix_proof: None,
             voter_choices: Some(EncryptedChoices(vec![
