@@ -10,5 +10,11 @@ pub fn brand_parameters_doc(
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
 
-    builder::brand_parameters_doc(&serde_json::json!({}), template, &sk.into(), kid, None)
+    builder::brand_parameters_doc(
+        &template.doc_ref()?,
+        &serde_json::json!({}),
+        &sk.into(),
+        kid,
+        None,
+    )
 }
