@@ -45,8 +45,14 @@ impl Choices {
     pub fn new_clear_single(
         choice: usize,
         n_options: usize,
-    ) -> Self {
-        Self::Clear((0..n_options).map(|i| u64::from(i == choice)).collect())
+    ) -> anyhow::Result<Self> {
+        anyhow::ensure!(
+            choice < n_options,
+            "Invalid choice, the value of choice: {choice}, should be less than the number of voting options: {n_options}."
+        );
+        Ok(Self::Clear(
+            (0..n_options).map(|i| u64::from(i == choice)).collect(),
+        ))
     }
 
     /// Returns `true` if the underlying choice is a single choice, not a multi weighted
