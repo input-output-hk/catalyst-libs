@@ -23,7 +23,8 @@ impl CatalystSignedDocumentValidationRule for SignatureKidRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Ok(self.check_inner(doc))
+        self.check_inner(doc);
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -55,11 +56,10 @@ impl SignatureKidRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> bool {
-        let contains_exp_role = doc.authors().iter().enumerate().all(|(i, kid)| {
+    ) {
+        doc.authors().iter().enumerate().for_each(|(i, kid)| {
             if self.allowed_roles.is_empty() {
-                let res = kid.is_admin();
-                if !res {
+                if !kid.is_admin() {
                     doc.report().invalid_value(
                         "kid",
                         &kid.to_string(),
@@ -70,13 +70,11 @@ impl SignatureKidRule {
                         .as_str(),
                     );
                 }
-                res
             } else {
                 if kid.is_admin() {
                     doc.report().invalid_value("kid", &kid.to_string(),
                         "Allowed roles must be empty when admin Catalyst ID is used",
                         &format!("Invalid Catalyst Signed Document signature at position [{i}]"));
-                    return false;
                 }
 
                 let (role_index, _) = kid.role_and_rotation();
@@ -90,17 +88,9 @@ impl SignatureKidRule {
                         )
                         .as_str(),
                     );
-                    return false;
                 }
-
-                true
             }
         });
-        if !contains_exp_role {
-            return false;
-        }
-
-        true
     }
 }
 
@@ -137,10 +127,15 @@ mod tests {
             .unwrap()
             .build();
 
-        assert!(rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        println!("{:?}", doc.report());
+        assert!(!doc.report().is_problematic());
 
         rule.allowed_roles = [RoleId::Proposer].into_iter().collect();
-        assert!(!rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        let report = format!("{:?}", doc.report());
+        println!("{report}");
+        assert!(report.contains("Invalid Catalyst Signed Document signature at position [0]"));
     }
 
     #[test]
@@ -167,7 +162,8 @@ mod tests {
             .unwrap()
             .build();
 
-        assert!(!rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        assert!(doc.report().is_problematic());
 
         let report = format!("{:?}", doc.report());
         assert!(report.contains("Allowed roles must be empty when admin Catalyst ID is used"));
