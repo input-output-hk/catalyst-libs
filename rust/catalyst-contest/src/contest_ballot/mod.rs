@@ -216,6 +216,19 @@ fn check_choice(
     commitment_key: &VoterProofCommitment,
     report: &ProblemReport,
 ) {
+    if choice.n_options() != contest_parameters.choices().n_options() {
+        report.invalid_value(
+            "choices",
+            &choice.n_options().to_string(),
+            &contest_parameters.choices().n_options().to_string(),
+            "'Contest Ballot' must be aligned with the 'Contest Parameters' on the number of options between the choice was made",
+        );
+    }
+
+    if !choice.is_single() {
+        report.functional_validation("choices", "'Contest Ballot' must be a single choice ballot");
+    }
+
     match choice {
         Choices::Encrypted {
             vote,
@@ -232,25 +245,6 @@ fn check_choice(
                     "'Contest Ballot' document validation",
                 );
             }
-
-            if vote.n_options() != contest_parameters.choices().n_options() {
-                report.invalid_value(
-                    "encrypted choices", 
-                    &vote.n_options().to_string(),
-                    &contest_parameters.choices().n_options().to_string(),
-                    "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
-                );
-            }
-        },
-        Choices::Clear(choices) => {
-            if choices.len() != contest_parameters.choices().n_options() {
-                report.invalid_value(
-                    "clear choices", 
-                    &choices.len().to_string(),
-                    &contest_parameters.choices().n_options().to_string(),
-                    "'Contest Ballot' must be aligned on contest choices with the 'Contest Parameters'"
-                );
-            }
         },
         Choices::Encrypted {
             row_proof: None, ..
@@ -260,6 +254,7 @@ fn check_choice(
                 "'Contest Ballot' must have a proof for an encrypted choice",
             );
         },
+        _ => {},
     }
 }
 

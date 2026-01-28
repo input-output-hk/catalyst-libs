@@ -63,6 +63,14 @@ impl Choices {
             Self::Encrypted { .. } => true,
         }
     }
+
+    /// Returns a number of options between which choice was made
+    pub fn n_options(&self) -> usize {
+        match self {
+            Self::Clear(v) => v.len(),
+            Self::Encrypted { vote, .. } => vote.n_options(),
+        }
+    }
 }
 
 impl Decode<'_, ProblemReport> for Choices {
@@ -167,9 +175,9 @@ impl Encode<()> for Choices {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use test_case::test_case;
 
+    use super::*;
 
     #[test]
     fn clear_roundtrip() {
@@ -184,8 +192,8 @@ mod tests {
         println!("{report:?}");
         assert!(!report.is_problematic());
     }
-    
-    #[test_case( &Choices::Clear(vec![0, 1, 0]) => true ; "clear single choice" )] 
+
+    #[test_case( &Choices::Clear(vec![0, 1, 0]) => true ; "clear single choice" )]
     #[test_case( &Choices::Clear(vec![1, 2, 3]) => false ; "clear multiple weighted choice" )]
     #[test_case( &Choices::Clear(vec![1, u64::MAX, 0]) => false ; "clear overflowed choice" )]
     fn clear_is_single(choices: &Choices) -> bool {
