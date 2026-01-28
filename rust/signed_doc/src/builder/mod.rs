@@ -1,5 +1,4 @@
 //! Catalyst Signed Document Builder.
-
 #![allow(
     missing_docs,
     clippy::missing_errors_doc,
@@ -273,6 +272,74 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
         })
     }
 }
+
+macro_rules! doc_builder {
+    ($fn_name:ident, $type_const:expr, Json, $($metadata_field:ident : $metadata_type:ty),*) => {
+        pub fn $fn_name(
+            $($metadata_field : $metadata_type ,)*
+            content: &serde_json::Value,
+            sk: &crate::builder::ed25519::Ed25519SigningKey,
+            kid: crate::catalyst_id::CatalystId,
+            id: Option<crate::uuid::UuidV7>,
+        ) -> anyhow::Result<crate::CatalystSignedDocument> {
+                doc_builder!{$type_const, Json, id, $($metadata_field),*}
+                    .with_json_content(content)?
+                    .add_signature(|m| sk.sign(&m), kid)?
+                    .build()
+        }
+
+    };
+    ($fn_name:ident, $type_const:expr, SchemaJson, $($metadata_field:ident : $metadata_type:ty),*) => {
+        pub fn $fn_name(
+            $($metadata_field : $metadata_type ,)*
+            content: &serde_json::Value,
+            sk: &crate::builder::ed25519::Ed25519SigningKey,
+            kid: crate::catalyst_id::CatalystId,
+            id: Option<crate::uuid::UuidV7>,
+        ) -> anyhow::Result<crate::CatalystSignedDocument> {
+                doc_builder!{$type_const, SchemaJson, id, $($metadata_field),*}
+                    .with_json_content(content)?
+                    .add_signature(|m| sk.sign(&m), kid)?
+                    .build()
+        }
+
+    };
+    ($fn_name:ident, $type_const:expr, Cbor, $($metadata_field:ident : $metadata_type:ty),*) => {
+        pub fn $fn_name<P: minicbor::Encode<()>>(
+            $($metadata_field : $metadata_type ,)*
+            content: P,
+            sk: &crate::builder::ed25519::Ed25519SigningKey,
+            kid: crate::catalyst_id::CatalystId,
+            id: Option<crate::uuid::UuidV7>,
+        ) -> anyhow::Result<crate::CatalystSignedDocument> {
+                doc_builder!{$type_const, Cbor, id, $($metadata_field),*}
+                    .with_cbor_content(content)?
+                    .add_signature(|m| sk.sign(&m), kid)?
+                    .build()
+        }
+    };
+    ($type_const:expr, $content_type:ident, $id:ident, $($metadata_field:ident),*) => {
+        {
+            let (id, ver) = $id.map_or_else(
+                || {
+                    let id = crate::uuid::UuidV7::new();
+                    (id, id)
+                },
+                |v| (v, crate::uuid::UuidV7::new()),
+            );
+            crate::builder::Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "content-type": crate::ContentType::$content_type,
+                    "content-encoding": crate::ContentEncoding::Brotli,
+                    "type": $type_const.clone(),
+                    "id": id,
+                    "ver": ver,
+                    $(stringify!($metadata_field).trim_start_matches("r#") : $metadata_field ,)*
+                }))?
+        }
+    }
+}
+pub(crate) use doc_builder;
 
 #[cfg(test)]
 pub(crate) mod tests {

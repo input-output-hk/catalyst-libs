@@ -11,9 +11,9 @@ pub fn category_parameters_doc(
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
     builder::category_parameters_doc(
+        &template.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        template,
-        parameters,
         &sk.into(),
         kid,
         None,
