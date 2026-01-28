@@ -41,6 +41,24 @@ pub enum Choices {
 }
 
 impl Choices {
+    /// Returns encrypted vote if `Choices::Encrypted`
+    pub fn as_encrypted_choices(&self) -> Option<&EncryptedVote> {
+        if let Choices::Encrypted { vote, .. } = self {
+            Some(vote)
+        } else {
+            None
+        }
+    }
+
+    /// Returns clear vote if `Choices::Clear`
+    pub fn as_clear_choices(&self) -> Option<&Vec<u64>> {
+        if let Choices::Clear(vote) = self {
+            Some(vote)
+        } else {
+            None
+        }
+    }
+
     /// Creates a clear single choice `Choices::Clear`
     pub fn new_clear_single(
         choice: usize,
