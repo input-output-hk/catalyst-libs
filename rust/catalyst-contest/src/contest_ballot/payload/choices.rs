@@ -40,6 +40,31 @@ pub enum Choices {
     },
 }
 
+impl Choices {
+    /// Creates a clear single choice `Choices::Clear`
+    pub fn new_clear_single(
+        choice: usize,
+        n_options: usize,
+    ) -> Self {
+        Self::Clear((0..n_options).map(|i| u64::from(i == choice)).collect())
+    }
+
+    /// Returns `true` if the underlying choice is a single choice, not a multi weighted
+    /// choice.
+    pub fn is_single(&self) -> bool {
+        match self {
+            Self::Clear(v) => {
+                v.iter()
+                    .try_fold(0_u64, |sum, b| sum.checked_add(*b))
+                    .is_some_and(|sum| sum == 1)
+            },
+            // underlying `EncryptedVote` with its ZK proof `VoterProof` represents only a single
+            // choice
+            Self::Encrypted { .. } => true,
+        }
+    }
+}
+
 impl Decode<'_, ProblemReport> for Choices {
     fn decode(
         d: &mut Decoder<'_>,
@@ -143,6 +168,8 @@ impl Encode<()> for Choices {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
+
 
     #[test]
     fn clear_roundtrip() {
@@ -156,5 +183,12 @@ mod tests {
         assert_eq!(original, decoded);
         println!("{report:?}");
         assert!(!report.is_problematic());
+    }
+    
+    #[test_case( &Choices::Clear(vec![0, 1, 0]) => true ; "clear single choice" )] 
+    #[test_case( &Choices::Clear(vec![1, 2, 3]) => false ; "clear multiple weighted choice" )]
+    #[test_case( &Choices::Clear(vec![1, u64::MAX, 0]) => false ; "clear overflowed choice" )]
+    fn clear_is_single(choices: &Choices) -> bool {
+        choices.is_single()
     }
 }
