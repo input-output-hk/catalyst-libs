@@ -45,7 +45,8 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.choices().n_options())?]);
+        let choice = Choices::new_clear_single(0, parameters.choices().n_options())?;
+        let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
@@ -88,7 +89,8 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.choices().n_options())?]);
+        let choice = Choices::new_clear_single(0, parameters.choices().n_options())?;
+        let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
@@ -108,7 +110,8 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.choices().n_options() + 1)?]);
+        let choice = Choices::new_clear_single(0, parameters.choices().n_options().saturating_add(1))?;
+        let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
