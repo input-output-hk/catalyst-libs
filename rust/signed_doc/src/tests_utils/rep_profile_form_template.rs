@@ -11,8 +11,8 @@ pub fn rep_profile_form_template_doc(
     provider.add_sk(kid.clone(), sk.clone());
 
     builder::rep_profile_form_template_doc(
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        parameters,
         &sk.into(),
         kid,
         None,

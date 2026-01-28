@@ -12,10 +12,10 @@ pub fn proposal_comment_doc(
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
     builder::proposal_comment_doc(
+        &linked.doc_ref()?,
+        &template.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        linked,
-        template,
-        parameters,
         &sk.into(),
         kid,
         None,

@@ -13,11 +13,11 @@ pub fn proposal_submission_action_doc(
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
 
     builder::proposal_submission_action_doc(
+        &linked.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({
             "action": "final"
         }),
-        linked,
-        parameters,
         &sk.into(),
         kid,
         None,
