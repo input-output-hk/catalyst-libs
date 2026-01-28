@@ -13,6 +13,18 @@ pub enum Ed25519SigningKey {
     Bip32(ed25519_bip32::XPrv),
 }
 
+impl From<ed25519_dalek::SigningKey> for Ed25519SigningKey {
+    fn from(v: ed25519_dalek::SigningKey) -> Self {
+        Self::Common(v)
+    }
+}
+
+impl From<ed25519_bip32::XPrv> for Ed25519SigningKey {
+    fn from(v: ed25519_bip32::XPrv) -> Self {
+        Self::Bip32(v)
+    }
+}
+
 impl TryFrom<&[u8]> for Ed25519SigningKey {
     type Error = anyhow::Error;
 

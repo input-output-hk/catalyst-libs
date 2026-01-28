@@ -10,9 +10,9 @@ pub fn contest_parameters_form_template_doc(
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
     builder::contest_parameters_form_template_doc(
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )

@@ -21,7 +21,7 @@ use crate::{
         let template_ref = doc.doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -45,7 +45,7 @@ use crate::{
         provider.add_document(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_content(json_content)
             .build()
     }
@@ -66,7 +66,7 @@ use crate::{
         provider.add_document(&doc).unwrap();
         let template_ref = doc.doc_ref().unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -89,7 +89,7 @@ use crate::{
         provider.add_document(&doc).unwrap();
         let template_ref = doc.doc_ref().unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -114,7 +114,7 @@ use crate::{
         provider.add_document(&doc).unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -138,7 +138,7 @@ use crate::{
         let template_ref = doc.doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -162,7 +162,7 @@ use crate::{
         let template_ref = doc.doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -185,7 +185,7 @@ use crate::{
         let template_ref = doc.doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -209,7 +209,7 @@ use crate::{
         let template_ref = doc.doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -225,7 +225,7 @@ use crate::{
         let template_ref = create_dummy_doc_ref();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -247,12 +247,14 @@ fn template_specified_test(
 
     TemplateRule::Specified { allowed_type }
         .check_inner(&doc, &provider)
-        .unwrap()
+        .unwrap();
+    println!("{:?}", doc.report());
+    !doc.report().is_problematic()
 }
 
 #[test_case(
     |_, _| {
-        Builder::new()
+        Builder::with_required_fields()
             .build()
     }
     => true
@@ -273,7 +275,7 @@ fn template_specified_test(
         let template_ref = doc.doc_ref().unwrap();
 
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Template(
                 vec![template_ref].into(),
             ))
@@ -293,5 +295,7 @@ fn reply_rule_not_specified_test(
     let doc = doc_gen(allowed_type, &mut provider);
     TemplateRule::NotSpecified
         .check_inner(&doc, &provider)
-        .unwrap()
+        .unwrap();
+    println!("{:?}", doc.report());
+    !doc.report().is_problematic()
 }

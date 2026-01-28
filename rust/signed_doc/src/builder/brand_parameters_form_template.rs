@@ -6,6 +6,7 @@ use crate::{
     uuid::UuidV7,
 };
 
+// TODO: use doc_builder! macro
 pub fn brand_parameters_form_template_doc(
     content: &serde_json::Value,
     sk: &Ed25519SigningKey,

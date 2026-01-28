@@ -1,5 +1,5 @@
 use crate::{
-    CatalystSignedDocument, builder, providers::tests::TestCatalystProvider,
+    CatalystSignedDocument, Chain, builder, providers::tests::TestCatalystProvider,
     tests_utils::create_dummy_admin_key_pair,
 };
 
@@ -11,9 +11,11 @@ pub fn contest_ballot_checkpoint_doc(
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
     builder::contest_ballot_checkpoint_doc(
-        linked,
-        parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &linked.doc_ref()?,
+        &parameters.doc_ref()?,
+        &Chain::new(0, None),
+        1,
+        &sk.into(),
         kid,
         None,
     )

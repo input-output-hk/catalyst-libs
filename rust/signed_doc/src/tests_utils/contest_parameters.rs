@@ -25,10 +25,10 @@ pub fn contest_parameters_doc(
     provider.add_sk(kid.clone(), sk.clone());
     let content = contest_parameters_default_content();
     builder::contest_parameters_doc(
+        &template.doc_ref()?,
+        &parameters.doc_ref()?,
         &content,
-        template,
-        parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &sk.into(),
         kid,
         None,
     )

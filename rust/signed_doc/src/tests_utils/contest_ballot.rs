@@ -13,11 +13,11 @@ pub fn contest_ballot_doc(
     let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
     provider.add_sk(kid.clone(), sk.clone());
     builder::contest_ballot_doc(
-        linked,
-        parameters,
-        &builder::ed25519::Ed25519SigningKey::Common(sk),
+        &[linked.doc_ref()?],
+        &parameters.doc_ref()?,
+        [160],
+        &sk.into(),
         kid,
         None,
-        &[160],
     )
 }
