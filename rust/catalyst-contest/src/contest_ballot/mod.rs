@@ -4,7 +4,7 @@
 //!
 //! [documentation]: https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot/
 
-mod payload;
+pub mod payload;
 pub mod rule;
 #[cfg(test)]
 mod tests;

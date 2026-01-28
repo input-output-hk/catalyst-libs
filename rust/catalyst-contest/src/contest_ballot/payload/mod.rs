@@ -37,6 +37,18 @@ pub struct ContestBallotPayload {
     pub voter_choices: Option<EncryptedChoices>,
 }
 
+impl ContestBallotPayload {
+    /// Create a `ContestBallotPayload` with provided `choices` and default values for the
+    /// rest of the fields
+    #[must_use]
+    pub fn new(choices: Vec<Choices>) -> Self {
+        Self {
+            choices,
+            ..Default::default()
+        }
+    }
+}
+
 impl Decode<'_, ProblemReport> for ContestBallotPayload {
     fn decode(
         d: &mut Decoder<'_>,
