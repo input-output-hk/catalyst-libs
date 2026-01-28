@@ -56,13 +56,19 @@ impl Decode<'_, ProblemReport> for ContestBallotPayload {
         let matrix_proof = None;
         let mut voter_choices = None;
 
-        for entry in map {
+        for (i, entry) in map.into_iter().enumerate() {
             let mut key_decoder = Decoder::new(&entry.key_bytes);
             let mut value_decoder = Decoder::new(&entry.value);
 
             match key_decoder.datatype()? {
                 Type::U8 | Type::U16 | Type::U32 | Type::U64 => {
                     let key = key_decoder.u64()?;
+                    if !u64::try_from(i).is_ok_and(|i| i == key) {
+                        report.other(
+                            &format!("choices keys must be continuous, expected {i}, found {key}"),
+                            context,
+                        ); 
+                    }
                     match Choices::decode(&mut value_decoder, report) {
                         Ok(val) => {
                             choices.insert(key, val);
@@ -168,7 +174,7 @@ mod tests {
     #[test]
     fn roundtrip() {
         let original = ContestBallotPayload {
-            choices: [(1, Choices::Clear(vec![1, 2, 3, 4, 5]))].into(),
+            choices: [(0, Choices::Clear(vec![1, 2, 3, 4, 5]))].into(),
             column_proof: None,
             matrix_proof: None,
             voter_choices: Some(EncryptedChoices(vec![

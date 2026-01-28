@@ -246,7 +246,7 @@ fn invalid_proof_payload() -> ContestBallotPayload {
 
 /// Constructs a payload with clear choices.
 fn clear_payload() -> ContestBallotPayload {
-    let choices = [(0, Choices::Clear(vec![0, 1, 2]))]
+    let choices = [(0, Choices::Clear(vec![0, 1, 0]))]
         .iter()
         .cloned()
         .collect();
