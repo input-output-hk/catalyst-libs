@@ -14,10 +14,10 @@ pub fn rep_nomination_doc(
         .inspect(|(sk, kid)| provider.add_sk(kid.clone(), sk.clone()))?;
 
     builder::rep_nomination_doc(
+        &linked.doc_ref()?,
+        &template.doc_ref()?,
+        &parameters.doc_ref()?,
         &serde_json::json!({}),
-        linked,
-        template,
-        parameters,
         &sk.into(),
         kid,
         None,

@@ -10,5 +10,11 @@ pub fn proposal_form_template_doc(
     let (sk, kid) = create_dummy_admin_key_pair();
     provider.add_sk(kid.clone(), sk.clone());
 
-    builder::proposal_form_template_doc(&serde_json::json!({}), parameters, &sk.into(), kid, None)
+    builder::proposal_form_template_doc(
+        &parameters.doc_ref()?,
+        &serde_json::json!({}),
+        &sk.into(),
+        kid,
+        None,
+    )
 }
