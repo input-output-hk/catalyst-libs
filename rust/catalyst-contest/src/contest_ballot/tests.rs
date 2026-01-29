@@ -24,7 +24,6 @@ use crate::{
         rule::ContestBallotRule,
     },
     contest_parameters::ContestParameters,
-    crypto::group::GroupElement,
     vote_protocol::voter::{
         Vote, encrypt_vote_with_default_rng,
         proof::{VoterProofCommitment, generate_voter_proof_with_default_rng},
@@ -225,15 +224,15 @@ fn contest_ballot(
 /// Constructs an encoded payload with encrypted choices
 fn encrypted_payload(parameters: &ContestParameters) -> ContestBallotPayload {
     let vote = Vote::new(1, 3).unwrap();
-    let public_key = GroupElement::zero().into();
-    let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &public_key);
+    let (encrypted_vote, randomness) =
+        encrypt_vote_with_default_rng(&vote, parameters.election_public_key());
 
     let commitment = commitment_key(parameters.doc_ref()).unwrap();
     let proof = generate_voter_proof_with_default_rng(
         &vote,
         encrypted_vote.clone(),
         randomness,
-        &public_key,
+        parameters.election_public_key(),
         &commitment,
     )
     .unwrap();
