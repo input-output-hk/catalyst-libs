@@ -32,6 +32,11 @@ impl VotingOptions {
     pub fn n_options(&self) -> usize {
         self.0.len()
     }
+
+    /// Returns an iterator over the voting options items
+    pub fn iter(&self) -> impl Iterator<Item = &String> {
+        self.0.iter()
+    }
 }
 
 impl IntoIterator for VotingOptions {
