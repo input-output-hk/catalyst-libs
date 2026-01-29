@@ -16,7 +16,7 @@ mithril-client = { version = "=0.12.2", default-features = false, features = [
     "num-integer-backend",
 ] }
 
-cardano-blockchain-types = { version = "0.0.9", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types/v0.0.9" }
+cardano-blockchain-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "hack-do-not-merge-simple-versions" }
 catalyst-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "hack-do-not-merge-simple-versions" }
 
 thiserror = "1.0.69"
