@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.14", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.14" }
+catalyst-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "hack-do-not-merge-simple-versions" }
 #cbork-cddl-parser = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-cddl-parser/v0.0.3" }
 
 serde_json = "1.0.145"
