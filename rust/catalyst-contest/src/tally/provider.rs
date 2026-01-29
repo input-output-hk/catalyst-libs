@@ -24,7 +24,7 @@ pub trait VotingPowerProvider {
 pub(crate) mod tests {
     //! Simple providers implementation just for the testing purposes
 
-    use std::{collections::HashMap};
+    use std::collections::HashMap;
 
     use anyhow::Context;
     use catalyst_signed_doc::providers::tests::TestCatalystProvider;
@@ -36,7 +36,6 @@ pub(crate) mod tests {
         pub voters: HashMap<CatalystId, u64>,
         pub p: TestCatalystProvider,
     }
-
 
     impl VotingPowerProvider for TestTallyProvider {
         fn try_get_voting_power(

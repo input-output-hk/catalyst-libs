@@ -20,7 +20,8 @@ use proptest_derive::Arbitrary;
 
 use crate::{
     contest_ballot::payload::{Choices, ContestBallotPayload},
-    contest_parameters::ContestParameters, tally::{provider::tests::TestTallyProvider, tally},
+    contest_parameters::ContestParameters,
+    tally::{provider::tests::TestTallyProvider, tally},
 };
 
 const VOTING_OPTIONS: usize = 3;
