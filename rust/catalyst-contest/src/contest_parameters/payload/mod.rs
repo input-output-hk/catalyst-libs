@@ -48,6 +48,15 @@ impl IntoIterator for VotingOptions {
     }
 }
 
+impl IntoIterator for VotingOptions {
+    type IntoIter = <Vec<std::string::String> as IntoIterator>::IntoIter;
+    type Item = String;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 impl Default for ContestParametersPayload {
     fn default() -> Self {
         Self {
