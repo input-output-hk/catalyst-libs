@@ -20,11 +20,11 @@ use catalyst_signed_doc::{
     },
     uuid::UuidV7,
 };
-use catalyst_voting::vote_protocol::committee::ElectionPublicKey;
 use chrono::{DateTime, Utc};
 
 use self::payload::ContestParametersPayload;
 pub use self::payload::VotingOptions;
+use crate::vote_protocol::committee::ElectionPublicKey;
 
 /// `Contest Parameters` document type.
 #[derive(Debug, Clone)]

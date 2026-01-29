@@ -1,22 +1,25 @@
 //! Contest tally functionality with all necessary types
 
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashMap;
 
 use anyhow::Context;
 use catalyst_signed_doc::{
     DocumentRef, catalyst_id::CatalystId, providers::CatalystSignedDocumentProvider,
 };
-use catalyst_voting::vote_protocol::{
-    committee::ElectionSecretKey,
-    tally::{
-        self, DecryptionTallySetup, EncryptedTally, decrypt_tally,
-        proof::{TallyProof, generate_tally_proof_with_default_rng},
-    },
-};
 
 use crate::{
     contest_ballot::{ContestBallot, payload::Choices},
     contest_parameters::{ContestParameters, VotingOptions},
+    vote_protocol::{
+        committee::ElectionSecretKey,
+        tally::{
+            self, DecryptionTallySetup, EncryptedTally, decrypt_tally,
+            proof::{TallyProof, generate_tally_proof_with_default_rng},
+        },
+    },
 };
 
 /// Contest Tally Result type

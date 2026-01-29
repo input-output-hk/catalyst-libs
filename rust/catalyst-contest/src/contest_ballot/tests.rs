@@ -14,13 +14,6 @@ use catalyst_signed_doc::{
     },
     validator::Validator,
 };
-use catalyst_voting::{
-    crypto::group::GroupElement,
-    vote_protocol::voter::{
-        Vote, encrypt_vote_with_default_rng,
-        proof::{VoterProofCommitment, generate_voter_proof_with_default_rng},
-    },
-};
 use chrono::{Duration, Utc};
 use test_case::test_case;
 
@@ -31,6 +24,11 @@ use crate::{
         rule::ContestBallotRule,
     },
     contest_parameters::ContestParameters,
+    crypto::group::GroupElement,
+    vote_protocol::voter::{
+        Vote, encrypt_vote_with_default_rng,
+        proof::{VoterProofCommitment, generate_voter_proof_with_default_rng},
+    },
 };
 
 #[test_case(

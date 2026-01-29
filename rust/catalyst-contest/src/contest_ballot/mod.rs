@@ -16,15 +16,13 @@ use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, catalyst_id::CatalystId, doc_types::CONTEST_BALLOT,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider,
 };
-use catalyst_voting::{
-    crypto::hash::{Blake2b512Hasher, digest::Digest},
-    vote_protocol::voter::proof::{VoterProofCommitment, verify_voter_proof},
-};
 use minicbor::{Decode, Encode};
 
 use crate::{
     contest_ballot::payload::{Choices, ContestBallotPayload},
     contest_parameters::ContestParameters,
+    crypto::hash::{Blake2b512Hasher, digest::Digest},
+    vote_protocol::voter::proof::{VoterProofCommitment, verify_voter_proof},
 };
 
 /// An individual Ballot cast in a Contest by a registered user.

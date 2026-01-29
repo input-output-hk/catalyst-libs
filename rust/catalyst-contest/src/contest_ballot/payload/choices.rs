@@ -1,9 +1,10 @@
 //! Voters Choices.
 
 use catalyst_signed_doc::problem_report::ProblemReport;
-use catalyst_voting::vote_protocol::voter::{EncryptedVote, proof::VoterProof};
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
+
+use crate::vote_protocol::voter::{EncryptedVote, proof::VoterProof};
 
 /// A clear choice indicator. See the `Choices` CBOR schema for the details.
 const CLEAR_CHOICE: u8 = 0;

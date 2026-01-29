@@ -2,8 +2,9 @@
 
 mod serde_election_public_key;
 
-use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use chrono::{DateTime, Utc};
+
+use crate::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 
 /// Content Parameters JSON payload type.
 #[derive(Debug, Clone, serde::Deserialize)]
