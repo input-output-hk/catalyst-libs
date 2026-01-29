@@ -45,7 +45,7 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let choice = Choices::new_clear_single(0, parameters.choices().n_options())?;
+        let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
         let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
@@ -89,7 +89,7 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let choice = Choices::new_clear_single(0, parameters.choices().n_options())?;
+        let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
         let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
@@ -110,7 +110,7 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let choice = Choices::new_clear_single(0, parameters.choices().n_options().saturating_add(1))?;
+        let choice = Choices::new_clear_single(0, parameters.options().n_options().saturating_add(1))?;
         let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
@@ -131,7 +131,7 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let choice = Choices::Clear((0..parameters.choices().n_options()).map(u64::try_from).collect::<Result<Vec<_>, _>>()?);
+        let choice = Choices::Clear((0..parameters.options().n_options()).map(u64::try_from).collect::<Result<Vec<_>, _>>()?);
         let payload = ContestBallotPayload::new(vec![choice]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
@@ -155,7 +155,7 @@ use crate::{
         let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
-        let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.choices().n_options())?]);
+        let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.options().n_options())?]);
 
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
@@ -249,7 +249,7 @@ fn encrypted_payload(parameters: &ContestParameters) -> ContestBallotPayload {
 
 /// Constructs an encoded payload with encrypted choices, but without proof.
 fn empty_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(0, parameters.choices().n_options()).unwrap();
+    let vote = Vote::new(0, parameters.options().n_options()).unwrap();
     let vote = encrypt_vote_with_default_rng(&vote, parameters.election_public_key()).0;
     let choices = [Choices::Encrypted {
         vote,
@@ -261,7 +261,7 @@ fn empty_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
 
 /// Constructs an encoded payload with encrypted choices, but with an invalid proof.
 fn invalid_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(0, parameters.choices().n_options()).unwrap();
+    let vote = Vote::new(0, parameters.options().n_options()).unwrap();
     let (encrypted_vote, randomness) =
         encrypt_vote_with_default_rng(&vote, parameters.election_public_key());
 

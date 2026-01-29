@@ -25,6 +25,7 @@ pub struct DecryptionTallySetup {
 
 /// A representation of the encrypted tally.
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone)]
 pub struct EncryptedTally(Ciphertext);
 
 impl DecryptionTallySetup {

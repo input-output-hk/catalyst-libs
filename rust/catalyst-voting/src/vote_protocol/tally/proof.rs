@@ -16,6 +16,7 @@ use crate::{
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
 #[must_use]
+#[derive(Debug, Clone)]
 pub struct TallyProof(DleqProof);
 
 /// Generates a tally proof.
