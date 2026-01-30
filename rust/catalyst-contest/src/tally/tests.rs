@@ -66,9 +66,9 @@ fn tally_test(
         let res_tally_per_proposal = res_tally.tally_per_proposals.get(&p_ref).expect("missing tally result for the proposal");
 
         for i in 0..exp_tally_per_proposal.len() {
-            assert_eq!(res_tally_per_proposal[i].clear_tally, exp_tally_per_proposal[i].0);
-            assert_eq!(res_tally_per_proposal[i].decrypted_tally, exp_tally_per_proposal[i].1);
             assert_eq!(res_tally_per_proposal[i].option, exp_tally_per_proposal[i].2);
+            assert_eq!(res_tally_per_proposal[i].decrypted_tally, exp_tally_per_proposal[i].1);
+            assert_eq!(res_tally_per_proposal[i].clear_tally, exp_tally_per_proposal[i].0);
         }
     }
 
@@ -99,10 +99,10 @@ fn prepare_contest(
             None,
         )
     })?;
-    let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
+    let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
 
     let proposals_refs = (0..proposals_amount)
-        .map(|_| build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?.doc_ref())
+        .map(|_| build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?.doc_ref())
         .collect::<Result<_, _>>()?;
 
     Ok((ContestParameters::new(&parameters, p)?, proposals_refs))

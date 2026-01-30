@@ -38,8 +38,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
@@ -59,8 +59,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = encrypted_payload(&parameters);
@@ -82,8 +82,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.clone().into(), kid.clone(), None))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
@@ -103,8 +103,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options().saturating_add(1))?;
@@ -124,8 +124,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::Clear((0..parameters.options().n_options()).map(u64::try_from).collect::<Result<Vec<_>, _>>()?);
@@ -148,8 +148,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.clone().into(), kid.clone(), None))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.options().n_options())?]);
@@ -168,8 +168,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = empty_proof_payload(&parameters);
@@ -187,8 +187,8 @@ use crate::{
         let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = invalid_proof_payload(&parameters);
