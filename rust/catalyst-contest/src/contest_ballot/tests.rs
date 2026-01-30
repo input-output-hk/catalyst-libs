@@ -2,17 +2,9 @@
 //! <https://docs.dev.projectcatalyst.io/libs/main/architecture/08_concepts/signed_doc/docs/contest_ballot>
 
 use catalyst_signed_doc::{
-    CatalystSignedDocument, builder,
-    catalyst_id::role_index::RoleId,
-    doc_types,
-    providers::tests::TestCatalystProvider,
-    tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
-        contest_parameters::contest_parameters_default_content, contest_parameters_doc,
-        contest_parameters_form_template_doc, create_dummy_key_pair, create_key_pair_and_publish,
-        proposal_doc, proposal_form_template_doc,
-    },
-    validator::Validator,
+    builder, catalyst_id::role_index::RoleId, doc_types, providers::tests::TestCatalystProvider, tests_utils::{
+        brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish, contest_parameters::contest_parameters_default_content, contest_parameters_doc, contest_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair, create_key_pair_and_publish, proposal_doc, proposal_form_template_doc
+    }, validator::Validator, CatalystSignedDocument
 };
 use catalyst_voting::{
     crypto::group::GroupElement,
@@ -37,12 +29,12 @@ use crate::{
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
 
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
@@ -58,12 +50,12 @@ use crate::{
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
 
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = encrypted_payload(&parameters);
@@ -76,17 +68,18 @@ use crate::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_admin_key_pair());
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(1)));
         content["end"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(5)));
-
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.clone().into(), kid.clone(), None))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let parameters = build_verify_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.clone().into(), kid.clone(), None))?;
+       
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
@@ -102,12 +95,12 @@ use crate::{
     |p| {
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
 
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options().saturating_add(1))?;
@@ -121,19 +114,17 @@ use crate::{
 )]
 #[test_case(
     |p| {
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
+
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::Clear((0..parameters.options().n_options()).map(u64::try_from).collect::<Result<Vec<_>, _>>()?);
         let payload = ContestBallotPayload::new(vec![choice]);
-
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => false
@@ -142,21 +133,22 @@ use crate::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_admin_key_pair());
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(5)));
         content["end"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(1)));
+        let parameters = build_verify_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
+        
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.clone().into(), kid.clone(), None))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = ContestBallotPayload::new(vec![Choices::new_clear_single(0, parameters.options().n_options())?]);
-
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => false
@@ -165,15 +157,14 @@ use crate::{
 )]
 #[test_case(
     |p| {
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
+
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = empty_proof_payload(&parameters);
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
@@ -184,15 +175,16 @@ use crate::{
 )]
 #[test_case(
     |p| {
+
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
+
+
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-
-        let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let parameters = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&parameters, p))?;
-        let proposal = build_doc_and_publish(p, |p| proposal_doc(&template, &parameters, p))?;
-
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = invalid_proof_payload(&parameters);
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)

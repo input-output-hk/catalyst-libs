@@ -31,6 +31,8 @@ pub mod rep_nomination_form_template;
 pub mod rep_profile;
 pub mod rep_profile_form_template;
 
+use std::sync::LazyLock;
+
 pub use brand_parameters::brand_parameters_doc;
 pub use brand_parameters_form_template::brand_parameters_form_template_doc;
 pub use campaign_parameters::campaign_parameters_doc;
@@ -58,6 +60,7 @@ use crate::{
     catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     uuid::{UuidV4, UuidV7},
+    validator::Validator,
 };
 
 #[allow(clippy::missing_errors_doc)]
@@ -114,11 +117,16 @@ pub fn create_dummy_doc_ref() -> DocumentRef {
     test_doc.doc_ref().expect("Must be valid DocumentRef")
 }
 
-pub fn build_doc_and_publish(
+pub fn build_verify_and_publish(
     provider: &mut TestCatalystProvider,
     gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>,
 ) -> anyhow::Result<CatalystSignedDocument> {
+    static VALIDATOR: LazyLock<Validator> = LazyLock::new(|| Validator::new());
+
     let doc = gen_fn(provider)?;
+    VALIDATOR.validate(&doc, provider)?;
+    anyhow::ensure!(!doc.report().is_problematic(), "Invalid document, report: {:?}", doc.report());
+
     provider.add_document(&doc)?;
     Ok(doc)
 }
