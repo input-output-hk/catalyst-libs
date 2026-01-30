@@ -4,7 +4,13 @@ use catalyst_signed_doc::problem_report::ProblemReport;
 use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 
-use crate::vote_protocol::voter::{EncryptedVote, proof::VoterProof};
+use crate::vote_protocol::{
+    committee::ElectionPublicKey,
+    voter::{
+        EncryptedVote, Vote, encrypt_vote_with_default_rng,
+        proof::{VoterProof, VoterProofCommitment, generate_voter_proof_with_default_rng},
+    },
+};
 
 /// A clear choice indicator. See the `Choices` CBOR schema for the details.
 const CLEAR_CHOICE: u8 = 0;
@@ -72,6 +78,31 @@ impl Choices {
         Ok(Self::Clear(
             (0..n_options).map(|i| u64::from(i == choice)).collect(),
         ))
+    }
+
+    /// Creates a encrypted single choice `Choices::Encrypted`
+    pub fn new_encrypted_single(
+        choice: usize,
+        n_options: usize,
+        election_public_key: &ElectionPublicKey,
+        commitment: &VoterProofCommitment,
+    ) -> anyhow::Result<Self> {
+        let vote = Vote::new(choice, n_options)?;
+        let (encrypted_vote, randomness) =
+            encrypt_vote_with_default_rng(&vote, election_public_key);
+
+        let proof = generate_voter_proof_with_default_rng(
+            &vote,
+            encrypted_vote.clone(),
+            randomness,
+            election_public_key,
+            commitment,
+        )?;
+
+        Ok(Self::Encrypted {
+            vote: encrypted_vote,
+            row_proof: Some(proof),
+        })
     }
 
     /// Returns `true` if the underlying choice is a single choice, not a multi weighted

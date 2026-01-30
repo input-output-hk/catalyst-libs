@@ -24,10 +24,7 @@ use crate::{
         rule::ContestBallotRule,
     },
     contest_parameters::ContestParameters,
-    vote_protocol::voter::{
-        Vote, encrypt_vote_with_default_rng,
-        proof::{VoterProofCommitment, generate_voter_proof_with_default_rng},
-    },
+    vote_protocol::voter::proof::VoterProofCommitment,
 };
 
 #[test_case(
@@ -223,59 +220,42 @@ fn contest_ballot(
 
 /// Constructs an encoded payload with encrypted choices
 fn encrypted_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(1, 3).unwrap();
-    let (encrypted_vote, randomness) =
-        encrypt_vote_with_default_rng(&vote, parameters.election_public_key());
-
     let commitment = commitment_key(parameters.doc_ref()).unwrap();
-    let proof = generate_voter_proof_with_default_rng(
-        &vote,
-        encrypted_vote.clone(),
-        randomness,
+    let choice = Choices::new_encrypted_single(
+        1,
+        parameters.options().n_options(),
         parameters.election_public_key(),
         &commitment,
     )
     .unwrap();
-    let choices = [Choices::Encrypted {
-        vote: encrypted_vote,
-        row_proof: Some(proof),
-    }]
-    .to_vec();
-    ContestBallotPayload::new(choices)
+    ContestBallotPayload::new(vec![choice])
 }
 
 /// Constructs an encoded payload with encrypted choices, but without proof.
 fn empty_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(0, parameters.options().n_options()).unwrap();
-    let vote = encrypt_vote_with_default_rng(&vote, parameters.election_public_key()).0;
-    let choices = [Choices::Encrypted {
-        vote,
-        row_proof: None,
-    }]
-    .to_vec();
-    ContestBallotPayload::new(choices)
+    let commitment = commitment_key(parameters.doc_ref()).unwrap();
+    let mut choice = Choices::new_encrypted_single(
+        1,
+        parameters.options().n_options(),
+        parameters.election_public_key(),
+        &commitment,
+    )
+    .unwrap();
+    if let Choices::Encrypted { row_proof, .. } = &mut choice {
+        *row_proof = None;
+    }
+    ContestBallotPayload::new(vec![choice])
 }
 
 /// Constructs an encoded payload with encrypted choices, but with an invalid proof.
 fn invalid_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(0, parameters.options().n_options()).unwrap();
-    let (encrypted_vote, randomness) =
-        encrypt_vote_with_default_rng(&vote, parameters.election_public_key());
-
     let wrong_commitment = VoterProofCommitment::random_with_default_rng();
-    let proof = generate_voter_proof_with_default_rng(
-        &vote,
-        encrypted_vote.clone(),
-        randomness,
+    let choice = Choices::new_encrypted_single(
+        1,
+        parameters.options().n_options(),
         parameters.election_public_key(),
         &wrong_commitment,
     )
     .unwrap();
-
-    let choices = [Choices::Encrypted {
-        vote: encrypted_vote,
-        row_proof: Some(proof),
-    }]
-    .to_vec();
-    ContestBallotPayload::new(choices)
+    ContestBallotPayload::new(vec![choice])
 }

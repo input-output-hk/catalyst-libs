@@ -13,13 +13,16 @@ use catalyst_signed_doc::{
 };
 use catalyst_voting::vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey};
 use proptest::{
-    prelude::{ProptestConfig, prop::array, Just},
+    prelude::{Just, ProptestConfig, prop::array},
     property_test,
 };
 use proptest_derive::Arbitrary;
 
 use crate::{
-    contest_ballot::payload::{Choices, ContestBallotPayload},
+    contest_ballot::{
+        commitment_key,
+        payload::{Choices, ContestBallotPayload},
+    },
     contest_parameters::ContestParameters,
     tally::{provider::tests::TestTallyProvider, tally},
 };
@@ -134,7 +137,19 @@ fn publish_ballot(
     let choices = voter
         .choices
         .iter()
-        .map(|choice| Choices::new_clear_single(*choice, parameters.options().n_options()))
+        .map(|choice| {
+            if voter.anonymous {
+                let commitment = commitment_key(&parameters.doc_ref())?;
+                Choices::new_encrypted_single(
+                    *choice,
+                    parameters.options().n_options(),
+                    parameters.election_public_key(),
+                    &commitment,
+                )
+            } else {
+                Choices::new_clear_single(*choice, parameters.options().n_options())
+            }
+        })
         .collect::<Result<_, _>>()?;
     let payload = ContestBallotPayload::new(choices);
 
