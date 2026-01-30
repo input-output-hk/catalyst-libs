@@ -29,7 +29,8 @@ impl CatalystSignedDocumentValidationRule for ContentEncodingRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Ok(self.check_inner(doc))
+        self.check_inner(doc);
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -63,7 +64,7 @@ impl ContentEncodingRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> bool {
+    ) {
         let context = "Content Encoding Rule check";
         match self {
             Self::NotSpecified => {
@@ -75,7 +76,6 @@ impl ContentEncodingRule {
                             "{context}, document does not expect to have a content-encoding field"
                         ),
                     );
-                    return false;
                 }
             },
             Self::Specified { exp, optional } => {
@@ -90,7 +90,6 @@ impl ContentEncodingRule {
                                 .join(", "),
                             "Invalid document content-encoding value",
                         );
-                        return false;
                     }
                     if content_encoding.decode(doc.encoded_content()).is_err() {
                         doc.report().invalid_value(
@@ -99,18 +98,15 @@ impl ContentEncodingRule {
                             content_encoding.to_string().as_str(),
                             "Document content is not decodable with the expected content-encoding",
                         );
-                        return false;
                     }
                 } else if !optional {
                     doc.report().missing_field(
                         "content-encoding",
                         "Document must have a content-encoding field",
                     );
-                    return false;
                 }
             },
         }
-        true
     }
 }
 
@@ -128,26 +124,38 @@ mod tests {
             optional: true,
         };
 
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .with_content(content_encoding.encode(&[1, 2, 3]).unwrap())
             .build();
-        assert!(rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        assert!(!doc.report().is_problematic());
 
         // empty content (empty bytes) could not be brotli decoded
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        let report = format!("{:?}", doc.report());
+        println!("{report}");
+        assert!(doc.report().is_problematic());
+        assert!(
+            report.contains("Document content is not decodable with the expected content-encoding")
+        );
 
-        let doc = Builder::new().build();
-        assert!(rule.check_inner(&doc));
+        let doc = Builder::with_required_fields().build();
+        rule.check_inner(&doc);
+        assert!(!doc.report().is_problematic());
 
         let rule = ContentEncodingRule::Specified {
             exp: vec![content_encoding],
             optional: false,
         };
-        assert!(!rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        let report = format!("{:?}", doc.report());
+        println!("{report}");
+        assert!(doc.report().is_problematic());
+        assert!(report.contains("Document must have a content-encoding field"));
     }
 
     #[test]
@@ -157,13 +165,18 @@ mod tests {
         let rule = ContentEncodingRule::NotSpecified;
 
         // With Brotli content encoding
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
-        assert!(!rule.check_inner(&doc));
+        rule.check_inner(&doc);
+        let report = format!("{:?}", doc.report());
+        println!("{report}");
+        assert!(doc.report().is_problematic());
+        assert!(report.contains("document does not expect to have a content-encoding field"));
 
         // No content encoding
-        let doc = Builder::new().build();
-        assert!(rule.check_inner(&doc));
+        let doc = Builder::with_required_fields().build();
+        rule.check_inner(&doc);
+        assert!(!doc.report().is_problematic());
     }
 }
