@@ -121,7 +121,7 @@ pub fn build_verify_and_publish(
     provider: &mut TestCatalystProvider,
     gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>,
 ) -> anyhow::Result<CatalystSignedDocument> {
-    static VALIDATOR: LazyLock<Validator> = LazyLock::new(|| Validator::new());
+    static VALIDATOR: LazyLock<Validator> = LazyLock::new(Validator::new);
 
     let doc = gen_fn(provider)?;
     VALIDATOR.validate(&doc, provider)?;

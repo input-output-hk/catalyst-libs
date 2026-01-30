@@ -80,7 +80,7 @@ use crate::{
         let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
 
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_admin_key_pair());
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(1)));
         content["end"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(5)));
@@ -145,7 +145,7 @@ use crate::{
         let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
 
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_admin_key_pair());
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(5)));
         content["end"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(1)));
