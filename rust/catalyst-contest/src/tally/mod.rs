@@ -50,7 +50,6 @@ pub fn tally(
     );
 
     let ballots = contest_parameters.get_associated_ballots(provider)?;
-    println!("ballots len {}", ballots.len());
     let ballots = ballots
         .iter()
         .map(|d| ContestBallot::new(d, provider))
@@ -81,7 +80,6 @@ pub fn tally(
     let decryption_tally_setup = DecryptionTallySetup::new(total_voting_power)?;
 
     let proposals = contest_parameters.get_associated_proposals(provider)?;
-    println!("proposals len {}", proposals.len());
     let tally_per_proposals = proposals
         .iter()
         .map(|p| {

@@ -13,7 +13,7 @@ use catalyst_signed_doc::{
 };
 use catalyst_voting::vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey};
 use proptest::{
-    prelude::{ProptestConfig, prop::array},
+    prelude::{ProptestConfig, prop::array, Just},
     property_test,
 };
 use proptest_derive::Arbitrary;
@@ -33,6 +33,7 @@ struct Voter {
     voting_power: u32,
     #[proptest(strategy = "array::uniform(0..VOTING_OPTIONS)")]
     choices: [usize; PROPOSALS_AMOUNT],
+    #[proptest(strategy = "Just(false)")]
     anonymous: bool,
 }
 
@@ -62,16 +63,27 @@ fn tally_test(
     let res_tally = tally(&contest_parameters, &election_secret_key, &mut p).unwrap();
     assert_eq!(&res_tally.options, contest_parameters.options());
 
-    for (p_ref,exp_tally_per_proposal) in exp_tally {
-        let res_tally_per_proposal = res_tally.tally_per_proposals.get(&p_ref).expect("missing tally result for the proposal");
+    for (p_ref, exp_tally_per_proposal) in exp_tally {
+        let res_tally_per_proposal = res_tally
+            .tally_per_proposals
+            .get(&p_ref)
+            .expect("missing tally result for the proposal");
 
         for i in 0..exp_tally_per_proposal.len() {
-            assert_eq!(res_tally_per_proposal[i].option, exp_tally_per_proposal[i].2);
-            assert_eq!(res_tally_per_proposal[i].decrypted_tally, exp_tally_per_proposal[i].1);
-            assert_eq!(res_tally_per_proposal[i].clear_tally, exp_tally_per_proposal[i].0);
+            assert_eq!(
+                res_tally_per_proposal[i].option,
+                exp_tally_per_proposal[i].2
+            );
+            assert_eq!(
+                res_tally_per_proposal[i].decrypted_tally,
+                exp_tally_per_proposal[i].1
+            );
+            assert_eq!(
+                res_tally_per_proposal[i].clear_tally,
+                exp_tally_per_proposal[i].0
+            );
         }
     }
-
 }
 
 fn prepare_contest(
@@ -162,7 +174,7 @@ fn expected_tally(
                     let p_clear_result_per_option = voters
                         .iter()
                         // filters ALL encrypted option, to keep only clear one
-                        .filter(|v| v.anonymous)
+                        .filter(|v| !v.anonymous)
                         // filters each voter's choice that its done exactly on the `option_index`
                         .filter(|v| {
                             let choice = v.choices.get(p_index).expect("missing proposal choice");
