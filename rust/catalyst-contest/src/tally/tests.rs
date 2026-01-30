@@ -5,10 +5,10 @@ use catalyst_signed_doc::{
     catalyst_id::role_index::RoleId,
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish,
         contest_parameters::contest_parameters_default_content,
-        contest_parameters_form_template_doc, create_dummy_key_pair, create_key_pair_and_publish,
-        proposal_doc, proposal_form_template_doc,
+        contest_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
+        create_key_pair_and_publish, proposal_doc, proposal_form_template_doc,
     },
 };
 use catalyst_voting::vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey};
@@ -95,16 +95,16 @@ fn prepare_contest(
     election_public_key: &ElectionPublicKey,
     p: &mut TestCatalystProvider,
 ) -> anyhow::Result<(ContestParameters, Vec<DocumentRef>)> {
-    let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+    let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+    let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+    let template =
+        build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
 
-    let brand = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-    let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
-    let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-
+    let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
     let mut content = contest_parameters_default_content();
     content["election_public_key"] = serde_json::json!(hex::encode(election_public_key.to_bytes()));
     content["options"] = serde_json::json!(options);
-    let parameters = build_doc_and_publish(p, |_| {
+    let parameters = build_verify_and_publish(p, |_| {
         builder::contest_parameters_doc(
             &template.doc_ref()?,
             &brand.doc_ref()?,
@@ -114,10 +114,10 @@ fn prepare_contest(
             None,
         )
     })?;
-    let template = build_doc_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+    let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
 
     let proposals_refs = (0..proposals_amount)
-        .map(|_| build_doc_and_publish(p, |p| proposal_doc(&template, &brand, p))?.doc_ref())
+        .map(|_| build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?.doc_ref())
         .collect::<Result<_, _>>()?;
 
     Ok((ContestParameters::new(&parameters, p)?, proposals_refs))
@@ -153,7 +153,7 @@ fn publish_ballot(
         .collect::<Result<_, _>>()?;
     let payload = ContestBallotPayload::new(choices);
 
-    build_doc_and_publish(&mut p.p, |_| {
+    build_verify_and_publish(&mut p.p, |_| {
         builder::contest_ballot_doc(
             proposals_refs,
             parameters.doc_ref(),

@@ -5,7 +5,7 @@ use catalyst_signed_doc::{
     builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish,
         contest_parameters::contest_parameters_default_content, contest_parameters_doc,
         contest_parameters_form_template_doc, create_dummy_admin_key_pair,
         create_key_pair_and_publish,
@@ -20,9 +20,9 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
 
 #[test_case(
     |p| {
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let parameters = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         contest_parameters_doc(&template, &parameters, p)
     }
     => true
@@ -37,9 +37,9 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
         content["start"] = serde_json::json!(time);
         content["end"] = serde_json::json!(time);
 
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let parameters = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         builder::contest_parameters_doc(&template.doc_ref()?, &parameters.doc_ref()?, &content, &sk.into(), kid, None)
     }
     => false
@@ -52,9 +52,9 @@ use crate::contest_parameters::{ContestParameters, rule::ContestParametersRule};
         let mut content = contest_parameters_default_content();
         content["options"] = serde_json::json!(["Yes"]);
 
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let parameters = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let parameters = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&parameters, p))?;
         builder::contest_parameters_doc(&template.doc_ref()?, &parameters.doc_ref()?, &content, &sk.into(), kid, None)
     }
     => false

@@ -4,7 +4,7 @@
 use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, build_doc_and_publish,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish,
         contest_delegation_by_representative_doc, contest_delegation_doc,
         contest_parameters::contest_parameters_default_content, contest_parameters_doc,
         contest_parameters_form_template_doc, create_dummy_admin_key_pair,
@@ -21,15 +21,15 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
 
 #[test_case(
     |p| {
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
-        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let contest = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
-        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
-        let _delegation_by_representative = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_verify_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_verify_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative = build_verify_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
         contest_delegation_doc(&rep_nomination, &contest, p)
     }
     => true
@@ -43,15 +43,15 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
         content["start"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(1)));
         content["end"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(5)));
 
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
-        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let contest = build_doc_and_publish(p, |_|  builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
-        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
-        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
-        let _delegation_by_representative = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_verify_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_verify_and_publish(p, |_|  builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
+        let template = build_verify_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_verify_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative = build_verify_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
         contest_delegation_doc(&rep_nomination, &contest, p)
     }
     => false
@@ -65,15 +65,15 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
         content["start"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(5)));
         content["end"] = serde_json::json!(Utc::now().checked_sub_signed(Duration::hours(1)));
 
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
-        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let contest = build_doc_and_publish(p, |_|  builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
-        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
-        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
-        let _delegation_by_representative = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_verify_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_verify_and_publish(p, |_|  builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
+        let template = build_verify_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_verify_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative = build_verify_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
         contest_delegation_doc(&rep_nomination, &contest, p)
     }
     => false
@@ -82,14 +82,14 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
 )]
 #[test_case(
     |p| {
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
-        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let contest = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
-        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_verify_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_verify_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
         contest_delegation_doc(&rep_nomination, &contest, p)
     }
     => false
@@ -98,18 +98,18 @@ use crate::contest_delegation::{ContestDelegation, rule::ContestDelegationRule};
 )]
 #[test_case(
     |p| {
-        let template = build_doc_and_publish(p, brand_parameters_form_template_doc)?;
-        let brand = build_doc_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_doc_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
-        let rep_profile = build_doc_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
-        let contest = build_doc_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
-        let template = build_doc_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
-        let rep_nomination = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
-        let _delegation_by_representative = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
+        let template = build_verify_and_publish(p, |p| rep_profile_form_template_doc(&brand, p))?;
+        let rep_profile = build_verify_and_publish(p, |p| rep_profile_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let contest = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| rep_nomination_form_template_doc(&contest, p))?;
+        let rep_nomination = build_verify_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative = build_verify_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination, &contest, p))?;
         std::thread::sleep(std::time::Duration::from_secs(1));
-        let rep_nomination_latest = build_doc_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
-        let _delegation_by_representative_2 = build_doc_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination_latest, &contest, p))?;
+        let rep_nomination_latest = build_verify_and_publish(p, |p| rep_nomination_doc(&template, &rep_profile, &contest, p))?;
+        let _delegation_by_representative_2 = build_verify_and_publish(p, |p| contest_delegation_by_representative_doc(&rep_nomination_latest, &contest, p))?;
         contest_delegation_doc(&rep_nomination, &contest, p)
     }
     => false
