@@ -58,6 +58,7 @@ use crate::{
     catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     uuid::{UuidV4, UuidV7},
+    validator::Validator,
 };
 
 #[allow(clippy::missing_errors_doc)]
@@ -114,11 +115,24 @@ pub fn create_dummy_doc_ref() -> DocumentRef {
     test_doc.doc_ref().expect("Must be valid DocumentRef")
 }
 
-pub fn build_doc_and_publish(
+pub fn build_verify_and_publish(
     provider: &mut TestCatalystProvider,
     gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>,
 ) -> anyhow::Result<CatalystSignedDocument> {
+    #[cfg(not(target_arch = "wasm32"))]
+    static VALIDATOR: std::sync::LazyLock<Validator> = std::sync::LazyLock::new(Validator::new);
+    #[cfg(target_arch = "wasm32")]
+    #[allow(non_snake_case)]
+    let VALIDATOR = Validator::new();
+
     let doc = gen_fn(provider)?;
+    VALIDATOR.validate(&doc, provider)?;
+    anyhow::ensure!(
+        !doc.report().is_problematic(),
+        "Invalid document, report: {:?}",
+        doc.report()
+    );
+
     provider.add_document(&doc)?;
     Ok(doc)
 }
