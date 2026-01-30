@@ -49,7 +49,7 @@ fn tally_test(
     let mut p = TestTallyProvider::default();
 
     let (contest_parameters, proposals_refs) = prepare_contest(
-        options,
+        &options,
         PROPOSALS_AMOUNT,
         &election_secret_key.public_key(),
         &mut p.p,
@@ -63,7 +63,7 @@ fn tally_test(
         publish_ballot(&voter, &contest_parameters, &proposals_refs, &mut p).unwrap();
     }
 
-    let res_tally = tally(&contest_parameters, &election_secret_key, &mut p).unwrap();
+    let res_tally = tally(&contest_parameters, &election_secret_key, &p).unwrap();
     assert_eq!(&res_tally.options, contest_parameters.options());
 
     for (p_ref, exp_tally_per_proposal) in exp_tally {
@@ -90,7 +90,7 @@ fn tally_test(
 }
 
 fn prepare_contest(
-    options: [String; VOTING_OPTIONS],
+    options: &[String; VOTING_OPTIONS],
     proposals_amount: usize,
     election_public_key: &ElectionPublicKey,
     p: &mut TestCatalystProvider,
@@ -139,7 +139,7 @@ fn publish_ballot(
         .iter()
         .map(|choice| {
             if voter.anonymous {
-                let commitment = commitment_key(&parameters.doc_ref())?;
+                let commitment = commitment_key(parameters.doc_ref())?;
                 Choices::new_encrypted_single(
                     *choice,
                     parameters.options().n_options(),
