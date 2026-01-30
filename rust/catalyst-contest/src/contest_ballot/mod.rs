@@ -216,11 +216,11 @@ fn check_choice(
     commitment_key: &VoterProofCommitment,
     report: &ProblemReport,
 ) {
-    if choice.n_options() != contest_parameters.choices().n_options() {
+    if choice.n_options() != contest_parameters.options().n_options() {
         report.invalid_value(
             "choices",
             &choice.n_options().to_string(),
-            &contest_parameters.choices().n_options().to_string(),
+            &contest_parameters.options().n_options().to_string(),
             "'Contest Ballot' must be aligned with the 'Contest Parameters' on the number of options between the choice was made",
         );
     }

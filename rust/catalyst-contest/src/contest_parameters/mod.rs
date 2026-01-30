@@ -74,9 +74,9 @@ impl ContestParameters {
         &self.payload.snapshot
     }
 
-    /// Returns contest choices
+    /// Returns contest voting options
     #[must_use]
-    pub fn choices(&self) -> &VotingOptions {
+    pub fn options(&self) -> &VotingOptions {
         &self.payload.options
     }
 

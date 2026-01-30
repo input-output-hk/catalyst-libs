@@ -19,6 +19,7 @@ use crate::crypto::{
 
 /// DLEQ proof struct
 #[must_use]
+#[derive(Debug, Clone)]
 pub struct DleqProof(Scalar, Scalar);
 
 /// Generates a DLEQ proof.
