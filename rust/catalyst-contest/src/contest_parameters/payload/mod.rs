@@ -23,7 +23,7 @@ pub(crate) struct ContestParametersPayload {
 }
 
 /// Contest Choices
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct VotingOptions(Vec<String>);
 
 impl VotingOptions {
@@ -36,15 +36,6 @@ impl VotingOptions {
     /// Returns an iterator over the voting options items
     pub fn iter(&self) -> impl Iterator<Item = &String> {
         self.0.iter()
-    }
-}
-
-impl IntoIterator for VotingOptions {
-    type IntoIter = <Vec<std::string::String> as IntoIterator>::IntoIter;
-    type Item = String;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
     }
 }
 

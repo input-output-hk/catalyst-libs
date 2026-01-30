@@ -160,7 +160,7 @@ fn tally_per_proposal(
     for_clear_choices
         .into_iter()
         .zip(for_encrypted_choices)
-        .zip(options.clone())
+        .zip(options.iter().cloned())
         .map(
             |((clear_tally, (decrypted_tally, encrypted_tally, tally_proof)), option)| {
                 anyhow::Ok(TallyPerOption {

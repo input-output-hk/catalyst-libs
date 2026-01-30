@@ -53,13 +53,25 @@ fn tally_test(
     .unwrap();
     assert_eq!(proposals_refs.len(), PROPOSALS_AMOUNT);
 
-    let _exp_tally = expected_tally(&contest_parameters, &proposals_refs, &voters);
+    let exp_tally = expected_tally(&contest_parameters, &proposals_refs, &voters);
 
     for voter in voters {
         publish_ballot(&voter, &contest_parameters, &proposals_refs, &mut p).unwrap();
     }
 
-    let _res = tally(&contest_parameters, &election_secret_key, &mut p).unwrap();
+    let res_tally = tally(&contest_parameters, &election_secret_key, &mut p).unwrap();
+    assert_eq!(&res_tally.options, contest_parameters.options());
+
+    for (p_ref,exp_tally_per_proposal) in exp_tally {
+        let res_tally_per_proposal = res_tally.tally_per_proposals.get(&p_ref).expect("missing tally result for the proposal");
+
+        for i in 0..exp_tally_per_proposal.len() {
+            assert_eq!(res_tally_per_proposal[i].clear_tally, exp_tally_per_proposal[i].0);
+            assert_eq!(res_tally_per_proposal[i].decrypted_tally, exp_tally_per_proposal[i].1);
+            assert_eq!(res_tally_per_proposal[i].option, exp_tally_per_proposal[i].2);
+        }
+    }
+
 }
 
 fn prepare_contest(
@@ -143,8 +155,7 @@ fn expected_tally(
         .enumerate()
         .map(|(p_index, p_ref)| {
             let res = options
-                .clone()
-                .into_iter()
+                .iter()
                 .enumerate()
                 .map(|(option_index, option)| {
                     // collects a voting result for a proposal per voting option
@@ -177,7 +188,7 @@ fn expected_tally(
                     (
                         p_clear_result_per_option,
                         p_encrypted_result_per_option,
-                        option,
+                        option.clone(),
                     )
                 })
                 .collect::<Vec<_>>();
