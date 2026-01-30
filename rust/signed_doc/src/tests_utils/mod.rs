@@ -125,7 +125,11 @@ pub fn build_verify_and_publish(
 
     let doc = gen_fn(provider)?;
     VALIDATOR.validate(&doc, provider)?;
-    anyhow::ensure!(!doc.report().is_problematic(), "Invalid document, report: {:?}", doc.report());
+    anyhow::ensure!(
+        !doc.report().is_problematic(),
+        "Invalid document, report: {:?}",
+        doc.report()
+    );
 
     provider.add_document(&doc)?;
     Ok(doc)
