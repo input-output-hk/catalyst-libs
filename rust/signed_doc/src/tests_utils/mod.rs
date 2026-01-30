@@ -31,8 +31,6 @@ pub mod rep_nomination_form_template;
 pub mod rep_profile;
 pub mod rep_profile_form_template;
 
-use std::sync::LazyLock;
-
 pub use brand_parameters::brand_parameters_doc;
 pub use brand_parameters_form_template::brand_parameters_form_template_doc;
 pub use campaign_parameters::campaign_parameters_doc;
@@ -121,7 +119,12 @@ pub fn build_verify_and_publish(
     provider: &mut TestCatalystProvider,
     gen_fn: impl FnOnce(&mut TestCatalystProvider) -> anyhow::Result<CatalystSignedDocument>,
 ) -> anyhow::Result<CatalystSignedDocument> {
-    static VALIDATOR: LazyLock<Validator> = LazyLock::new(Validator::new);
+    #[cfg(not(target_arch = "wasm32"))]
+    static VALIDATOR: std::sync::LazyLock<Validator> = std::sync::LazyLock::new(Validator::new);
+    #[cfg(target_arch = "wasm32")]
+    #[allow(non_snake_case)]
+    let VALIDATOR = Validator::new();
+
 
     let doc = gen_fn(provider)?;
     VALIDATOR.validate(&doc, provider)?;
