@@ -125,7 +125,6 @@ pub fn build_verify_and_publish(
     #[allow(non_snake_case)]
     let VALIDATOR = Validator::new();
 
-
     let doc = gen_fn(provider)?;
     VALIDATOR.validate(&doc, provider)?;
     anyhow::ensure!(
