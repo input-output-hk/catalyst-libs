@@ -58,8 +58,9 @@ fn single_signature_validation_test() {
     // case: has key
     let mut provider = TestCatalystProvider::default();
     provider.add_sk(kid.clone(), sk);
+    SignatureRule::check_inner(&signed_doc, &provider).unwrap();
     assert!(
-        SignatureRule::check_inner(&signed_doc, &provider).unwrap(),
+        !signed_doc.report().is_problematic(),
         "{:?}",
         signed_doc.report()
     );

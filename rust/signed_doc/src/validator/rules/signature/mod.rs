@@ -23,7 +23,8 @@ impl CatalystSignedDocumentValidationRule for SignatureRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Self::check_inner(doc, provider)
+        Self::check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -36,24 +37,20 @@ impl SignatureRule {
     fn check_inner(
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         if doc.signatures().is_empty() {
             doc.report().other(
                 "Catalyst Signed Document is unsigned",
                 "During Catalyst Signed Document signature validation",
             );
-            return Ok(false);
+            return Ok(());
         }
 
-        let res = doc
-            .signatures()
-            .iter()
-            .map(|sign| validate_signature(doc, sign, provider, doc.report()))
-            .collect::<anyhow::Result<Vec<_>>>()?
-            .iter()
-            .all(|res| *res);
+        for signature in doc.signatures().iter() {
+            validate_signature(doc, signature, provider, doc.report())?;
+        }
 
-        Ok(res)
+        Ok(())
     }
 }
 
@@ -63,7 +60,7 @@ fn validate_signature(
     sign: &Signature,
     provider: &dyn CatalystIdProvider,
     report: &ProblemReport,
-) -> anyhow::Result<bool> {
+) -> anyhow::Result<()> {
     let kid = sign.kid();
 
     let Some(pk) = provider.try_get_registered_key(kid)? else {
@@ -71,7 +68,7 @@ fn validate_signature(
             &format!("Missing public key for {kid}."),
             "During public key extraction",
         );
-        return Ok(false);
+        return Ok(());
     };
 
     let tbs_data = tbs_data(kid, doc.doc_meta(), doc.content()).context("Probably a bug, cannot build CBOR COSE bytes for signature verification from the structurally valid COSE object.")?;
@@ -83,7 +80,7 @@ fn validate_signature(
             &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
             "During encoding cose signature to bytes",
         );
-        return Ok(false);
+        return Ok(());
     };
 
     let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
@@ -92,8 +89,7 @@ fn validate_signature(
             &format!("Verification failed for signature with Key ID {kid}"),
             "During signature validation with verifying key",
         );
-        return Ok(false);
     }
 
-    Ok(true)
+    Ok(())
 }
