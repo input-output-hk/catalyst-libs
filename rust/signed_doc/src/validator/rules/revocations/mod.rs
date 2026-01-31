@@ -27,7 +27,8 @@ impl CatalystSignedDocumentValidationRule for RevocationsRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Ok(self.check_inner(doc))
+        self.check_inner(doc);
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -49,7 +50,7 @@ impl RevocationsRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> bool {
+    ) {
         if let Self::Specified { optional } = self
             && doc.doc_meta().revocations().is_none()
             && !optional
@@ -58,7 +59,6 @@ impl RevocationsRule {
                 "revocations",
                 "Document must have 'revocations' field specified",
             );
-            return false;
         }
         if let Self::NotSpecified = self
             && doc.doc_meta().revocations().is_some()
@@ -71,9 +71,6 @@ impl RevocationsRule {
                 ),
                 "Document does not expect to have a 'revocations' field",
             );
-            return false;
         }
-
-        true
     }
 }
