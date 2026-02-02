@@ -2,8 +2,9 @@
 
 mod serde_election_public_key;
 
-use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use chrono::{DateTime, Utc};
+
+use crate::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 
 /// Content Parameters JSON payload type.
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -22,7 +23,7 @@ pub(crate) struct ContestParametersPayload {
 }
 
 /// Contest Choices
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct VotingOptions(Vec<String>);
 
 impl VotingOptions {
@@ -31,14 +32,10 @@ impl VotingOptions {
     pub fn n_options(&self) -> usize {
         self.0.len()
     }
-}
 
-impl IntoIterator for VotingOptions {
-    type IntoIter = <Vec<std::string::String> as IntoIterator>::IntoIter;
-    type Item = String;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+    /// Returns an iterator over the voting options items
+    pub fn iter(&self) -> impl Iterator<Item = &String> {
+        self.0.iter()
     }
 }
 
