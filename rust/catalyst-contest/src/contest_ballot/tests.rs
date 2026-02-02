@@ -134,7 +134,7 @@ use crate::{
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
         let payload = ContestBallotPayload::new(vec![choice]);
-        builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)      
+        builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => false
     ;
