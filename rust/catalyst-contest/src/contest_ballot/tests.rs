@@ -127,6 +127,26 @@ use crate::{
         let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
         let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
         let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
+        let _proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
+        let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
+
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
+        let parameters = ContestParameters::new(&parameters, p)?;
+        let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
+        let payload = ContestBallotPayload::new(vec![choice]);
+        builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)      
+    }
+    => false
+    ;
+    "invalid 'ref' field, does not align with the associated 'Contest Parameters' proposals"
+)]
+#[test_case(
+    |p| {
+        let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
+        let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
+        let parameters = build_verify_and_publish(p, |p| contest_parameters_doc(&template, &brand, p))?;
+        let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
         let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
         let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));

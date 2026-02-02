@@ -85,7 +85,7 @@ impl Display for DocumentRef {
     ) -> std::fmt::Result {
         write!(
             f,
-            "id: {}, ver: {}, document_locator: {}",
+            "{{ id: {}, ver: {}, document_locator: {} }}",
             self.id, self.ver, self.doc_locator
         )
     }
