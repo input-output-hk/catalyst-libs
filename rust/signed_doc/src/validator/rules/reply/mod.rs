@@ -33,7 +33,8 @@ impl CatalystSignedDocumentValidationRule for ReplyRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        self.check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -77,7 +78,7 @@ impl ReplyRule {
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let context: &str = "Reply rule check";
         if let Self::Specified {
             allowed_type: exp_reply_type,
@@ -112,7 +113,7 @@ impl ReplyRule {
                     true
                 };
 
-                return doc_refs_check(
+                doc_refs_check(
                     reply_ref,
                     std::slice::from_ref(exp_reply_type),
                     false,
@@ -120,13 +121,12 @@ impl ReplyRule {
                     provider,
                     doc.report(),
                     reply_validator,
-                );
+                )?;
             } else if !optional {
                 doc.report().missing_field(
                     "reply",
                     &format!("{context}, document must have reply field"),
                 );
-                return Ok(false);
             }
         }
         if let Self::NotSpecified = self
@@ -137,9 +137,8 @@ impl ReplyRule {
                 &reply.to_string(),
                 &format!("{context}, document does not expect to have a reply field"),
             );
-            return Ok(false);
         }
 
-        Ok(true)
+        Ok(())
     }
 }
