@@ -14,13 +14,6 @@ use catalyst_signed_doc::{
     },
     validator::Validator,
 };
-use catalyst_voting::{
-    crypto::group::GroupElement,
-    vote_protocol::voter::{
-        Vote, encrypt_vote_with_default_rng,
-        proof::{VoterProofCommitment, generate_voter_proof_with_default_rng},
-    },
-};
 use chrono::{Duration, Utc};
 use test_case::test_case;
 
@@ -31,12 +24,11 @@ use crate::{
         rule::ContestBallotRule,
     },
     contest_parameters::ContestParameters,
+    vote_protocol::voter::proof::VoterProofCommitment,
 };
 
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-
         let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
@@ -44,10 +36,10 @@ use crate::{
         let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
         let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
         let payload = ContestBallotPayload::new(vec![choice]);
-
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => true
@@ -56,8 +48,6 @@ use crate::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-
         let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
@@ -65,9 +55,9 @@ use crate::{
         let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
         let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let parameters = ContestParameters::new(&parameters, p)?;
         let payload = encrypted_payload(&parameters);
-
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => true
@@ -84,15 +74,15 @@ use crate::{
         let mut content = contest_parameters_default_content();
         content["start"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(1)));
         content["end"] = serde_json::json!(Utc::now().checked_add_signed(Duration::hours(5)));
-        let parameters = build_verify_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.clone().into(), kid.clone(), None))?;
+        let parameters = build_verify_and_publish(p, |_| builder::contest_parameters_doc(&template.doc_ref()?, &brand.doc_ref()?, &content, &sk.into(), kid, None))?;
 
         let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
         let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options())?;
         let payload = ContestBallotPayload::new(vec![choice]);
-
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => false
@@ -101,8 +91,6 @@ use crate::{
 )]
 #[test_case(
     |p| {
-        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
-
         let brand = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
         let brand = build_verify_and_publish(p, |p| brand_parameters_doc(&brand, p))?;
         let template = build_verify_and_publish(p, |p| contest_parameters_form_template_doc(&brand, p))?;
@@ -110,10 +98,10 @@ use crate::{
         let template = build_verify_and_publish(p, |p| proposal_form_template_doc(&brand, p))?;
         let proposal = build_verify_and_publish(p, |p| proposal_doc(&template, &brand, p))?;
 
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let parameters = ContestParameters::new(&parameters, p)?;
         let choice = Choices::new_clear_single(0, parameters.options().n_options().saturating_add(1))?;
         let payload = ContestBallotPayload::new(vec![choice]);
-
         builder::contest_ballot_doc(&[proposal.doc_ref()?], parameters.doc_ref(), &payload, &sk.into(), kid, None)
     }
     => false
@@ -226,59 +214,42 @@ fn contest_ballot(
 
 /// Constructs an encoded payload with encrypted choices
 fn encrypted_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(1, 3).unwrap();
-    let public_key = GroupElement::zero().into();
-    let (encrypted_vote, randomness) = encrypt_vote_with_default_rng(&vote, &public_key);
-
     let commitment = commitment_key(parameters.doc_ref()).unwrap();
-    let proof = generate_voter_proof_with_default_rng(
-        &vote,
-        encrypted_vote.clone(),
-        randomness,
-        &public_key,
+    let choice = Choices::new_encrypted_single(
+        1,
+        parameters.options().n_options(),
+        parameters.election_public_key(),
         &commitment,
     )
     .unwrap();
-    let choices = [Choices::Encrypted {
-        vote: encrypted_vote,
-        row_proof: Some(proof),
-    }]
-    .to_vec();
-    ContestBallotPayload::new(choices)
+    ContestBallotPayload::new(vec![choice])
 }
 
 /// Constructs an encoded payload with encrypted choices, but without proof.
 fn empty_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(0, parameters.options().n_options()).unwrap();
-    let vote = encrypt_vote_with_default_rng(&vote, parameters.election_public_key()).0;
-    let choices = [Choices::Encrypted {
-        vote,
-        row_proof: None,
-    }]
-    .to_vec();
-    ContestBallotPayload::new(choices)
+    let commitment = commitment_key(parameters.doc_ref()).unwrap();
+    let mut choice = Choices::new_encrypted_single(
+        1,
+        parameters.options().n_options(),
+        parameters.election_public_key(),
+        &commitment,
+    )
+    .unwrap();
+    if let Choices::Encrypted { row_proof, .. } = &mut choice {
+        *row_proof = None;
+    }
+    ContestBallotPayload::new(vec![choice])
 }
 
 /// Constructs an encoded payload with encrypted choices, but with an invalid proof.
 fn invalid_proof_payload(parameters: &ContestParameters) -> ContestBallotPayload {
-    let vote = Vote::new(0, parameters.options().n_options()).unwrap();
-    let (encrypted_vote, randomness) =
-        encrypt_vote_with_default_rng(&vote, parameters.election_public_key());
-
     let wrong_commitment = VoterProofCommitment::random_with_default_rng();
-    let proof = generate_voter_proof_with_default_rng(
-        &vote,
-        encrypted_vote.clone(),
-        randomness,
+    let choice = Choices::new_encrypted_single(
+        1,
+        parameters.options().n_options(),
         parameters.election_public_key(),
         &wrong_commitment,
     )
     .unwrap();
-
-    let choices = [Choices::Encrypted {
-        vote: encrypted_vote,
-        row_proof: Some(proof),
-    }]
-    .to_vec();
-    ContestBallotPayload::new(choices)
+    ContestBallotPayload::new(vec![choice])
 }
