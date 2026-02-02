@@ -1,7 +1,8 @@
 //! A serialize/deserialize implementation for `ElectionPublicKey`.
 
-use catalyst_voting::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 use serde::{Deserialize, Deserializer, Serializer};
+
+use crate::{crypto::group::GroupElement, vote_protocol::committee::ElectionPublicKey};
 
 /// A serialization implementation for `ElectionPublicKey`.
 // Allow dead code as for now it is only used in tests.

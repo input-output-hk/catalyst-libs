@@ -9,3 +9,5 @@ pub mod contest_ballot;
 pub mod contest_delegation;
 pub mod contest_parameters;
 pub mod tally;
+
+pub use catalyst_voting::*;
