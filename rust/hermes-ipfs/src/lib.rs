@@ -752,26 +752,30 @@ pub enum SubscriptionStatusEvent {
 }
 
 /// Handle stream of messages from the IPFS pubsub topic
-pub fn subscription_stream_task<MH, SH>(
+pub fn subscription_stream_task<MH, SH, MHFut, SHFut>(
     stream: BoxStream<'static, connexa::prelude::GossipsubEvent>,
     message_handler: MH,
     subscription_handler: SH,
 ) -> tokio::task::JoinHandle<()>
 where
-    MH: Fn(GossipsubMessage) + Send + 'static,
-    SH: Fn(SubscriptionStatusEvent) + Send + 'static,
+    MH: Fn(GossipsubMessage) -> MHFut + Send + 'static,
+    MHFut: Future<Output = ()> + Send + 'static,
+    SH: Fn(SubscriptionStatusEvent) -> SHFut + Send + 'static,
+    SHFut: Future<Output = ()> + Send + 'static,
 {
     tokio::spawn(async move {
         pin_mut!(stream);
         while let Some(msg) = stream.next().await {
             match msg {
                 connexa::prelude::GossipsubEvent::Subscribed { peer_id } => {
-                    subscription_handler(SubscriptionStatusEvent::Subscribed { peer_id });
+                    subscription_handler(SubscriptionStatusEvent::Subscribed { peer_id }).await;
                 },
                 connexa::prelude::GossipsubEvent::Unsubscribed { peer_id } => {
-                    subscription_handler(SubscriptionStatusEvent::Unsubscribed { peer_id });
+                    subscription_handler(SubscriptionStatusEvent::Unsubscribed { peer_id }).await;
                 },
-                connexa::prelude::GossipsubEvent::Message { message } => message_handler(message),
+                connexa::prelude::GossipsubEvent::Message { message } => {
+                    message_handler(message).await;
+                },
             }
         }
     })
