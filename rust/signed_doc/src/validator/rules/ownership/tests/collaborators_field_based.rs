@@ -15,7 +15,7 @@ use crate::{
     |_| {
         let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
@@ -28,7 +28,7 @@ use crate::{
     |provider| {
         let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
@@ -36,7 +36,7 @@ use crate::{
             .build();
         provider.add_document(&doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
@@ -50,7 +50,7 @@ use crate::{
         let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let (c_sk, c_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Collaborators(vec![c_kid.clone()].into()))
@@ -59,7 +59,7 @@ use crate::{
             .build();
         provider.add_document(&doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
@@ -75,7 +75,7 @@ use crate::{
         let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let (c_sk, c_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Collaborators(vec![c_kid.clone()].into()))
@@ -84,7 +84,7 @@ use crate::{
             .build();
         provider.add_document(&doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .add_signature(|m| c_sk.sign(&m).to_vec(), c_kid.clone())
@@ -96,7 +96,7 @@ use crate::{
 #[test_case(
     |_| {
         let id = UuidV7::new();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .build()
@@ -108,7 +108,7 @@ use crate::{
         let (sk1, kid1) = create_dummy_key_pair(RoleId::Role0);
         let (sk2, kid2) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
@@ -123,7 +123,7 @@ use crate::{
     |provider| {
         let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
@@ -132,7 +132,7 @@ use crate::{
         provider.add_document(&doc).unwrap();
 
         let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
@@ -146,7 +146,7 @@ use crate::{
         let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let (c_sk, c_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
@@ -154,7 +154,7 @@ use crate::{
             .build();
         provider.add_document(&doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
@@ -170,7 +170,7 @@ use crate::{
         let (a_sk, a_kid) = create_dummy_key_pair(RoleId::Role0);
         let (c1_sk, c1_kid) = create_dummy_key_pair(RoleId::Role0);
         let id = UuidV7::new();
-        let doc = Builder::new()
+        let doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(id))
             .with_metadata_field(SupportedField::Collaborators(vec![c1_kid.clone()].into()))
@@ -180,7 +180,7 @@ use crate::{
         provider.add_document(&doc).unwrap();
 
         let (c2_sk, c2_kid) = create_dummy_key_pair(RoleId::Role0);
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(id))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .add_signature(|m| a_sk.sign(&m).to_vec(), a_kid.clone())
@@ -200,9 +200,9 @@ fn ownership_test(
 
     let doc = doc_gen(&mut provider);
 
-    let res = DocumentOwnershipRule::CollaboratorsFieldBased
+    DocumentOwnershipRule::CollaboratorsFieldBased
         .check_inner(&doc, &provider)
         .unwrap();
     println!("{:?}", doc.report());
-    res
+    !doc.report().is_problematic()
 }

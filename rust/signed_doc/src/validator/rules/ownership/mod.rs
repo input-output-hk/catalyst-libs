@@ -36,7 +36,8 @@ impl CatalystSignedDocumentValidationRule for DocumentOwnershipRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        self.check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -74,14 +75,14 @@ impl DocumentOwnershipRule {
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let doc_id = doc.doc_id()?;
         if doc_id == doc.doc_ver()? && doc.authors().len() != 1 {
             doc.report().functional_validation(
                 "Document must only be signed by one author",
                 REPORT_CONTEXT,
             );
-            return Ok(false);
+            return Ok(());
         }
 
         let mut allowed_authors = HashSet::new();
@@ -94,7 +95,7 @@ impl DocumentOwnershipRule {
                             "Cannot find a first version of the referenced document",
                             REPORT_CONTEXT,
                         );
-                        return Ok(false);
+                        return Ok(());
                     };
                     allowed_authors.extend(first_doc.authors());
                 }
@@ -107,7 +108,7 @@ impl DocumentOwnershipRule {
                             "Cannot find a first version of the referenced document",
                             REPORT_CONTEXT,
                         );
-                        return Ok(false);
+                        return Ok(());
                     };
                     allowed_authors.extend(first_doc.authors());
 
@@ -121,19 +122,19 @@ impl DocumentOwnershipRule {
             Self::RefFieldBased => {
                 let Some(doc_ref) = doc.doc_meta().doc_ref() else {
                     doc.report().missing_field("ref", REPORT_CONTEXT);
-                    return Ok(false);
+                    return Ok(());
                 };
                 let [doc_ref] = doc_ref.as_slice() else {
                     doc.report()
                         .other("'ref' field cannot have multiple values", REPORT_CONTEXT);
-                    return Ok(false);
+                    return Ok(());
                 };
                 let Some(first_ref_doc) = provider.try_get_first_doc(*doc_ref.id())? else {
                     doc.report().other(
                         "Cannot find a first version of the referenced document",
                         REPORT_CONTEXT,
                     );
-                    return Ok(false);
+                    return Ok(());
                 };
                 allowed_authors.extend(first_ref_doc.authors());
 
@@ -162,6 +163,6 @@ impl DocumentOwnershipRule {
                 REPORT_CONTEXT
             );
         }
-        Ok(is_valid)
+        Ok(())
     }
 }
