@@ -5,8 +5,8 @@ use catalyst_signed_doc::{
     builder::Builder,
     providers::tests::TestCatalystProvider,
     tests_utils::{
-        brand_parameters_doc, brand_parameters_form_template_doc, create_dummy_admin_key_pair,
-        create_dummy_key_pair,
+        brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish,
+        create_dummy_admin_key_pair, create_dummy_key_pair, create_key_pair_and_publish,
     },
     validator::Validator,
     *,
@@ -16,23 +16,21 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 #[test_case(
-    |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
-        brand_parameters_doc(&template, provider)
+    |p| {
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+        brand_parameters_doc(&template, p)
     }
     => true
     ;
     "valid document"
 )]
 #[test_case(
-    |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+    |p| {
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
-        provider.add_sk(kid.clone(), sk.clone());
-
         let template_ref = template.doc_ref()?;
-
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -51,14 +49,12 @@ use test_case::test_case;
     "wrong role"
 )]
 #[test_case(
-    |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+    |p| {
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_admin_key_pair();
-        provider.add_sk(kid.clone(), sk.clone());
-
         let template_ref = template.doc_ref()?;
-
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,
@@ -77,14 +73,12 @@ use test_case::test_case;
     "empty content"
 )]
 #[test_case(
-    |provider| {
-        let template = brand_parameters_form_template_doc(provider).inspect(|v| provider.add_document(v).unwrap())?;
+    |p| {
+        let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
+
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_admin_key_pair();
-        provider.add_sk(kid.clone(), sk.clone());
-
         let template_ref = template.doc_ref()?;
-
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::Json,

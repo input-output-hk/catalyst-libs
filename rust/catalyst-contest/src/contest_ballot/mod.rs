@@ -9,20 +9,23 @@ pub mod rule;
 #[cfg(test)]
 mod tests;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Context;
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, catalyst_id::CatalystId, doc_types::CONTEST_BALLOT,
     problem_report::ProblemReport, providers::CatalystSignedDocumentProvider,
 };
+use catalyst_voting::{
+    crypto::hash::{Blake2b512Hasher, digest::Digest},
+    vote_protocol::voter::proof::{VoterProofCommitment, verify_voter_proof},
+};
+use itertools::Itertools;
 use minicbor::{Decode, Encode};
 
 use crate::{
     contest_ballot::payload::{Choices, ContestBallotPayload},
     contest_parameters::ContestParameters,
-    crypto::hash::{Blake2b512Hasher, digest::Digest},
-    vote_protocol::voter::proof::{VoterProofCommitment, verify_voter_proof},
 };
 
 /// An individual Ballot cast in a Contest by a registered user.
@@ -62,7 +65,7 @@ impl ContestBallot {
         let params = check_parameters(doc, provider, &report)?;
         let mut choices = HashMap::new();
         if let Some(params) = &params {
-            choices = check_choices(doc, &payload, params, &report)?;
+            choices = check_choices(doc, &payload, params, provider, &report)?;
         }
 
         Ok(Self {
@@ -173,10 +176,28 @@ fn check_choices(
     doc: &CatalystSignedDocument,
     payload: &ContestBallotPayload,
     contest_parameters: &ContestParameters,
+    provider: &dyn CatalystSignedDocumentProvider,
     report: &ProblemReport,
 ) -> anyhow::Result<HashMap<DocumentRef, Choices>> {
     let commitment_key = commitment_key(contest_parameters.doc_ref())?;
     if let Some(doc_ref) = doc.doc_meta().doc_ref() {
+        let proposals = contest_parameters.get_associated_proposals(provider)?;
+
+        let proposal_refs = proposals
+            .iter()
+            .map(CatalystSignedDocument::doc_ref)
+            .collect::<anyhow::Result<HashSet<_>>>()?;
+        if !(proposal_refs.len() == doc_ref.len()
+            && doc_ref.iter().all(|r| proposal_refs.contains(r)))
+        {
+            report.invalid_value(
+                "ref",
+                &format!("[{}]", doc_ref.iter().map(ToString::to_string).join(",")),
+                &format!("[{}]", proposal_refs.iter().map(ToString::to_string).join(",")),
+                "Proposal references must align with the associated Proposals list to the 'Contest Parameters' document"
+            );
+        }
+
         let choices = doc_ref
             .iter()
             .zip(payload.choices.iter())
