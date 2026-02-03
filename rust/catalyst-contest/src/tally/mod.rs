@@ -1,46 +1,36 @@
 //! Contest tally functionality with all necessary types
 
+pub mod provider;
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashMap;
 
 use anyhow::Context;
-use catalyst_signed_doc::{
-    DocumentRef, catalyst_id::CatalystId, providers::CatalystSignedDocumentProvider,
-};
-use catalyst_voting::vote_protocol::{
-    committee::ElectionSecretKey,
-    tally::{
-        self, DecryptionTallySetup, EncryptedTally, decrypt_tally,
-        proof::{TallyProof, generate_tally_proof_with_default_rng},
-    },
-};
+use catalyst_signed_doc::DocumentRef;
 
 use crate::{
     contest_ballot::{ContestBallot, payload::Choices},
     contest_parameters::{ContestParameters, VotingOptions},
+    tally::provider::TallyProvider,
+    vote_protocol::{
+        committee::ElectionSecretKey,
+        tally::{
+            self, DecryptionTallySetup, EncryptedTally, decrypt_tally,
+            proof::{TallyProof, generate_tally_proof_with_default_rng},
+        },
+    },
 };
 
 /// Contest Tally Result type
 #[derive(Debug, Clone)]
 pub struct TallyInfo {
     /// Contest choices, defined by the 'Contest Parameters' document
-    #[allow(dead_code)]
-    pub choices: VotingOptions,
+    pub options: VotingOptions,
 
     /// Final tally calculated per each proposal, which was assigned to the corresponding
     /// 'Contest Parameters' document
     pub tally_per_proposals: HashMap<DocumentRef, Vec<TallyPerOption>>,
-}
-
-/// Voter's voting power provider
-pub trait VotingPowerProvider: CatalystSignedDocumentProvider {
-    /// Try to get a voting power value by the provided user's `CatalystId`.
-    ///
-    /// # Errors
-    /// If `provider` returns error, fails fast throwing that error.
-    fn try_get_voting_power(
-        &self,
-        kid: &CatalystId,
-    ) -> anyhow::Result<u64>;
 }
 
 /// Contest tally procedure based on the provided 'Contest Parameters' document.
@@ -52,7 +42,7 @@ pub trait VotingPowerProvider: CatalystSignedDocumentProvider {
 pub fn tally(
     contest_parameters: &ContestParameters,
     election_secret_key: &ElectionSecretKey,
-    provider: &dyn VotingPowerProvider,
+    provider: &dyn TallyProvider,
 ) -> anyhow::Result<TallyInfo> {
     anyhow::ensure!(
         contest_parameters.election_public_key() == &election_secret_key.public_key(),
@@ -107,7 +97,7 @@ pub fn tally(
         .collect::<anyhow::Result<_>>()?;
 
     Ok(TallyInfo {
-        choices: contest_parameters.options().clone(),
+        options: contest_parameters.options().clone(),
         tally_per_proposals,
     })
 }
@@ -170,7 +160,7 @@ fn tally_per_proposal(
     for_clear_choices
         .into_iter()
         .zip(for_encrypted_choices)
-        .zip(options.clone())
+        .zip(options.iter().cloned())
         .map(
             |((clear_tally, (decrypted_tally, encrypted_tally, tally_proof)), option)| {
                 anyhow::Ok(TallyPerOption {

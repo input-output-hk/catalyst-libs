@@ -10,7 +10,7 @@ use crate::{
 #[test_case(
     |exp_type, provider| {
         let common_ref: DocumentRefs = vec![create_dummy_doc_ref()].into();
-        let ref_doc = Builder::new()
+        let ref_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
@@ -18,7 +18,7 @@ use crate::{
             .build();
         provider.add_document(&ref_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
                 vec![ref_doc.doc_ref().unwrap()].into(),
@@ -32,7 +32,7 @@ use crate::{
 #[test_case(
     |_, provider| {
         let common_ref: DocumentRefs = vec![create_dummy_doc_ref()].into();
-        let ref_doc = Builder::new()
+        let ref_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
@@ -40,7 +40,7 @@ use crate::{
             .build();
         provider.add_document(&ref_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
                 vec![ref_doc.doc_ref().unwrap()].into(),
@@ -54,14 +54,14 @@ use crate::{
 #[test_case(
     |_, provider| {
         let common_ref: DocumentRefs = vec![create_dummy_doc_ref()].into();
-        let ref_doc = Builder::new()
+        let ref_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
             .build();
         provider.add_document(&ref_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
                 vec![ref_doc.doc_ref().unwrap()].into(),
@@ -74,7 +74,7 @@ use crate::{
 )]
 #[test_case(
     |exp_type, provider| {
-        let ref_doc = Builder::new()
+        let ref_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(
@@ -84,7 +84,7 @@ use crate::{
             .build();
         provider.add_document(&ref_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![create_dummy_doc_ref()].into(),
             ))
@@ -100,14 +100,14 @@ use crate::{
 #[test_case(
     |exp_type, provider| {
         let common_ref: DocumentRefs = vec![create_dummy_doc_ref()].into();
-        let ref_doc = Builder::new()
+        let ref_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(exp_type))
             .build();
         provider.add_document(&ref_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(common_ref))
             .with_metadata_field(SupportedField::Reply(
                 vec![ref_doc.doc_ref().unwrap()].into(),
@@ -121,14 +121,14 @@ use crate::{
 #[test_case(
     |_, provider| {
         let common_ref: DocumentRefs = vec![create_dummy_doc_ref()].into();
-        let ref_doc = Builder::new()
+        let ref_doc = Builder::with_required_fields()
             .with_metadata_field(SupportedField::Id(UuidV7::new()))
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Ref(common_ref.clone()))
             .build();
         provider.add_document(&ref_doc).unwrap();
 
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Reply(
                 vec![ref_doc.doc_ref().unwrap()].into(),
             ))
@@ -140,7 +140,7 @@ use crate::{
 )]
 #[test_case(
     |_, _| {
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Ref(
                 vec![create_dummy_doc_ref()].into(),
             ))
@@ -162,19 +162,23 @@ fn reply_specified_test(
 
     let doc = doc_gen(exp_type.clone(), &mut provider);
 
-    let non_optional_res = ReplyRule::Specified {
+    ReplyRule::Specified {
         allowed_type: exp_type.clone(),
         optional: false,
     }
     .check_inner(&doc, &provider)
     .unwrap();
+    println!("{:?}", doc.report());
+    let non_optional_res = !doc.report().is_problematic();
 
-    let optional_res = ReplyRule::Specified {
+    ReplyRule::Specified {
         allowed_type: exp_type.clone(),
         optional: true,
     }
     .check_inner(&doc, &provider)
     .unwrap();
+    println!("{:?}", doc.report());
+    let optional_res = !doc.report().is_problematic();
 
     assert_eq!(non_optional_res, optional_res);
     non_optional_res
@@ -188,8 +192,9 @@ fn reply_specified_optional_test() {
         optional: true,
     };
 
-    let doc = Builder::new().build();
-    assert!(rule.check_inner(&doc, &provider).unwrap());
+    let doc = Builder::with_required_fields().build();
+    rule.check_inner(&doc, &provider).unwrap();
+    assert!(!doc.report().is_problematic(), "{:?}", doc.report());
 
     let provider = TestCatalystProvider::default();
     let rule = ReplyRule::Specified {
@@ -197,8 +202,14 @@ fn reply_specified_optional_test() {
         optional: false,
     };
 
-    let doc = Builder::new().build();
-    assert!(!rule.check_inner(&doc, &provider).unwrap());
+    let doc = Builder::with_required_fields().build();
+    rule.check_inner(&doc, &provider).unwrap();
+    assert!(doc.report().is_problematic());
+    let report = format!("{:?}", doc.report());
+    assert!(
+        report.contains("Reply rule check, document must have reply field"),
+        "{report}"
+    );
 }
 
 #[test]
@@ -206,11 +217,18 @@ fn reply_rule_not_specified_test() {
     let rule = ReplyRule::NotSpecified;
     let provider = TestCatalystProvider::default();
 
-    let doc = Builder::new().build();
-    assert!(rule.check_inner(&doc, &provider).unwrap());
+    let doc = Builder::with_required_fields().build();
+    rule.check_inner(&doc, &provider).unwrap();
+    assert!(!doc.report().is_problematic(), "{:?}", doc.report());
 
-    let doc = Builder::new()
+    let doc = Builder::with_required_fields()
         .with_metadata_field(SupportedField::Reply(vec![create_dummy_doc_ref()].into()))
         .build();
-    assert!(!rule.check_inner(&doc, &provider).unwrap());
+    rule.check_inner(&doc, &provider).unwrap();
+    assert!(doc.report().is_problematic());
+    let report = format!("{:?}", doc.report());
+    assert!(
+        report.contains("Reply rule check, document does not expect to have a reply field"),
+        "{report}"
+    );
 }
