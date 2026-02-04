@@ -33,7 +33,8 @@ impl CatalystSignedDocumentValidationRule for ChainRule {
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        self.check_inner(doc, provider)
+        self.check_inner(doc, provider)?;
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -64,19 +65,19 @@ impl ChainRule {
         &self,
         doc: &CatalystSignedDocument,
         provider: &dyn Provider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         let chain = doc.doc_meta().chain();
 
         if let Self::Specified { optional } = self {
             if chain.is_none() && !optional {
                 doc.report()
                     .missing_field("chain", "Document must have 'chain' field");
-                return Ok(false);
+                return Ok(());
             }
 
             // perform integrity validation
             if let Some(doc_chain) = chain {
-                return Self::chain_check(doc_chain, doc, provider);
+                Self::chain_check(doc_chain, doc, provider)?;
             }
         }
         if let Self::NotSpecified = self
@@ -92,10 +93,9 @@ impl ChainRule {
                     .unwrap_or_default(),
                 "Document does not expect to have 'chain' field",
             );
-            return Ok(false);
         }
 
-        Ok(true)
+        Ok(())
     }
 
     /// `chain` metadata field checks
@@ -103,7 +103,7 @@ impl ChainRule {
         doc_chain: &Chain,
         doc: &CatalystSignedDocument,
         provider: &dyn CatalystSignedDocumentProvider,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<()> {
         const CONTEXT: &str = "Chained Documents validation";
 
         if doc_chain.document_ref().is_none() && doc_chain.height() != 0 {
@@ -111,20 +111,20 @@ impl ChainRule {
                 "The chain height must be zero when there is no chained doc",
                 CONTEXT,
             );
-            return Ok(false);
+            return Ok(());
         }
         if doc_chain.height() == 0 && doc_chain.document_ref().is_some() {
             doc.report().functional_validation(
                 "The next Chained Document must not exist while the height is zero",
                 CONTEXT,
             );
-            return Ok(false);
+            return Ok(());
         }
 
         if let Some(chained_ref) = doc_chain.document_ref() {
             let Ok(expected_doc_type) = doc.doc_type() else {
                 doc.report().missing_field("type", CONTEXT);
-                return Ok(false);
+                return Ok(());
             };
 
             let chain_validator = |chained_doc: &CatalystSignedDocument| {
@@ -198,7 +198,7 @@ impl ChainRule {
                 true
             };
 
-            return doc_refs_check(
+            doc_refs_check(
                 &vec![chained_ref.clone()].into(),
                 std::slice::from_ref(expected_doc_type),
                 false,
@@ -206,9 +206,9 @@ impl ChainRule {
                 provider,
                 doc.report(),
                 chain_validator,
-            );
+            )?;
         }
 
-        Ok(true)
+        Ok(())
     }
 }

@@ -285,11 +285,11 @@ fn test_valid_chained_documents(
     } => false;
     "not have its absolute height exactly one more than the height of the document being chained to"
 )]
-
 fn test_invalid_chained_documents(
     (provider, doc): (TestCatalystProvider, CatalystSignedDocument)
 ) -> bool {
     let rule = ChainRule::Specified { optional: false };
 
-    rule.check_inner(&doc, &provider).unwrap()
+    rule.check_inner(&doc, &provider).unwrap();
+    !doc.report().is_problematic()
 }
