@@ -92,6 +92,12 @@ pub fn tally(
                 election_secret_key,
             )?;
 
+            let total_tally_sum = tally_res.iter().map(|t| t.total_tally()).sum::<u64>();
+            anyhow::ensure!(
+                total_tally_sum == total_voting_power,
+                "The final total tally for the proposal '{total_tally_sum}' must be aligned with the total voting power '{total_voting_power}'"
+            );
+
             anyhow::Ok((p_ref, tally_res))
         })
         .collect::<anyhow::Result<_>>()?;
