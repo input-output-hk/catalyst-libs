@@ -139,7 +139,7 @@ use test_case::test_case;
     |p| {
         let template = build_verify_and_publish(p, brand_parameters_form_template_doc)?;
         let parameters = build_verify_and_publish(p, |p| brand_parameters_doc(&template, p))?;
-        let template = build_verify_and_publish(p, |p|, campaign_parameters_form_template_doc(&parameters, p))?;
+        let template = build_verify_and_publish(p, |p| campaign_parameters_form_template_doc(&parameters, p))?;
 
         let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let id = uuid::UuidV7::new();
