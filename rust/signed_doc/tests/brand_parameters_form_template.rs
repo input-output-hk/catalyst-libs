@@ -6,6 +6,7 @@ use catalyst_signed_doc::{
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_form_template_doc, create_dummy_admin_key_pair, create_dummy_key_pair,
+        create_key_pair_and_publish,
     },
     validator::Validator,
     *,
@@ -15,18 +16,17 @@ use ed25519_dalek::ed25519::signature::Signer;
 use test_case::test_case;
 
 #[test_case(
-    |provider| {
-        brand_parameters_form_template_doc(provider)
+    |p| {
+        brand_parameters_form_template_doc(p)
     }
     => true
     ;
     "valid document"
 )]
 #[test_case(
-    |provider| {
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, || create_dummy_key_pair(RoleId::Role0));
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_key_pair(RoleId::Role0);
-        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
@@ -44,10 +44,9 @@ use test_case::test_case;
     "wrong role"
 )]
 #[test_case(
-    |provider| {
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_admin_key_pair();
-        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
@@ -65,10 +64,9 @@ use test_case::test_case;
     "empty content"
 )]
 #[test_case(
-    |provider| {
+    |p| {
+        let (sk, kid) = create_key_pair_and_publish(p, create_dummy_admin_key_pair);
         let id = uuid::UuidV7::new();
-        let (sk, kid) = create_dummy_admin_key_pair();
-        provider.add_sk(kid.clone(), sk.clone());
         Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": ContentType::SchemaJson,
