@@ -1,8 +1,11 @@
+mod double_vote;
+
 use std::collections::HashMap;
 
 use catalyst_signed_doc::{
-    DocumentRef, builder,
-    catalyst_id::role_index::RoleId,
+    CatalystSignedDocument, DocumentRef,
+    builder::{self, ed25519::Ed25519SigningKey},
+    catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish,
@@ -11,7 +14,10 @@ use catalyst_signed_doc::{
         create_key_pair_and_publish, proposal_doc, proposal_form_template_doc,
     },
 };
-use catalyst_voting::vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey};
+use catalyst_voting::vote_protocol::{
+    committee::{ElectionPublicKey, ElectionSecretKey},
+    tally::proof::verify_tally_proof,
+};
 use proptest::{
     prelude::{Just, ProptestConfig, prop::array},
     property_test,
@@ -24,7 +30,7 @@ use crate::{
         payload::{Choices, ContestBallotPayload},
     },
     contest_parameters::ContestParameters,
-    tally::{provider::tests::TestTallyProvider, tally},
+    tally::{ContestResult, contest_tally, provider::tests::TestTallyProvider},
 };
 
 const VOTING_OPTIONS: usize = 3;
@@ -39,6 +45,11 @@ struct Voter {
     #[proptest(strategy = "Just(false)")]
     anonymous: bool,
 }
+
+type EncryptedTotalResult = u64;
+type ClearTotalResult = u64;
+type Participants = HashMap<CatalystId, (u64, DocumentRef)>;
+type TallyRes = HashMap<DocumentRef, Vec<(ClearTotalResult, EncryptedTotalResult, String)>>;
 
 #[property_test(config = ProptestConfig::with_cases(1))]
 fn tally_test(
@@ -59,12 +70,37 @@ fn tally_test(
 
     let exp_tally = expected_tally(&contest_parameters, &proposals_refs, &voters);
 
-    for voter in voters {
-        publish_ballot(&voter, &contest_parameters, &proposals_refs, &mut p).unwrap();
-    }
+    let exp_participants: Participants = voters
+        .iter()
+        .map(|v| {
+            let ballot =
+                publish_ballot_with_keys(v, &contest_parameters, &proposals_refs, &mut p).unwrap();
+            let voter = ballot.authors().first().unwrap().clone();
+            let ballot_ref = ballot.doc_ref().unwrap();
 
-    let res_tally = tally(&contest_parameters, &election_secret_key, &p).unwrap();
+            (voter, (v.voting_power.into(), ballot_ref))
+        })
+        .collect();
+
+    let res_tally = contest_tally(&contest_parameters, Some(&election_secret_key), &p).unwrap();
+    assert_contest_tally_result(
+        &election_secret_key.public_key(),
+        res_tally,
+        &contest_parameters,
+        exp_tally,
+        exp_participants,
+    );
+}
+
+fn assert_contest_tally_result(
+    election_public_key: &ElectionPublicKey,
+    res_tally: ContestResult,
+    contest_parameters: &ContestParameters,
+    exp_tally: TallyRes,
+    exp_participants: Participants,
+) {
     assert_eq!(&res_tally.options, contest_parameters.options());
+    assert_eq!(&res_tally.participants, &exp_participants);
 
     for (p_ref, exp_tally_per_proposal) in exp_tally {
         let res_tally_per_proposal = res_tally
@@ -77,14 +113,21 @@ fn tally_test(
                 res_tally_per_proposal[i].option,
                 exp_tally_per_proposal[i].2
             );
-            assert_eq!(
-                res_tally_per_proposal[i].decrypted_tally,
-                exp_tally_per_proposal[i].1
-            );
+            let decrypted_tally = res_tally_per_proposal[i]
+                .decrypted_tally
+                .as_ref()
+                .expect("must have decrypted tally");
+            assert_eq!(decrypted_tally.tally, exp_tally_per_proposal[i].1);
             assert_eq!(
                 res_tally_per_proposal[i].clear_tally,
                 exp_tally_per_proposal[i].0
             );
+            assert!(verify_tally_proof(
+                &res_tally_per_proposal[i].encrypted_tally,
+                decrypted_tally.tally,
+                &election_public_key,
+                &decrypted_tally.proof
+            ));
         }
     }
 }
@@ -123,22 +166,32 @@ fn prepare_contest(
     Ok((ContestParameters::new(&parameters, p)?, proposals_refs))
 }
 
-fn publish_ballot(
+fn publish_ballot_with_keys(
     voter: &Voter,
     parameters: &ContestParameters,
     proposals_refs: &[DocumentRef],
     p: &mut TestTallyProvider,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_key_pair_and_publish(&mut p.p, || create_dummy_key_pair(RoleId::Role0));
+    publish_ballot((voter, kid, &sk.into()), parameters, proposals_refs, p)
+}
 
+fn publish_ballot(
+    voter: (&Voter, CatalystId, &Ed25519SigningKey),
+    parameters: &ContestParameters,
+    proposals_refs: &[DocumentRef],
+    p: &mut TestTallyProvider,
+) -> anyhow::Result<CatalystSignedDocument> {
     // Filling the `TestTallyProvider` with the voter's voting power information
-    p.voters.insert(kid.clone(), voter.voting_power.into());
+    p.voters
+        .insert(voter.1.clone(), voter.0.voting_power.into());
 
     let choices = voter
+        .0
         .choices
         .iter()
         .map(|choice| {
-            if voter.anonymous {
+            if voter.0.anonymous {
                 let commitment = commitment_key(parameters.doc_ref())?;
                 Choices::new_encrypted_single(
                     *choice,
@@ -158,23 +211,18 @@ fn publish_ballot(
             proposals_refs,
             parameters.doc_ref(),
             &payload,
-            &sk.into(),
-            kid,
+            voter.2,
+            voter.1,
             None,
         )
-    })?;
-
-    Ok(())
+    })
 }
-
-type EncryptedTotalResult = u64;
-type ClearTotalResult = u64;
 
 fn expected_tally(
     contest_parameters: &ContestParameters,
     proposals_refs: &[DocumentRef],
     voters: &[Voter],
-) -> HashMap<DocumentRef, Vec<(ClearTotalResult, EncryptedTotalResult, String)>> {
+) -> TallyRes {
     let options = contest_parameters.options().clone();
 
     proposals_refs
