@@ -7,7 +7,11 @@ mod tests;
 use std::collections::HashMap;
 
 use anyhow::Context;
-use catalyst_signed_doc::DocumentRef;
+use catalyst_signed_doc::{DocumentRef, catalyst_id::CatalystId};
+use catalyst_voting::vote_protocol::tally::{
+    DecryptionTallySetup, decrypt_tally,
+    proof::{TallyProof, generate_tally_proof_with_default_rng},
+};
 
 use crate::{
     contest_ballot::{ContestBallot, payload::Choices},
@@ -15,39 +19,75 @@ use crate::{
     tally::provider::TallyProvider,
     vote_protocol::{
         committee::ElectionSecretKey,
-        tally::{
-            self, DecryptionTallySetup, EncryptedTally, decrypt_tally,
-            proof::{TallyProof, generate_tally_proof_with_default_rng},
-        },
+        tally::{self, EncryptedTally},
     },
 };
 
 /// Contest Tally Result type
 #[derive(Debug, Clone)]
-pub struct TallyInfo {
+pub struct ContestResult {
     /// Contest choices, defined by the 'Contest Parameters' document
     pub options: VotingOptions,
 
     /// Final tally calculated per each proposal, which was assigned to the corresponding
     /// 'Contest Parameters' document
     pub tally_per_proposals: HashMap<DocumentRef, Vec<TallyPerOption>>,
+
+    /// List of all participated voters with their voting power
+    pub participants: HashMap<CatalystId, u64>,
+}
+
+/// Encrypted Tally per voting option
+#[derive(Debug, Clone)]
+pub struct TallyPerOption {
+    /// Total sum over all clear votes
+    pub clear_tally: u64,
+    /// Encrypted tally (homomorphic total sum over all encrypted votes)
+    pub encrypted_tally: EncryptedTally,
+    /// Decrypted tally
+    pub decrypted_tally: Option<DecryptedTally>,
+    /// Contest voting option
+    pub option: String,
+}
+
+/// Decrypted tally object with the tally result itself and its proof to the corresponding
+/// `EncryptedTally`
+#[derive(Debug, Clone)]
+pub struct DecryptedTally {
+    /// Total sum over all encrypted votes
+    pub tally: u64,
+    /// Encrypted tally proof
+    pub proof: TallyProof,
+}
+
+impl TallyPerOption {
+    /// Returns a sum of `clear_tally` and `decrypted_tally` if `decrypted_tally` if
+    /// present
+    #[must_use]
+    pub fn total_tally(&self) -> Option<u64> {
+        self.decrypted_tally
+            .as_ref()
+            .map(|v| self.clear_tally.saturating_add(v.tally))
+    }
 }
 
 /// Contest tally procedure based on the provided 'Contest Parameters' document.
-/// Collects all necessary `ContestBallot`, `Proposal`, `ContestDelegation` documents
-/// which are associate with the provided `ContestParameters`.
+/// Collects all necessary `ContestBallot`, `Proposal`, which are associate with the
+/// provided `ContestParameters`.
 ///
 /// # Errors
 ///  - `provider` returns error
-pub fn tally(
+pub fn contest_tally(
     contest_parameters: &ContestParameters,
-    election_secret_key: &ElectionSecretKey,
+    election_secret_key: Option<&ElectionSecretKey>,
     provider: &dyn TallyProvider,
-) -> anyhow::Result<TallyInfo> {
-    anyhow::ensure!(
-        contest_parameters.election_public_key() == &election_secret_key.public_key(),
-        "`election_secret_key` must align with `election_public_key` from the `contest_parameters`"
-    );
+) -> anyhow::Result<ContestResult> {
+    if let Some(election_secret_key) = election_secret_key {
+        anyhow::ensure!(
+            contest_parameters.election_public_key() == &election_secret_key.public_key(),
+            "`election_secret_key` must align with `election_public_key` from the `contest_parameters`"
+        );
+    }
 
     let ballots = contest_parameters.get_associated_ballots(provider)?;
     let ballots = ballots
@@ -77,7 +117,12 @@ pub fn tally(
             .context("Total voting power overflow")?;
     }
 
-    let decryption_tally_setup = DecryptionTallySetup::new(total_voting_power)?;
+    let decryption_credentials = election_secret_key
+        .map(|key| {
+            let decryption_tally_setup = DecryptionTallySetup::new(total_voting_power)?;
+            anyhow::Ok((decryption_tally_setup, key.clone()))
+        })
+        .transpose()?;
 
     let proposals = contest_parameters.get_associated_proposals(provider)?;
     let tally_per_proposals = proposals
@@ -88,47 +133,29 @@ pub fn tally(
                 &p_ref,
                 &ballots_with_voting_power,
                 contest_parameters.options(),
-                &decryption_tally_setup,
-                election_secret_key,
+                decryption_credentials.as_ref(),
             )?;
 
-            let total_tally_sum = tally_res.iter().map(|t| t.total_tally()).sum::<u64>();
-            anyhow::ensure!(
+
+            if decryption_credentials.is_some() {
+                let total_tally_sum = tally_res.iter().map(TallyPerOption::total_tally).try_fold(0_u64, |sum, total_tally| {
+
+                    anyhow::Ok(sum.checked_add(total_tally.context("total tally over encrypted and decrypted one must exist, because `decryption_credentials` was provided")?).context("total tally sum per proposal overflow")?)
+                 })?;
+                 anyhow::ensure!(
                 total_tally_sum == total_voting_power,
-                "The final total tally for the proposal '{total_tally_sum}' must be aligned with the total voting power '{total_voting_power}'"
-            );
+                "The final total tally for the proposal '{total_tally_sum}' must be aligned with the total voting power '{total_voting_power}'" );
+            }
 
             anyhow::Ok((p_ref, tally_res))
         })
         .collect::<anyhow::Result<_>>()?;
 
-    Ok(TallyInfo {
+    Ok(ContestResult {
         options: contest_parameters.options().clone(),
         tally_per_proposals,
+        participants: HashMap::new(),
     })
-}
-
-/// Tally per voting option
-#[derive(Debug, Clone)]
-pub struct TallyPerOption {
-    /// Total sum over all clear votes
-    pub clear_tally: u64,
-    /// Decrypted tally (decrypted total sum over all encrypted votes)
-    pub decrypted_tally: u64,
-    /// Encrypted tally (homomorphic total sum over all encrypted votes)
-    pub encrypted_tally: EncryptedTally,
-    /// Encrypted tally proof
-    pub tally_proof: TallyProof,
-    /// Contest voting option
-    pub option: String,
-}
-
-impl TallyPerOption {
-    /// Returns a sum of `clear_tally` and `decrypted_tally`
-    #[must_use]
-    pub fn total_tally(&self) -> u64 {
-        self.clear_tally.saturating_add(self.decrypted_tally)
-    }
 }
 
 // Calculates the voting tally for a specific proposal, processing both encrypted and
@@ -136,15 +163,14 @@ impl TallyPerOption {
 ///
 /// This function aggregates votes across all provided ballots, applying the respective
 /// voting power to each choice. It performs two parallel tallies:
-/// 1. **Encrypted Tally**: Aggregates ciphertexts, generates a decryption proof, and
-///    decrypts the result.
+/// 1. **Encrypted Tally**: Aggregates ciphertexts. If necessary arguments are provided  -
+///    generates a decryption proof, and decrypts the result.
 /// 2. **Clear Tally**: Sums plain-text votes multiplied by voting power.
 fn tally_per_proposal(
     p_ref: &DocumentRef,
     ballots_with_voting_power: &[(ContestBallot, u64)],
     options: &VotingOptions,
-    decryption_tally_setup: &DecryptionTallySetup,
-    election_secret_key: &ElectionSecretKey,
+    decryption_credentials: Option<&(DecryptionTallySetup, ElectionSecretKey)>,
 ) -> anyhow::Result<Vec<TallyPerOption>> {
     let choices_with_voting_power_iter = ballots_with_voting_power.iter().map(|(b, p)| {
         let c = b.get_choices_for_proposal(p_ref).context(format!(
@@ -157,8 +183,7 @@ fn tally_per_proposal(
     let for_encrypted_choices = tally_encrypted_choices(
         &choices_with_voting_power_iter.clone(),
         options.n_options(),
-        election_secret_key,
-        decryption_tally_setup,
+        decryption_credentials,
     )?;
     let for_clear_choices =
         tally_clear_choices(choices_with_voting_power_iter, options.n_options())?;
@@ -168,12 +193,11 @@ fn tally_per_proposal(
         .zip(for_encrypted_choices)
         .zip(options.iter().cloned())
         .map(
-            |((clear_tally, (decrypted_tally, encrypted_tally, tally_proof)), option)| {
+            |((clear_tally, (encrypted_tally, decrypted_tally)), option)| {
                 anyhow::Ok(TallyPerOption {
                     clear_tally,
-                    decrypted_tally,
                     encrypted_tally,
-                    tally_proof,
+                    decrypted_tally,
                     option,
                 })
             },
@@ -185,9 +209,8 @@ fn tally_per_proposal(
 fn tally_encrypted_choices<'a, I>(
     choices_with_voting_power_iter: &I,
     n_options: usize,
-    election_secret_key: &ElectionSecretKey,
-    decryption_tally_setup: &DecryptionTallySetup,
-) -> anyhow::Result<Vec<(u64, EncryptedTally, TallyProof)>>
+    decryption_credentials: Option<&(DecryptionTallySetup, ElectionSecretKey)>,
+) -> anyhow::Result<Vec<(EncryptedTally, Option<DecryptedTally>)>>
 where
     I: Iterator<Item = (anyhow::Result<&'a Choices>, &'a u64)> + Clone,
 {
@@ -207,16 +230,25 @@ where
         .map(|i| {
             let encrypted_tally =
                 tally::tally(i, encrypted_choices.as_slice(), encrypted_power.as_slice())?;
-            let tally_proof =
-                generate_tally_proof_with_default_rng(&encrypted_tally, election_secret_key);
 
-            let tally = decrypt_tally(
-                &encrypted_tally,
-                election_secret_key,
-                decryption_tally_setup,
-            )?;
+            let decrypted_tally = decryption_credentials
+                .as_ref()
+                .map(|(decryption_tally_setup, election_secret_key)| {
+                    let proof = generate_tally_proof_with_default_rng(
+                        &encrypted_tally,
+                        election_secret_key,
+                    );
 
-            anyhow::Ok((tally, encrypted_tally, tally_proof))
+                    let tally = decrypt_tally(
+                        &encrypted_tally,
+                        election_secret_key,
+                        decryption_tally_setup,
+                    )?;
+                    anyhow::Ok(DecryptedTally { tally, proof })
+                })
+                .transpose()?;
+
+            anyhow::Ok((encrypted_tally, decrypted_tally))
         })
         .collect()
 }

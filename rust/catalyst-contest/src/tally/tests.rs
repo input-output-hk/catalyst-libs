@@ -11,7 +11,10 @@ use catalyst_signed_doc::{
         create_key_pair_and_publish, proposal_doc, proposal_form_template_doc,
     },
 };
-use catalyst_voting::vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey};
+use catalyst_voting::vote_protocol::{
+    committee::{ElectionPublicKey, ElectionSecretKey},
+    tally::proof::verify_tally_proof,
+};
 use proptest::{
     prelude::{Just, ProptestConfig, prop::array},
     property_test,
@@ -24,7 +27,7 @@ use crate::{
         payload::{Choices, ContestBallotPayload},
     },
     contest_parameters::ContestParameters,
-    tally::{provider::tests::TestTallyProvider, tally},
+    tally::{contest_tally, provider::tests::TestTallyProvider},
 };
 
 const VOTING_OPTIONS: usize = 3;
@@ -63,7 +66,7 @@ fn tally_test(
         publish_ballot(&voter, &contest_parameters, &proposals_refs, &mut p).unwrap();
     }
 
-    let res_tally = tally(&contest_parameters, &election_secret_key, &p).unwrap();
+    let res_tally = contest_tally(&contest_parameters, Some(&election_secret_key), &p).unwrap();
     assert_eq!(&res_tally.options, contest_parameters.options());
 
     for (p_ref, exp_tally_per_proposal) in exp_tally {
@@ -77,14 +80,21 @@ fn tally_test(
                 res_tally_per_proposal[i].option,
                 exp_tally_per_proposal[i].2
             );
-            assert_eq!(
-                res_tally_per_proposal[i].decrypted_tally,
-                exp_tally_per_proposal[i].1
-            );
+            let decrypted_tally = res_tally_per_proposal[i]
+                .decrypted_tally
+                .as_ref()
+                .expect("must have decrypted tally");
+            assert_eq!(decrypted_tally.tally, exp_tally_per_proposal[i].1);
             assert_eq!(
                 res_tally_per_proposal[i].clear_tally,
                 exp_tally_per_proposal[i].0
             );
+            assert!(verify_tally_proof(
+                &res_tally_per_proposal[i].encrypted_tally,
+                decrypted_tally.tally,
+                &election_secret_key.public_key(),
+                &decrypted_tally.proof
+            ));
         }
     }
 }
