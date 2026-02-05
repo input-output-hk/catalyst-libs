@@ -8,7 +8,7 @@ use crate::{
 
 #[test_case(
     || {
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Collaborators(
                     vec![create_dummy_key_pair(RoleId::Role0).1].into()
                 ))
@@ -20,7 +20,7 @@ use crate::{
 )]
 #[test_case(
     || {
-        Builder::new().build()
+        Builder::with_required_fields().build()
     }
     => true
     ;
@@ -31,12 +31,13 @@ fn section_rule_specified_optional_test(doc_gen: impl FnOnce() -> CatalystSigned
     let rule = CollaboratorsRule::Specified { optional: true };
 
     let doc = doc_gen();
-    rule.check_inner(&doc)
+    rule.check_inner(&doc);
+    !doc.report().is_problematic()
 }
 
 #[test_case(
     || {
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Collaborators(
                     vec![create_dummy_key_pair(RoleId::Role0).1].into()
                 ))
@@ -48,7 +49,7 @@ fn section_rule_specified_optional_test(doc_gen: impl FnOnce() -> CatalystSigned
 )]
 #[test_case(
     || {
-        Builder::new().build()
+        Builder::with_required_fields().build()
     }
     => false
     ;
@@ -61,12 +62,13 @@ fn section_rule_specified_not_optional_test(
     let rule = CollaboratorsRule::Specified { optional: false };
 
     let doc = doc_gen();
-    rule.check_inner(&doc)
+    rule.check_inner(&doc);
+    !doc.report().is_problematic()
 }
 
 #[test_case(
     || {
-        Builder::new().build()
+        Builder::with_required_fields().build()
     }
     => true
     ;
@@ -74,7 +76,7 @@ fn section_rule_specified_not_optional_test(
 )]
 #[test_case(
     || {
-        Builder::new()
+        Builder::with_required_fields()
             .with_metadata_field(SupportedField::Collaborators(
                     vec![create_dummy_key_pair(RoleId::Role0).1].into()
                 ))
@@ -89,5 +91,6 @@ fn section_rule_not_specified_test(doc_gen: impl FnOnce() -> CatalystSignedDocum
     let rule = CollaboratorsRule::NotSpecified;
 
     let doc = doc_gen();
-    rule.check_inner(&doc)
+    rule.check_inner(&doc);
+    !doc.report().is_problematic()
 }
