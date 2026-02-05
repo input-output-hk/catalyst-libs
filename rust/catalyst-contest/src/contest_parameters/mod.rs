@@ -12,7 +12,7 @@ mod tests;
 
 use catalyst_signed_doc::{
     CatalystSignedDocument, DocumentRef, DocumentRefs,
-    doc_types::{CONTEST_BALLOT, CONTEST_PARAMETERS, PROPOSAL},
+    doc_types::{CONTEST_BALLOT, CONTEST_DELEGATION, CONTEST_PARAMETERS, PROPOSAL},
     problem_report::ProblemReport,
     providers::{
         CatalystSignedDocumentProvider, CatalystSignedDocumentSearchQuery, DocTypeSelector,
@@ -190,6 +190,26 @@ impl ContestParameters {
         // Consider ONLY latest versions.
         let ballots = provider.try_search_latest_docs(&query)?;
         Ok(ballots)
+    }
+
+    /// Return a list of associated 'Contest Delegation' documents
+    /// with the 'Contest Parameters' document.
+    ///
+    /// # Errors
+    ///  - `provider` returns error.
+    #[allow(dead_code)]
+    pub(crate) fn get_associated_delegations(
+        &self,
+        provider: &dyn CatalystSignedDocumentProvider,
+    ) -> anyhow::Result<Vec<CatalystSignedDocument>> {
+        let query = CatalystSignedDocumentSearchQuery {
+            doc_type: Some(DocTypeSelector::In(vec![CONTEST_DELEGATION])),
+            parameters: Some(DocumentRefSelector::Eq(vec![self.doc_ref.clone()].into())),
+            ..Default::default()
+        };
+        let delegations = provider.try_search_latest_docs(&query)?;
+
+        Ok(delegations)
     }
 }
 

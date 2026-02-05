@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use catalyst_signed_doc::{
-    DocumentRef, builder,
-    catalyst_id::role_index::RoleId,
+    CatalystSignedDocument, DocumentRef, builder,
+    catalyst_id::{CatalystId, role_index::RoleId},
     providers::tests::TestCatalystProvider,
     tests_utils::{
         brand_parameters_doc, brand_parameters_form_template_doc, build_verify_and_publish,
@@ -62,12 +62,20 @@ fn tally_test(
 
     let exp_tally = expected_tally(&contest_parameters, &proposals_refs, &voters);
 
-    for voter in voters {
-        publish_ballot(&voter, &contest_parameters, &proposals_refs, &mut p).unwrap();
-    }
+    let exp_participant: HashMap<CatalystId, (u64, DocumentRef)> = voters
+        .iter()
+        .map(|v| {
+            let ballot = publish_ballot(v, &contest_parameters, &proposals_refs, &mut p).unwrap();
+            let voter = ballot.authors().first().unwrap().clone();
+            let ballot_ref = ballot.doc_ref().unwrap();
+
+            (voter, (v.voting_power.into(), ballot_ref))
+        })
+        .collect();
 
     let res_tally = contest_tally(&contest_parameters, Some(&election_secret_key), &p).unwrap();
     assert_eq!(&res_tally.options, contest_parameters.options());
+    assert_eq!(&res_tally.participants, &exp_participant);
 
     for (p_ref, exp_tally_per_proposal) in exp_tally {
         let res_tally_per_proposal = res_tally
@@ -138,7 +146,7 @@ fn publish_ballot(
     parameters: &ContestParameters,
     proposals_refs: &[DocumentRef],
     p: &mut TestTallyProvider,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<CatalystSignedDocument> {
     let (sk, kid) = create_key_pair_and_publish(&mut p.p, || create_dummy_key_pair(RoleId::Role0));
 
     // Filling the `TestTallyProvider` with the voter's voting power information
@@ -172,9 +180,7 @@ fn publish_ballot(
             kid,
             None,
         )
-    })?;
-
-    Ok(())
+    })
 }
 
 type EncryptedTotalResult = u64;

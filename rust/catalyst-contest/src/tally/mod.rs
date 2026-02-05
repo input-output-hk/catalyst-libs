@@ -33,8 +33,9 @@ pub struct ContestResult {
     /// 'Contest Parameters' document
     pub tally_per_proposals: HashMap<DocumentRef, Vec<TallyPerOption>>,
 
-    /// List of all participated voters with their voting power
-    pub participants: HashMap<CatalystId, u64>,
+    /// List of all participated voters with their voting power and reference to the
+    /// accounted vote
+    pub participants: HashMap<CatalystId, (u64, DocumentRef)>,
 }
 
 /// Encrypted Tally per voting option
@@ -90,31 +91,25 @@ pub fn contest_tally(
     }
 
     let ballots = contest_parameters.get_associated_ballots(provider)?;
-    let ballots = ballots
-        .iter()
-        .map(|d| ContestBallot::new(d, provider))
-        .map(|d| {
-            d.and_then(|d| {
-                if d.report().is_problematic() {
-                    anyhow::bail!(
-                        "'Contest Ballot' document ({}) is problematic: {:?}",
-                        d.doc_ref(),
-                        d.report()
-                    )
-                }
-                Ok(d)
-            })
-        })
-        .collect::<anyhow::Result<Vec<_>>>()?;
 
-    let mut ballots_with_voting_power = Vec::new();
     let mut total_voting_power: u64 = 0;
-    for b in ballots {
-        let voting_power = provider.try_get_voting_power(b.voter())?;
-        ballots_with_voting_power.push((b, voting_power));
+    let mut participants = HashMap::new();
+    for ballot in ballots {
+        let ballot = ContestBallot::new(&ballot, provider)?;
+
+        if ballot.report().is_problematic() {
+            anyhow::bail!(
+                "'Contest Ballot' document ({}) is problematic: {:?}",
+                ballot.doc_ref(),
+                ballot.report()
+            )
+        }
+        // to prevent double voting, match each ballot with its voter inside the `HashMap`
+        let voting_power = provider.try_get_voting_power(ballot.voter())?;
         total_voting_power = total_voting_power
             .checked_add(voting_power)
             .context("Total voting power overflow")?;
+        participants.insert(ballot.voter().clone(), (voting_power, ballot));
     }
 
     let decryption_credentials = election_secret_key
@@ -129,9 +124,10 @@ pub fn contest_tally(
         .iter()
         .map(|p| {
             let p_ref = p.doc_ref()?;
+            let ballots_with_voting_power = participants.values().map(|(power, ballot)| (ballot, power));
             let tally_res = tally_per_proposal(
                 &p_ref,
-                &ballots_with_voting_power,
+                ballots_with_voting_power,
                 contest_parameters.options(),
                 decryption_credentials.as_ref(),
             )?;
@@ -151,10 +147,15 @@ pub fn contest_tally(
         })
         .collect::<anyhow::Result<_>>()?;
 
+    let participants = participants
+        .into_iter()
+        .map(|(kid, (power, ballot))| (kid, (power, ballot.doc_ref().clone())))
+        .collect();
+
     Ok(ContestResult {
         options: contest_parameters.options().clone(),
         tally_per_proposals,
-        participants: HashMap::new(),
+        participants,
     })
 }
 
@@ -166,13 +167,13 @@ pub fn contest_tally(
 /// 1. **Encrypted Tally**: Aggregates ciphertexts. If necessary arguments are provided  -
 ///    generates a decryption proof, and decrypts the result.
 /// 2. **Clear Tally**: Sums plain-text votes multiplied by voting power.
-fn tally_per_proposal(
+fn tally_per_proposal<'a>(
     p_ref: &DocumentRef,
-    ballots_with_voting_power: &[(ContestBallot, u64)],
+    ballots_with_voting_power: impl Iterator<Item = (&'a ContestBallot, &'a u64)> + Clone,
     options: &VotingOptions,
     decryption_credentials: Option<&(DecryptionTallySetup, ElectionSecretKey)>,
 ) -> anyhow::Result<Vec<TallyPerOption>> {
-    let choices_with_voting_power_iter = ballots_with_voting_power.iter().map(|(b, p)| {
+    let choices_with_voting_power_iter = ballots_with_voting_power.map(|(b, p)| {
         let c = b.get_choices_for_proposal(p_ref).context(format!(
             "'Contest Ballot' {} must have  a choice for the 'Proposal' {p_ref}",
             b.doc_ref(),
