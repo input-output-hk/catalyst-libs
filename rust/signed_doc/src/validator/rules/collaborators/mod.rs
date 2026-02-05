@@ -27,7 +27,8 @@ impl CatalystSignedDocumentValidationRule for CollaboratorsRule {
         doc: &CatalystSignedDocument,
         _provider: &dyn Provider,
     ) -> anyhow::Result<bool> {
-        Ok(self.check_inner(doc))
+        self.check_inner(doc);
+        Ok(!doc.report().is_problematic())
     }
 }
 
@@ -49,7 +50,7 @@ impl CollaboratorsRule {
     fn check_inner(
         &self,
         doc: &CatalystSignedDocument,
-    ) -> bool {
+    ) {
         if let Self::Specified { optional } = self
             && doc.doc_meta().collaborators().is_empty()
             && !optional
@@ -58,7 +59,6 @@ impl CollaboratorsRule {
                 "collaborators",
                 "Document must have at least one entry in 'collaborators' field",
             );
-            return false;
         }
         if let Self::NotSpecified = self
             && !doc.doc_meta().collaborators().is_empty()
@@ -75,9 +75,6 @@ impl CollaboratorsRule {
                 ),
                 "Document does not expect to have a 'collaborators' field",
             );
-            return false;
         }
-
-        true
     }
 }
