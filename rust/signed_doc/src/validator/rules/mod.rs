@@ -12,6 +12,7 @@ mod content_type;
 mod doc_ref;
 mod ownership;
 mod parameters;
+mod rep_nomination;
 mod reply;
 mod revocations;
 mod section;
@@ -30,6 +31,7 @@ pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
 pub(crate) use ownership::DocumentOwnershipRule;
 pub(crate) use parameters::ParametersRule;
+pub(crate) use rep_nomination::RepNominationRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use revocations::RevocationsRule;
 pub(crate) use section::SectionRule;
@@ -62,6 +64,7 @@ fn rules_for_doc(
             all_docs_specs,
             &doc_spec.metadata.parameters,
         )?),
+        Box::new(RepNominationRule),
         Box::new(ChainRule::new(
             &doc_spec.metadata.chain,
             &doc_spec.metadata.collaborators,
