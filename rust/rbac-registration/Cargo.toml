@@ -34,5 +34,5 @@ thiserror = "2.0.11"
 
 c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "c509-certificate-v0.0.3" }
 cbork-utils = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cbork-utils-v0.0.2" }
-cardano-blockchain-types = { version = "0.0.9", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types/v0.0.9" }
-catalyst-types = { version = "0.0.10", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types/v0.0.10" }
+cardano-blockchain-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "hack-do-not-merge-simple-versions" }
+catalyst-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "hack-do-not-merge-simple-versions" }
