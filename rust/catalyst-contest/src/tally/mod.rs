@@ -106,10 +106,14 @@ pub fn contest_tally(
         }
         // to prevent double voting, match each ballot with its voter inside the `HashMap`
         let voting_power = provider.try_get_voting_power(ballot.voter())?;
-        total_voting_power = total_voting_power
-            .checked_add(voting_power)
-            .context("Total voting power overflow")?;
-        participants.insert(ballot.voter().clone(), (voting_power, ballot));
+        if participants
+            .insert(ballot.voter().clone(), (voting_power, ballot))
+            .is_none()
+        {
+            total_voting_power = total_voting_power
+                .checked_add(voting_power)
+                .context("Total voting power overflow")?;
+        }
     }
 
     let decryption_credentials = election_secret_key
