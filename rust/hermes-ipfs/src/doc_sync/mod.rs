@@ -94,6 +94,13 @@ impl<'b, C> Decode<'b, C> for Signature {
 #[derive(Clone, Debug, PartialEq, Eq, Copy)]
 pub struct Blake3256(blake3::Hash);
 
+impl Blake3256 {
+    /// Hex string representation of the hash.
+    pub fn to_hex(&self) -> String {
+        self.0.to_hex().to_string()
+    }
+}
+
 impl<C> Encode<C> for Blake3256 {
     fn encode<W: Write>(
         &self,
